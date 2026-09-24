@@ -89,3 +89,4 @@
 - Validação documental e sincronização: em andamento.
 - Validação documental: `git diff --check` passou; um verificador Node conferiu os links locais em README e nos três documentos relacionados; conferi a ficha completa para garantir que os campos estão em branco, sem fatos inventados ou dados reais.
 - Commit `d2f899e8385d6ae3034210681ce644b1a7f80f6d` publicado na branch `implementation/primeira-jornada-local`; SHA local e remoto conferidos iguais. Cartão 4 atualizado e relido em `Requisitos a validar`, com fluxo-alvo corretamente descrito, critério de aceite e link para a ficha.
+- PR #9 teve a descrição atualizada para refletir a captura mínima de briefing, seus limites provisórios, validação 9/9, teste no Chromium em 390×844 e o vínculo com os cartões 4 e 18. `gh pr view 9` confirmou que continua aberto como rascunho; o cartão 18 foi atualizado e a resposta de escrita confirmou a descrição revisada.
