@@ -6,7 +6,7 @@
 - Cobertura e percurso documentados em `docs/PRIMEIRA-IMPLEMENTACAO.md` e `prototipo/README.md`.
 - Validação: `node --test tests/workflow.test.js` passou 14/14; checks de sintaxe JS e `git diff --check` passaram. Chromium anexou dois PDFs sintéticos, baixou o arquivo anterior e conferiu seus bytes; histórico mostrou nomes antigo e atual. Em 1440×960 e 390×844, documento/painel sem overflow e console sem erros. Prints em `%LOCALAPPDATA%/Temp/mix7-draft-recovery-desktop.png` e `mix7-draft-recovery-mobile.png`.
 - Limite: arquivos e histórico continuam no perfil local do navegador; não há armazenamento central, sincronização ou auditoria protegida.
-- Código `d8b0a463a2e67ebdacf47a64a3eeab97173c169e` enviado e SHA local/remoto confirmado na branch `implementation/primeira-jornada-local`; esta atualização registra seu comportamento e validação.
+- Código `d8b0a463a2e67ebdacf47a64a3eeab97173c169e` enviado e SHA local/remoto confirmado na branch `implementation/primeira-jornada-local`; comportamento e validação registrados aqui. Cartão 18 do Trello e PR #9 atualizados com MVP-05, testes e limites; PR segue em rascunho.
 
 ## MVP-08: planejar tarefas a partir do feedback — 24/09/2026
 
