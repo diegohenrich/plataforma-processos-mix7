@@ -63,3 +63,11 @@
 - Revisar o protótipo local com usuário/equipe; esta fatia ainda requer revisão, e o PR de implementação permanece pendente.
 - Prosseguir com prova de conceito controlada e detalhamento de arquitetura/modelo de dados, sem selecionar stack ou enviar dados reais antes dos portões documentados.
 - Manter documentação, GitHub e Trello sincronizados após cada entrega.
+
+## Atualização da jornada — alteração do briefing durante execução (2026-09-24)
+
+- Implementado em `prototipo/`: uma alteração de briefing durante a execução exige motivo, preserva briefing anterior e novo, registra auditoria, pausa a execução e retorna a demanda ao planejamento. A retomada exige confirmação humana do plano; a confirmação fica registrada. Nesta fatia, alteração do briefing só está disponível durante execução.
+- `node --test tests/workflow.test.js`: 8/8 passaram; `node --check prototipo/workflow.js`, `node --check prototipo/app.js` e `git diff --check` passaram.
+- Chromium: fluxo com briefing fictício confirmou pausa, histórico/motivo, bloqueio até confirmação, retomada e persistência após recarga. Desktop e viewport 390×844 inspecionados; largura móvel sem overflow e console sem avisos/erros.
+- Commit de código `74700857f5c3be0e47c17b4ce051c7c9d4a8e464` enviado e SHA local/remoto comparado na branch `implementation/primeira-jornada-local`. Cartão 18 do Trello atualizado e resposta conferida com regra, validação, limites e links. PR #9 segue como rascunho.
+- Uso limitado a dados sintéticos; permanece sem backend, login/permissões reais, sincronização ou publicação. Alteração de briefing após envio ao cliente e revisão operacional dependem de caso real anonimizado.
