@@ -115,3 +115,10 @@
 - Cobertura P0/limites e roteiro do protótipo atualizados. Validação: `node --test tests/workflow.test.js` passou 13/13; `node --check prototipo/workflow.js`, `node --check prototipo/app.js`, `git diff --check` e links locais passaram. Chromium cobriu os três tipos e bloqueio até evidência; inspeção desktop e 390×844 sem overflow/erros de console.
 - Commit `9e427e9f9ac004bd7d897348fe951dc184924814` publicado e SHA local/remoto confirmado na branch `implementation/primeira-jornada-local`. Cartão 18 do Trello atualizado com MVP-10, teste e limites; PR #9 atualizado, aberto e em rascunho.
 - Limite: tipo e evidência ficam no armazenamento local. Datas, canais e metadados por serviço seguem pendentes de validação da rotina real.
+
+## MVP-11: histórico com contexto recuperável — 2026-09-24
+
+- Eventos locais agora ligam transições a versão/arquivo, substituição de nome de arquivo, comentário/motivo, tarefa ou resultado pós-aprovação quando esses dados se aplicam. A interface mostra resumos legíveis e limita o trecho visual de textos longos sem remover o conteúdo canônico de comentários/evidências. Registros antigos sem número de versão continuam legíveis como “Versão”, sem inferência.
+- Validação: 13/13 testes; checks JS/diff e links locais passaram. Chromium percorreu pedido de ajuste, nova versão V04 e aprovação interna; histórico exibiu referência à V03, motivo, V04 e arquivo novo. Mobile 390×844 sem overflow, resumo de comentário extenso e console sem avisos/erros.
+- Commit `7c585d92e747d933c7101311ef360e1cd9aa9c72` publicado e SHA local/remoto confirmado na branch `implementation/primeira-jornada-local`. Cartão 18 do Trello atualizado com MVP-11 e validação; PR #9 atualizado, aberto e em rascunho.
+- Limite: o histórico permanece editável no perfil do navegador, sem identidade autenticada, armazenamento central, retenção ou assinatura de auditoria.
