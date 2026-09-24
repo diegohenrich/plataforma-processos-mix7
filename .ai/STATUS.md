@@ -5,7 +5,7 @@
 - PRs verificados como abertos e em rascunho: #6 pesquisa inicial (`main`); #10 pesquisa/arquitetura detalhada (base #6); #7 protótipo (`main`); #8 requisitos priorizados (`main`); #9 implementação local (base #7). A sequência proposta respeita as bases: revisar #6 antes de #10 e #7 antes de #9; #8 pode ser revisado em paralelo, contra `main`.
 - O conteúdo de #10 é pesquisa documental, proposta conceitual e protocolo de prova sintética; não escolhe fornecedor nem stack. #9 valida comportamento local, sem backend nem dados operacionais. Casos reais anonimizados ainda são necessários para atores, variações e evidências da Mix7.
 - Nenhum PR foi mesclado nem rebaseado nesta conferência. Antes de fechar as revisões, reconciliar a especificação #8 e a arquitetura #10 com a implementação #9; escolher stack somente após prova técnica controlada e decisão registrada.
-- Validação desta atualização: `gh pr list --state open` confirmou os cinco PRs e suas bases; `git status --short --branch` confirmou árvore limpa na branch `implementation/primeira-jornada-local` antes da edição. Sincronização deste registro e Trello: a concluir neste mesmo trabalho.
+- Validação desta atualização: `gh pr list --state open` confirmou os cinco PRs e suas bases; `git diff --check` passou. Registro publicado como `dcb0aee79c69d139e4f0575398642d8863e98b12`, SHA remoto conferido; cartão 18 do Trello atualizado e resposta confirmou descrição, lista e etiquetas. PR #9 continua em rascunho.
 
 ## Glossário e critério de conclusão — 24/09/2026
 
