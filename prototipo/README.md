@@ -8,7 +8,8 @@ Não há autenticação, separação de clientes, portal externo, API, servidor,
 
 ## Percursos para revisar
 
-1. Criar demanda e conferir que ela começa como briefing com origem, canal/peça e critérios de aceite registrados; prazo e referências são opcionais neste protótipo.
+1. Criar demanda e conferir que ela começa como briefing com origem, canal/peça e critérios de aceite registrados. Prazo, links e arquivos de referência são opcionais. Imagem, vídeo e PDF de até 15 MB por arquivo ficam no navegador e podem ser baixados no painel; não contam como criativo final nem liberam revisão interna.
+   Validação local em 24/09/2026: PDF sintético permaneceu disponível após recarga; download conferido por SHA-256. Revisão em celular para este campo ainda pendente.
 2. Tentar avançar um briefing antigo sem esses dados: o sistema deve listar o que falta e bloquear planejamento. Preencher pelo formulário do briefing e conferir o histórico da alteração.
 3. Atribuir tarefas com responsável; opcionalmente ligar tarefas prévias da mesma rodada. A tarefa dependente fica bloqueada até que as anteriores sejam concluídas; o histórico registra a relação.
 4. Filtrar por esse responsável e conferir que quadro e lista mostram demandas com tarefas pendentes da rodada atual; a busca deve continuar funcionando junto do filtro. Ao concluir a tarefa, a demanda sai da visão dessa pessoa. O filtro é somente visual, não uma permissão de acesso.

@@ -264,6 +264,12 @@ h1 { margin: 9px 0 5px; font: 700 25px Manrope, sans-serif; letter-spacing: -.8p
 .briefing-details-form label small { color: #94a0b0; font-size: 7px; font-weight: 400; }
 .briefing-details-form .workflow-input { margin: 0; font-size: 9px; }
 .briefing-details-form .secondary-button { min-height: 32px; }
+.briefing-files { display: grid; gap: 6px; margin-top: 10px; padding-top: 9px; border-top: 1px solid #edf1f6; color: #78879a; font-size: 8px; }
+.briefing-files[hidden] { display: none; }
+.briefing-file-list { display: grid; gap: 5px; margin: 0; padding: 0; list-style: none; }
+.briefing-file-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; }
+.briefing-file-item > span { overflow: hidden; color: #5b6b81; text-overflow: ellipsis; white-space: nowrap; }
+.briefing-file-item .text-action { flex: 0 0 auto; }
 
 .people-filter-label { display: inline-flex; }
 .people-filter { max-width: 160px; padding-right: 24px; cursor: pointer; }

@@ -1,6 +1,6 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { transition, listAssignees, filterRequestsByAssignee, taskBlockers } = require("../prototipo/workflow.js");
+const { transition, listAssignees, filterRequestsByAssignee, taskBlockers, validateLocalFiles } = require("../prototipo/workflow.js");
 
 function demand() {
   return {
@@ -33,6 +33,18 @@ function completeCurrentTasks(item) {
   }
   return item;
 }
+
+test("arquivos locais de briefing aceitam mídia/PDF e rejeitam tipo ou tamanho fora do limite", () => {
+  const maxBytes = 15 * 1024 * 1024;
+  assert.equal(validateLocalFiles([], maxBytes), "");
+  assert.equal(validateLocalFiles([
+    { type: "image/png", size: 120 },
+    { type: "video/mp4", size: 240 },
+    { type: "application/pdf", size: maxBytes },
+  ], maxBytes), "");
+  assert.match(validateLocalFiles([{ type: "text/plain", size: 10 }], maxBytes), /Formato não permitido/);
+  assert.match(validateLocalFiles([{ type: "application/pdf", size: maxBytes + 1 }], maxBytes), /15 MB por arquivo/);
+});
 
 test("filtro por profissional considera tarefas da rodada vigente e opções distintas", () => {
   const first = demand();

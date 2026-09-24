@@ -12,7 +12,7 @@ O baseline P0 está na [especificação priorizada em revisão no PR #8](https:/
 
 | Requisito | Cobertura atual no protótipo | Limite ainda aberto |
 | --- | --- | --- |
-| MVP-01 Briefing | Parcial local: cliente, tipo, origem, canal/peça e critérios; bloqueia planejamento se campos mínimos faltarem. | Obrigatoriedade por serviço não é configurável; arquivos não entram no formulário inicial; prazo e referências não são validados. |
+| MVP-01 Briefing | Parcial local: cliente, tipo, origem, canal/peça, critérios e opcionais de prazo, links e arquivos de referência; bloqueia planejamento se os campos mínimos faltarem. Arquivos de referência ficam separados da versão de entrega e podem ser baixados no painel. | Campos obrigatórios por serviço não são configuráveis; prazo e links não são validados; arquivo, nome e metadados dependem do mesmo perfil local do navegador. |
 | MVP-02 Visões e trabalho por pessoa | Parcial local: Kanban, lista, busca e filtro das demandas com tarefas pendentes da rodada atual por profissional. | O filtro usa nomes de texto nas tarefas, não mostra uma fila própria de tarefas e não impõe permissão de acesso. |
 | MVP-03 Tarefas | Parcial local: responsável, status, estimativa, prazo e rodada; dependências múltiplas dentro da rodada; impedimento com motivo e histórico. | Uma tarefa concluída só pode ser reaberta após reabrir tarefas que dependem dela. Sem notificações, cronômetro, capacidade, identidade ou coordenação entre usuários. |
 | MVP-04 IA no planejamento | Não implementado; o plano continua manualmente editável. | Provedor, dados enviados e experiência de confirmação humana ainda precisam de definição. |
@@ -27,7 +27,7 @@ O baseline P0 está na [especificação priorizada em revisão no PR #8](https:/
 
 O filtro de MVP-02 é uma demonstração da visão individual solicitada; ele combina com quadro/lista e busca e esconde demandas sem tarefa pendente atribuída à pessoa selecionada, mas não é segurança. A matriz de permissões e as funções reais dependem da definição de papéis e da arquitetura de produção.
 
-No briefing inicial, a demonstração coleta origem do pedido, canal/peça e critérios de aceite. A demanda não segue para planejamento enquanto faltar um desses dados; referências e prazo podem ficar vazios. Alterações nos campos iniciais são preservadas no histórico. Esta regra é uma hipótese mínima da demonstração, ainda sujeita a validação por tipo de serviço com um caso real da Mix7.
+No briefing inicial, a demonstração coleta origem do pedido, canal/peça e critérios de aceite. A demanda não segue para planejamento enquanto faltar um desses dados; referências, prazo e arquivos de referência podem ficar vazios. Arquivos opcionais de imagem, vídeo ou PDF (até 15 MB cada nesta demonstração) ficam separados do criativo final e são recuperáveis pelo painel enquanto permanecerem no IndexedDB deste navegador. A criação registra nome, tipo e tamanho no histórico. Alterações nos campos iniciais são preservadas no histórico. Esta regra mínima e os limites de arquivo ainda precisam de validação por tipo de serviço com um caso real da Mix7.
 
 O caminho implementado é:
 
@@ -74,7 +74,7 @@ Foram percorridos cenários fictícios isolados no navegador:
 - **Variações de demanda:** foram criadas demandas fictícias para vídeo e newsletter, incluindo e omitindo prazo e referência opcionais.
 - **Aprovação e conclusão:** em sessões isoladas, testar aprovação direta e publicação agendada. Aprovar moveu a demanda para entrega/publicação, mas não a concluiu. O registro só foi aceito após escolher o resultado e informar evidência fictícia; o histórico guardou ambos.
 
-As sessões usaram armazenamento local separado por origem do navegador. Nenhum arquivo foi enviado e nenhum dado real de cliente foi usado. Portanto, não foi validada a jornada completa de uma demanda nova com mídia, revisão interna, versão enviada ao cliente e aprovação. Os cenários confirmam regras da demonstração, não a rotina real da Mix7; atores, exceções e evidências precisam do caso anonimizado descrito em [VALIDACAO-CASO-REAL.md](VALIDACAO-CASO-REAL.md).
+As sessões anteriores usaram armazenamento local separado por origem do navegador e dados fictícios. Em 24/09/2026, uma sessão isolada também criou uma demanda de teste com um PDF sintético: nome e tipo apareceram no painel e no histórico, permaneceram após recarregar, e o arquivo baixado teve o mesmo SHA-256 do original (`B8AE055C146242ADCA8F1487651495FAFF9B9D29A22CA262FD9AA86572C29A25`). Nenhum dado real de cliente foi usado. Ainda não foi validada a jornada completa de uma demanda nova com mídia de referência, revisão interna, versão enviada ao cliente e aprovação. A apresentação móvel dos anexos também permanece por conferir. Os cenários confirmam regras da demonstração, não a rotina real da Mix7; atores, exceções e evidências precisam do caso anonimizado descrito em [VALIDACAO-CASO-REAL.md](VALIDACAO-CASO-REAL.md).
 
 ## Próximas decisões
 

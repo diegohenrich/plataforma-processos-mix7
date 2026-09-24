@@ -1,4 +1,4 @@
-const { stages, transition, listAssignees, filterRequestsByAssignee, taskBlockers } = window.Mix7Workflow;
+const { stages, transition, listAssignees, filterRequestsByAssignee, taskBlockers, validateLocalFiles } = window.Mix7Workflow;
 const STORAGE_KEY = "mix7.workflow.v1";
 const MAX_FILE_BYTES = 15 * 1024 * 1024;
 const drawer = document.querySelector("#detailDrawer");
@@ -40,6 +40,7 @@ function loadState() {
             if (typeof task.blockedReason !== "string") task.blockedReason = "";
           }
           if (!Array.isArray(request.briefingRevisions)) request.briefingRevisions = [];
+          if (!Array.isArray(request.briefingFiles)) request.briefingFiles = [];
           if (typeof request.planReviewRequired !== "boolean") request.planReviewRequired = false;
           for (const field of ["origin", "channel", "acceptanceCriteria", "references"]) {
             if (typeof request[field] !== "string") request[field] = "";
@@ -409,6 +410,17 @@ function formatTimecode(value) {
   return hours ? [hours, minutes, seconds].map(part => String(part).padStart(2, "0")).join(":") : [minutes, seconds].map(part => String(part).padStart(2, "0")).join(":");
 }
 
+async function removeFile(key) {
+  const database = await openAssetDatabase();
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction("assets", "readwrite");
+    transaction.objectStore("assets").delete(key);
+    transaction.oncomplete = () => { database.close(); resolve(); };
+    transaction.onerror = () => { database.close(); reject(transaction.error || new Error("Falha ao remover arquivo temporário.")); };
+    transaction.onabort = () => { database.close(); reject(transaction.error || new Error("A remoção do arquivo foi cancelada.")); };
+  });
+}
+
 function historyExcerpt(value, maxLength = 180) {
   const text = String(value || "").replace(/\s+/g, " ").trim();
   return text.length > maxLength ? `${text.slice(0, maxLength - 1)}…` : text;
@@ -441,6 +453,8 @@ function renderHistory(request) {
     } else if (event.type === "record_delivery") {
       const labels = { delivered: "entregue ao cliente", scheduled: "agendado", published: "publicado" };
       summary = `${historyVersionLabel(details.versionNumber)} · ${labels[details.destinationType] || "resultado sem tipo registrado"}${details.evidence ? ` · evidência: ${historyExcerpt(details.evidence)}` : ""}`;
+    } else if (event.type === "created" && details.briefingFiles?.length) {
+      summary = `Referências iniciais: ${details.briefingFiles.map(file => historyExcerpt(file.fileName, 48)).join(", ")}`;
     } else if (event.type === "briefing_revised") {
       summary = details.reason ? `Motivo: ${historyExcerpt(details.reason)}` : "";
     } else if (["submit_internal_review", "internal_approved", "internal_changes", "client_approved", "client_changes", "attach_file", "new_version", "add_comment"].includes(event.type)) {
@@ -465,9 +479,13 @@ function renderHistory(request) {
 }
 
 async function downloadHistoricalFile(fileKey, fileName) {
+  return downloadLocalFile(fileKey, fileName, "O arquivo anterior não está disponível neste navegador.");
+}
+
+async function downloadLocalFile(fileKey, fileName, unavailableMessage = "O arquivo de referência não está disponível neste navegador.") {
   try {
     const file = await readFile(fileKey);
-    if (!file) throw new Error("O arquivo anterior não está disponível neste navegador.");
+    if (!file) throw new Error(unavailableMessage);
     const url = URL.createObjectURL(file);
     const link = node("a");
     link.href = url;
@@ -831,6 +849,23 @@ function renderBriefing(request) {
     row.append(node("dt", "", label), node("dd", "", String(value || "").trim() || (required ? "Não informado · necessário antes do planejamento" : "Não informado · opcional nesta demonstração")));
     details.append(row);
   }
+  const briefingFiles = document.querySelector("#briefingFiles");
+  briefingFiles.replaceChildren();
+  briefingFiles.hidden = !request.briefingFiles?.length;
+  if (request.briefingFiles?.length) {
+    briefingFiles.append(node("strong", "briefing-files-title", "Arquivos de referência"));
+    const list = node("ul", "briefing-file-list");
+    for (const file of request.briefingFiles) {
+      const item = node("li", "briefing-file-item");
+      item.append(node("span", "", `${file.fileName} · ${file.type || "tipo desconhecido"}`));
+      const download = node("button", "text-action", "Baixar");
+      download.type = "button";
+      download.addEventListener("click", () => downloadLocalFile(file.fileKey, file.fileName));
+      item.append(download);
+      list.append(item);
+    }
+    briefingFiles.append(list);
+  }
   const detailsForm = document.querySelector("#briefingDetailsForm");
   detailsForm.hidden = request.stage !== "briefing";
   for (const field of ["origin", "channel", "acceptanceCriteria", "references", "due"]) {
@@ -905,19 +940,46 @@ document.querySelector("#briefingDetailsForm").addEventListener("submit", event 
 document.querySelector("#requestForm").addEventListener("submit", event => {
   event.preventDefault();
   const data = new FormData(event.currentTarget);
+  const selectedFiles = data.getAll("briefingFiles").filter(file => file instanceof File && file.size > 0);
+  const fileError = validateLocalFiles(selectedFiles, MAX_FILE_BYTES);
+  if (fileError) {
+    showToast(fileError);
+    return;
+  }
+  const submitButton = event.currentTarget.querySelector('button[type="submit"]');
+  submitButton.disabled = true;
+  void createRequestFromForm(event.currentTarget, data, selectedFiles, submitButton);
+});
+
+async function createRequestFromForm(form, data, selectedFiles, submitButton) {
   const now = new Date().toISOString();
+  const id = makeId();
+  const briefingFiles = selectedFiles.map(file => ({ id: makeId(), fileKey: `${id}-brief-${makeId()}`, fileName: file.name, type: file.type, size: file.size }));
+  const storedKeys = [];
+  try {
+    for (let index = 0; index < selectedFiles.length; index += 1) {
+      await storeFile(briefingFiles[index].fileKey, selectedFiles[index]);
+      storedKeys.push(briefingFiles[index].fileKey);
+    }
+  } catch (error) {
+    await Promise.allSettled(storedKeys.map(removeFile));
+    showToast(error.message || "Não foi possível salvar os arquivos de referência neste navegador.");
+    submitButton.disabled = false;
+    return;
+  }
   const request = {
-    id: makeId(), title: String(data.get("title")).trim(), client: String(data.get("client")).trim(), brief: String(data.get("brief")).trim(), type: String(data.get("type")), origin: String(data.get("origin")).trim(), channel: String(data.get("channel")).trim(), acceptanceCriteria: String(data.get("acceptanceCriteria")).trim(), references: String(data.get("references") || "").trim(), due: String(data.get("due") || ""), stage: "briefing", demo: false, briefingRevisions: [], planReviewRequired: false,
-    versions: [{ id: "", number: 1, fileName: "", fileKey: null, createdBy: "", createdAt: now, sharedAt: null, decision: null }], tasks: [], comments: [], history: [{ type: "created", details: { origin: String(data.get("origin")).trim(), channel: String(data.get("channel")).trim(), acceptanceCriteria: String(data.get("acceptanceCriteria")).trim() }, at: now }], delivery: null,
+    id, title: String(data.get("title")).trim(), client: String(data.get("client")).trim(), brief: String(data.get("brief")).trim(), type: String(data.get("type")), origin: String(data.get("origin")).trim(), channel: String(data.get("channel")).trim(), acceptanceCriteria: String(data.get("acceptanceCriteria")).trim(), references: String(data.get("references") || "").trim(), due: String(data.get("due") || ""), stage: "briefing", demo: false, briefingRevisions: [], briefingFiles, planReviewRequired: false,
+    versions: [{ id: "", number: 1, fileName: "", fileKey: null, createdBy: "", createdAt: now, sharedAt: null, decision: null }], tasks: [], comments: [], history: [{ type: "created", details: { origin: String(data.get("origin")).trim(), channel: String(data.get("channel")).trim(), acceptanceCriteria: String(data.get("acceptanceCriteria")).trim(), briefingFiles: briefingFiles.map(({ fileName, type, size }) => ({ fileName, type, size })) }, at: now }], delivery: null,
   };
   request.versions[0].id = `${request.id}-v1`;
   state.requests.unshift(request);
   const saved = saveState();
   renderBoard();
-  event.currentTarget.reset();
+  form.reset();
   dialog.close();
-  showToast(saved ? "Demanda salva no navegador como briefing para revisão." : "Demanda criada nesta sessão; o navegador não confirmou o salvamento.");
-});
+  showToast(saved ? `Demanda salva no navegador como briefing para revisão${briefingFiles.length ? ` com ${briefingFiles.length} arquivo(s) de referência` : ""}.` : "Demanda criada nesta sessão; o navegador não confirmou o salvamento.");
+  submitButton.disabled = false;
+}
 
 document.querySelector("#sendComment").addEventListener("click", () => {
   const field = document.querySelector("#commentDraft");
@@ -941,8 +1003,8 @@ fileInput.addEventListener("change", async () => {
   const file = fileInput.files?.[0];
   const request = currentRequest();
   if (!file || !request || !selectedFileAction) return;
-  if (!(file.type.startsWith("image/") || file.type.startsWith("video/") || file.type === "application/pdf")) { showToast("Formato não permitido. Use imagem, vídeo ou PDF."); return; }
-  if (file.size > MAX_FILE_BYTES) { showToast("O limite local desta demonstração é 15 MB por arquivo."); return; }
+  const fileError = validateLocalFiles([file], MAX_FILE_BYTES);
+  if (fileError) { showToast(fileError); return; }
   const fileKey = `${request.id}-${makeId()}`;
   try {
     await storeFile(fileKey, file);

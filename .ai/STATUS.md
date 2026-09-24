@@ -183,3 +183,9 @@
 - O cartão 22 já contém a checklist atual do MVP-01. Uma checklist duplicada no cartão 18 foi renomeada para “Cópia antiga do MVP-01 — cartão 22 é o atual”; seu conteúdo foi preservado. A remoção dessa cópia via interface do Trello requer confirmação do usuário, conforme a política de ações de exclusão da skill computer-use; nenhum dado foi apagado.
 - `docs/TRELLO.md` atualizado para estabelecer que cartões principais só funcionam como índice e que checklists não devem ser duplicadas. Trello lido após atualização; cartão 18 e a cópia antiga retornaram com a identificação esperada.
 - Próximo: obter autorização antes de remover a checklist antiga; concluir e sincronizar separadamente a alteração de anexos que já estava em andamento.
+
+## MVP-01: anexos no briefing — validação do navegador — 24/09/2026
+
+- Testes de regra passaram 15/15; `node --check` passou em `prototipo/workflow.js` e `prototipo/app.js`; `git diff --check` passou.
+- No servidor isolado `127.0.0.1:4191`, criei uma demanda sintética com PDF de teste. O painel mostrou o arquivo e seu tipo, o histórico listou a referência, os dados continuaram após recarregar e o download teve SHA-256 idêntico ao fixture. Nenhum dado real foi usado. O campo e o modal foram inspecionados visualmente em desktop.
+- Pendências antes de encerrar o MVP-01: validar visualmente em celular; incluir esta evidência e limitações no PR #9; sincronizar código/docs e atualizar cartões 22 e 18. O cartão 22 permanece em andamento. O desenho técnico segue local, sem servidor ou acesso multiusuário.
