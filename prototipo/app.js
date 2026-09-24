@@ -33,7 +33,11 @@ function loadState() {
     if (saved) {
       const parsed = JSON.parse(saved);
       if (parsed.schemaVersion === 1 && Array.isArray(parsed.requests)) {
-        for (const request of parsed.requests) if (!Array.isArray(request.tasks)) request.tasks = [];
+        for (const request of parsed.requests) {
+          if (!Array.isArray(request.tasks)) request.tasks = [];
+          if (!Array.isArray(request.briefingRevisions)) request.briefingRevisions = [];
+          if (typeof request.planReviewRequired !== "boolean") request.planReviewRequired = false;
+        }
         return parsed;
       }
     }
@@ -66,6 +70,8 @@ function loadState() {
       due: "",
       stage,
       demo: true,
+      briefingRevisions: [],
+      planReviewRequired: false,
       tasks: [],
       versions: card.classList.contains("card-featured") ? [
         { id: `demo-${index}-v1`, number: 1, fileName: "Versão 01 · sem arquivo real", fileKey: null, createdBy: "Equipe Mix7 (demonstração)", createdAt: "", sharedAt: null, decision: null },
@@ -330,7 +336,7 @@ function renderHistory(request) {
 
 function eventLabel(type) {
   const names = {
-    created: "Demanda criada", fixture_loaded: "Item demonstrativo carregado", briefing_ready: "Briefing liberado para planejamento", plan_confirmed: "Planejamento confirmado", add_task: "Tarefa atribuída", toggle_task: "Estado da tarefa alterado", submit_internal_review: "Enviado para revisão interna", internal_approved: "Revisão interna aprovada e versão compartilhada", internal_changes: "Devolvido pela revisão interna", client_approved: "Versão aprovada pelo cliente", client_changes: "Ajustes solicitados pelo cliente", attach_file: "Arquivo anexado à versão", new_version: "Nova versão criada", record_delivery: "Entrega/publicação registrada", add_comment: "Comentário registrado",
+    created: "Demanda criada", fixture_loaded: "Item demonstrativo carregado", briefing_ready: "Briefing liberado para planejamento", briefing_revised: "Briefing alterado; plano aguarda revisão", plan_confirmed: "Planejamento revisado e confirmado", add_task: "Tarefa atribuída", toggle_task: "Estado da tarefa alterado", submit_internal_review: "Enviado para revisão interna", internal_approved: "Revisão interna aprovada e versão compartilhada", internal_changes: "Devolvido pela revisão interna", client_approved: "Versão aprovada pelo cliente", client_changes: "Ajustes solicitados pelo cliente", attach_file: "Arquivo anexado à versão", new_version: "Nova versão criada", record_delivery: "Entrega/publicação registrada", add_comment: "Comentário registrado",
   };
   return names[type] || type;
 }
@@ -352,7 +358,8 @@ function renderActions(request) {
 
   if (request.stage === "briefing") appendAction(buttons, "Briefing completo", () => updateRequest("briefing_ready", {}, "Briefing liberado para planejamento."), "approve-button");
   else if (request.stage === "planning") {
-    const confirm = appendAction(buttons, "Confirmar plano e iniciar", () => updateRequest("plan_confirmed", {}, "Planejamento confirmado; demanda em produção."), "approve-button");
+    if (request.planReviewRequired) container.append(node("small", "workflow-hint", "O briefing mudou. Revise o briefing e as tarefas, ajuste o plano se necessário e confirme para retomar a execução."));
+    const confirm = appendAction(buttons, request.planReviewRequired ? "Confirmar revisão do plano e retomar" : "Confirmar plano e iniciar", () => updateRequest("plan_confirmed", {}, request.planReviewRequired ? "Revisão do plano confirmada; execução retomada." : "Planejamento confirmado; demanda em produção."), "approve-button");
     confirm.disabled = !(request.tasks || []).some(task => task.round === request.versions.at(-1).number);
     if (confirm.disabled) container.append(node("small", "workflow-hint", "Adicione ao menos uma tarefa e informe o responsável."));
   }
@@ -618,6 +625,7 @@ function renderDrawer() {
   document.querySelector("#drawerClient").textContent = request.client;
   document.querySelector("#drawerStage").textContent = stages[request.stage].toUpperCase();
   document.querySelector("#drawerDue").textContent = request.due ? `◷ ${formatDue(request.due)}` : "Prazo não definido";
+  renderBriefing(request);
   const flowIndex = ({ briefing: 0, planning: 1, doing: 2, internalReview: 2, clientReview: 3, adjustments: 2, delivery: 4, completed: 4 })[request.stage];
   document.querySelectorAll(".flow-step").forEach((step, index) => {
     step.classList.toggle("complete", index < flowIndex || request.stage === "completed");
@@ -630,6 +638,20 @@ function renderDrawer() {
   renderTasks(request);
   renderActions(request);
   renderAsset(request);
+}
+
+function renderBriefing(request) {
+  document.querySelector("#briefingText").textContent = request.brief || "Nenhum contexto registrado.";
+  const notice = document.querySelector("#briefingRevisionNotice");
+  const revision = request.briefingRevisions?.at(-1);
+  notice.replaceChildren();
+  notice.hidden = !revision;
+  if (revision) {
+    notice.append(node("strong", "", request.planReviewRequired ? "Plano aguardando revisão humana" : "Última alteração do briefing"));
+    notice.append(node("p", "", `Motivo: ${revision.reason}`));
+    notice.append(node("p", "", `Antes: ${revision.previousBrief}`));
+  }
+  document.querySelector("#briefingRevisionForm").hidden = request.stage !== "doing";
 }
 
 function openDrawer(id) {
@@ -672,12 +694,19 @@ document.addEventListener("keydown", event => { if (event.key === "Escape") { cl
 document.querySelector("#newRequestButton").addEventListener("click", () => dialog.showModal());
 document.querySelectorAll(".add-card").forEach(button => button.addEventListener("click", () => dialog.showModal()));
 
+document.querySelector("#briefingRevisionForm").addEventListener("submit", event => {
+  event.preventDefault();
+  const data = new FormData(event.currentTarget);
+  const saved = updateRequest("briefing_revised", { brief: data.get("revisedBrief"), reason: data.get("revisionReason") }, "Briefing atualizado; revise o plano antes de retomar.");
+  if (saved) event.currentTarget.reset();
+});
+
 document.querySelector("#requestForm").addEventListener("submit", event => {
   event.preventDefault();
   const data = new FormData(event.currentTarget);
   const now = new Date().toISOString();
   const request = {
-    id: makeId(), title: String(data.get("title")).trim(), client: String(data.get("client")).trim(), brief: String(data.get("brief")).trim(), type: String(data.get("type")), due: String(data.get("due") || ""), stage: "briefing", demo: false,
+    id: makeId(), title: String(data.get("title")).trim(), client: String(data.get("client")).trim(), brief: String(data.get("brief")).trim(), type: String(data.get("type")), due: String(data.get("due") || ""), stage: "briefing", demo: false, briefingRevisions: [], planReviewRequired: false,
     versions: [{ id: "", number: 1, fileName: "", fileKey: null, createdBy: "", createdAt: now, sharedAt: null, decision: null }], tasks: [], comments: [], history: [{ type: "created", details: {}, at: now }], delivery: null,
   };
   request.versions[0].id = `${request.id}-v1`;

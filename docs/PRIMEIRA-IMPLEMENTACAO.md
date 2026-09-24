@@ -10,6 +10,8 @@ O caminho implementado é:
 
 `Briefing → Planejamento → Produção → Revisão interna → Aprovação do cliente → (Ajustes → nova versão → revisão) → Entrega/publicação → Concluída`
 
+Durante a execução, a equipe pode registrar uma alteração do briefing e seu motivo. A demanda retorna a planejamento, preserva o texto anterior e pausa a execução. Uma pessoa precisa revisar o briefing e as tarefas e confirmar o plano para retomar. Esta regra é exercitada com dados fictícios; ainda não há permissões reais que identifiquem a pessoa revisora.
+
 O plano exige ao menos uma tarefa atribuída; revisão interna exige que as tarefas da rodada estejam concluídas e que haja um arquivo. O cliente só decide uma versão compartilhada após a revisão interna. Pedido de ajustes requer justificativa e fica preso à versão; a nova versão exige tarefas da rodada de ajuste concluídas e preserva a decisão anterior. A aprovação conduz a entrega, mas só há conclusão após registrar evidência.
 
 ## Implementação atual
@@ -37,7 +39,7 @@ node --check prototipo/workflow.js
 node --check prototipo/app.js
 ```
 
-Os testes cobrem plano com tarefa atribuída, bloqueio de revisão com tarefas incompletas, fluxo feliz, aprovação de versão não compartilhada, motivo obrigatório na revisão interna, pedido de alteração ligado à versão antiga, preservação do histórico na versão seguinte, âncoras de imagem/vídeo validadas e evidência obrigatória para concluir. Na inspeção em Chromium com arquivos sintéticos, o ponto e o timecode abriram a V01 correspondente depois da criação da V02; o histórico sobreviveu à recarga, a tela de 390 px não teve overflow horizontal e o console ficou sem avisos ou erros. A seleção de arquivo foi exercitada pelo fluxo normal do navegador. A integração ainda requer validação da equipe Mix7.
+Os testes cobrem plano com tarefa atribuída, bloqueio de revisão com tarefas incompletas, fluxo feliz, aprovação de versão não compartilhada, motivo obrigatório na revisão interna, pedido de alteração ligado à versão antiga, preservação do histórico na versão seguinte, âncoras de imagem/vídeo, alteração de briefing com retomada bloqueada até revisão humana e evidência obrigatória para concluir. Na inspeção em Chromium com dados fictícios, a alteração de briefing voltou a demanda ao planejamento, mostrou texto anterior e motivo, e só retomou após confirmar o plano; esses dados persistiram após recarregar. Viewport de 390×844 teve largura de documento de 390 px, sem overflow horizontal, e console sem avisos/erros. A seleção de arquivo foi exercitada no fluxo normal do navegador em validação anterior. A integração ainda requer validação da equipe Mix7.
 
 ## Próximas decisões
 

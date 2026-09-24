@@ -45,7 +45,26 @@
         if (next.stage !== "planning") throw new Error("A demanda não está em planejamento.");
         if (!next.tasks.some(task => task.round === version.number && task.title && task.assignee)) throw new Error("Adicione ao menos uma tarefa com responsável antes de confirmar o plano.");
         next.stage = "doing";
+        if (next.planReviewRequired) {
+          next.planReviewRequired = false;
+          next.planReviewedAt = now;
+        }
         break;
+      case "briefing_revised": {
+        if (next.stage !== "doing") throw new Error("O briefing só pode ser revisado durante a execução nesta demonstração.");
+        const revisedBrief = String(payload.brief || "").trim();
+        const reason = String(payload.reason || "").trim();
+        if (!revisedBrief) throw new Error("Informe o briefing atualizado.");
+        if (revisedBrief === String(next.brief || "").trim()) throw new Error("O briefing atualizado precisa ter uma alteração.");
+        if (!reason) throw new Error("Explique o que mudou no briefing.");
+        next.briefingRevisions ||= [];
+        next.briefingRevisions.push({ previousBrief: next.brief || "", brief: revisedBrief, reason, at: now });
+        next.brief = revisedBrief;
+        next.planReviewRequired = true;
+        next.planReviewedAt = null;
+        next.stage = "planning";
+        break;
+      }
       case "add_task": {
         if (next.stage !== "planning" && next.stage !== "adjustments") throw new Error("Tarefas só podem ser planejadas no início ou numa rodada de ajustes.");
         const title = String(payload.title || "").trim();
@@ -125,6 +144,11 @@
     }
 
     const eventDetails = payload.evidence ? { evidence: payload.evidence.trim() } : {};
+    if (action === "briefing_revised") {
+      const revision = next.briefingRevisions.at(-1);
+      eventDetails.reason = revision.reason;
+      eventDetails.planReviewRequired = true;
+    }
     if (["add_comment", "internal_changes", "client_changes"].includes(action)) {
       eventDetails.versionId = version.id;
       const comment = next.comments.at(-1);

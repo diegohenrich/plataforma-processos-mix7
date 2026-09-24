@@ -6,6 +6,9 @@ function demand() {
   return {
     id: "d-1",
     stage: "briefing",
+    brief: "Criar uma peça de lançamento.",
+    briefingRevisions: [],
+    planReviewRequired: false,
     versions: [{ id: "d-1-v1", number: 1, fileName: "arte-v1.png", fileKey: "asset-v1", sharedAt: null, decision: null }],
     tasks: [],
     comments: [],
@@ -107,4 +110,41 @@ test("nova versão continua a numeração informada mesmo com histórico parcial
   const updated = transition(item, "new_version", { fileName: "arte-v4.png", fileKey: "asset-v4" });
   assert.equal(updated.versions.at(-1).number, 4);
   assert.equal(updated.versions.at(-1).id, "d-1-v4");
+});
+
+test("alterar briefing na execução pausa o trabalho e exige revisão humana do plano", () => {
+  let item = planRoundOne(demand());
+  const oldBrief = item.brief;
+  item = transition(item, "briefing_revised", {
+    brief: "Criar uma peça de lançamento com foco na linha infantil.",
+    reason: "O cliente alterou o público da campanha.",
+  }, "2026-09-24T16:00:00.000Z");
+
+  assert.equal(item.stage, "planning");
+  assert.equal(item.brief, "Criar uma peça de lançamento com foco na linha infantil.");
+  assert.equal(item.planReviewRequired, true);
+  assert.deepEqual(item.briefingRevisions[0], {
+    previousBrief: oldBrief,
+    brief: item.brief,
+    reason: "O cliente alterou o público da campanha.",
+    at: "2026-09-24T16:00:00.000Z",
+  });
+  assert.deepEqual(item.history.at(-1).details, {
+    reason: "O cliente alterou o público da campanha.",
+    planReviewRequired: true,
+  });
+  assert.throws(() => transition(item, "toggle_task", { taskId: item.tasks[0].id }), /execução/);
+
+  item = transition(item, "plan_confirmed", {}, "2026-09-24T16:05:00.000Z");
+  assert.equal(item.stage, "doing");
+  assert.equal(item.planReviewRequired, false);
+  assert.equal(item.planReviewedAt, "2026-09-24T16:05:00.000Z");
+});
+
+test("revisar briefing exige texto novo e motivo sem alterar a demanda em caso de erro", () => {
+  const item = planRoundOne(demand());
+  assert.throws(() => transition(item, "briefing_revised", { brief: "Outro briefing" }), /Explique/);
+  assert.throws(() => transition(item, "briefing_revised", { brief: item.brief, reason: "Teste" }), /precisa ter uma alteração/);
+  assert.equal(item.stage, "doing");
+  assert.equal(item.briefingRevisions.length, 0);
 });

@@ -233,6 +233,17 @@
         <h2 id="drawerTitle">Post de lançamento — linha Botânica</h2>
         <div class="drawer-meta"><span class="due-date" id="drawerDue">Prazo não definido</span><span class="meta-divider"></span><span>Registro local de demonstração</span></div>
 
+        <section class="briefing-section">
+          <div class="section-title-row"><h3>Briefing</h3></div>
+          <p class="briefing-current" id="briefingText"></p>
+          <div class="briefing-revision-notice" id="briefingRevisionNotice" hidden></div>
+          <form class="briefing-revision-form" id="briefingRevisionForm" hidden>
+            <label>Briefing atualizado<textarea class="workflow-input" name="revisedBrief" rows="3" required maxlength="1200" placeholder="Descreva o novo objetivo e contexto"></textarea></label>
+            <label>O que mudou?<textarea class="workflow-input" name="revisionReason" rows="2" required maxlength="300" placeholder="Registre o motivo da alteração"></textarea></label>
+            <button class="secondary-button" type="submit">Enviar alteração para revisão do plano</button>
+          </form>
+        </section>
+
         <section class="flow-section">
           <div class="section-title-row"><h3>Etapas da demanda</h3><button class="text-action">Ver histórico</button></div>
           <div class="flow-track">
