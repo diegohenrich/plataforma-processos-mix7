@@ -14,6 +14,7 @@
 
 - Os cartões ainda não representam requisitos aprovados: questões abertas permanecem em **Requisitos a validar**.
 - A integração do Trello permite aplicar etiquetas existentes, mas não renomeá-las; as cinco etiquetas coloridas ainda estão sem nome no próprio Trello. A legenda no cartão de decisões é provisória.
+- O usuário apontou que a legenda isolada não resolve a falta de identificação. `docs/TRELLO.md` e `README.md` agora explicam nome, cor, finalidade e uso cruzado das etiquetas. A renomeação efetiva no Trello depende de login da Atlassian no navegador; a tela foi aberta para o usuário.
 - Validação final pela integração: seis listas na ordem planejada; 18 cartões (3 de contexto, 10 de requisitos, 5 de entregas); etiquetas azul, verde, roxa, amarela e laranja aplicadas conforme a legenda; descrições e links conferidos em cartões de amostra; checklists conferidos pela leitura direta, inclusive as três etapas do protótipo.
 - Uma atualização intermediária substituiu a descrição de cinco cartões de entrega; os textos completos foram restaurados e conferidos por leitura posterior.
 - Commit inicial `904ca87` publicado em `main` no repositório privado `diegohenrich/plataforma-processos-mix7`. A checagem `git diff --cached --check` passou; 11 arquivos Markdown foram examinados e nenhum link local quebrado foi encontrado. A aplicação ainda não tem código, portanto não há testes ou build aplicáveis.
