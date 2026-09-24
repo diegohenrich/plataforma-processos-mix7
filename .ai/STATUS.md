@@ -1,5 +1,12 @@
 # Estado em 2026-09-24
 
+## Consistência do fluxo aprovado — 24/09/2026
+
+- Corrigida a linguagem desatualizada em `.ai/DECISIONS.md` e `docs/FLUXO-PROPOSTO.md`: revisão interna e registro/conferência de evidência antes da conclusão são partes do fluxo-alvo aceito. O caso real documentará responsáveis, aplicação por serviço, variações e exceções; não será usado para reabrir essas decisões sem nova evidência ou decisão explícita.
+- `git diff --check` passou. Busca direcionada em `.ai/`, `README.md` e `docs/` não encontrou mais afirmações de que a revisão interna, o fluxo-alvo ou a necessidade de evidência para concluir seguem por decidir.
+- Commit `70dfccc5c8d218d084220132797908ed3c12bb48` enviado e SHA local/remoto confirmado na branch `implementation/primeira-jornada-local`. Cartão 15 no Trello atualizado com fluxo e pendências factuais; próxima sincronização registrará o SHA deste bloco de status.
+- Permanece necessário um caso real anonimizado para confirmar atores, variações, exceções e evidências por serviço. PR #8 segue rascunho; esta atualização não altera nem integra outros PRs.
+
 ## Continuidade — fluxo-alvo e documentação alinhados
 
 - O usuário aprovou como fluxo-alvo: demanda/briefing → planejamento revisado → execução → revisão interna → aprovação do cliente → ajustes e nova versão quando pedidos → entrega/agendamento/publicação com evidência → conclusão conferida. Isso define o comportamento desejado do produto; não é prova de como a Mix7 opera hoje.
@@ -17,12 +24,12 @@
 - Referência https://mix7.com.br/ inspecionada; preferência explícita por interface clara em branco e azul registrada no cartão visual.
 - Criada documentação inicial em `README.md`, `docs/`, `CONTRIBUTING.md` e template de pull request; as duas pastas de módulos agora possuem README sem código. Inicializado Git local e criado repositório privado `diegohenrich/plataforma-processos-mix7`.
 - Regra de sincronização GitHub + Trello solicitada pelo usuário e registrada em `AGENTS.md`, `CONTRIBUTING.md`, `.ai/CONTEXT.md` e `.ai/DECISIONS.md`.
-- As cinco perguntas sobre o fluxo foram respondidas como proposta de funcionamento, documentada em `docs/FLUXO-PROPOSTO.md` e vinculada aos requisitos. O fluxo ainda precisa ser validado com um caso real da Mix7.
+- As cinco perguntas sobre o fluxo foram respondidas como comportamento-alvo e aceitas pelo usuário; `docs/FLUXO-PROPOSTO.md` documenta a diretriz, enquanto um caso real ainda é necessário para identificar a rotina observada e suas variações.
 
 ## Estado atual e validação
 
-- Os cartões ainda não representam requisitos aprovados: questões abertas permanecem em **Requisitos a validar**.
-- O fluxo proposto define responsáveis e transições para criativos de redes sociais, mas não é descrição confirmada da operação atual; papéis concretos, exceções e critério de conclusão seguem pendentes de validação.
+- Os requisitos P0/P1/P2 são um baseline priorizado para revisão; o usuário aprovou o fluxo-alvo como diretriz do produto. Questões sobre a rotina observada, os papéis concretos, exceções e evidências por serviço permanecem em **Requisitos a validar**.
+- A revisão interna antes do envio ao cliente e a conclusão após registrar e conferir a evidência fazem parte do fluxo-alvo aprovado. Não são mais decisões estruturais pendentes; o caso real identifica responsáveis e eventuais exceções operacionais.
 - Após login da Atlassian no navegador, as cinco etiquetas de área e a etiqueta vermelha de **Bloqueio** foram nomeadas diretamente no Trello. O usuário apontou que a legenda isolada não bastava; a descrição do quadro e `docs/TRELLO.md` agora explicam a finalidade de cada uma.
 - Validação das etiquetas: leitura pela integração confirmou os seis pares nome/cor e a descrição do quadro; a interface mostrou os nomes nos cartões após ativar a exibição expandida e recarregar o quadro. Nenhuma etiqueta permanece sem nome.
 - Validação final pela integração: seis listas na ordem planejada; 18 cartões (3 de contexto, 10 de requisitos, 5 de entregas); etiquetas azul, verde, roxa, amarela e laranja aplicadas conforme a legenda; descrições e links conferidos em cartões de amostra; checklists conferidos pela leitura direta, inclusive as três etapas do protótipo.
@@ -52,7 +59,7 @@
 
 ## Próximo passo
 
-- Incorporar um caso real de demanda da Mix7 e resolver fluxo, papéis, revisão interna e significado de conclusão.
+- Incorporar um caso real anonimizado para confirmar atores, variações, exceções e evidências por serviço; preservar o fluxo-alvo aprovado salvo nova evidência ou decisão explícita.
 - Revisar o protótipo local com usuário/equipe; esta fatia ainda requer revisão, e o PR de implementação permanece pendente.
-- Depois da revisão do fluxo, ajustar estados e tarefas à operação confirmada e avançar na decisão de modelo de dados/arquitetura técnica e teste com equipe/cliente.
+- Prosseguir com prova de conceito controlada e detalhamento de arquitetura/modelo de dados, sem selecionar stack ou enviar dados reais antes dos portões documentados.
 - Manter documentação, GitHub e Trello sincronizados após cada entrega.
