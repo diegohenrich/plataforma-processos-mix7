@@ -6,7 +6,7 @@
 - `docs/PRIMEIRA-IMPLEMENTACAO.md` e `prototipo/README.md` descrevem a cobertura e o percurso de revisão. IA continua não implementada: não há decomposição automática, atribuição ou envio a provedor.
 - Validação: `node --test tests/workflow.test.js` passou 14/14; `node --check prototipo/workflow.js`, `node --check prototipo/app.js` e `git diff --check` passaram. Chromium percorreu pedido de ajustes V03 → rascunho → atribuição manual → tarefa V04; lista e histórico referenciaram o comentário/V03. Em 1440×960 e 390×844, documento/drawer sem overflow; console sem erros. Prints em `%LOCALAPPDATA%/Temp/mix7-feedback-task-desktop.png` e `mix7-feedback-task-mobile.png`.
 - Limite: vínculo e autoria seguem no perfil local do navegador. O recurso é manual e não substitui a futura consolidação cronológica assistida por IA.
-- Código `f78657609d56155d558610e02cd1edb7b5e9fa91` enviado e SHA local/remoto confirmado na branch `implementation/primeira-jornada-local`; validação desta entrega registrada aqui. Atualizar o cartão 18 do Trello e o rascunho do PR #9 com o resultado.
+- Código `f78657609d56155d558610e02cd1edb7b5e9fa91` enviado e SHA local/remoto confirmado na branch `implementation/primeira-jornada-local`; validação registrada aqui. Cartão 18 do Trello e PR #9 atualizados com MVP-08, validação e limites; PR permanece em rascunho.
 
 ## Consistência do fluxo aprovado — 24/09/2026
 
