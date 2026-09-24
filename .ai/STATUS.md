@@ -14,7 +14,7 @@
 - Validação local: `node --test tests/workflow.test.js` passou 14/14; `node --check prototipo/workflow.js` e `node --check prototipo/app.js` passaram; `git diff --check` passou.
 - GitHub Actions executou com sucesso no push da branch `implementation/primeira-jornada-local`, commit `804616f67a36160b2d2e44d3b15e3978ced4ab0c`, execução [36061087791](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36061087791). Atualizações documentais posteriores voltarão a disparar a mesma checagem.
 - A branch ainda está em rascunho no PR #9; a regra agora também cobre os demais PRs depois que o workflow estiver na base deles ou em `main`.
-- Sincronização deste registro e do cartão 18 do Trello: a concluir.
+- Cartão 18 do Trello atualizado e relido: inclui a execução aprovada do CI, o mapa/risco de integração e os links do repositório; permaneceu em “Em revisão” com etiquetas Gestão de equipe e Aprovações.
 
 ## Glossário e critério de conclusão — 24/09/2026
 
