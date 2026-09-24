@@ -6,5 +6,6 @@
 - Preferência visual: usar o site https://mix7.com.br/ como referência de identidade, com interface dos sistemas em branco e azul claros conforme escolha do usuário.
 - Organização do trabalho: o quadro https://trello.com/b/RkWOzDcu/desenvolvimento-de-projetos-mix7 é a fonte canônica para cartões e andamento. O repositório privado https://github.com/diegohenrich/plataforma-processos-mix7 guarda documentação durável, código futuro e histórico. Esta memória local permite retomada entre agentes.
 - Regra operacional: a cada alteração ou tarefa concluída, sincronizar GitHub e Trello antes de declarar conclusão; ver `AGENTS.md`.
-- Estado técnico local: esta raiz é um repositório Git na branch `main`; as duas pastas de módulos contêm apenas README. Ainda não há aplicação, stack ou arquitetura decididas.
-- Fonte dos requisitos: transcrição dos três áudios fornecida na conversa em 24/09/2026. Não há arquitetura ou stack decididas.
+- Estado técnico: há uma fatia funcional local em `prototipo/`, com HTML/CSS/JavaScript nativos, regras em `prototipo/workflow.js`, testes Node e persistência por perfil do navegador (`localStorage` + `IndexedDB`). Não é produção; autenticação, servidor, sincronização e stack final seguem em aberto.
+- Trabalho: branch `implementation/primeira-jornada-local`, derivada de `prototype/fluxo-integrado`; PRs anteriores são rascunhos encadeados. Consultar `.ai/STATUS.md` para SHAs, validações e próximo passo.
+- Fonte dos requisitos: transcrição dos três áudios e definições posteriores. O fluxo implementado é diretriz pretendida, ainda sujeito a validação com um caso real da Mix7.

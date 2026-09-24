@@ -25,7 +25,7 @@
         <span class="nav-caption">ESPAÇO DE TRABALHO</span>
         <nav class="main-nav">
           <a class="nav-item" href="#visao"><span class="nav-icon">▦</span> Visão geral</a>
-          <a class="nav-item active" href="#demandas"><span class="nav-icon">▤</span> Demandas <span class="nav-count">12</span></a>
+          <a class="nav-item active" href="#demandas"><span class="nav-icon">▤</span> Demandas <span class="nav-count" id="navDemandCount">12</span></a>
           <a class="nav-item" href="#aprovacoes"><span class="nav-icon">◉</span> Aprovações <span class="nav-dot"></span></a>
           <a class="nav-item" href="#equipe"><span class="nav-icon">♙</span> Equipe</a>
           <a class="nav-item" href="#clientes"><span class="nav-icon">◇</span> Clientes</a>
@@ -74,22 +74,21 @@
           <div class="summary-grid" aria-label="Resumo das demandas">
             <article class="summary-card">
               <div class="summary-top"><span>Demandas ativas</span><span class="metric-icon blue-icon">▤</span></div>
-              <div class="metric-row"><strong>24</strong><span class="metric-change positive">↗ 12%</span></div>
-              <small>em relação à semana passada</small>
-              <div class="metric-bars"><i style="height:36%"></i><i style="height:48%"></i><i style="height:42%"></i><i style="height:66%"></i><i style="height:52%"></i><i style="height:78%"></i><i class="bar-current" style="height:92%"></i></div>
+              <div class="metric-row"><strong id="activeDemandCount">0</strong><span class="metric-note">neste quadro</span></div>
+              <small>não inclui demandas concluídas</small>
             </article>
             <article class="summary-card">
               <div class="summary-top"><span>Aguardando cliente</span><span class="metric-icon amber-icon">◷</span></div>
-              <div class="metric-row"><strong>06</strong><span class="metric-note">2 vencem hoje</span></div>
-              <small>aprovações pendentes</small>
-              <div class="summary-bottom"><span class="tiny-avatars"><i class="tiny-avatar a1">AC</i><i class="tiny-avatar a2">RB</i><i class="tiny-avatar a3">+4</i></span><span>6 peças em revisão</span></div>
+              <div class="metric-row"><strong id="pendingApprovalCount">0</strong><span class="metric-note">itens</span></div>
+              <small>aguardando decisão do cliente</small>
+              <div class="summary-bottom"><span>Exemplos fictícios aparecem no quadro</span></div>
             </article>
             <article class="summary-card">
               <div class="summary-top"><span>Capacidade da equipe</span><span class="metric-icon green-icon">♙</span></div>
-              <div class="metric-row"><strong>78<span class="metric-percent">%</span></strong><span class="capacity-label"><i></i> saudável</span></div>
-              <small>horas planejadas nesta semana</small>
-              <div class="capacity-track"><i></i></div>
-              <div class="capacity-legend"><span>0h</span><span>96h de 123h</span></div>
+              <div class="metric-row"><strong>—</strong><span class="capacity-label">em definição</span></div>
+              <small>indisponível até definirmos jornada, estimativas e ausências</small>
+              <div class="capacity-track"><i style="width:0"></i></div>
+              <div class="capacity-legend"><span>Sem dados de horas</span></div>
             </article>
           </div>
 
@@ -100,9 +99,9 @@
             </div>
             <div class="board-tools">
               <label class="search-field"><span>⌕</span><input id="searchInput" type="search" placeholder="Buscar demanda" aria-label="Buscar demanda" /></label>
-              <button class="filter-button" id="filterButton"><span>☷</span> Filtros <i class="filter-indicator"></i></button>
-              <button class="people-filter" aria-label="Filtrar por pessoa"><span class="avatar avatar-tiny avatar-teal">AC</span><span class="avatar avatar-tiny avatar-lilac">RB</span><span class="avatar avatar-tiny avatar-coral">JP</span><b>⌄</b></button>
-              <button class="more-button" aria-label="Mais opções">···</button>
+              <button class="filter-button" id="filterButton" type="button" disabled title="Filtros avançados ainda não fazem parte desta fatia"><span>☷</span> Filtros</button>
+              <button class="people-filter" type="button" aria-label="Filtrar por pessoa" disabled title="Papéis e membros serão configurados após validar a equipe"><span>Equipe · em definição</span></button>
+              <button class="more-button" type="button" aria-label="Mais opções" disabled>···</button>
             </div>
           </div>
 
@@ -169,7 +168,12 @@
               </div>
             </div>
 
-            <div class="kanban-column column-review" data-stage="review">
+            <div class="kanban-column" data-stage="internalReview">
+              <div class="column-heading"><span class="stage-dot dot-amber"></span><h2>Revisão interna</h2><span class="column-count">0</span></div>
+              <div class="card-stack"><button class="add-card" data-add="internalReview">＋ Adicionar demanda</button></div>
+            </div>
+
+            <div class="kanban-column column-review" data-stage="clientReview">
               <div class="column-heading"><span class="stage-dot dot-amber"></span><h2>Aguardando cliente</h2><span class="column-count">2</span><button class="column-menu">···</button></div>
               <div class="card-stack">
                 <article class="task-card card-featured" data-title="Post de lançamento — linha Botânica" data-client="Casa Aurora" data-stage-name="Aguardando cliente">
@@ -210,8 +214,13 @@
                 </article>
               </div>
             </div>
+
+            <div class="kanban-column" data-stage="completed">
+              <div class="column-heading"><span class="stage-dot dot-green"></span><h2>Concluídas</h2><span class="column-count">0</span></div>
+              <div class="card-stack"></div>
+            </div>
           </section>
-          <div class="board-footnote"><span class="info-mark">i</span> Exemplo demonstrativo: clientes e demandas exibidos são fictícios.</div>
+          <div class="board-footnote"><span class="info-mark">i</span> Clientes e itens iniciais são exemplos fictícios. Demandas criadas e alterações ficam salvas apenas neste navegador; não use dados reais ou sensíveis.</div>
         </section>
       </main>
     </div>
@@ -222,7 +231,7 @@
       <div class="drawer-content">
         <div class="drawer-client"><span class="client-label label-blue" id="drawerClient">Casa Aurora</span><button class="subtle-button">···</button></div>
         <h2 id="drawerTitle">Post de lançamento — linha Botânica</h2>
-        <div class="drawer-meta"><span class="due-date due-today"><span>◷</span> Hoje, 17h</span><span class="meta-divider"></span><span>Responsável</span><span class="avatar avatar-tiny avatar-lilac">RB</span><strong>Rafaela</strong></div>
+        <div class="drawer-meta"><span class="due-date" id="drawerDue">Prazo não definido</span><span class="meta-divider"></span><span>Registro local de demonstração</span></div>
 
         <section class="flow-section">
           <div class="section-title-row"><h3>Etapas da demanda</h3><button class="text-action">Ver histórico</button></div>
@@ -234,19 +243,33 @@
             <div class="flow-step"><span>5</span><small>Entrega</small></div>
           </div>
         </section>
+        <section class="history-section"><div class="section-title-row"><h3>Histórico da demanda</h3></div><ol id="historyList" class="history-list"></ol></section>
 
-        <div class="drawer-tabs" role="tablist"><button class="drawer-tab active" role="tab">Material e feedback</button><button class="drawer-tab" role="tab">Tarefas <span>3</span></button></div>
+        <div class="drawer-tabs"><span class="drawer-tab active">Material e feedback</span></div>
+        <section class="tasks-section">
+          <div class="section-title-row"><h3>Tarefas do plano <span class="comment-count" id="taskCount">0</span></h3></div>
+          <p class="workflow-hint" id="taskHint">Adicione tarefas com responsável para iniciar a execução.</p>
+          <ul class="task-list" id="taskList"></ul>
+          <form class="task-form" id="taskForm">
+            <label>Tarefa<input name="taskTitle" required maxlength="120" placeholder="Ex.: preparar primeira versão" /></label>
+            <label>Responsável<input name="taskAssignee" required maxlength="80" placeholder="Nome ou função" /></label>
+            <div class="task-form-row"><label>Estimativa (h)<input name="taskEstimateHours" type="number" min="0.25" step="0.25" /></label><label>Prazo<input name="taskDue" type="date" /></label></div>
+            <button class="secondary-button" type="submit">＋ Adicionar tarefa</button>
+          </form>
+        </section>
         <section class="asset-section">
-          <div class="asset-heading"><div><strong>Post de lançamento — linha Botânica</strong><small>Imagem para Instagram · 1080 × 1350</small></div><button class="subtle-button">•••</button></div>
-          <div class="asset-preview">
+          <div class="asset-heading"><div><strong id="assetTitle">Material da demanda</strong><small id="assetMeta">Arquivo e versão</small></div></div>
+          <div class="asset-preview" id="assetPreview">
             <span class="asset-leaf asset-leaf-one"></span><span class="asset-leaf asset-leaf-two"></span><span class="asset-sun"></span>
             <span class="asset-brand">CASA AURORA</span><strong>Floresça<br />no seu tempo.</strong><small>linha botânica · primavera 2026</small>
           </div>
-          <div class="version-row"><span class="version-tag">V03</span><span>Enviada por Rafaela · hoje, 12:42</span><button class="version-link">Ver versões (3) <b>⌄</b></button></div>
+          <div class="version-row"><span class="version-tag" id="versionTag">V01</span><span id="versionMeta">Versão atual</span><span class="version-link" id="versionCount"></span></div>
+          <details class="version-history"><summary id="versionHistorySummary">Consultar versões</summary><ol id="versionHistoryList"></ol></details>
         </section>
 
         <section class="feedback-section">
-          <div class="section-title-row"><h3>Feedback do cliente <span class="comment-count">2</span></h3><button class="filter-comments">Todos ⌄</button></div>
+          <div class="section-title-row"><h3>Comentários e decisões <span class="comment-count" id="commentCount">0</span></h3></div>
+          <div id="commentsContainer">
           <div class="comment-item">
             <span class="avatar avatar-small avatar-client">CA</span>
             <div class="comment-body"><div class="comment-meta"><strong>Camila Alves</strong><span>13:08</span><span class="client-role">CLIENTE</span></div><p>Gostei bastante! Podemos deixar a chamada um pouquinho maior para ganhar mais destaque?</p><span class="comment-anchor">◉ Ponto marcado na imagem</span></div>
@@ -256,10 +279,11 @@
             <div class="comment-body"><div class="comment-meta"><strong>Camila Alves</strong><span>13:11</span></div><p>A cor do fundo está aprovada 🌿</p></div>
           </div>
           <div class="internal-note"><span>✳</span> Nota interna: consolidar ajustes e enviar uma nova versão para revisão.</div>
-          <label class="reply-box"><textarea rows="2" placeholder="Escreva uma resposta ou mencione alguém…"></textarea><span class="reply-actions"><span>↗</span><button type="button" aria-label="Anexar arquivo">＋</button><button class="send-reply" type="button" aria-label="Enviar comentário">↑</button></span></label>
+          </div>
+          <label class="reply-box"><textarea id="commentDraft" rows="2" placeholder="Adicionar comentário interno…"></textarea><span class="reply-actions"><span>Interno</span><button class="send-reply" id="sendComment" type="button" aria-label="Enviar comentário">↑</button></span></label>
         </section>
       </div>
-      <div class="drawer-footer"><span class="client-approval-note"><i></i> Cliente tem acesso somente a este material</span><div class="approval-buttons"><button class="secondary-button" id="requestChangesButton">Solicitar ajustes</button><button class="approve-button" id="approveButton"><span>✓</span> Aprovar versão</button></div></div>
+      <div class="drawer-footer" id="workflowActions"></div>
     </aside>
 
     <dialog class="request-dialog" id="requestDialog">
@@ -274,6 +298,8 @@
       </form>
     </dialog>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <input id="versionFileInput" type="file" accept="image/*,video/*,application/pdf" hidden />
+    <script src="workflow.js"></script>
     <script src="app.js"></script>
   </body>
 </html>

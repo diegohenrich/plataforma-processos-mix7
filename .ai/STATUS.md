@@ -31,9 +31,18 @@
 - Ainda faltam revisão do usuário/equipe, validar o fluxo contra um caso real, persistência, backend, login/permissões reais, arquivos e comentários de vídeo funcionais. Não há stack de produto definida.
 - Sincronização do protótipo: [PR #7](https://github.com/diegohenrich/plataforma-processos-mix7/pull/7), branch `prototype/fluxo-integrado` publicada e SHA local/remoto conferidos como iguais; PR permanece aberto para revisão. Cartão 17 atualizado para **Em revisão** com o resultado e o link do PR.
 
+## Implementação local do fluxo — 2026-09-24
+
+- Fatia funcional em `prototipo/`: demandas persistidas por navegador, briefing, tarefas livres atribuídas por rodada, estados de execução, arquivos imagem/vídeo/PDF no IndexedDB, comentários, decisões por versão, ajustes em nova versão e evidência obrigatória para concluir. Tarefas e comentários anteriores permanecem visíveis no histórico.
+- Validação automática: `node --check prototipo/workflow.js`, `node --check prototipo/app.js`, `node --test tests/workflow.test.js` (5 passaram) e `git diff --check` passaram. Sem etapa de build/dependências para HTML/CSS/JS nativos.
+- Validação no navegador em Chromium: fluxo ponta a ponta percorreu briefing → plano com tarefa/responsável → produção e conclusão da tarefa → arquivo sintético → revisão interna → pedido de ajuste ligado à V01 → tarefa concluída na rodada V02 → nova versão → revisão interna → aprovação da V02 → entrega/publicação; recarga preservou as duas rodadas, arquivo, comentário e trilha. Em viewport de 390 px, drawer mediu 390 px e `documentElement.scrollWidth` ficou em 390 px; captura visual revisada. Console sem avisos/erros. Arquivo usado era imagem sintética, não de cliente.
+- Esta fatia continua sendo demonstração local sem login, contas/permissões, serviço central, sincronização, backup ou uso de dados reais. Stack de produção continua pendente da pesquisa existente.
+- Branch atual: `implementation/primeira-jornada-local`, derivada de `prototype/fluxo-integrado`. PR e sync GitHub/Trello ainda pendentes nesta execução; não declarar entregue até verificar SHA remoto e atualizar o cartão 18.
+- Pendência de requisitos: validar o fluxo com um exemplo real da Mix7; especialmente papéis, exceções, revisão interna, evidência operacional de conclusão e comentário ancorado em vídeo.
+
 ## Próximo passo
 
 - Incorporar um caso real de demanda da Mix7 e resolver fluxo, papéis, revisão interna e significado de conclusão.
-- Revisar o protótipo com usuário/equipe e ajustar o fluxo à descrição real da operação.
-- Depois de validar estados e papéis, especificar modelo de dados/arquitetura técnica e preparar teste com equipe e cliente.
+- Revisar o protótipo local com usuário/equipe; esta fatia ainda requer revisão, e o PR de implementação permanece pendente.
+- Depois da revisão do fluxo, ajustar estados e tarefas à operação confirmada e avançar na decisão de modelo de dados/arquitetura técnica e teste com equipe/cliente.
 - Manter documentação, GitHub e Trello sincronizados após cada entrega.

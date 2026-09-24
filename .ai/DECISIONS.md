@@ -8,3 +8,5 @@
 - 2026-09-24 — IA apresenta propostas para revisão humana antes da criação ou distribuição de tarefas. Revisar somente se houver nova decisão explícita sobre autonomia.
 - 2026-09-24 — Interface dos sistemas deve priorizar branco e azul claros, usando o site da Mix7 como referência. Revisar tons e tipografia no protótipo.
 - 2026-09-24 — Comparar soluções prontas e open source antes de definir arquitetura ou stack. Avaliar função, licença, manutenção, segurança, integração e custo.
+- 2026-09-24 — Criar uma fatia funcional local do fluxo no protótipo antes de escolher a stack de produção. Guardar dados no perfil do navegador apenas para validar comportamento; não usar dados reais nem tratar a fatia como ferramenta operacional. Rever após pesquisa técnica e validação do caso real.
+- 2026-09-24 — O plano funcional requer uma ou mais tarefas com responsável informado; revisão interna e nova versão requerem tarefas concluídas. Nomes são texto livre e não representam contas nem permissões. Rever a regra com papéis reais e exceções da Mix7.
