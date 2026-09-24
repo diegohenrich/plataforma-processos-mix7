@@ -1,11 +1,11 @@
 # Contexto vigente — Plataforma de Processos Mix7
 
 - Objetivo: planejar uma plataforma integrada de gestão de equipe e aprovações para a operação da Mix7. Aprovações começam por criativos de redes sociais e podem se expandir para outras áreas.
-- Público inicial: equipe e clientes da Mix7. Primeira entrega pretendida: demanda → planejamento revisado → execução → aprovação do cliente → ajustes → conclusão.
+- Público inicial: equipe e clientes da Mix7. Fluxo-alvo aprovado para a primeira entrega: demanda/briefing → planejamento revisado → execução → revisão interna → aprovação do cliente → ajustes e nova versão quando pedidos → entrega/agendamento/publicação com evidência → conclusão conferida.
 - A IA deve sugerir tarefas, responsáveis e estimativas; uma pessoa confirma antes de aplicar.
 - Preferência visual: usar o site https://mix7.com.br/ como referência de identidade, com interface dos sistemas em branco e azul claros conforme escolha do usuário.
 - Organização do trabalho: o quadro https://trello.com/b/RkWOzDcu/desenvolvimento-de-projetos-mix7 é a fonte canônica para cartões e andamento. O repositório privado https://github.com/diegohenrich/plataforma-processos-mix7 guarda documentação durável, código futuro e histórico. Esta memória local permite retomada entre agentes.
 - Regra operacional: a cada alteração ou tarefa concluída, sincronizar GitHub e Trello antes de declarar conclusão; ver `AGENTS.md`.
 - Estado técnico: há uma fatia funcional local em `prototipo/`, com HTML/CSS/JavaScript nativos, regras em `prototipo/workflow.js`, testes Node e persistência por perfil do navegador (`localStorage` + `IndexedDB`). Não é produção; autenticação, servidor, sincronização e stack final seguem em aberto.
 - Trabalho: branch `implementation/primeira-jornada-local`, derivada de `prototype/fluxo-integrado`; PRs anteriores são rascunhos encadeados. Consultar `.ai/STATUS.md` para SHAs, validações e próximo passo.
-- Fonte dos requisitos: transcrição dos três áudios e definições posteriores. O fluxo implementado é diretriz pretendida, ainda sujeito a validação com um caso real da Mix7.
+- Fonte dos requisitos: transcrição dos três áudios e definições posteriores. O fluxo-alvo acima foi aprovado pelo usuário e está implementado como demonstração local. A validação com caso real ainda precisa confirmar papéis, variações por serviço, exceções e evidências operacionais; não reabrir a estrutura do fluxo-alvo sem nova evidência ou decisão explícita.

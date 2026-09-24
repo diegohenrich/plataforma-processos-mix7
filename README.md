@@ -6,7 +6,7 @@ Projeto da Mix7 para reunir gestão de equipe e aprovações em um fluxo documen
 
 ## Primeira entrega pretendida
 
-Demanda → planejamento revisado → execução → aprovação do cliente → ajustes → conclusão. A IA poderá sugerir tarefas, responsáveis e estimativas, mas uma pessoa deverá confirmar antes de aplicar as sugestões. O significado exato de “conclusão” e a necessidade de revisão interna ainda serão validados com a operação da Mix7.
+Demanda/briefing → planejamento revisado → execução → revisão interna → aprovação do cliente → ajustes e nova versão quando pedidos → entrega/agendamento/publicação com evidência → conclusão conferida. A IA poderá sugerir tarefas, responsáveis e estimativas, mas uma pessoa deverá confirmar antes de aplicar as sugestões. O usuário aprovou este fluxo-alvo; um caso real ainda deve confirmar papéis, exceções e evidências por tipo de serviço, sem confundir essa validação factual com a diretriz do produto.
 
 ## Organização
 

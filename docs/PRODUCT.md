@@ -20,7 +20,7 @@ A interface deve tomar https://mix7.com.br/ como referência de identidade e pri
 
 ## Protótipo navegável
 
-O [protótipo do fluxo integrado](../prototipo/README.md) materializa uma primeira proposta de quadro, briefing, versões, feedback e decisões de aprovação. Os nomes, números, clientes e demandas da tela são dados fictícios. As ações são demonstrações locais sem persistência; o protótipo ainda precisa de revisão da Mix7 e não representa a aplicação pronta.
+O [protótipo do fluxo integrado](../prototipo/README.md) materializa o fluxo-alvo aprovado: quadro, briefing, versões, feedback, revisão interna, decisão do cliente e registro de entrega antes da conclusão. Os nomes, números, clientes e demandas da tela são dados fictícios. As ações são demonstrações locais no navegador; não representam a aplicação pronta nem descrevem por si só o processo atual da Mix7.
 
 ## Limites atuais
 

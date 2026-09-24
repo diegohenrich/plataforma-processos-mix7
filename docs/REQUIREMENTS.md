@@ -21,12 +21,12 @@ Fonte: transcrição dos três áudios fornecidos em 24/09/2026 e decisões expl
 ## Decisões confirmadas para o primeiro recorte
 
 - Público: equipe e clientes da Mix7.
-- Fluxo pretendido: demanda → planejamento revisado → execução → aprovação do cliente → ajustes → conclusão.
+- Fluxo-alvo aprovado: demanda/briefing → planejamento revisado → execução → revisão interna → aprovação do cliente → ajustes e nova versão quando pedidos → entrega/agendamento/publicação com evidência → conclusão conferida. Validar no caso real da Mix7 quem exerce cada papel, as exceções e as evidências exigidas por serviço; não reabrir o fluxo-alvo sem nova evidência ou decisão explícita.
 - IA: sugere; uma pessoa revisa antes de criar ou distribuir tarefas.
 
 ## Questões abertas que impedem especificação final
 
-1. Qual é o percurso real de uma demanda, da entrada ao encerramento? Existe revisão interna obrigatória? “Concluído” significa aprovado, entregue, agendado ou publicado?
+1. Em um caso real da Mix7, como se aplicam as etapas do fluxo-alvo já aprovado? Quem executa cada papel, quais exceções existem e o que comprova a conclusão para esse serviço (entrega, agendamento, publicação ou outro registro)?
 2. Quem pode ver, editar, aprovar e reabrir cada item? A visão individual é um filtro ou uma restrição de acesso?
 3. Quem aprova em nome do cliente? Há aprovação parcial, limite de rodadas, prazo de resposta ou alteração após aprovação?
 4. Como manter comentários ligados à versão correta? Comentários em imagem exigem marcação espacial? Como exibir feedback temporal em novas versões do vídeo?
