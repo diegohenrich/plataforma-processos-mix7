@@ -51,3 +51,10 @@
 - Depois da validação operacional, executar o protocolo `docs/PROVA-DE-CONCEITO.md` com dados sintéticos, responsável e conta de teste autorizados; ainda não houve ensaio nas contas dos fornecedores.
 - Usar os resultados do piloto para escolher caminho de implementação, detalhar arquitetura técnica e stack; PRs #7–#10 continuam abertos para revisão incremental.
 - Manter documentação, GitHub e Trello sincronizados após cada entrega.
+
+## Pesquisa documental — OpenProject incluído (2026-09-24)
+
+- Acrescentado OpenProject Community/Premium à comparação e ao roteiro de prova de conceito, com links oficiais para recursos, API, permissões, licença, preços, release e avisos. A Community cobre gestão de trabalho, Gantt, tempo e disponibilidade/atributos; o planejador de capacidade está no Premium Enterprise. Não foi feita instalação nem teste de produto; cliente externo, revisão de mídia, custo do plano necessário e adequação de interface continuam sem evidência prática.
+- Arquitetura conceitual agora registra OpenProject como candidato de gestão interna, sem decisão de adoção/stack. `git diff --check` e resolução dos links relativos nos quatro arquivos alterados passaram; revisão do diff confirma apenas pesquisa, roteiro da prova, arquitetura e este status. Fontes oficiais consultadas em 24/09/2026; teste de produto, cotação e análise jurídica não executados.
+- A fatia de implementação foi atualizada separadamente na branch `implementation/primeira-jornada-local`, commit de código `74700857f5c3be0e47c17b4ce051c7c9d4a8e464`, com estado em `2579a4efefb1d8dde0a736a6b62677663d3b57c0`; o cartão 18 foi atualizado. PRs #9 e #10 continuam rascunhos.
+- Próximo passo: adicionar esta atualização documental ao PR #10 e sincronizar cartões 14 (comparativo) e 16 (arquitetura) no Trello; depois, seguir o protocolo de prova quando houver caso real anonimizado e responsável da Mix7 para a avaliação.

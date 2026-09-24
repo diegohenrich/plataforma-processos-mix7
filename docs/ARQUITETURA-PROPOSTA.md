@@ -84,6 +84,8 @@ O primeiro recorte deve comprovar uma demanda social do início ao registro fina
 
 Não escolher frontend, backend, banco de dados, hospedagem ou provedor de arquivos antes de comparar manutenção, segurança, exportação, integrações e custo e validar a operação real. A pesquisa está em [PESQUISA-SOLUCOES.md](PESQUISA-SOLUCOES.md); o cenário e os critérios da prova controlada estão em [PROVA-DE-CONCEITO.md](PROVA-DE-CONCEITO.md). Testar interfaces e integrações antes de fixar tecnologia. Esta arquitetura de produto define conceitos e contratos, mas não a arquitetura técnica, implantação ou desenho físico do banco.
 
+OpenProject Community é um candidato adicional para a parcela de gestão interna, especialmente pacotes de trabalho, Gantt e registro de tempo, além de expor API e permissões por projeto. A edição Community também documenta atributos de usuário e disponibilidade; seu planejador de capacidade é Premium Enterprise e deve ser comparado ao custo. A recomendação é avaliá-lo como possível componente ou referência de requisitos, mantendo o núcleo integrado e o módulo de aprovação criativa como fronteiras de produto. A pesquisa documental não demonstra ainda aprovação externa segura por versão, comentário ancorado, adequação de interface ou integração sem perda de histórico; portanto, não define adoção nem arquitetura técnica.
+
 ## Critério de evolução desta proposta
 
 Detalhar esta arquitetura quando a validação trouxer: atores e exceções reais; tipos de arquivo e volume; regra de acesso de clientes; evidências específicas por serviço; integrações exigidas; e limite orçamentário/operacional. A estrutura do fluxo-alvo aprovado só deve ser revista com nova evidência ou decisão explícita; sua aprovação não confirma como a operação trabalha hoje.
