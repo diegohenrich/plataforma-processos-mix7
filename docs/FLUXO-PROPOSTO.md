@@ -1,6 +1,6 @@
 # Fluxo proposto para uma demanda de criativo
 
-**Estado:** proposta de funcionamento para a primeira entrega da plataforma, elaborada em resposta às cinco perguntas do usuário. Ainda não descreve um processo atual comprovado nem uma decisão final da Mix7. O primeiro exemplo é um criativo de redes sociais; os módulos futuros de aprovação poderão ter outro destino após o aceite.
+**Estado:** direção de funcionamento aprovada pelo usuário para a primeira entrega da plataforma. Descreve como o produto deve funcionar, não um processo atual comprovado da Mix7. O primeiro exemplo é um criativo de redes sociais; módulos futuros de aprovação poderão ter outros campos, etapas e destinos.
 
 ## 1. Entrada do pedido e briefing
 

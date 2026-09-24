@@ -82,7 +82,7 @@ O primeiro recorte deve comprovar uma demanda social do início ao registro fina
 
 ## Decisões técnicas ainda pendentes
 
-Não escolher frontend, backend, banco de dados, hospedagem ou provedor de arquivos antes de comparar manutenção, segurança, exportação, integrações e custo e validar a operação real. A pesquisa inicial está em [PESQUISA-SOLUCOES.md](PESQUISA-SOLUCOES.md). A recomendação é testar interfaces e integrações com uma prova de conceito antes de fixar tecnologia. Esta arquitetura de produto ganhou um mapa de conceitos e contratos, mas não define arquitetura técnica, implantação ou desenho físico do banco.
+Não escolher frontend, backend, banco de dados, hospedagem ou provedor de arquivos antes de comparar manutenção, segurança, exportação, integrações e custo e validar a operação real. A pesquisa está em [PESQUISA-SOLUCOES.md](PESQUISA-SOLUCOES.md); o cenário e os critérios da prova controlada estão em [PROVA-DE-CONCEITO.md](PROVA-DE-CONCEITO.md). Testar interfaces e integrações antes de fixar tecnologia. Esta arquitetura de produto define conceitos e contratos, mas não a arquitetura técnica, implantação ou desenho físico do banco.
 
 ## Critério de evolução desta proposta
 
