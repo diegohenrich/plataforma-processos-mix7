@@ -71,6 +71,19 @@
     });
   }
 
+  function unmetTaskDependencies(request, task) {
+    const tasksById = new Map((request.tasks || []).map(item => [item.id, item]));
+    return (task.dependencyTaskIds || [])
+      .map(id => tasksById.get(id))
+      .filter(dependency => dependency && dependency.status !== "completed");
+  }
+
+  function taskBlockers(request, task) {
+    const reasons = unmetTaskDependencies(request, task).map(dependency => `Aguardando: ${dependency.title}`);
+    if (String(task.blockedReason || "").trim()) reasons.unshift(String(task.blockedReason).trim());
+    return reasons;
+  }
+
   function transition(request, action, payload = {}, now = new Date().toISOString()) {
     const next = structuredClone(request);
     const version = next.versions[next.versions.length - 1];
@@ -133,16 +146,42 @@
         const assignee = String(payload.assignee || "").trim();
         if (!title || !assignee) throw new Error("Informe o nome da tarefa e seu responsável.");
         const round = version.number + (next.stage === "adjustments" ? 1 : 0);
+        const requestedDependencies = Array.isArray(payload.dependencyTaskIds) ? payload.dependencyTaskIds : (payload.dependencyTaskId ? [payload.dependencyTaskId] : []);
+        const dependencyTaskIds = [...new Set(requestedDependencies.map(String).filter(Boolean))];
+        const roundTaskIds = new Set(next.tasks.filter(task => task.round === round).map(task => task.id));
+        if (dependencyTaskIds.some(id => !roundTaskIds.has(id))) throw new Error("Dependências devem apontar para tarefas da mesma rodada.");
         const estimateHours = Number(payload.estimateHours) > 0 ? Number(payload.estimateHours) : null;
-        next.tasks.push({ id: `${next.id}-task-${round}-${next.tasks.filter(task => task.round === round).length + 1}`, title, assignee, estimateHours, due: String(payload.due || ""), round, status: "pending" });
+        const task = { id: `${next.id}-task-${round}-${next.tasks.filter(task => task.round === round).length + 1}`, title, assignee, estimateHours, due: String(payload.due || ""), round, status: "pending", dependencyTaskIds, blockedReason: "" };
+        next.tasks.push(task);
+        payload = { ...payload, taskId: task.id, taskTitle: task.title, dependencyTaskIds };
         break;
       }
       case "toggle_task": {
         if (next.stage !== "doing" && next.stage !== "adjustments") throw new Error("Tarefas só podem ser atualizadas durante a execução.");
         const task = next.tasks.find(item => item.id === payload.taskId && item.round === version.number + (next.stage === "adjustments" ? 1 : 0));
         if (!task) throw new Error("Tarefa não encontrada nesta rodada.");
+        if (task.status === "completed" && next.tasks.some(item => item.status === "completed" && item.dependencyTaskIds?.includes(task.id))) {
+          throw new Error("Reabra as tarefas dependentes antes de reabrir esta tarefa prévia.");
+        }
+        if (task.status !== "completed") {
+          if (task.blockedReason) throw new Error("Remova ou atualize o impedimento antes de concluir esta tarefa.");
+          if (unmetTaskDependencies(next, task).length) throw new Error("Conclua as tarefas prévias antes desta tarefa.");
+        }
         task.status = task.status === "completed" ? "pending" : "completed";
         task.completedAt = task.status === "completed" ? now : null;
+        payload = { ...payload, taskTitle: task.title, status: task.status };
+        break;
+      }
+      case "set_task_blocker": {
+        if (next.stage !== "doing" && next.stage !== "adjustments") throw new Error("Impedimentos só podem ser registrados durante a execução.");
+        const task = next.tasks.find(item => item.id === payload.taskId && item.round === version.number + (next.stage === "adjustments" ? 1 : 0));
+        if (!task) throw new Error("Tarefa não encontrada nesta rodada.");
+        if (task.status === "completed") throw new Error("Reabra a tarefa antes de registrar um impedimento.");
+        const reason = String(payload.reason || "").trim();
+        if (reason.length > 500) throw new Error("O motivo do impedimento deve ter até 500 caracteres.");
+        const previousReason = task.blockedReason || "";
+        task.blockedReason = reason;
+        payload = { ...payload, taskTitle: task.title, previousReason, reason, blocked: Boolean(reason) };
         break;
       }
       case "submit_internal_review":
@@ -223,11 +262,22 @@
       const comment = next.comments.at(-1);
       if (comment?.anchor) eventDetails.anchor = comment.anchor;
     }
+    if (["add_task", "toggle_task", "set_task_blocker"].includes(action)) {
+      eventDetails.taskId = payload.taskId;
+      eventDetails.taskTitle = payload.taskTitle;
+      if (action === "add_task") eventDetails.dependencyTaskIds = payload.dependencyTaskIds;
+      if (action === "toggle_task") eventDetails.status = payload.status;
+      if (action === "set_task_blocker") {
+        eventDetails.previousReason = payload.previousReason;
+        eventDetails.reason = payload.reason;
+        eventDetails.blocked = payload.blocked;
+      }
+    }
     recordEvent(next, action, eventDetails, now);
     return next;
   }
 
-  const api = { stages, transition, listAssignees, filterRequestsByAssignee };
+  const api = { stages, transition, listAssignees, filterRequestsByAssignee, unmetTaskDependencies, taskBlockers };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   root.Mix7Workflow = api;
 })(globalThis);

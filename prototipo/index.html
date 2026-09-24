@@ -275,6 +275,7 @@
           <form class="task-form" id="taskForm">
             <label>Tarefa<input name="taskTitle" required maxlength="120" placeholder="Ex.: preparar primeira versão" /></label>
             <label>Responsável<input name="taskAssignee" required maxlength="80" placeholder="Nome ou função" /></label>
+            <label>Depende de (opcional)<select name="taskDependencies" multiple size="3" aria-describedby="taskDependencyHelp"></select><small id="taskDependencyHelp">Selecione tarefas prévias da rodada. Use Ctrl ou ⌘ para múltiplas seleções.</small></label>
             <div class="task-form-row"><label>Estimativa (h)<input name="taskEstimateHours" type="number" min="0.25" step="0.25" /></label><label>Prazo<input name="taskDue" type="date" /></label></div>
             <button class="secondary-button" type="submit">＋ Adicionar tarefa</button>
           </form>

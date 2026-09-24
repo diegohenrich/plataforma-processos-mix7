@@ -1,4 +1,4 @@
-const { stages, transition, listAssignees, filterRequestsByAssignee } = window.Mix7Workflow;
+const { stages, transition, listAssignees, filterRequestsByAssignee, taskBlockers } = window.Mix7Workflow;
 const STORAGE_KEY = "mix7.workflow.v1";
 const MAX_FILE_BYTES = 15 * 1024 * 1024;
 const drawer = document.querySelector("#detailDrawer");
@@ -35,6 +35,10 @@ function loadState() {
       if (parsed.schemaVersion === 1 && Array.isArray(parsed.requests)) {
         for (const request of parsed.requests) {
           if (!Array.isArray(request.tasks)) request.tasks = [];
+          for (const task of request.tasks) {
+            if (!Array.isArray(task.dependencyTaskIds)) task.dependencyTaskIds = task.dependencyTaskId ? [task.dependencyTaskId] : [];
+            if (typeof task.blockedReason !== "string") task.blockedReason = "";
+          }
           if (!Array.isArray(request.briefingRevisions)) request.briefingRevisions = [];
           if (typeof request.planReviewRequired !== "boolean") request.planReviewRequired = false;
           for (const field of ["origin", "channel", "acceptanceCriteria", "references"]) {
@@ -263,18 +267,48 @@ function renderTasks(request) {
   document.querySelector("#taskCount").textContent = String(tasks.length);
   const form = document.querySelector("#taskForm");
   form.hidden = !["planning", "adjustments"].includes(request.stage);
+  const dependencySelect = form.elements.namedItem("taskDependencies");
+  dependencySelect.replaceChildren(new Option("Sem dependência", ""));
+  for (const task of tasks.filter(task => task.round === round)) dependencySelect.add(new Option(`${task.title} · ${task.assignee}`, task.id));
   document.querySelector("#taskHint").textContent = request.stage === "planning" ? "Inclua pelo menos uma tarefa atribuída antes de iniciar a execução." : request.stage === "adjustments" ? `Tarefas para a versão V${String(round).padStart(2, "0")}; conclua todas antes de anexá-la.` : `Tarefas da rodada V${String(round).padStart(2, "0")}. Os nomes são texto livre nesta demonstração.`;
   for (const task of tasks) {
-    const item = node("li", `task-list-item${task.status === "completed" ? " task-done" : ""}`);
+    const blockers = taskBlockers(request, task);
+    const item = node("li", `task-list-item${task.status === "completed" ? " task-done" : ""}${blockers.length ? " task-blocked" : ""}`);
     const details = node("div", "task-list-details");
     details.append(node("strong", "", `V${String(task.round).padStart(2, "0")} · ${task.title}`), node("span", "", `${task.assignee}${task.estimateHours ? ` · ${task.estimateHours} h` : ""}${task.due ? ` · ${formatDue(task.due)}` : ""}`));
+    for (const blocker of blockers) details.append(node("span", "task-blocker-note", `Impedida: ${blocker}`));
     item.append(details);
     if (task.round === round && ["doing", "adjustments"].includes(request.stage)) {
       const button = node("button", "task-toggle", task.status === "completed" ? "Reabrir" : "Concluir tarefa");
       button.type = "button";
+      button.disabled = task.status !== "completed" && blockers.length > 0;
       button.addEventListener("click", () => updateRequest("toggle_task", { taskId: task.id }, task.status === "completed" ? "Tarefa reaberta." : "Tarefa concluída."));
       item.append(button);
-    } else item.append(node("span", "task-status", task.status === "completed" ? "Concluída" : "Pendente"));
+      if (task.status !== "completed") {
+        const blockerForm = node("form", "task-blocker-form");
+        const reason = node("input", "workflow-input");
+        reason.name = "reason";
+        reason.maxLength = 500;
+        reason.required = true;
+        reason.placeholder = "Motivo obrigatório para sinalizar impedimento";
+        reason.setAttribute("aria-label", `Motivo do impedimento em ${task.title}`);
+        reason.value = task.blockedReason || "";
+        const submit = node("button", "secondary-button", task.blockedReason ? "Atualizar impedimento" : "Sinalizar impedimento");
+        submit.type = "submit";
+        blockerForm.append(reason, submit);
+        blockerForm.addEventListener("submit", event => {
+          event.preventDefault();
+          updateRequest("set_task_blocker", { taskId: task.id, reason: reason.value }, task.blockedReason ? "Impedimento atualizado." : "Impedimento registrado.");
+        });
+        if (task.blockedReason) {
+          const clear = node("button", "task-clear-blocker", "Remover impedimento");
+          clear.type = "button";
+          clear.addEventListener("click", () => updateRequest("set_task_blocker", { taskId: task.id, reason: "" }, "Impedimento removido."));
+          blockerForm.append(clear);
+        }
+        item.append(blockerForm);
+      }
+    } else item.append(node("span", "task-status", blockers.length ? "Bloqueada" : task.status === "completed" ? "Concluída" : "Pendente"));
     list.append(item);
   }
   if (!tasks.length) list.append(node("li", "empty-comments", "Nenhuma tarefa cadastrada nesta rodada."));
@@ -346,14 +380,25 @@ function renderHistory(request) {
   const list = document.querySelector("#historyList");
   list.replaceChildren();
   for (const event of [...request.history].reverse()) {
-    const row = node("li", "", `${eventLabel(event.type)} · ${formatTimestamp(event.at)}`);
+    const details = event.details || {};
+    const task = request.tasks.find(item => item.id === details.taskId);
+    let summary = "";
+    if (event.type === "add_task") {
+      const dependencies = (details.dependencyTaskIds || []).map(id => request.tasks.find(item => item.id === id)?.title).filter(Boolean);
+      summary = `${details.taskTitle || task?.title || "Tarefa"}${dependencies.length ? ` · após ${dependencies.join(", ")}` : ""}`;
+    } else if (event.type === "toggle_task") {
+      summary = `${details.taskTitle || task?.title || "Tarefa"} · ${details.status === "completed" ? "concluída" : "reaberta"}`;
+    } else if (event.type === "set_task_blocker") {
+      summary = `${details.taskTitle || task?.title || "Tarefa"} · ${details.blocked ? `impedimento: ${details.reason}` : "impedimento removido"}`;
+    }
+    const row = node("li", "", `${eventLabel(event.type)}${summary ? ` · ${summary}` : ""} · ${formatTimestamp(event.at)}`);
     list.append(row);
   }
 }
 
 function eventLabel(type) {
   const names = {
-    created: "Demanda criada", fixture_loaded: "Item demonstrativo carregado", briefing_ready: "Briefing liberado para planejamento", briefing_revised: "Briefing alterado; plano aguarda revisão", plan_confirmed: "Planejamento revisado e confirmado", add_task: "Tarefa atribuída", toggle_task: "Estado da tarefa alterado", submit_internal_review: "Enviado para revisão interna", internal_approved: "Revisão interna aprovada e versão compartilhada", internal_changes: "Devolvido pela revisão interna", client_approved: "Versão aprovada pelo cliente", client_changes: "Ajustes solicitados pelo cliente", attach_file: "Arquivo anexado à versão", new_version: "Nova versão criada", record_delivery: "Entrega/publicação registrada", add_comment: "Comentário registrado",
+    created: "Demanda criada", fixture_loaded: "Item demonstrativo carregado", briefing_ready: "Briefing liberado para planejamento", briefing_revised: "Briefing alterado; plano aguarda revisão", plan_confirmed: "Planejamento revisado e confirmado", add_task: "Tarefa atribuída", toggle_task: "Estado da tarefa alterado", set_task_blocker: "Impedimento da tarefa atualizado", submit_internal_review: "Enviado para revisão interna", internal_approved: "Revisão interna aprovada e versão compartilhada", internal_changes: "Devolvido pela revisão interna", client_approved: "Versão aprovada pelo cliente", client_changes: "Ajustes solicitados pelo cliente", attach_file: "Arquivo anexado à versão", new_version: "Nova versão criada", record_delivery: "Entrega/publicação registrada", add_comment: "Comentário registrado",
   };
   return names[type] || type;
 }
@@ -780,7 +825,7 @@ document.querySelector("#sendComment").addEventListener("click", () => {
 document.querySelector("#taskForm").addEventListener("submit", event => {
   event.preventDefault();
   const data = new FormData(event.currentTarget);
-  const saved = updateRequest("add_task", { title: data.get("taskTitle"), assignee: data.get("taskAssignee"), estimateHours: data.get("taskEstimateHours"), due: data.get("taskDue") }, "Tarefa atribuída ao plano.");
+  const saved = updateRequest("add_task", { title: data.get("taskTitle"), assignee: data.get("taskAssignee"), estimateHours: data.get("taskEstimateHours"), due: data.get("taskDue"), dependencyTaskIds: data.getAll("taskDependencies").filter(Boolean) }, "Tarefa atribuída ao plano.");
   if (saved) event.currentTarget.reset();
 });
 

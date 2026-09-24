@@ -4,7 +4,7 @@
 
 ## O que já executa
 
-A tela `prototipo/` mantém os cartões no quadro e na lista, registra briefing, busca e detalhes, permite filtrar demandas com tarefas pendentes da rodada atual atribuídas a um profissional, planejar tarefas com responsável, estimativa e prazo, acompanhar sua conclusão, aceita arquivo local de imagem, vídeo ou PDF de até 15 MB, cria versões, grava comentários e eventos, aplica decisões e avança a demanda pelas regras do fluxo. Comentários podem ser ligados a um ponto percentual da imagem ou ao instante pausado do vídeo; atalhos no histórico abrem a versão correspondente.
+A tela `prototipo/` mantém os cartões no quadro e na lista, registra briefing, busca e detalhes, permite filtrar demandas com tarefas pendentes da rodada atual atribuídas a um profissional, planejar tarefas com responsável, estimativa e prazo, registrar dependências entre tarefas da mesma rodada e sinalizar impedimentos com motivo durante a execução. Dependências e impedimentos bloqueiam a conclusão até serem resolvidos; alterações entram no histórico. Aceita arquivo local de imagem, vídeo ou PDF de até 15 MB, cria versões, grava comentários e eventos, aplica decisões e avança a demanda pelas regras do fluxo. Comentários podem ser ligados a um ponto percentual da imagem ou ao instante pausado do vídeo; atalhos no histórico abrem a versão correspondente.
 
 ## Cobertura dos requisitos P0
 
@@ -14,7 +14,7 @@ O baseline P0 está na [especificação priorizada em revisão no PR #8](https:/
 | --- | --- | --- |
 | MVP-01 Briefing | Parcial local: cliente, tipo, origem, canal/peça e critérios; bloqueia planejamento se campos mínimos faltarem. | Obrigatoriedade por serviço não é configurável; arquivos não entram no formulário inicial; prazo e referências não são validados. |
 | MVP-02 Visões e trabalho por pessoa | Parcial local: Kanban, lista, busca e filtro das demandas com tarefas pendentes da rodada atual por profissional. | O filtro usa nomes de texto nas tarefas, não mostra uma fila própria de tarefas e não impõe permissão de acesso. |
-| MVP-03 Tarefas | Parcial local: responsável, status, estimativa, prazo e rodada. | Dependências e sinalização de impedimento ainda não estão implementadas. |
+| MVP-03 Tarefas | Parcial local: responsável, status, estimativa, prazo e rodada; dependências múltiplas dentro da rodada; impedimento com motivo e histórico. | Uma tarefa concluída só pode ser reaberta após reabrir tarefas que dependem dela. Sem notificações, cronômetro, capacidade, identidade ou coordenação entre usuários. |
 | MVP-04 IA no planejamento | Não implementado; o plano continua manualmente editável. | Provedor, dados enviados e experiência de confirmação humana ainda precisam de definição. |
 | MVP-05 Versões | Parcial local: versões e arquivos no IndexedDB do navegador. | Sem armazenamento central e auditoria imutável; um arquivo ainda pode ser substituído na mesma versão antes do envio. |
 | MVP-06 Decisão do cliente | Parcial local: aprovar ou solicitar ajustes em versão compartilhada. | Sem identidade autenticada, isolamento por cliente ou portal externo. |
@@ -62,7 +62,7 @@ node --check prototipo/workflow.js
 node --check prototipo/app.js
 ```
 
-Os testes cobrem briefing incompleto e registro histórico de correções, plano com tarefa atribuída, bloqueio de revisão com tarefas incompletas, fluxo feliz, aprovação de versão não compartilhada, motivo obrigatório na revisão interna, pedido de alteração ligado à versão antiga, preservação do histórico na versão seguinte, âncoras de imagem/vídeo, alteração de briefing com retomada bloqueada até revisão humana e evidência obrigatória para concluir. Na inspeção em Chromium com dados fictícios, a alteração de briefing voltou a demanda ao planejamento, mostrou texto anterior e motivo, e só retomou após confirmar o plano; esses dados persistiram após recarregar. Viewport de 390×844 teve largura de documento de 390 px, sem overflow horizontal, e console sem avisos/erros. A seleção de arquivo foi exercitada no fluxo normal do navegador em validação anterior. A integração ainda requer validação da equipe Mix7.
+Os testes cobrem briefing incompleto e registro histórico de correções, plano com tarefa atribuída, dependências entre tarefas, reabertura ordenada, impedimento com motivo/histórico, bloqueio de revisão com tarefas incompletas, fluxo feliz, aprovação de versão não compartilhada, motivo obrigatório na revisão interna, pedido de alteração ligado à versão antiga, preservação do histórico na versão seguinte, âncoras de imagem/vídeo, alteração de briefing com retomada bloqueada até revisão humana e evidência obrigatória para concluir. Em Chromium, dependência e impedimento foram exercitados ponta a ponta; ambos bloquearam conclusão corretamente e o motivo apareceu no histórico. Viewport de 390×844: painel e documento sem overflow horizontal; screenshot móvel inspecionado e console sem avisos/erros. A seleção de arquivo foi exercitada no fluxo normal do navegador em validação anterior. A integração ainda requer validação da equipe Mix7.
 
 ## Próximas decisões
 

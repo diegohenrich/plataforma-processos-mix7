@@ -1,6 +1,6 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { transition, listAssignees, filterRequestsByAssignee } = require("../prototipo/workflow.js");
+const { transition, listAssignees, filterRequestsByAssignee, taskBlockers } = require("../prototipo/workflow.js");
 
 function demand() {
   return {
@@ -58,6 +58,43 @@ test("filtro por profissional considera tarefas da rodada vigente e opções dis
   assert.deepEqual(filterRequestsByAssignee(requests, "dIeGo").map(item => item.id), ["d-1", "d-2"]);
   assert.deepEqual(filterRequestsByAssignee(requests, "Ana").map(item => item.id), ["d-1"]);
   assert.deepEqual(filterRequestsByAssignee(requests, ""), requests);
+});
+
+test("dependências só liberam a tarefa após conclusão e preservam a ordem ao reabrir", () => {
+  let item = transition(demand(), "briefing_ready");
+  item = transition(item, "add_task", { title: "Definir conceito", assignee: "Gestor" });
+  const prerequisite = item.tasks[0];
+  item = transition(item, "add_task", { title: "Criar peça", assignee: "Designer", dependencyTaskIds: [prerequisite.id] });
+  const dependent = item.tasks[1];
+  assert.throws(() => transition(item, "add_task", { title: "Outra rodada", assignee: "Designer", dependencyTaskIds: ["fora-da-rodada"] }), /mesma rodada/);
+  item = transition(item, "plan_confirmed");
+  assert.deepEqual(taskBlockers(item, dependent), ["Aguardando: Definir conceito"]);
+  assert.throws(() => transition(item, "toggle_task", { taskId: dependent.id }), /tarefas prévias/);
+  item = transition(item, "toggle_task", { taskId: prerequisite.id });
+  assert.deepEqual(taskBlockers(item, dependent), []);
+  item = transition(item, "toggle_task", { taskId: dependent.id });
+  assert.throws(() => transition(item, "toggle_task", { taskId: prerequisite.id }), /tarefas dependentes/);
+  item = transition(item, "toggle_task", { taskId: dependent.id });
+  item = transition(item, "toggle_task", { taskId: prerequisite.id });
+  assert.deepEqual(item.tasks.map(task => task.status), ["pending", "pending"]);
+});
+
+test("impedimento exige motivo, bloqueia conclusão, pode ser atualizado e removido com histórico", () => {
+  let item = planRoundOne(demand());
+  const task = item.tasks[0];
+  assert.throws(() => transition(item, "set_task_blocker", { taskId: "missing", reason: "Aguardando arquivo" }), /não encontrada/);
+  item = transition(item, "set_task_blocker", { taskId: task.id, reason: "Aguardando material do cliente" }, "2026-09-24T17:00:00.000Z");
+  assert.equal(item.tasks[0].blockedReason, "Aguardando material do cliente");
+  assert.deepEqual(taskBlockers(item, item.tasks[0]), ["Aguardando material do cliente"]);
+  assert.deepEqual(item.history.at(-1).details, { taskId: task.id, taskTitle: task.title, previousReason: "", reason: "Aguardando material do cliente", blocked: true });
+  assert.throws(() => transition(item, "toggle_task", { taskId: task.id }), /impedimento/);
+  assert.throws(() => transition(item, "set_task_blocker", { taskId: task.id, reason: "x".repeat(501) }), /500 caracteres/);
+  item = transition(item, "set_task_blocker", { taskId: task.id, reason: "" });
+  assert.equal(item.tasks[0].blockedReason, "");
+  assert.deepEqual(taskBlockers(item, item.tasks[0]), []);
+  assert.deepEqual(item.history.at(-1).details, { taskId: task.id, taskTitle: task.title, previousReason: "Aguardando material do cliente", reason: "", blocked: false });
+  item = transition(item, "toggle_task", { taskId: task.id });
+  assert.throws(() => transition(item, "set_task_blocker", { taskId: task.id, reason: "Bloqueada novamente" }), /Reabra/);
 });
 
 test("fluxo feliz só conclui após aprovação e evidência de entrega", () => {
