@@ -32,6 +32,45 @@
     throw new Error("O tipo de referência do comentário é inválido.");
   }
 
+  function currentTaskRound(request) {
+    const currentVersion = Number(request.versions?.at(-1)?.number) || 1;
+    return currentVersion + (request.stage === "adjustments" ? 1 : 0);
+  }
+
+  function assigneeKey(value) {
+    return String(value || "").trim().toLocaleLowerCase("pt-BR");
+  }
+
+  function listAssignees(requests) {
+    const assignees = new Map();
+    for (const request of requests) {
+      const round = currentTaskRound(request);
+      for (const task of request.tasks || []) {
+        const name = String(task.assignee || "").trim();
+        const key = assigneeKey(name);
+        const taskRound = Number(task.round) || currentVersionNumber(request);
+        if (name && taskRound === round && !assignees.has(key)) assignees.set(key, name);
+      }
+    }
+    return [...assignees.values()].sort((a, b) => a.localeCompare(b, "pt-BR"));
+  }
+
+  function currentVersionNumber(request) {
+    return Number(request.versions?.at(-1)?.number) || 1;
+  }
+
+  function filterRequestsByAssignee(requests, assignee) {
+    const key = assigneeKey(assignee);
+    if (!key) return requests;
+    return requests.filter(request => {
+      const round = currentTaskRound(request);
+      return (request.tasks || []).some(task => {
+        const taskRound = Number(task.round) || currentVersionNumber(request);
+        return taskRound === round && task.status !== "completed" && assigneeKey(task.assignee) === key;
+      });
+    });
+  }
+
   function transition(request, action, payload = {}, now = new Date().toISOString()) {
     const next = structuredClone(request);
     const version = next.versions[next.versions.length - 1];
@@ -188,7 +227,7 @@
     return next;
   }
 
-  const api = { stages, transition };
+  const api = { stages, transition, listAssignees, filterRequestsByAssignee };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   root.Mix7Workflow = api;
 })(globalThis);

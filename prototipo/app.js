@@ -1,4 +1,4 @@
-const { stages, transition } = window.Mix7Workflow;
+const { stages, transition, listAssignees, filterRequestsByAssignee } = window.Mix7Workflow;
 const STORAGE_KEY = "mix7.workflow.v1";
 const MAX_FILE_BYTES = 15 * 1024 * 1024;
 const drawer = document.querySelector("#detailDrawer");
@@ -180,12 +180,26 @@ function makeCard(request) {
 }
 
 function renderBoard() {
+  const assigneeFilter = document.querySelector("#assigneeFilter");
+  const selectedAssignee = assigneeFilter.value;
+  const assignees = listAssignees(state.requests);
+  assigneeFilter.replaceChildren(new Option("Equipe toda", ""));
+  for (const assignee of assignees) assigneeFilter.add(new Option(assignee, assignee));
+  if (assignees.includes(selectedAssignee)) assigneeFilter.value = selectedAssignee;
+  const activeAssignee = assigneeFilter.value;
+  const scopeNote = document.querySelector("#assigneeScope");
+  scopeNote.hidden = !activeAssignee;
+  scopeNote.textContent = activeAssignee
+    ? `Filtro visual: demandas com tarefas pendentes da rodada atual atribuídas a ${activeAssignee}. Os indicadores acima são gerais; o filtro não limita acesso.`
+    : "";
+  const visibleRequests = filterRequestsByAssignee(state.requests, activeAssignee);
+
   for (const stage of Object.keys(stages)) {
     const column = document.querySelector(`.kanban-column[data-stage="${stage}"]`);
     if (!column) continue;
     const stack = column.querySelector(".card-stack");
     stack.querySelectorAll(".task-card").forEach(card => card.remove());
-    const items = state.requests.filter(request => request.stage === stage);
+    const items = visibleRequests.filter(request => request.stage === stage);
     const addButton = stack.querySelector(".add-card");
     for (const request of items.slice().reverse()) stack.insertBefore(makeCard(request), addButton || null);
     const count = column.querySelector(".column-count");
@@ -788,6 +802,7 @@ fileInput.addEventListener("change", async () => {
 });
 
 document.querySelector("#searchInput").addEventListener("input", event => applySearch(event.target.value));
+document.querySelector("#assigneeFilter").addEventListener("change", renderBoard);
 
 document.querySelectorAll(".view-tab").forEach(tab => tab.addEventListener("click", () => {
   document.querySelectorAll(".view-tab").forEach(item => { item.classList.remove("active"); item.setAttribute("aria-selected", "false"); });

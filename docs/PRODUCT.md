@@ -14,7 +14,7 @@ A primeira versão atende à Mix7 e seus clientes. Transformar a plataforma em p
 
 ## Experiência pretendida
 
-Gestão interna focada, com Kanban e lista; aprovações de imagem e vídeo conectadas às demandas; comentários preservados por versão e, no vídeo, associados a um instante. O produto deve permitir ampliar os tipos de aprovação conforme as necessidades da agência forem validadas.
+Gestão interna focada, com Kanban e lista e consulta do trabalho atribuído a cada profissional; aprovações de imagem e vídeo conectadas às demandas; comentários preservados por versão e, no vídeo, associados a um instante. A visão por profissional organiza o trabalho, enquanto permissões de acesso seguem uma definição separada. O produto deve permitir ampliar os tipos de aprovação conforme as necessidades da agência forem validadas.
 
 A interface deve tomar https://mix7.com.br/ como referência de identidade e priorizar branco e azul claros, conforme preferência explícita do usuário. Tons, fontes e composição do protótipo são escolhas iniciais para validar com a Mix7.
 

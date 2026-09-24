@@ -1,6 +1,6 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { transition } = require("../prototipo/workflow.js");
+const { transition, listAssignees, filterRequestsByAssignee } = require("../prototipo/workflow.js");
 
 function demand() {
   return {
@@ -33,6 +33,32 @@ function completeCurrentTasks(item) {
   }
   return item;
 }
+
+test("filtro por profissional considera tarefas da rodada vigente e opções distintas", () => {
+  const first = demand();
+  first.stage = "doing";
+  first.tasks = [
+    { assignee: " Diego ", round: 1, status: "pending" },
+    { assignee: "DIEGO", round: 1, status: "completed" },
+    { assignee: "Ana", round: 1, status: "pending" },
+  ];
+  const second = { ...demand(), id: "d-2", stage: "adjustments", versions: [{ id: "d-2-v1", number: 1 }], tasks: [
+    { assignee: "Diego", round: 1, status: "completed" },
+    { assignee: "Diego", round: 2, status: "pending" },
+  ] };
+  const third = { ...demand(), id: "d-3", stage: "adjustments", versions: [{ id: "d-3-v1", number: 1 }], tasks: [
+    { assignee: "Diego", round: 1, status: "completed" },
+  ] };
+  const fourth = { ...demand(), id: "d-4", stage: "doing", tasks: [
+    { assignee: "Diego", round: 1, status: "completed" },
+  ] };
+  const requests = [first, second, third, fourth];
+
+  assert.deepEqual(listAssignees(requests), ["Ana", "Diego"]);
+  assert.deepEqual(filterRequestsByAssignee(requests, "dIeGo").map(item => item.id), ["d-1", "d-2"]);
+  assert.deepEqual(filterRequestsByAssignee(requests, "Ana").map(item => item.id), ["d-1"]);
+  assert.deepEqual(filterRequestsByAssignee(requests, ""), requests);
+});
 
 test("fluxo feliz só conclui após aprovação e evidência de entrega", () => {
   let item = demand();

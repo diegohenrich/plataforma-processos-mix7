@@ -250,6 +250,11 @@ h1 { margin: 9px 0 5px; font: 700 25px Manrope, sans-serif; letter-spacing: -.8p
 .briefing-details-form label small { color: #94a0b0; font-size: 7px; font-weight: 400; }
 .briefing-details-form .workflow-input { margin: 0; font-size: 9px; }
 .briefing-details-form .secondary-button { min-height: 32px; }
+
+.people-filter-label { display: inline-flex; }
+.people-filter { max-width: 160px; padding-right: 24px; cursor: pointer; }
+.assignee-scope { margin: 9px 0 0; color: #7486a0; font-size: 9px; line-height: 1.45; }
+.assignee-scope[hidden] { display: none; }
 .request-dialog { max-height: min(86dvh, 780px); overflow-y: auto; }
 @media (max-width: 600px) { .briefing-detail { grid-template-columns: 82px minmax(0, 1fr); } .request-dialog { max-height: 90dvh; } }
 @media (max-width: 600px) {

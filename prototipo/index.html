@@ -100,10 +100,12 @@
             <div class="board-tools">
               <label class="search-field"><span>⌕</span><input id="searchInput" type="search" placeholder="Buscar demanda" aria-label="Buscar demanda" /></label>
               <button class="filter-button" id="filterButton" type="button" disabled title="Filtros avançados ainda não fazem parte desta fatia"><span>☷</span> Filtros</button>
-              <button class="people-filter" type="button" aria-label="Filtrar por pessoa" disabled title="Papéis e membros serão configurados após validar a equipe"><span>Equipe · em definição</span></button>
+              <label class="people-filter-label"><span class="visually-hidden">Filtrar por profissional</span><select class="people-filter" id="assigneeFilter" aria-label="Filtrar por profissional"><option value="">Equipe toda</option></select></label>
               <button class="more-button" type="button" aria-label="Mais opções" disabled>···</button>
             </div>
           </div>
+
+          <p class="assignee-scope" id="assigneeScope" aria-live="polite" hidden></p>
 
           <div class="list-view-header" id="listViewHeader" hidden><span>CLIENTE</span><span>DEMANDA</span><span>ETAPA</span><span>PRAZO</span><span></span></div>
 

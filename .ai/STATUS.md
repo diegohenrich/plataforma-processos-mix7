@@ -86,7 +86,16 @@
 - Criada `docs/VALIDACAO-CASO-REAL.md`, uma ficha para mapear demanda anonimizada ponta a ponta, identificar papéis, gatilhos, sistemas, evidências, tempos e exceções, e comparar requisitos dos áudios sem misturar fatos da rotina com fluxo-alvo aprovado.
 - README e `docs/REQUIREMENTS.md` apontam para a ficha. Os requisitos de avaliação agora registram explicitamente como pendência finalidade, transparência e tratamento de bloqueios/mudanças; nenhuma política de pontuação foi presumida. A ficha proíbe inserir credenciais ou material confidencial.
 - Nenhum caso operacional foi preenchido nem validado; permanece necessária informação real anonimizada fornecida pela equipe Mix7. Não houve mudança no protótipo nem nas decisões vigentes.
-- Validação documental e sincronização: em andamento.
+- Validação documental e sincronização concluídas nos registros e commits logo abaixo.
 - Validação documental: `git diff --check` passou; um verificador Node conferiu os links locais em README e nos três documentos relacionados; conferi a ficha completa para garantir que os campos estão em branco, sem fatos inventados ou dados reais.
 - Commit `d2f899e8385d6ae3034210681ce644b1a7f80f6d` publicado na branch `implementation/primeira-jornada-local`; SHA local e remoto conferidos iguais. Cartão 4 atualizado e relido em `Requisitos a validar`, com fluxo-alvo corretamente descrito, critério de aceite e link para a ficha.
 - PR #9 teve a descrição atualizada para refletir a captura mínima de briefing, seus limites provisórios, validação 9/9, teste no Chromium em 390×844 e o vínculo com os cartões 4 e 18. `gh pr view 9` confirmou que continua aberto como rascunho; o cartão 18 foi atualizado e a resposta de escrita confirmou a descrição revisada.
+
+## MVP-02: visão por profissional e auditoria P0 — 2026-09-24
+
+- O quadro/lista ganhou seletor de profissional derivado das tarefas, e filtra demandas com tarefas pendentes da rodada atual dessa pessoa. O filtro funciona junto da busca, atualiza contagens por etapa e deixa explícito que os indicadores superiores são gerais e que a visão não impõe permissões. Tarefas concluídas e rodadas antigas não mantêm a demanda na lista pessoal.
+- `docs/PRIMEIRA-IMPLEMENTACAO.md` agora compara MVP-01…MVP-12 com a fatia executável: parcial local, ausente e limites específicos. Essa cobertura deixa visíveis necessidades ainda não implementadas, sem declarar a primeira jornada completa. `docs/PRODUCT.md` e o roteiro de revisão do protótipo refletem a visão pessoal.
+- Validação automática: `node --test tests/workflow.test.js` passou 10/10; `node --check prototipo/workflow.js`, `node --check prototipo/app.js`, `git diff --check` e verificação de links locais nos documentos alterados passaram.
+- Chromium isolado com dados fictícios: uma demanda atribuída apareceu na visão da pessoa; busca e lista mantiveram a seleção; ao concluir sua única tarefa, a demanda saiu da visão pessoal, mas permaneceu no quadro geral. Em viewport 390×844, texto do filtro e quadro inspecionados; largura do documento correspondeu à largura útil do viewport e console não registrou avisos/erros. O servidor de teste registrou o 404 esperado da solicitação automática de `/favicon.ico`; não afetou a aplicação.
+- Limite: filtro é local e organizacional, sem identidade autenticada nem controle de acesso. O caso real da Mix7 ainda precisa validar papéis e visão individual antes de produção. Sem backend ou dados reais.
+- GitHub/Trello: sincronização desta entrega em andamento.
