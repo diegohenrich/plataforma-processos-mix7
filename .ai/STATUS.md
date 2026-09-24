@@ -4,7 +4,7 @@
 
 - `docs/ARQUITETURA-PROPOSTA.md` agora fixa a revisão interna como etapa do fluxo-alvo e trata o caso real como validação de atores, variações e exceções da operação; não como aprovação da estrutura do fluxo. `.ai/DECISIONS.md` e o resumo do estado também foram limpos de formulações antigas que reabriam a decisão.
 - `git diff --check` passou; busca direcionada não encontrou texto dizendo que revisão interna ou o fluxo-alvo aceito ainda aguardam confirmação. Sem teste de produto novo nesta alteração documental.
-- Próxima sincronização: publicar esta atualização na branch do PR #10 e registrar commit no cartão 16 do Trello. Caso real segue pendente para validação factual; nenhum produto/stack foi selecionado.
+- Commit `cfdb5d13f72044e586722936bafdc0721cfce66f` publicado e SHA local/remoto confirmado na branch `research/atualizar-comparativo-e-arquitetura`; cartão 16 do Trello atualizado com o alinhamento e o link. Caso real segue pendente para validação factual; nenhum produto/stack foi selecionado.
 
 ## Concluído
 
