@@ -37,3 +37,5 @@ Fonte: transcrição dos três áudios fornecidos em 24/09/2026 e decisões expl
 9. Quais funções do Trello são indispensáveis? Quais formatos, limites de arquivo e tamanhos de tela precisam ser atendidos?
 
 As respostas serão registradas nos cartões da lista **Requisitos a validar** do [Trello](https://trello.com/b/RkWOzDcu/desenvolvimento-de-projetos-mix7). Não inferir regras finais a partir do resumo da transcrição quando a fala não as estabelece.
+
+Uma [proposta de fluxo](FLUXO-PROPOSTO.md) responde como o processo **deveria funcionar** para criativos de redes sociais. Ela não substitui a validação de um caso real da Mix7.

@@ -9,10 +9,12 @@
 - Referência https://mix7.com.br/ inspecionada; preferência explícita por interface clara em branco e azul registrada no cartão visual.
 - Criada documentação inicial em `README.md`, `docs/`, `CONTRIBUTING.md` e template de pull request; as duas pastas de módulos agora possuem README sem código. Inicializado Git local e criado repositório privado `diegohenrich/plataforma-processos-mix7`.
 - Regra de sincronização GitHub + Trello solicitada pelo usuário e registrada em `AGENTS.md`, `CONTRIBUTING.md`, `.ai/CONTEXT.md` e `.ai/DECISIONS.md`.
+- As cinco perguntas sobre o fluxo foram respondidas como proposta de funcionamento, documentada em `docs/FLUXO-PROPOSTO.md` e vinculada aos requisitos. O fluxo ainda precisa ser validado com um caso real da Mix7.
 
 ## Estado atual e validação
 
 - Os cartões ainda não representam requisitos aprovados: questões abertas permanecem em **Requisitos a validar**.
+- O fluxo proposto define responsáveis e transições para criativos de redes sociais, mas não é descrição confirmada da operação atual; papéis concretos, exceções e critério de conclusão seguem pendentes de validação.
 - Após login da Atlassian no navegador, as cinco etiquetas de área e a etiqueta vermelha de **Bloqueio** foram nomeadas diretamente no Trello. O usuário apontou que a legenda isolada não bastava; a descrição do quadro e `docs/TRELLO.md` agora explicam a finalidade de cada uma.
 - Validação das etiquetas: leitura pela integração confirmou os seis pares nome/cor e a descrição do quadro; a interface mostrou os nomes nos cartões após ativar a exibição expandida e recarregar o quadro. Nenhuma etiqueta permanece sem nome.
 - Validação final pela integração: seis listas na ordem planejada; 18 cartões (3 de contexto, 10 de requisitos, 5 de entregas); etiquetas azul, verde, roxa, amarela e laranja aplicadas conforme a legenda; descrições e links conferidos em cartões de amostra; checklists conferidos pela leitura direta, inclusive as três etapas do protótipo.
