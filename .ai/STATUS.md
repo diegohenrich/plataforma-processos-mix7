@@ -6,7 +6,15 @@
 - O conteúdo de #10 é pesquisa documental, proposta conceitual e protocolo de prova sintética; não escolhe fornecedor nem stack. #9 valida comportamento local, sem backend nem dados operacionais. Casos reais anonimizados ainda são necessários para atores, variações e evidências da Mix7.
 - Simulação sem alterar branches (`git merge-tree`): #6 + #7 combina sem conflito; #6 + #8 e #7 + #8 conflitam em `.ai/STATUS.md`. Preservar os dois registros e resolver esse arquivo explicitamente ao integrar o #8. Os cinco PRs retornam `statusCheckRollup` vazio; não há checagem automática reportada nesta consulta.
 - Nenhum PR foi mesclado nem rebaseado nesta conferência. Antes de fechar as revisões, reconciliar a especificação #8 e a arquitetura #10 com a implementação #9; escolher stack somente após prova técnica controlada e decisão registrada.
-- Validação desta atualização: `gh pr list --state open` confirmou cinco PRs abertos/rascunho; inspeção de `files` confirmou suas bases e arquivos tocados; `git merge-tree` verificou os conflitos indicados sem alterar branches; consultas de `statusCheckRollup` vieram vazias; `git diff --check` passou. Sincronização deste achado com GitHub e cartão 18 do Trello: a concluir nesta atualização.
+- Validação desta atualização: `gh pr list --state open` confirmou cinco PRs abertos/rascunho; inspeção de `files` confirmou suas bases e arquivos tocados; `git merge-tree` verificou os conflitos indicados sem alterar branches; `git diff --check` passou.
+
+## CI no GitHub — 24/09/2026
+
+- Criado `.github/workflows/validate.yml` para executar testes e checks de sintaxe em pushes e pull requests das branches do projeto. Usa `ubuntu-24.04`, Node.js 22 e permissões somente de leitura; actions fixadas em SHA completo.
+- Validação local: `node --test tests/workflow.test.js` passou 14/14; `node --check prototipo/workflow.js` e `node --check prototipo/app.js` passaram; `git diff --check` passou.
+- GitHub Actions executou com sucesso no push da branch `implementation/primeira-jornada-local`, commit `804616f67a36160b2d2e44d3b15e3978ced4ab0c`, execução [36061087791](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36061087791). Atualizações documentais posteriores voltarão a disparar a mesma checagem.
+- A branch ainda está em rascunho no PR #9; a regra agora também cobre os demais PRs depois que o workflow estiver na base deles ou em `main`.
+- Sincronização deste registro e do cartão 18 do Trello: a concluir.
 
 ## Glossário e critério de conclusão — 24/09/2026
 
