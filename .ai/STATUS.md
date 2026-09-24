@@ -25,7 +25,13 @@
 - `README.md` atualizado para destacar a regra de sincronização e a tag do marco inicial. A validação da publicação deste ajuste consta no histórico Git.
 - Proteção automática da branch `main` indisponível no plano atual do GitHub para este repositório privado (API retornou HTTP 403 e exigiu GitHub Pro ou repositório público). Não alterar a privacidade por esse motivo. O processo de push verificado, pull request e preservação de histórico é a proteção operacional adotada.
 
+- 2026-09-24 — Pesquisa inicial de produtos oficiais comparou Planable, Frame.io, Filestage, Wekan e Plane Community. Recomendação registrada: núcleo próprio de processos com módulos configuráveis; testar soluções de gestão e revisão criativa como componentes distintos antes de definir stack. Licenças identificadas para Wekan (MIT) e Plane Community (AGPL-3.0); custos/limites comerciais ainda precisam de validação.
+- 2026-09-24 — Proposta de arquitetura de produto documentada sem fixar tecnologias. Inclui núcleo de demandas, tarefas, motor configurável de etapas/decisões, módulo de criativos com versões/comentários, trilha de auditoria, integrações a avaliar e IA sujeita a confirmação humana.
+- Esta sessão solicitou um exemplo real para validar briefing, papéis, revisão e encerramento; a resposta ainda está pendente. Até lá, o fluxo é somente desenho-alvo.
+
 ## Próximo passo
 
-- Levantar um caso real de demanda da Mix7 para resolver fluxo, papéis, revisão interna e significado de conclusão antes de especificar a primeira versão.
-- Manter a documentação sincronizada com as decisões tomadas durante a descoberta e, quando houver código, vincular mudanças aos cartões do Trello por pull requests.
+- Incorporar um caso real de demanda da Mix7 e resolver fluxo, papéis, revisão interna e significado de conclusão.
+- Preparar protótipo navegável do fluxo depois de validar os estados e papéis; então testar com equipe e cliente.
+- Executar prova ponta a ponta das soluções candidatas, incluindo revisão de arquivo/vídeo, permissões, versões, exportação e integração.
+- Manter documentação, GitHub e Trello sincronizados após cada entrega.
