@@ -1,5 +1,12 @@
 # Estado em 2026-09-24
 
+## Glossário e critério de conclusão — 24/09/2026
+
+- Criado `docs/GLOSSARIO.md` com termos do fluxo-alvo e critério explícito: aprovação não encerra; registrar resultado e evidência, uma pessoa designada confere e então a demanda pode ser concluída. Os papéis e comprovantes específicos seguem pendentes do caso real.
+- `README.md` aponta para o glossário. Código e documentação publicados em `ceef477ef856c5270351da1f0ee1279baf360f8f` e SHA local/remoto confirmado na branch `implementation/primeira-jornada-local`.
+- Cartão 3 do Trello permanece em contexto/decisões até registrar a validação operacional; alinhar sua descrição ao critério aprovado sem encerrá-lo.
+- Validação: `git diff --check` passou; links locais do README e do glossário verificados.
+
 ## MVP-05: recuperar rascunho de arquivo substituído — 24/09/2026
 
 - Ao substituir arquivo durante a execução, o evento preserva o nome e a chave local do arquivo anterior. O histórico oferece seu download quando o arquivo ainda existe no IndexedDB. Isso recupera rascunhos da mesma versão antes do envio; não cria versão aprovada nem recupera conteúdo removido do armazenamento do navegador.
