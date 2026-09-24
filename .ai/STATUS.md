@@ -29,7 +29,7 @@
 - 2026-09-24 — Protótipo estático navegável criado em `prototipo/`. Usa dados fictícios; quadro, lista, formulário de demanda, painel lateral com versão/comentários, busca e simulações de aprovação/ajustes não salvam dados. Isto não é a aplicação de produção.
 - Validação visual/funcional do protótipo: aberto e renderizado em Chromium a 1440×1000 e 390×844; screenshots de quadro, lista e painel inspecionados; viewport móvel ficou com 390 px de largura sem overflow global; painel mediu 510 px em desktop e 390 px em celular; busca por Nativa Saúde retornou 2 cartões; criação gerou uma demanda de briefing; aprovar e solicitar ajustes exibiram a próxima ação esperada; nenhum erro JavaScript de página no percurso principal.
 - Ainda faltam revisão do usuário/equipe, validar o fluxo contra um caso real, persistência, backend, login/permissões reais, arquivos e comentários de vídeo funcionais. Não há stack de produto definida.
-- Sincronização do protótipo: [PR #7](https://github.com/diegohenrich/plataforma-processos-mix7/pull/7), commit `d9667a6e4250dd942db30ace3ab0976224222c3f`; branch publicada e SHA local/remoto conferidos como iguais. PR permanece aberto para revisão. O cartão 17 do Trello será atualizado para **Em revisão** após esta publicação.
+- Sincronização do protótipo: [PR #7](https://github.com/diegohenrich/plataforma-processos-mix7/pull/7), branch `prototype/fluxo-integrado` publicada e SHA local/remoto conferidos como iguais; PR permanece aberto para revisão. Cartão 17 atualizado para **Em revisão** com o resultado e o link do PR.
 
 ## Próximo passo
 
