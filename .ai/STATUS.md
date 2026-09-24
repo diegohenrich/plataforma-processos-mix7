@@ -4,7 +4,7 @@
 
 - Corrigida a linguagem desatualizada em `.ai/DECISIONS.md` e `docs/FLUXO-PROPOSTO.md`: revisão interna e registro/conferência de evidência antes da conclusão são partes do fluxo-alvo aceito. O caso real documentará responsáveis, aplicação por serviço, variações e exceções; não será usado para reabrir essas decisões sem nova evidência ou decisão explícita.
 - `git diff --check` passou. Busca direcionada em `.ai/`, `README.md` e `docs/` não encontrou mais afirmações de que a revisão interna, o fluxo-alvo ou a necessidade de evidência para concluir seguem por decidir.
-- Commit `70dfccc5c8d218d084220132797908ed3c12bb48` enviado e SHA local/remoto confirmado na branch `implementation/primeira-jornada-local`. Cartão 15 no Trello atualizado com fluxo e pendências factuais; próxima sincronização registrará o SHA deste bloco de status.
+- Commit `70dfccc5c8d218d084220132797908ed3c12bb48` enviado e SHA local/remoto confirmado na branch `implementation/primeira-jornada-local`. Cartões 15 (especificação) e 18 (implementação) atualizados no Trello com o fluxo-alvo e as pendências factuais; as respostas de escrita retornaram as descrições atualizadas e os links dos documentos/commits.
 - Permanece necessário um caso real anonimizado para confirmar atores, variações, exceções e evidências por serviço. PR #8 segue rascunho; esta atualização não altera nem integra outros PRs.
 
 ## Continuidade — fluxo-alvo e documentação alinhados
