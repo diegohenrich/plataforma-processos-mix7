@@ -35,7 +35,8 @@ Fonte: transcrição dos três áudios fornecidos em 24/09/2026 e decisões expl
 7. Quais serviços exigem acesso, e quais permitem autenticação sem compartilhar senha? Como conceder e revogar acessos?
 8. Quais integrações com ChatGPT, Codex, Claude e Windows são realmente necessárias na primeira versão? Que dados podem ser enviados a cada serviço?
 9. Quais funções do Trello são indispensáveis? Quais formatos, limites de arquivo e tamanhos de tela precisam ser atendidos?
+10. Quais são as regras transparentes e a finalidade da avaliação de prazo, produção e qualidade? Como registrar bloqueios ou mudanças de escopo sem atribuir automaticamente o resultado à pessoa?
 
-As respostas serão registradas nos cartões da lista **Requisitos a validar** do [Trello](https://trello.com/b/RkWOzDcu/desenvolvimento-de-projetos-mix7). Não inferir regras finais a partir do resumo da transcrição quando a fala não as estabelece.
+As respostas serão registradas nos cartões da lista **Requisitos a validar** do [Trello](https://trello.com/b/RkWOzDcu/desenvolvimento-de-projetos-mix7). A [ficha de validação de caso real](VALIDACAO-CASO-REAL.md) separa fatos, fontes, hipóteses e decisões propostas. Não inferir regras finais a partir do resumo da transcrição quando a fala não as estabelece.
 
 Uma [proposta de fluxo](FLUXO-PROPOSTO.md) responde como o processo **deveria funcionar** para criativos de redes sociais. Ela não substitui a validação de um caso real da Mix7.

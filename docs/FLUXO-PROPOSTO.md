@@ -31,3 +31,5 @@ O **aprovador designado pelo cliente** acessa apenas as peças destinadas a ele.
 - Para cada tipo de demanda, qual evidência comprova entrega, agendamento, publicação ou outro destino e quem a confere antes da conclusão? A exigência de registrar e conferir evidência antes de concluir permanece parte do fluxo-alvo aprovado.
 
 Cartão de validação: [Mapear o percurso real de uma demanda na Mix7](https://trello.com/c/7ZHbl0kH/4-mapear-o-percurso-real-de-uma-demanda-na-mix7).
+
+Para registrar um exemplo sem confundir fatos com o comportamento desejado, use a [ficha para validar um caso real](VALIDACAO-CASO-REAL.md). Anonimize cliente e pessoas, não inclua arquivos nem credenciais, e deixe explícito o que continuar sem resposta.

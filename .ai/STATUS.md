@@ -80,3 +80,10 @@
 - Validação: `node --test tests/workflow.test.js` passou 9/9; `node --check prototipo/workflow.js`, `node --check prototipo/app.js` e `git diff --check` passaram. No Chromium isolado, criei briefing com dados sintéticos, confirmei a exibição dos metadados, bloqueio de briefing antigo incompleto, registro de alteração no histórico, liberação para planejamento e persistência após recarga. Em 390×844, o formulário abriu em modal rolável; a aplicação mantém uma faixa inferior cortada horizontalmente por causa do quadro de colunas em tela estreita, comportamento preexistente fora da mudança do formulário. Console sem avisos/erros durante o percurso.
 - Sem backend, login ou sincronização. Nenhuma informação real de cliente foi usada. PR #9 continua como rascunho.
 - Próximo passo: validar os campos e papéis com um caso real anonimizado; depois ajustar requisitos e protótipo.
+
+## Preparação da validação operacional — 2026-09-24
+
+- Criada `docs/VALIDACAO-CASO-REAL.md`, uma ficha para mapear demanda anonimizada ponta a ponta, identificar papéis, gatilhos, sistemas, evidências, tempos e exceções, e comparar requisitos dos áudios sem misturar fatos da rotina com fluxo-alvo aprovado.
+- README e `docs/REQUIREMENTS.md` apontam para a ficha. Os requisitos de avaliação agora registram explicitamente como pendência finalidade, transparência e tratamento de bloqueios/mudanças; nenhuma política de pontuação foi presumida. A ficha proíbe inserir credenciais ou material confidencial.
+- Nenhum caso operacional foi preenchido nem validado; permanece necessária informação real anonimizada fornecida pela equipe Mix7. Não houve mudança no protótipo nem nas decisões vigentes.
+- Validação documental e sincronização: em andamento.

@@ -12,6 +12,7 @@ Demanda/briefing → planejamento revisado → execução → revisão interna �
 
 - [Requisitos e dúvidas abertas](docs/REQUIREMENTS.md)
 - [Fluxo proposto para uma demanda de criativo](docs/FLUXO-PROPOSTO.md)
+- [Ficha para validar um caso real da Mix7](docs/VALIDACAO-CASO-REAL.md)
 - [Produto e público](docs/PRODUCT.md)
 - [Fases e critérios de avanço](docs/ROADMAP.md)
 - [Primeira implementação e seus limites](docs/PRIMEIRA-IMPLEMENTACAO.md)
