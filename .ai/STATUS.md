@@ -169,3 +169,10 @@
 - Aprovação direta levou à etapa de entrega/publicação, sem concluir a demanda. A conclusão exigiu selecionar entrega, agendamento ou publicação e preencher evidência fictícia; o histórico registrou resultado e evidência.
 - Não houve upload nem uso de dados reais. A jornada nova até mídia, revisão e aprovação do cliente não foi completada; estes cenários exercitam o protótipo, não confirmam a rotina real.
 - Validação: `node --test tests/workflow.test.js` 14/14; checks JS e `git diff --check` passaram; CI passou na execução 36063126012. Commit `e5de980e1d6e3e701a87c2357e6be14872539b98`, SHA local/remoto igual. Cartão 18 do Trello relido em “Em revisão” com descrição atualizada; PR #9 continua aberto como rascunho.
+
+## Trello simplificado e rastreável — 24/09/2026
+
+- A pedido do usuário, o quadro foi ajustado para ser compreensível sem a conversa: descrições curtas em 22 cartões, com objetivo, estado/resultado, aceite e link para detalhes no GitHub. `docs/TRELLO.md` agora define a regra de escrita simples e a divisão de entregas em cartões próprios; etiquetas representam apenas áreas pertinentes.
+- O cartão 18 virou índice da primeira entrega e foi movido para “Em andamento”. Criados cartões 19–21 para três grupos de simulação, com checklists de 11 passos conferidos no total; os três estão em “Concluído”. Criado cartão 22 para anexos no briefing, em “Em andamento”, com checklist de 15 passos: 9 concluídos, 6 pendentes.
+- Etiquetas conferidas: todos os 22 cartões têm ao menos uma etiqueta de área apropriada. Leitura do quadro confirmou 3 cartões de contexto, 10 requisitos, 4 em andamento, 2 em revisão e 3 concluídos. Nenhum cartão original estava fechado ou marcado como concluído antes dessa reorganização.
+- Validação: leitura posterior confirmou nomes, descrições (máximo 707 caracteres), listas e etiquetas; as simulações 19–21 aparecem como concluídas e a implementação 22 como aberta/em andamento. Próximo: terminar MVP-01 e publicar a atualização desta rodada no GitHub e nos cartões relacionados.
