@@ -1,5 +1,13 @@
 # Estado em 2026-09-24
 
+## MVP-08: planejar tarefas a partir do feedback — 24/09/2026
+
+- Durante ajustes, comentários atuais do cliente com identificador podem preencher um rascunho editável de tarefa. A equipe revisa o título, informa o responsável e confirma a criação; tarefa, comentário de origem, versão e evento de histórico ficam ligados. Comentários demonstrativos legados sem identificador não oferecem o atalho.
+- `docs/PRIMEIRA-IMPLEMENTACAO.md` e `prototipo/README.md` descrevem a cobertura e o percurso de revisão. IA continua não implementada: não há decomposição automática, atribuição ou envio a provedor.
+- Validação: `node --test tests/workflow.test.js` passou 14/14; `node --check prototipo/workflow.js`, `node --check prototipo/app.js` e `git diff --check` passaram. Chromium percorreu pedido de ajustes V03 → rascunho → atribuição manual → tarefa V04; lista e histórico referenciaram o comentário/V03. Em 1440×960 e 390×844, documento/drawer sem overflow; console sem erros. Prints em `%LOCALAPPDATA%/Temp/mix7-feedback-task-desktop.png` e `mix7-feedback-task-mobile.png`.
+- Limite: vínculo e autoria seguem no perfil local do navegador. O recurso é manual e não substitui a futura consolidação cronológica assistida por IA.
+- Código em `f78657609d56155d558610e02cd1edb7b5e9fa91`, enviado e SHA local/remoto confirmado na branch `implementation/primeira-jornada-local`. O commit desta memória será registrado depois da publicação.
+
 ## Consistência do fluxo aprovado — 24/09/2026
 
 - Corrigida a linguagem desatualizada em `.ai/DECISIONS.md` e `docs/FLUXO-PROPOSTO.md`: revisão interna e registro/conferência de evidência antes da conclusão são partes do fluxo-alvo aceito. O caso real documentará responsáveis, aplicação por serviço, variações e exceções; não será usado para reabrir essas decisões sem nova evidência ou decisão explícita.
