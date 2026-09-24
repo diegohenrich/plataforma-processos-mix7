@@ -236,6 +236,15 @@
         <section class="briefing-section">
           <div class="section-title-row"><h3>Briefing</h3></div>
           <p class="briefing-current" id="briefingText"></p>
+          <dl class="briefing-details" id="briefingDetails" aria-label="Dados do briefing"></dl>
+          <form class="briefing-details-form" id="briefingDetailsForm" hidden>
+            <label>Origem do pedido<input class="workflow-input" name="origin" required /></label>
+            <label>Canal ou peça<input class="workflow-input" name="channel" required /></label>
+            <label>Critérios de aceite<textarea class="workflow-input" name="acceptanceCriteria" rows="2" required></textarea></label>
+            <label>Referências ou links <small>(opcional)</small><textarea class="workflow-input" name="references" rows="2"></textarea></label>
+            <label>Prazo desejado <small>(opcional)</small><input class="workflow-input" name="due" type="date" /></label>
+            <button class="secondary-button" type="submit">Salvar dados do briefing</button>
+          </form>
           <div class="briefing-revision-notice" id="briefingRevisionNotice" hidden></div>
           <form class="briefing-revision-form" id="briefingRevisionForm" hidden>
             <label>Briefing atualizado<textarea class="workflow-input" name="revisedBrief" rows="3" required maxlength="1200" placeholder="Descreva o novo objetivo e contexto"></textarea></label>
@@ -304,8 +313,11 @@
         <label class="form-label">Nome da demanda<input name="title" required placeholder="Ex.: Campanha de lançamento" /></label>
         <div class="form-grid"><label class="form-label">Cliente<input name="client" required placeholder="Selecione ou digite" /></label><label class="form-label">Tipo de entrega<select name="type"><option>Post para redes sociais</option><option>Vídeo</option><option>Outro material</option></select></label></div>
         <label class="form-label">Objetivo e contexto<textarea name="brief" rows="3" required placeholder="O que precisa ser feito? Para quem e com qual objetivo?"></textarea></label>
-        <label class="form-label">Prazo desejado<input name="due" type="date" /></label>
-        <div class="briefing-hint"><span>✳</span><p>A equipe revisa o briefing e combina responsáveis e prazos antes de iniciar.</p></div>
+        <label class="form-label">Origem do pedido<input name="origin" required placeholder="Ex.: cliente, calendário de conteúdo ou demanda interna" /></label>
+        <div class="form-grid"><label class="form-label">Canal ou peça<input name="channel" required placeholder="Ex.: Instagram · carrossel" /></label><label class="form-label">Prazo desejado <small>(opcional)</small><input name="due" type="date" /></label></div>
+        <label class="form-label">Critérios de aceite<textarea name="acceptanceCriteria" rows="2" required placeholder="Como a equipe e o cliente reconhecerão que a entrega atende ao pedido?"></textarea></label>
+        <label class="form-label">Referências ou links <small>(opcional)</small><textarea name="references" rows="2" placeholder="Links ou contexto de referência resumido"></textarea></label>
+        <div class="briefing-hint"><span>✳</span><p>Origem, canal/peça e critérios de aceite devem estar registrados antes do planejamento. Campos obrigatórios por serviço serão refinados com um caso real da Mix7.</p></div>
         <div class="dialog-footer"><button class="secondary-button" value="cancel">Cancelar</button><button class="primary-button" type="submit" value="submit">Salvar demanda <span>→</span></button></div>
       </form>
     </dialog>

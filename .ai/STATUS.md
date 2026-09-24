@@ -71,3 +71,12 @@
 - Chromium: fluxo com briefing fictício confirmou pausa, histórico/motivo, bloqueio até confirmação, retomada e persistência após recarga. Desktop e viewport 390×844 inspecionados; largura móvel sem overflow e console sem avisos/erros.
 - Commit de código `74700857f5c3be0e47c17b4ce051c7c9d4a8e464` enviado e SHA local/remoto comparado na branch `implementation/primeira-jornada-local`. Cartão 18 do Trello atualizado e resposta conferida com regra, validação, limites e links. PR #9 segue como rascunho.
 - Uso limitado a dados sintéticos; permanece sem backend, login/permissões reais, sincronização ou publicação. Alteração de briefing após envio ao cliente e revisão operacional dependem de caso real anonimizado.
+# Estado em 2026-09-24
+
+## Captura mínima do briefing — MVP-01
+
+- A nova demanda agora registra origem do pedido, canal/peça e critérios de aceite. Prazo e referências/links são opcionais nesta demonstração. O briefing não avança ao planejamento sem os três campos mínimos; demandas antigas podem ser completadas e a alteração entra no histórico antes da liberação.
+- A regra dos campos mínimos é provisória para prototipagem: serviços diferentes podem exigir dados adicionais. Confirmar com caso real anonimizado da Mix7 antes de tratar como requisito operacional.
+- Validação: `node --test tests/workflow.test.js` passou 9/9; `node --check prototipo/workflow.js`, `node --check prototipo/app.js` e `git diff --check` passaram. No Chromium isolado, criei briefing com dados sintéticos, confirmei a exibição dos metadados, bloqueio de briefing antigo incompleto, registro de alteração no histórico, liberação para planejamento e persistência após recarga. Em 390×844, o formulário abriu em modal rolável; a aplicação mantém uma faixa inferior cortada horizontalmente por causa do quadro de colunas em tela estreita, comportamento preexistente fora da mudança do formulário. Console sem avisos/erros durante o percurso.
+- Sem backend, login ou sincronização. Nenhuma informação real de cliente foi usada. PR #9 continua como rascunho.
+- Próximo passo: validar os campos e papéis com um caso real anonimizado; depois ajustar requisitos e protótipo.

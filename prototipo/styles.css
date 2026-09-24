@@ -240,6 +240,18 @@ h1 { margin: 9px 0 5px; font: 700 25px Manrope, sans-serif; letter-spacing: -.8p
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; clip-path: inset(50%); }
 .version-history-item { padding: 2px 4px; border: 0; border-radius: 4px; color: #70819a; background: transparent; font: inherit; text-align: left; cursor: pointer; }
 .version-history-item:hover, .version-history-item.selected { color: #416fae; background: #edf4ff; }
+.briefing-details { display: grid; gap: 6px; margin: 11px 0 0; }
+.briefing-detail { display: grid; grid-template-columns: 94px minmax(0, 1fr); gap: 7px; color: #77879c; font-size: 8px; line-height: 1.45; }
+.briefing-detail dt { color: #8997a9; font-weight: 600; }
+.briefing-detail dd { min-width: 0; margin: 0; color: #5b6b81; overflow-wrap: anywhere; white-space: pre-wrap; }
+.briefing-details-form { display: grid; gap: 7px; margin-top: 11px; padding-top: 10px; border-top: 1px solid #edf1f6; }
+.briefing-details-form[hidden] { display: none; }
+.briefing-details-form label { display: grid; gap: 4px; color: #78879a; font-size: 8px; }
+.briefing-details-form label small { color: #94a0b0; font-size: 7px; font-weight: 400; }
+.briefing-details-form .workflow-input { margin: 0; font-size: 9px; }
+.briefing-details-form .secondary-button { min-height: 32px; }
+.request-dialog { max-height: min(86dvh, 780px); overflow-y: auto; }
+@media (max-width: 600px) { .briefing-detail { grid-template-columns: 82px minmax(0, 1fr); } .request-dialog { max-height: 90dvh; } }
 @media (max-width: 600px) {
   #listViewHeader { display: none !important; }
   .kanban-board.list-view { grid-template-columns: minmax(0, 1fr); max-width: 100%; overflow-x: visible; }

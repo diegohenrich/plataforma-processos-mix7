@@ -7,6 +7,11 @@ function demand() {
     id: "d-1",
     stage: "briefing",
     brief: "Criar uma peça de lançamento.",
+    origin: "Cliente",
+    channel: "Instagram · carrossel",
+    acceptanceCriteria: "Mensagem legível e formato aprovado.",
+    references: "",
+    due: "",
     briefingRevisions: [],
     planReviewRequired: false,
     versions: [{ id: "d-1-v1", number: 1, fileName: "arte-v1.png", fileKey: "asset-v1", sharedAt: null, decision: null }],
@@ -43,6 +48,27 @@ test("fluxo feliz só conclui após aprovação e evidência de entrega", () => 
   assert.equal(item.stage, "completed");
   assert.equal(item.delivery.evidence, "URL de publicação");
   assert.equal(item.history.length, 8);
+});
+
+test("briefing sem origem, canal ou critérios não avança e as correções ficam no histórico", () => {
+  let item = demand();
+  item.origin = "";
+  assert.throws(() => transition(item, "briefing_ready"), /origem.*canal.*critérios/);
+  item = transition(item, "briefing_details_updated", {
+    origin: "Planejamento de conteúdo",
+    channel: "Instagram · carrossel",
+    acceptanceCriteria: "Texto revisado e identidade visual aprovada.",
+    references: "https://example.invalid/referencia",
+    due: "2026-10-02",
+  }, "2026-09-24T15:00:00.000Z");
+  assert.equal(item.stage, "briefing");
+  assert.equal(item.origin, "Planejamento de conteúdo");
+  assert.equal(item.history.at(-1).type, "briefing_details_updated");
+  assert.equal(item.history.at(-1).details.previous.origin, "");
+  assert.equal(item.history.at(-1).details.updated.acceptanceCriteria, "Texto revisado e identidade visual aprovada.");
+  item = transition(item, "briefing_ready");
+  assert.equal(item.stage, "planning");
+  assert.equal(item.history.at(-1).details.channel, "Instagram · carrossel");
 });
 
 test("pedido de alteração é comentário ancorado e decisão imutáveis da versão enviada", () => {

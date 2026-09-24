@@ -37,6 +37,9 @@ function loadState() {
           if (!Array.isArray(request.tasks)) request.tasks = [];
           if (!Array.isArray(request.briefingRevisions)) request.briefingRevisions = [];
           if (typeof request.planReviewRequired !== "boolean") request.planReviewRequired = false;
+          for (const field of ["origin", "channel", "acceptanceCriteria", "references"]) {
+            if (typeof request[field] !== "string") request[field] = "";
+          }
         }
         return parsed;
       }
@@ -356,7 +359,16 @@ function renderActions(request) {
   const buttons = node("div", "approval-buttons");
   container.append(buttons);
 
-  if (request.stage === "briefing") appendAction(buttons, "Briefing completo", () => updateRequest("briefing_ready", {}, "Briefing liberado para planejamento."), "approve-button");
+  if (request.stage === "briefing") {
+    const missing = [
+      ["origem do pedido", request.origin],
+      ["canal ou peça", request.channel],
+      ["critérios de aceite", request.acceptanceCriteria],
+    ].filter(([, value]) => !String(value || "").trim()).map(([label]) => label);
+    const ready = appendAction(buttons, "Confirmar briefing e planejar", () => updateRequest("briefing_ready", {}, "Briefing liberado para planejamento."), "approve-button");
+    ready.disabled = missing.length > 0;
+    if (missing.length) container.append(node("small", "workflow-hint", `Complete antes do planejamento: ${missing.join(", ")}.`));
+  }
   else if (request.stage === "planning") {
     if (request.planReviewRequired) container.append(node("small", "workflow-hint", "O briefing mudou. Revise o briefing e as tarefas, ajuste o plano se necessário e confirme para retomar a execução."));
     const confirm = appendAction(buttons, request.planReviewRequired ? "Confirmar revisão do plano e retomar" : "Confirmar plano e iniciar", () => updateRequest("plan_confirmed", {}, request.planReviewRequired ? "Revisão do plano confirmada; execução retomada." : "Planejamento confirmado; demanda em produção."), "approve-button");
@@ -642,6 +654,26 @@ function renderDrawer() {
 
 function renderBriefing(request) {
   document.querySelector("#briefingText").textContent = request.brief || "Nenhum contexto registrado.";
+  const details = document.querySelector("#briefingDetails");
+  details.replaceChildren();
+  const fields = [
+    ["Origem do pedido", request.origin, true],
+    ["Tipo de entrega", request.type, true],
+    ["Canal ou peça", request.channel, true],
+    ["Prazo desejado", request.due ? formatDue(request.due) : "", false],
+    ["Critérios de aceite", request.acceptanceCriteria, true],
+    ["Referências ou links", request.references, false],
+  ];
+  for (const [label, value, required] of fields) {
+    const row = node("div", "briefing-detail");
+    row.append(node("dt", "", label), node("dd", "", String(value || "").trim() || (required ? "Não informado · necessário antes do planejamento" : "Não informado · opcional nesta demonstração")));
+    details.append(row);
+  }
+  const detailsForm = document.querySelector("#briefingDetailsForm");
+  detailsForm.hidden = request.stage !== "briefing";
+  for (const field of ["origin", "channel", "acceptanceCriteria", "references", "due"]) {
+    detailsForm.elements.namedItem(field).value = request[field] || "";
+  }
   const notice = document.querySelector("#briefingRevisionNotice");
   const revision = request.briefingRevisions?.at(-1);
   notice.replaceChildren();
@@ -701,13 +733,20 @@ document.querySelector("#briefingRevisionForm").addEventListener("submit", event
   if (saved) event.currentTarget.reset();
 });
 
+document.querySelector("#briefingDetailsForm").addEventListener("submit", event => {
+  event.preventDefault();
+  const data = new FormData(event.currentTarget);
+  const payload = Object.fromEntries(["origin", "channel", "acceptanceCriteria", "references", "due"].map(field => [field, data.get(field)]));
+  updateRequest("briefing_details_updated", payload, "Dados do briefing e histórico atualizados.");
+});
+
 document.querySelector("#requestForm").addEventListener("submit", event => {
   event.preventDefault();
   const data = new FormData(event.currentTarget);
   const now = new Date().toISOString();
   const request = {
-    id: makeId(), title: String(data.get("title")).trim(), client: String(data.get("client")).trim(), brief: String(data.get("brief")).trim(), type: String(data.get("type")), due: String(data.get("due") || ""), stage: "briefing", demo: false, briefingRevisions: [], planReviewRequired: false,
-    versions: [{ id: "", number: 1, fileName: "", fileKey: null, createdBy: "", createdAt: now, sharedAt: null, decision: null }], tasks: [], comments: [], history: [{ type: "created", details: {}, at: now }], delivery: null,
+    id: makeId(), title: String(data.get("title")).trim(), client: String(data.get("client")).trim(), brief: String(data.get("brief")).trim(), type: String(data.get("type")), origin: String(data.get("origin")).trim(), channel: String(data.get("channel")).trim(), acceptanceCriteria: String(data.get("acceptanceCriteria")).trim(), references: String(data.get("references") || "").trim(), due: String(data.get("due") || ""), stage: "briefing", demo: false, briefingRevisions: [], planReviewRequired: false,
+    versions: [{ id: "", number: 1, fileName: "", fileKey: null, createdBy: "", createdAt: now, sharedAt: null, decision: null }], tasks: [], comments: [], history: [{ type: "created", details: { origin: String(data.get("origin")).trim(), channel: String(data.get("channel")).trim(), acceptanceCriteria: String(data.get("acceptanceCriteria")).trim() }, at: now }], delivery: null,
   };
   request.versions[0].id = `${request.id}-v1`;
   state.requests.unshift(request);

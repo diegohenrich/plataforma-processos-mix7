@@ -39,8 +39,31 @@
     switch (action) {
       case "briefing_ready":
         if (next.stage !== "briefing") throw new Error("A demanda não está no briefing.");
+        if (!String(next.origin || "").trim() || !String(next.channel || "").trim() || !String(next.acceptanceCriteria || "").trim()) {
+          throw new Error("Informe a origem, o canal ou peça e os critérios de aceite antes do planejamento.");
+        }
         next.stage = "planning";
         break;
+      case "briefing_details_updated": {
+        if (next.stage !== "briefing") throw new Error("Os dados iniciais só podem ser editados durante o briefing.");
+        const previous = {
+          origin: next.origin || "",
+          channel: next.channel || "",
+          acceptanceCriteria: next.acceptanceCriteria || "",
+          references: next.references || "",
+          due: next.due || "",
+        };
+        next.origin = String(payload.origin || "").trim();
+        next.channel = String(payload.channel || "").trim();
+        next.acceptanceCriteria = String(payload.acceptanceCriteria || "").trim();
+        next.references = String(payload.references || "").trim();
+        next.due = String(payload.due || "").trim();
+        if (!next.origin || !next.channel || !next.acceptanceCriteria) {
+          throw new Error("Informe a origem, o canal ou peça e os critérios de aceite.");
+        }
+        recordEvent(next, action, { previous, updated: { origin: next.origin, channel: next.channel, acceptanceCriteria: next.acceptanceCriteria, references: next.references, due: next.due } }, now);
+        return next;
+      }
       case "plan_confirmed":
         if (next.stage !== "planning") throw new Error("A demanda não está em planejamento.");
         if (!next.tasks.some(task => task.round === version.number && task.title && task.assignee)) throw new Error("Adicione ao menos uma tarefa com responsável antes de confirmar o plano.");
@@ -148,6 +171,13 @@
       const revision = next.briefingRevisions.at(-1);
       eventDetails.reason = revision.reason;
       eventDetails.planReviewRequired = true;
+    }
+    if (action === "briefing_ready") {
+      eventDetails.origin = next.origin;
+      eventDetails.channel = next.channel;
+      eventDetails.acceptanceCriteria = next.acceptanceCriteria;
+      eventDetails.references = next.references || "";
+      eventDetails.due = next.due || "";
     }
     if (["add_comment", "internal_changes", "client_changes"].includes(action)) {
       eventDetails.versionId = version.id;
