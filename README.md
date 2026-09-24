@@ -18,4 +18,6 @@ Demanda → planejamento revisado → execução → aprovação do cliente → 
 
 O Trello é a fonte canônica para cartões e andamento. Este repositório guarda documentação durável e, futuramente, código, testes e histórico de alterações. Os arquivos `.ai/` resumem o contexto vigente para continuidade entre agentes.
 
+**Regra de continuidade:** cada alteração ou tarefa concluída deve resultar em commit enviado e verificado no GitHub e atualização do cartão correspondente no Trello, com o resultado e o link. Consulte [AGENTS.md](AGENTS.md) e [Como contribuir](CONTRIBUTING.md). A organização inicial está preservada na tag `marco-2026-09-24-organizacao-inicial`.
+
 As pastas `Sistema de gestão de equipe` e `Sistema de aprovação de criativos das redes sociais` representam as duas frentes iniciais. Sua organização técnica será definida após a pesquisa de soluções e o desenho da arquitetura.
