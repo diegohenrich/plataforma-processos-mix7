@@ -37,3 +37,8 @@
 - Completar análise prática de soluções candidatas; depois documentar modelo de domínio/arquitetura técnica e escolher stack com evidências.
 - Implementar a primeira fatia integrada somente depois de validar fluxo, limites de dados e decisões técnicas.
 - Sincronizar documentação, GitHub e Trello após cada entrega.
+
+## Sincronização posterior da especificação — 2026-09-24
+
+- Correção do registro anterior: o cartão 15 do Trello foi atualizado com requisitos priorizados, critérios de aceite, links para requisitos/especificação/fluxo e PR #8. A leitura atual confirmou cartão em **Em andamento** e descrição vigente. A frase anterior “será atualizado após registrar o PR” ficou obsoleta após a sincronização.
+- PR #8 permanece aberto como rascunho contra `main`; não foi mesclado. A validação continua documental: `git diff --check` e links locais passaram na entrega original; caso real e revisão da equipe continuam pendentes.
