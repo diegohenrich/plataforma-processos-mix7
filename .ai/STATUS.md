@@ -25,7 +25,15 @@
 - `README.md` atualizado para destacar a regra de sincronização e a tag do marco inicial. A validação da publicação deste ajuste consta no histórico Git.
 - Proteção automática da branch `main` indisponível no plano atual do GitHub para este repositório privado (API retornou HTTP 403 e exigiu GitHub Pro ou repositório público). Não alterar a privacidade por esse motivo. O processo de push verificado, pull request e preservação de histórico é a proteção operacional adotada.
 
+- PR #6 contém pesquisa inicial de soluções e arquitetura de produto; PR #7 contém protótipo navegável. Ambos foram conferidos abertos como rascunhos e ainda não foram integrados à `main`.
+- 2026-09-24 — Transcrição original dos três áudios conferida no anexo fornecido. Requisitos reorganizados em P0/P1/P2 e especificação funcional inicial criada em `docs/ESPECIFICACAO-MVP.md`; as matrizes registram fontes, critérios verificáveis, dependências e rastreabilidade para cartões Trello 4–13 e 15. A diretriz aprovada foi separada dos fatos operacionais ainda não confirmados.
+- Validação documental desta etapa: `git diff --check` passou e todos os destinos locais de Markdown nos arquivos alterados existem. Não há código de produto novo nesta alteração, portanto build e testes de aplicação não se aplicam.
+- A especificação está em preparação na branch `spec/requisitos-priorizados`; falta publicar PR e atualizar o cartão 15. Fluxo real, papéis concretos e revisão do protótipo seguem pendentes.
+
 ## Próximo passo
 
-- Levantar um caso real de demanda da Mix7 para resolver fluxo, papéis, revisão interna e significado de conclusão antes de especificar a primeira versão.
-- Manter a documentação sincronizada com as decisões tomadas durante a descoberta e, quando houver código, vincular mudanças aos cartões do Trello por pull requests.
+- Incorporar um caso real de demanda da Mix7 e resolver fluxo, papéis, revisão interna, exceções e significado de conclusão.
+- Revisar o protótipo com usuário/equipe e ajustar o fluxo à descrição real da operação.
+- Completar análise prática de soluções candidatas; depois documentar modelo de domínio/arquitetura técnica e escolher stack com evidências.
+- Implementar a primeira fatia integrada somente depois de validar fluxo, limites de dados e decisões técnicas.
+- Sincronizar documentação, GitHub e Trello após cada entrega.
