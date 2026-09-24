@@ -1,5 +1,11 @@
 # Estado em 2026-09-24
 
+## Arquitetura coerente com o fluxo aprovado — 24/09/2026
+
+- `docs/ARQUITETURA-PROPOSTA.md` agora fixa a revisão interna como etapa do fluxo-alvo e trata o caso real como validação de atores, variações e exceções da operação; não como aprovação da estrutura do fluxo. `.ai/DECISIONS.md` e o resumo do estado também foram limpos de formulações antigas que reabriam a decisão.
+- `git diff --check` passou; busca direcionada não encontrou texto dizendo que revisão interna ou o fluxo-alvo aceito ainda aguardam confirmação. Sem teste de produto novo nesta alteração documental.
+- Próxima sincronização: publicar esta atualização na branch do PR #10 e registrar commit no cartão 16 do Trello. Caso real segue pendente para validação factual; nenhum produto/stack foi selecionado.
+
 ## Concluído
 
 - Quadro Trello existente localizado e conexão verificada.
@@ -13,8 +19,8 @@
 
 ## Estado atual e validação
 
-- Os cartões ainda não representam requisitos aprovados: questões abertas permanecem em **Requisitos a validar**.
-- O fluxo proposto define responsáveis e transições para criativos de redes sociais, mas não é descrição confirmada da operação atual; papéis concretos, exceções e critério de conclusão seguem pendentes de validação.
+- Os requisitos P0/P1/P2 são baseline para revisão; o fluxo-alvo integrado foi aprovado como diretriz do produto. Papéis, exceções, rotina observada e evidências por serviço ainda exigem caso real.
+- Revisão interna antes do envio ao cliente e evidência conferida antes da conclusão fazem parte do fluxo-alvo; não são decisões estruturais pendentes. O caso real identifica responsáveis e variações operacionais.
 - Após login da Atlassian no navegador, as cinco etiquetas de área e a etiqueta vermelha de **Bloqueio** foram nomeadas diretamente no Trello. O usuário apontou que a legenda isolada não bastava; a descrição do quadro e `docs/TRELLO.md` agora explicam a finalidade de cada uma.
 - Validação das etiquetas: leitura pela integração confirmou os seis pares nome/cor e a descrição do quadro; a interface mostrou os nomes nos cartões após ativar a exibição expandida e recarregar o quadro. Nenhuma etiqueta permanece sem nome.
 - Validação final pela integração: seis listas na ordem planejada; 18 cartões (3 de contexto, 10 de requisitos, 5 de entregas); etiquetas azul, verde, roxa, amarela e laranja aplicadas conforme a legenda; descrições e links conferidos em cartões de amostra; checklists conferidos pela leitura direta, inclusive as três etapas do protótipo.

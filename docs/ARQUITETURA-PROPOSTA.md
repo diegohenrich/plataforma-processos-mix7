@@ -23,8 +23,8 @@ flowchart LR
 ## Responsabilidades do produto
 
 - **Núcleo de trabalho:** cadastro da demanda, contexto do cliente, tarefas, atribuições, estimativas, prazo, bloqueios e visões de quadro/lista.
-- **Fluxo configurável:** estados e transições, condições para avançar, aprovadores, prazos de resposta e exceções autorizadas. A primeira configuração segue o fluxo aprovado como alvo, ainda sujeito à validação do caso real.
-- **Módulo de criativos:** arquivo submetido e suas versões; comentário geral ou ancorado; timecode para vídeo; revisão interna quando confirmada; decisões de aprovar ou solicitar alterações.
+- **Fluxo configurável:** estados e transições, condições para avançar, aprovadores, prazos de resposta e exceções autorizadas. A primeira configuração implementa o fluxo-alvo aprovado; o caso real confirma atores, variações e exceções da operação.
+- **Módulo de criativos:** arquivo submetido e suas versões; comentário geral ou ancorado; timecode para vídeo; revisão interna antes do envio ao cliente, conforme fluxo-alvo aprovado; decisões de aprovar ou solicitar alterações.
 - **Trilha de auditoria:** ator, ação, objeto, versão e horário para alterações de briefing, atribuições, comentários, decisões e encerramento.
 - **Integrações:** avaliar separadamente armazenamento de arquivos, revisão especializada, publicação social, calendário e notificações. A plataforma central conserva o vínculo, o estado e a evidência necessária para compreender o processo.
 - **IA assistiva:** preparar sugestões de tarefas, responsáveis e estimativas em rascunho. Uma pessoa precisa revisar e confirmar; a aplicação registra o que foi aceito ou alterado.
@@ -86,4 +86,4 @@ Não escolher frontend, backend, banco de dados, hospedagem ou provedor de arqui
 
 ## Critério de evolução desta proposta
 
-Rever esta arquitetura quando a validação trouxer: fluxo real com exceções; papéis concretos; tipos de arquivo e volume; regra de acesso de clientes; critério de conclusão; integrações exigidas; e limite orçamentário/operacional. A aprovação desta proposta de fluxo é uma diretriz do produto, não confirmação de como a operação trabalha hoje.
+Detalhar esta arquitetura quando a validação trouxer: atores e exceções reais; tipos de arquivo e volume; regra de acesso de clientes; evidências específicas por serviço; integrações exigidas; e limite orçamentário/operacional. A estrutura do fluxo-alvo aprovado só deve ser revista com nova evidência ou decisão explícita; sua aprovação não confirma como a operação trabalha hoje.
