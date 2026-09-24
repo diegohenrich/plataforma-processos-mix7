@@ -4,7 +4,7 @@
 
 ## O que já executa
 
-A tela `prototipo/` mantém os cartões no quadro e na lista, registra briefing, busca e detalhes, permite planejar tarefas com responsável, estimativa e prazo, acompanhar sua conclusão, aceita arquivo local de imagem, vídeo ou PDF de até 15 MB, cria versões, grava comentários e eventos, aplica decisões e avança a demanda pelas regras do fluxo.
+A tela `prototipo/` mantém os cartões no quadro e na lista, registra briefing, busca e detalhes, permite planejar tarefas com responsável, estimativa e prazo, acompanhar sua conclusão, aceita arquivo local de imagem, vídeo ou PDF de até 15 MB, cria versões, grava comentários e eventos, aplica decisões e avança a demanda pelas regras do fluxo. Comentários podem ser ligados a um ponto percentual da imagem ou ao instante pausado do vídeo; atalhos no histórico abrem a versão correspondente.
 
 O caminho implementado é:
 
@@ -25,7 +25,7 @@ O plano exige ao menos uma tarefa atribuída; revisão interna exige que as tare
 
 O navegador serve apenas para validar comportamento. Cada perfil de navegador tem dados próprios, sem sincronização ou backup gerenciado. Limpar os dados do site pode removê-los. Não use conteúdo de clientes, credenciais ou informação pessoal. A tela não tem login, isolamento por cliente, autorização de servidor, portal do cliente, trilha de auditoria à prova de adulteração, controle de retenção ou recuperação de backup. Os controles locais não constituem aprovação enviada ao cliente.
 
-Comentários em vídeo ainda não têm timecode e comentários em imagem ainda não têm coordenadas. As tarefas usam nomes livres e não são contas de membros: não há gestão de equipe/autorização, cronômetro ou capacidade. Também não há notificações, IA, integrações, nem registro separado de agendamento vs. publicação. Esses requisitos seguem na especificação priorizada.
+O ponto em imagem usa coordenadas percentuais relativas à mídia e o vídeo registra o instante em segundos; são comportamentos locais de demonstração a validar com a equipe. Os arquivos precisam estar presentes neste mesmo perfil do navegador para abrir a referência. As tarefas usam nomes livres e não são contas de membros: não há gestão de equipe/autorização, cronômetro ou capacidade. Também não há notificações, IA, integrações, nem registro separado de agendamento vs. publicação. Esses requisitos seguem na especificação priorizada.
 
 ## Verificação
 
@@ -37,8 +37,8 @@ node --check prototipo/workflow.js
 node --check prototipo/app.js
 ```
 
-Os testes cobrem plano com tarefa atribuída, bloqueio de revisão com tarefas incompletas, fluxo feliz, aprovação de versão não compartilhada, motivo obrigatório na revisão interna, pedido de alteração ligado à versão antiga, preservação do histórico na versão seguinte e evidência obrigatória para concluir. A inspeção em navegador também deve conferir persistência após recarga, seleção e abertura de arquivo e layout em desktop/celular antes de tratar esta fatia como revisada.
+Os testes cobrem plano com tarefa atribuída, bloqueio de revisão com tarefas incompletas, fluxo feliz, aprovação de versão não compartilhada, motivo obrigatório na revisão interna, pedido de alteração ligado à versão antiga, preservação do histórico na versão seguinte, âncoras de imagem/vídeo validadas e evidência obrigatória para concluir. Na inspeção em Chromium com arquivos sintéticos, o ponto e o timecode abriram a V01 correspondente depois da criação da V02; o histórico sobreviveu à recarga, a tela de 390 px não teve overflow horizontal e o console ficou sem avisos ou erros. A seleção de arquivo foi exercitada pelo fluxo normal do navegador. A integração ainda requer validação da equipe Mix7.
 
 ## Próximas decisões
 
-Antes de usar dados reais, fechar o caso real da Mix7 e sua matriz de papéis; escolher persistência central, autenticação, isolamento, hospedagem, backup, retenção e integração de arquivos; completar comentários ancorados em mídia. A escolha final de tecnologias deve seguir a pesquisa e as restrições operacionais.
+Antes de usar dados reais, fechar o caso real da Mix7 e sua matriz de papéis; escolher persistência central, autenticação, isolamento, hospedagem, backup, retenção e integração de arquivos; validar o comportamento das âncoras com equipe e cliente. A escolha final de tecnologias deve seguir a pesquisa e as restrições operacionais.

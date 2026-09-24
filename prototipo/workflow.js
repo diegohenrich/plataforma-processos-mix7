@@ -14,6 +14,24 @@
     request.history.push({ type, details: details || {}, at: now });
   }
 
+  function captureAnchor(anchor) {
+    if (anchor == null) return null;
+    if (anchor.type === "image") {
+      const x = Number(anchor.x);
+      const y = Number(anchor.y);
+      if (!Number.isFinite(x) || !Number.isFinite(y) || x < 0 || x > 1 || y < 0 || y > 1) {
+        throw new Error("O ponto do comentário na imagem está fora dos limites.");
+      }
+      return { type: "image", x, y };
+    }
+    if (anchor.type === "video") {
+      const timeSeconds = Number(anchor.timeSeconds);
+      if (!Number.isFinite(timeSeconds) || timeSeconds < 0) throw new Error("O instante do comentário no vídeo é inválido.");
+      return { type: "video", timeSeconds };
+    }
+    throw new Error("O tipo de referência do comentário é inválido.");
+  }
+
   function transition(request, action, payload = {}, now = new Date().toISOString()) {
     const next = structuredClone(request);
     const version = next.versions[next.versions.length - 1];
@@ -70,7 +88,7 @@
         if (next.stage !== "internalReview") throw new Error("A demanda não está em revisão interna.");
         if (!String(payload.comment || "").trim()) throw new Error("Registre o motivo da devolução.");
         next.stage = "doing";
-        next.comments.push({ versionId: version.id, author: "Revisão interna", audience: "internal", text: payload.comment.trim(), at: now });
+        next.comments.push({ id: `${next.id}-comment-${next.comments.length + 1}`, versionId: version.id, author: "Revisão interna", audience: "internal", text: payload.comment.trim(), anchor: captureAnchor(payload.anchor), at: now });
         break;
       case "client_approved":
         if (next.stage !== "clientReview" || version.id !== payload.versionId || !version.sharedAt) throw new Error("A versão enviada para aprovação mudou ou não está compartilhada.");
@@ -81,7 +99,7 @@
         if (next.stage !== "clientReview" || version.id !== payload.versionId || !version.sharedAt) throw new Error("A versão enviada para aprovação mudou ou não está compartilhada.");
         if (!String(payload.comment || "").trim()) throw new Error("Descreva as alterações solicitadas.");
         version.decision = { result: "changes_requested", author: payload.author || "Aprovador do cliente", at: now };
-        next.comments.push({ versionId: version.id, author: payload.author || "Aprovador do cliente", audience: "client", text: payload.comment.trim(), at: now });
+        next.comments.push({ id: `${next.id}-comment-${next.comments.length + 1}`, versionId: version.id, author: payload.author || "Aprovador do cliente", audience: "client", text: payload.comment.trim(), anchor: captureAnchor(payload.anchor), at: now });
         next.stage = "adjustments";
         break;
       case "new_version":
@@ -100,13 +118,19 @@
         break;
       case "add_comment":
         if (!String(payload.comment || "").trim()) throw new Error("Escreva um comentário antes de enviar.");
-        next.comments.push({ versionId: version.id, author: payload.author || "Equipe", audience: payload.audience || "internal", text: payload.comment.trim(), at: now });
+        next.comments.push({ id: `${next.id}-comment-${next.comments.length + 1}`, versionId: version.id, author: payload.author || "Equipe", audience: payload.audience || "internal", text: payload.comment.trim(), anchor: captureAnchor(payload.anchor), at: now });
         break;
       default:
         throw new Error("Ação de fluxo desconhecida.");
     }
 
-    recordEvent(next, action, payload.evidence ? { evidence: payload.evidence.trim() } : {}, now);
+    const eventDetails = payload.evidence ? { evidence: payload.evidence.trim() } : {};
+    if (["add_comment", "internal_changes", "client_changes"].includes(action)) {
+      eventDetails.versionId = version.id;
+      const comment = next.comments.at(-1);
+      if (comment?.anchor) eventDetails.anchor = comment.anchor;
+    }
+    recordEvent(next, action, eventDetails, now);
     return next;
   }
 

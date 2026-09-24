@@ -42,16 +42,17 @@ test("fluxo feliz só conclui após aprovação e evidência de entrega", () => 
   assert.equal(item.history.length, 8);
 });
 
-test("pedido de alteração é comentário e decisão imutáveis da versão enviada", () => {
+test("pedido de alteração é comentário ancorado e decisão imutáveis da versão enviada", () => {
   let item = demand();
   item = planRoundOne(item);
   item = completeCurrentTasks(item);
   item = transition(item, "submit_internal_review");
   item = transition(item, "internal_approved");
-  item = transition(item, "client_changes", { versionId: "d-1-v1", comment: "Ajustar a chamada" });
+  item = transition(item, "client_changes", { versionId: "d-1-v1", comment: "Ajustar a chamada", anchor: { type: "image", x: 0.6, y: 0.25 } });
   assert.equal(item.stage, "adjustments");
   assert.equal(item.versions[0].decision.result, "changes_requested");
   assert.equal(item.comments[0].versionId, "d-1-v1");
+  assert.deepEqual(item.comments[0].anchor, { type: "image", x: 0.6, y: 0.25 });
   item = transition(item, "add_task", { title: "Ajustar chamada", assignee: "Designer" });
   item = completeCurrentTasks(item);
   item = transition(item, "new_version", { fileName: "arte-v2.png", fileKey: "asset-v2" });
@@ -59,6 +60,18 @@ test("pedido de alteração é comentário e decisão imutáveis da versão envi
   assert.equal(item.versions[1].number, 2);
   assert.equal(item.versions[0].decision.result, "changes_requested");
   assert.deepEqual(item.tasks.map(task => [task.round, task.status]), [[1, "completed"], [2, "completed"]]);
+});
+
+test("comentário de vídeo preserva o instante e a versão e valida a âncora", () => {
+  const item = transition(demand(), "add_comment", {
+    comment: "Rever esta fala",
+    anchor: { type: "video", timeSeconds: 12.75 },
+  }, "2026-09-24T15:00:00.000Z");
+  assert.equal(item.comments[0].versionId, "d-1-v1");
+  assert.deepEqual(item.comments[0].anchor, { type: "video", timeSeconds: 12.75 });
+  assert.deepEqual(item.history[0].details, { versionId: "d-1-v1", anchor: { type: "video", timeSeconds: 12.75 } });
+  assert.throws(() => transition(demand(), "add_comment", { comment: "Ponto inválido", anchor: { type: "image", x: 1.1, y: 0.5 } }), /fora dos limites/);
+  assert.throws(() => transition(demand(), "add_comment", { comment: "Tempo inválido", anchor: { type: "video", timeSeconds: -1 } }), /instante.*inválido/);
 });
 
 test("bloqueia aprovação de versão antiga ou ainda não enviada", () => {

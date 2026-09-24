@@ -10,6 +10,10 @@ let toastTimer;
 let activeRequestId = null;
 let selectedFileAction = null;
 let activePreviewUrl = null;
+let activeMediaObserver = null;
+let activeCommentAnchor = null;
+let imageAnchorMode = false;
+let viewedVersionId = null;
 let state = loadState();
 
 function makeId() {
@@ -202,8 +206,20 @@ function updateRequest(action, payload = {}, successMessage = "Alteração salva
   const request = currentRequest();
   if (!request) return false;
   try {
-    const updated = transition(request, action, payload);
+    const commentActions = ["add_comment", "internal_changes", "client_changes"];
+    const anchorMatchesVersion = activeCommentAnchor?.versionId === request.versions.at(-1)?.id;
+    const actionPayload = commentActions.includes(action) && anchorMatchesVersion ? { ...payload, anchor: { ...activeCommentAnchor } } : payload;
+    const updated = transition(request, action, actionPayload);
     state.requests = state.requests.map(item => item.id === request.id ? updated : item);
+    if (action === "new_version") viewedVersionId = updated.versions.at(-1)?.id || null;
+    if (commentActions.includes(action)) {
+      activeCommentAnchor = null;
+      imageAnchorMode = false;
+    }
+    if (["attach_file", "new_version"].includes(action)) {
+      activeCommentAnchor = null;
+      imageAnchorMode = false;
+    }
     saveState();
     renderBoard();
     renderDrawer();
@@ -247,16 +263,60 @@ function renderComments(request) {
   const comments = [...request.comments].sort((a, b) => String(a.at).localeCompare(String(b.at)));
   for (const comment of comments) {
     const item = node("div", "comment-item");
+    item.dataset.commentId = comment.id || "";
     item.append(node("span", `avatar avatar-small ${comment.audience === "client" ? "avatar-client" : "avatar-lilac"}`, comment.audience === "client" ? "CL" : "EQ"));
     const body = node("div", "comment-body");
     const meta = node("div", "comment-meta");
     meta.append(node("strong", "", comment.author), node("span", "", formatTimestamp(comment.at)), node("span", "client-role", `V${request.versions.find(version => version.id === comment.versionId)?.number || "?"}`));
     body.append(meta, node("p", "", comment.text));
+    if (comment.anchor?.type === "image") {
+      const versionNumber = request.versions.find(version => version.id === comment.versionId)?.number || "?";
+      const anchor = node("button", "comment-anchor", `◉ V${String(versionNumber).padStart(2, "0")} · Imagem · x ${Math.round(comment.anchor.x * 100)}%, y ${Math.round(comment.anchor.y * 100)}%`);
+      anchor.type = "button";
+      anchor.title = "Abrir o ponto marcado na versão deste comentário";
+      anchor.addEventListener("click", () => openCommentAnchor(comment));
+      body.append(anchor);
+    } else if (comment.anchor?.type === "video") {
+      const versionNumber = request.versions.find(version => version.id === comment.versionId)?.number || "?";
+      const anchor = node("button", "comment-anchor", `▶ V${String(versionNumber).padStart(2, "0")} · Vídeo · ${formatTimecode(comment.anchor.timeSeconds)}`);
+      anchor.type = "button";
+      anchor.title = "Abrir o instante marcado na versão deste comentário";
+      anchor.addEventListener("click", () => openCommentAnchor(comment));
+      body.append(anchor);
+    }
     item.append(body);
     container.append(item);
   }
   if (!comments.length) container.append(node("p", "empty-comments", "Ainda não há comentários registrados."));
   document.querySelector("#commentCount").textContent = String(comments.length);
+}
+
+async function openCommentAnchor(comment) {
+  const request = currentRequest();
+  if (!request || !request.versions.some(version => version.id === comment.versionId)) return;
+  viewedVersionId = comment.versionId;
+  activeCommentAnchor = null;
+  imageAnchorMode = false;
+  await renderAsset(request);
+  document.querySelector("#assetPreview").scrollIntoView({ block: "center", behavior: "smooth" });
+  if (comment.anchor?.type === "image") {
+    const marker = document.querySelector(`[data-image-comment="${CSS.escape(comment.id || "")}"]`);
+    marker?.focus();
+  } else if (comment.anchor?.type === "video") {
+    const video = document.querySelector("#assetPreview video");
+    if (!video) return;
+    const seek = () => { video.currentTime = comment.anchor.timeSeconds; };
+    if (video.readyState > 0) seek();
+    else video.addEventListener("loadedmetadata", seek, { once: true });
+  }
+}
+
+function formatTimecode(value) {
+  const total = Math.max(0, Math.floor(Number(value) || 0));
+  const hours = Math.floor(total / 3600);
+  const minutes = Math.floor((total % 3600) / 60);
+  const seconds = total % 60;
+  return hours ? [hours, minutes, seconds].map(part => String(part).padStart(2, "0")).join(":") : [minutes, seconds].map(part => String(part).padStart(2, "0")).join(":");
 }
 
 function renderHistory(request) {
@@ -340,16 +400,116 @@ function chooseFile(action) {
   fileInput.click();
 }
 
+function imageContentRect(image, frame) {
+  const imageRect = image.getBoundingClientRect();
+  const frameRect = frame.getBoundingClientRect();
+  if (!image.naturalWidth || !image.naturalHeight || !imageRect.width || !imageRect.height) return null;
+  const scale = Math.min(imageRect.width / image.naturalWidth, imageRect.height / image.naturalHeight);
+  const width = image.naturalWidth * scale;
+  const height = image.naturalHeight * scale;
+  return {
+    left: imageRect.left - frameRect.left + (imageRect.width - width) / 2,
+    top: imageRect.top - frameRect.top + (imageRect.height - height) / 2,
+    width,
+    height,
+  };
+}
+
+function drawImageMarkers(request, frame, image) {
+  const placeMarkers = () => {
+    frame.querySelectorAll(".image-comment-marker").forEach(marker => marker.remove());
+    const content = imageContentRect(image, frame);
+    if (!content) return;
+    const markers = request.comments.filter(comment => comment.versionId === viewedVersionId && comment.anchor?.type === "image");
+    markers.forEach((comment, index) => {
+      const marker = node("button", "image-comment-marker", String(index + 1));
+      marker.type = "button";
+      marker.dataset.imageComment = comment.id || "";
+      marker.setAttribute("aria-label", `Comentário ${index + 1}: ${comment.text}`);
+      marker.title = comment.text;
+      marker.style.left = `${content.left + comment.anchor.x * content.width}px`;
+      marker.style.top = `${content.top + comment.anchor.y * content.height}px`;
+      marker.addEventListener("click", event => {
+        event.stopPropagation();
+        const commentItem = document.querySelector(`[data-comment-id="${CSS.escape(comment.id || "")}"]`);
+        document.querySelectorAll(".comment-item.selected-anchor").forEach(item => item.classList.remove("selected-anchor"));
+        commentItem?.classList.add("selected-anchor");
+        commentItem?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      });
+      frame.append(marker);
+    });
+  };
+  image.addEventListener("load", placeMarkers, { once: true });
+  if (image.complete) placeMarkers();
+  if (typeof ResizeObserver !== "undefined") {
+    activeMediaObserver = new ResizeObserver(placeMarkers);
+    activeMediaObserver.observe(frame);
+  }
+}
+
+function showAnchorStatus() {
+  const status = document.querySelector("#commentAnchorStatus");
+  status.replaceChildren();
+  if (!activeCommentAnchor) {
+    status.hidden = true;
+    return;
+  }
+  const label = activeCommentAnchor.type === "video"
+    ? `Vídeo · ${formatTimecode(activeCommentAnchor.timeSeconds)}`
+    : `Imagem · x ${Math.round(activeCommentAnchor.x * 100)}%, y ${Math.round(activeCommentAnchor.y * 100)}%`;
+  status.append(node("span", "", `Referência anexada: ${label}`));
+  const clear = node("button", "clear-anchor", "Remover");
+  clear.type = "button";
+  clear.addEventListener("click", () => {
+    activeCommentAnchor = null;
+    imageAnchorMode = false;
+    renderDrawer();
+  });
+  status.append(clear);
+  status.hidden = false;
+}
+
+function setImageAnchor(event, image, frame, versionId) {
+  if (!imageAnchorMode) return;
+  const content = imageContentRect(image, frame);
+  if (!content) return;
+  const frameRect = frame.getBoundingClientRect();
+  const x = (event.clientX - frameRect.left - content.left) / content.width;
+  const y = (event.clientY - frameRect.top - content.top) / content.height;
+  if (x < 0 || x > 1 || y < 0 || y > 1) return;
+  activeCommentAnchor = { type: "image", x, y, versionId };
+  imageAnchorMode = false;
+  showAnchorStatus();
+  frame.classList.remove("marking-image-comment");
+  frame.querySelector(".image-anchor-draft")?.remove();
+  const marker = node("span", "image-anchor-draft", "•");
+  marker.setAttribute("aria-hidden", "true");
+  marker.style.left = `${content.left + x * content.width}px`;
+  marker.style.top = `${content.top + y * content.height}px`;
+  frame.append(marker);
+}
+
 async function renderAsset(request) {
   const preview = document.querySelector("#assetPreview");
+  const anchorControls = document.querySelector("#assetAnchorControls");
+  anchorControls.replaceChildren();
+  anchorControls.hidden = true;
+  preview.classList.remove("has-uploaded-media");
+  activeMediaObserver?.disconnect();
+  activeMediaObserver = null;
   if (activePreviewUrl) URL.revokeObjectURL(activePreviewUrl);
   activePreviewUrl = null;
   preview.replaceChildren();
-  const version = request.versions.at(-1);
+  const latestVersion = request.versions.at(-1);
+  if (!request.versions.some(item => item.id === viewedVersionId)) viewedVersionId = latestVersion?.id || null;
+  const version = request.versions.find(item => item.id === viewedVersionId) || latestVersion;
+  const isLatestVersion = version?.id === latestVersion?.id;
   document.querySelector("#assetTitle").textContent = version?.fileName || "Nenhum arquivo anexado";
   document.querySelector("#assetMeta").textContent = `${request.type} · ${request.demo ? "material fictício" : "armazenado neste navegador"}`;
   document.querySelector("#versionTag").textContent = `V${String(version?.number || 1).padStart(2, "0")}`;
-  document.querySelector("#versionMeta").textContent = version?.createdAt ? `Adicionada por ${version.createdBy} · ${formatTimestamp(version.createdAt)}` : (request.demo ? "Versão demonstrativa" : "Versão inicial sem arquivo");
+  document.querySelector("#versionMeta").textContent = !isLatestVersion
+    ? `Visualização V${String(version?.number || 1).padStart(2, "0")} · novos comentários pertencem à versão atual`
+    : version?.createdAt ? `Adicionada por ${version.createdBy} · ${formatTimestamp(version.createdAt)}` : (request.demo ? "Versão demonstrativa" : "Versão inicial sem arquivo");
   document.querySelector("#versionCount").textContent = `${request.versions.length} versão(ões)`;
   document.querySelector("#versionHistorySummary").textContent = `Consultar histórico de versões (${request.versions.length})`;
   const versionList = document.querySelector("#versionHistoryList");
@@ -357,7 +517,18 @@ async function renderAsset(request) {
   for (const item of [...request.versions].reverse()) {
     const decision = item.decision?.result === "approved" ? " · aprovada" : item.decision?.result === "changes_requested" ? " · ajustes solicitados" : item.sharedAt ? " · compartilhada" : " · não compartilhada";
     const fileName = item.fileName || "sem arquivo anexado";
-    versionList.append(node("li", "", `V${String(item.number).padStart(2, "0")} · ${fileName}${decision}`));
+    const row = node("li");
+    const selectVersion = node("button", `version-history-item${item.id === version?.id ? " selected" : ""}`, `V${String(item.number).padStart(2, "0")} · ${fileName}${decision}`);
+    selectVersion.type = "button";
+    selectVersion.setAttribute("aria-current", item.id === version?.id ? "true" : "false");
+    selectVersion.addEventListener("click", () => {
+      viewedVersionId = item.id;
+      activeCommentAnchor = null;
+      imageAnchorMode = false;
+      renderAsset(request);
+    });
+    row.append(selectVersion);
+    versionList.append(row);
   }
 
   if (version?.fileKey) {
@@ -366,26 +537,78 @@ async function renderAsset(request) {
       if (!file || activeRequestId !== request.id) return;
       activePreviewUrl = URL.createObjectURL(file);
       if (file.type.startsWith("image/")) {
+        preview.classList.add("has-uploaded-media");
+        const frame = node("div", "asset-media-frame");
         const image = node("img", "uploaded-preview");
         image.src = activePreviewUrl;
         image.alt = `Prévia de ${version.fileName}`;
-        preview.append(image);
+        image.addEventListener("click", event => setImageAnchor(event, image, frame, version.id));
+        frame.append(image);
+        preview.append(frame);
+        drawImageMarkers(request, frame, image);
+        if (isLatestVersion) {
+          const mark = node("button", "secondary-button", imageAnchorMode ? "Clique na imagem para marcar" : "Marcar ponto na imagem");
+          mark.type = "button";
+          mark.setAttribute("aria-pressed", String(imageAnchorMode));
+          mark.addEventListener("click", () => {
+            imageAnchorMode = !imageAnchorMode;
+            frame.classList.toggle("marking-image-comment", imageAnchorMode);
+            mark.textContent = imageAnchorMode ? "Clique na imagem para marcar" : "Marcar ponto na imagem";
+            mark.setAttribute("aria-pressed", String(imageAnchorMode));
+          });
+          anchorControls.append(mark, node("small", "anchor-help", "O ponto fica ligado a esta versão."));
+        } else {
+          const latest = node("button", "secondary-button", `Voltar à versão atual (V${String(latestVersion.number).padStart(2, "0")})`);
+          latest.type = "button";
+          latest.addEventListener("click", () => { viewedVersionId = latestVersion.id; renderAsset(request); });
+          anchorControls.append(latest, node("small", "anchor-help", "Esta versão é somente para consulta."));
+        }
+        anchorControls.hidden = false;
       } else if (file.type.startsWith("video/")) {
+        preview.classList.add("has-uploaded-media");
         const video = node("video", "uploaded-preview");
         video.src = activePreviewUrl;
         video.controls = true;
         video.preload = "metadata";
         preview.append(video);
+        if (isLatestVersion) {
+          const capture = node("button", "secondary-button", "Vincular ao instante pausado");
+          capture.type = "button";
+          capture.disabled = true;
+          video.addEventListener("pause", () => { capture.disabled = false; });
+          video.addEventListener("play", () => { capture.disabled = true; });
+          capture.addEventListener("click", () => {
+            if (!video.paused || !Number.isFinite(video.currentTime)) {
+              showToast("Pause o vídeo no ponto que deseja comentar.");
+              return;
+            }
+            activeCommentAnchor = { type: "video", timeSeconds: video.currentTime, versionId: version.id };
+            showAnchorStatus();
+          });
+          anchorControls.append(capture, node("small", "anchor-help", "Pause no instante que deseja vincular ao comentário."));
+        } else {
+          const latest = node("button", "secondary-button", `Voltar à versão atual (V${String(latestVersion.number).padStart(2, "0")})`);
+          latest.type = "button";
+          latest.addEventListener("click", () => { viewedVersionId = latestVersion.id; renderAsset(request); });
+          anchorControls.append(latest, node("small", "anchor-help", "Esta versão é somente para consulta."));
+        }
+        anchorControls.hidden = false;
       } else {
+        preview.classList.add("has-uploaded-media");
         preview.append(node("div", "asset-file-placeholder", `PDF anexado: ${version.fileName}`));
       }
+      showAnchorStatus();
       return;
     } catch {
+      preview.classList.add("has-uploaded-media");
       preview.append(node("div", "asset-file-placeholder", "Não foi possível carregar este arquivo do armazenamento local."));
+      showAnchorStatus();
       return;
     }
   }
+  preview.classList.remove("has-uploaded-media");
   preview.append(node("div", "asset-file-placeholder", request.demo ? "Prévia fictícia · nenhum arquivo real" : "Anexe uma imagem, vídeo ou PDF durante a produção."));
+  showAnchorStatus();
 }
 
 function renderDrawer() {
@@ -411,6 +634,10 @@ function renderDrawer() {
 
 function openDrawer(id) {
   activeRequestId = id;
+  const request = state.requests.find(item => item.id === id);
+  viewedVersionId = request?.versions.at(-1)?.id || null;
+  activeCommentAnchor = null;
+  imageAnchorMode = false;
   renderDrawer();
   drawer.classList.add("open");
   drawer.setAttribute("aria-hidden", "false");
@@ -425,8 +652,11 @@ function closeDrawer() {
   scrim.hidden = true;
   document.body.style.overflow = "";
   activeRequestId = null;
+  viewedVersionId = null;
   if (activePreviewUrl) URL.revokeObjectURL(activePreviewUrl);
   activePreviewUrl = null;
+  activeMediaObserver?.disconnect();
+  activeMediaObserver = null;
 }
 
 function applySearch(value) {
@@ -461,8 +691,8 @@ document.querySelector("#requestForm").addEventListener("submit", event => {
 
 document.querySelector("#sendComment").addEventListener("click", () => {
   const field = document.querySelector("#commentDraft");
-  updateRequest("add_comment", { comment: field.value, audience: "internal" }, "Comentário interno registrado.");
-  if (currentRequest() && field.value.trim()) field.value = "";
+  const saved = updateRequest("add_comment", { comment: field.value, audience: "internal" }, "Comentário interno registrado.");
+  if (saved) field.value = "";
 });
 
 document.querySelector("#taskForm").addEventListener("submit", event => {
