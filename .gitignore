@@ -1,0 +1,25 @@
+# Credenciais e configuração local
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+
+# Dependências e artefatos de build
+node_modules/
+.venv/
+venv/
+dist/
+build/
+coverage/
+.cache/
+
+# Sistema e editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Arquivos temporários
+*.log
+*.tmp
