@@ -1,5 +1,13 @@
 # Estado em 2026-09-24
 
+## MVP-05: recuperar rascunho de arquivo substituído — 24/09/2026
+
+- Ao substituir arquivo durante a execução, o evento preserva o nome e a chave local do arquivo anterior. O histórico oferece seu download quando o arquivo ainda existe no IndexedDB. Isso recupera rascunhos da mesma versão antes do envio; não cria versão aprovada nem recupera conteúdo removido do armazenamento do navegador.
+- Cobertura e percurso documentados em `docs/PRIMEIRA-IMPLEMENTACAO.md` e `prototipo/README.md`.
+- Validação: `node --test tests/workflow.test.js` passou 14/14; checks de sintaxe JS e `git diff --check` passaram. Chromium anexou dois PDFs sintéticos, baixou o arquivo anterior e conferiu seus bytes; histórico mostrou nomes antigo e atual. Em 1440×960 e 390×844, documento/painel sem overflow e console sem erros. Prints em `%LOCALAPPDATA%/Temp/mix7-draft-recovery-desktop.png` e `mix7-draft-recovery-mobile.png`.
+- Limite: arquivos e histórico continuam no perfil local do navegador; não há armazenamento central, sincronização ou auditoria protegida.
+- Código `d8b0a463a2e67ebdacf47a64a3eeab97173c169e` enviado e SHA local/remoto confirmado na branch `implementation/primeira-jornada-local`; esta atualização registra seu comportamento e validação.
+
 ## MVP-08: planejar tarefas a partir do feedback — 24/09/2026
 
 - Durante ajustes, comentários atuais do cliente com identificador podem preencher um rascunho editável de tarefa. A equipe revisa o título, informa o responsável e confirma a criação; tarefa, comentário de origem, versão e evento de histórico ficam ligados. Comentários demonstrativos legados sem identificador não oferecem o atalho.
