@@ -87,3 +87,5 @@
 - README e `docs/REQUIREMENTS.md` apontam para a ficha. Os requisitos de avaliação agora registram explicitamente como pendência finalidade, transparência e tratamento de bloqueios/mudanças; nenhuma política de pontuação foi presumida. A ficha proíbe inserir credenciais ou material confidencial.
 - Nenhum caso operacional foi preenchido nem validado; permanece necessária informação real anonimizada fornecida pela equipe Mix7. Não houve mudança no protótipo nem nas decisões vigentes.
 - Validação documental e sincronização: em andamento.
+- Validação documental: `git diff --check` passou; um verificador Node conferiu os links locais em README e nos três documentos relacionados; conferi a ficha completa para garantir que os campos estão em branco, sem fatos inventados ou dados reais.
+- Commit `d2f899e8385d6ae3034210681ce644b1a7f80f6d` publicado na branch `implementation/primeira-jornada-local`; SHA local e remoto conferidos iguais. Cartão 4 atualizado e relido em `Requisitos a validar`, com fluxo-alvo corretamente descrito, critério de aceite e link para a ficha.
