@@ -161,3 +161,11 @@
 - Validação: 13/13 testes; checks JS/diff e links locais passaram. Chromium percorreu pedido de ajuste, nova versão V04 e aprovação interna; histórico exibiu referência à V03, motivo, V04 e arquivo novo. Mobile 390×844 sem overflow, resumo de comentário extenso e console sem avisos/erros.
 - Commit `7c585d92e747d933c7101311ef360e1cd9aa9c72` publicado e SHA local/remoto confirmado na branch `implementation/primeira-jornada-local`. Cartão 18 do Trello atualizado com MVP-11 e validação; PR #9 atualizado, aberto e em rascunho.
 - Limite: o histórico permanece editável no perfil do navegador, sem identidade autenticada, armazenamento central, retenção ou assinatura de auditoria.
+
+## Simulações manuais de demandas — 24/09/2026
+
+- Navegador com armazenamento local isolado e dados fictícios: briefing incompleto bloqueado; briefing mínimo liberado até o planejamento; execução exige tarefa atribuída; dependência e impedimento bloqueiam conclusão; ausência de arquivo impede revisão interna.
+- Pedido de ajuste fictício na V03 permaneceu ligado à versão; tarefa foi criada manualmente a partir do comentário e, após atribuição e conclusão, liberou nova versão. Demandas de vídeo e newsletter foram aceitas com combinações de prazo/referência opcionais.
+- Aprovação direta levou à etapa de entrega/publicação, sem concluir a demanda. A conclusão exigiu selecionar entrega, agendamento ou publicação e preencher evidência fictícia; o histórico registrou resultado e evidência.
+- Não houve upload nem uso de dados reais. A jornada nova até mídia, revisão e aprovação do cliente não foi completada; estes cenários exercitam o protótipo, não confirmam a rotina real.
+- Validação: `node --test tests/workflow.test.js` 14/14; checks JS e `git diff --check` passaram; CI passou na execução 36063126012. Commit `e5de980e1d6e3e701a87c2357e6be14872539b98`, SHA local/remoto igual. Cartão 18 do Trello relido em “Em revisão” com descrição atualizada; PR #9 continua aberto como rascunho.
