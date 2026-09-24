@@ -30,6 +30,9 @@
 - Esta sessão solicitou um exemplo real para validar briefing, papéis, revisão e encerramento; a resposta ainda está pendente. Até lá, o fluxo é somente desenho-alvo.
 - Sincronização desta etapa: [PR #6](https://github.com/diegohenrich/plataforma-processos-mix7/pull/6), commit `15f122bde5d5ea10884148448af444392f947280`; branch publicada e SHA local/remoto conferidos como iguais. `git diff --check` e verificação dos links locais de Markdown passaram. PR permanece aberto para revisão; ainda não foi integrado à `main`.
 
+- 2026-09-24 — Complementada a pesquisa comparativa com releases, licenças, páginas de preço e avisos de segurança publicados nos repositórios e sites oficiais. Wekan v11.95 foi publicado no dia da consulta; Plane v1.4.2 em 23/08/2026. Os repositórios exibem avisos recentes com versões corrigidas, portanto o protocolo da prova exige verificar versão candidata, avisos, permissões, configuração e restauração de backup, sem concluir que releases atuais sejam vulneráveis ou certificadas. Foram registrados limites comerciais disponíveis de Planable, Frame.io e Filestage e a divergência de preço encontrada nas páginas oficiais de Planable para confirmar com fornecedor.
+- Validação documental desta atualização: `git diff --check`; links oficiais incluídos na tabela e nas fontes. Não houve teste de produto, cotação, auditoria independente nem execução auto-hospedada.
+
 ## Próximo passo
 
 - Incorporar um caso real de demanda da Mix7 e resolver fluxo, papéis, revisão interna e significado de conclusão.
