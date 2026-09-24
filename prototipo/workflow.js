@@ -201,11 +201,12 @@
         if (next.stage !== "doing") throw new Error("O arquivo só pode ser anexado durante a produção.");
         if (!String(payload.fileKey || "").trim() || !String(payload.fileName || "").trim()) throw new Error("Arquivo inválido.");
         const previousFileName = version.fileName || "";
+        const previousFileKey = version.fileKey || null;
         version.fileKey = payload.fileKey;
         version.fileName = payload.fileName;
         version.createdBy = payload.author || "Equipe";
         version.createdAt = now;
-        payload = { ...payload, previousFileName };
+        payload = { ...payload, previousFileName, previousFileKey };
         break;
       }
       case "internal_approved":
@@ -274,6 +275,7 @@
     if (action === "submit_internal_review") eventDetails.fileName = payload.fileName;
     if (action === "attach_file") {
       eventDetails.previousFileName = payload.previousFileName;
+      eventDetails.previousFileKey = payload.previousFileKey;
       eventDetails.fileName = payload.fileName;
     }
     if (action === "internal_approved") eventDetails.result = payload.result;

@@ -448,12 +448,37 @@ function renderHistory(request) {
       if (event.type === "submit_internal_review") summary = `${versionLabel} · ${details.fileName || "arquivo"}`;
       if (event.type === "internal_approved" || event.type === "client_approved") summary = versionLabel;
       if (event.type === "internal_changes" || event.type === "client_changes") summary = `${versionLabel}${details.commentText ? ` · ${historyExcerpt(details.commentText)}` : ""}`;
-      if (event.type === "attach_file") summary = `${versionLabel} · ${details.previousFileName ? `${historyExcerpt(details.previousFileName, 72)} → ` : ""}${historyExcerpt(details.fileName || "arquivo", 72)}`;
+      if (event.type === "attach_file") summary = `${versionLabel} · ${details.previousFileName ? `Rascunho substituído: ${historyExcerpt(details.previousFileName, 72)} → ` : ""}${historyExcerpt(details.fileName || "arquivo", 72)}`;
       if (event.type === "new_version") summary = `${versionLabel} · ${details.fileName || "arquivo"}`;
       if (event.type === "add_comment") summary = `${versionLabel}${details.commentText ? ` · ${historyExcerpt(details.commentText)}` : ""}`;
     }
-    const row = node("li", "", `${eventLabel(event.type)}${summary ? ` · ${summary}` : ""} · ${formatTimestamp(event.at)}`);
+    const row = node("li", "history-event");
+    row.append(node("span", "history-event-summary", `${eventLabel(event.type)}${summary ? ` · ${summary}` : ""} · ${formatTimestamp(event.at)}`));
+    if (event.type === "attach_file" && details.previousFileKey && details.previousFileName) {
+      const download = node("button", "history-file-download", `Baixar rascunho anterior · ${historyExcerpt(details.previousFileName, 72)}`);
+      download.type = "button";
+      download.addEventListener("click", () => downloadHistoricalFile(details.previousFileKey, details.previousFileName));
+      row.append(download);
+    }
     list.append(row);
+  }
+}
+
+async function downloadHistoricalFile(fileKey, fileName) {
+  try {
+    const file = await readFile(fileKey);
+    if (!file) throw new Error("O arquivo anterior não está disponível neste navegador.");
+    const url = URL.createObjectURL(file);
+    const link = node("a");
+    link.href = url;
+    link.download = fileName;
+    link.hidden = true;
+    document.body.append(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  } catch (error) {
+    showToast(error.message || "Não foi possível recuperar o rascunho anterior.");
   }
 }
 

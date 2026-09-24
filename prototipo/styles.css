@@ -215,6 +215,8 @@ h1 { margin: 9px 0 5px; font: 700 25px Manrope, sans-serif; letter-spacing: -.8p
 .task-form .task-source-hint { padding: 7px 8px; border-radius: 6px; color: #5278a8; background: #f1f6fd; font-size: 8px; line-height: 1.45; }
 .task-list-details .task-source-reference { color: #5278a8; overflow-wrap: anywhere; }
 .comment-task-action { margin-top: 4px; cursor: pointer; }
+.history-event { display: grid; gap: 5px; }
+.history-file-download { justify-self: start; padding: 4px 7px; border: 1px solid #dce7f4; border-radius: 5px; color: #5278b4; background: #f6faff; font: inherit; font-size: 8px; cursor: pointer; overflow-wrap: anywhere; }
 .task-form label { display: grid; gap: 4px; color: #78879a; font-size: 8px; }
 .task-form input, .task-form select { width: 100%; min-height: 32px; padding: 6px 8px; border: 1px solid #e2e8ef; border-radius: 6px; color: #52637a; background: white; font: inherit; font-size: 9px; }
 .task-form select[multiple] { min-height: 70px; }

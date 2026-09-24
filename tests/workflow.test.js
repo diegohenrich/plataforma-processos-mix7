@@ -103,7 +103,7 @@ test("fluxo feliz só conclui após aprovação e evidência de entrega", () => 
   item = completeCurrentTasks(item);
   item = transition(item, "attach_file", { fileKey: "asset-v1a", fileName: "arte-original.png" });
   item = transition(item, "attach_file", { fileKey: "asset-v1b", fileName: "arte-final.png" });
-  assert.deepEqual(item.history.at(-1).details, { versionId: "d-1-v1", versionNumber: 1, previousFileName: "arte-original.png", fileName: "arte-final.png" });
+  assert.deepEqual(item.history.at(-1).details, { versionId: "d-1-v1", versionNumber: 1, previousFileName: "arte-original.png", previousFileKey: "asset-v1a", fileName: "arte-final.png" });
   item = transition(item, "submit_internal_review");
   assert.deepEqual(item.history.at(-1).details, { versionId: "d-1-v1", versionNumber: 1, fileName: "arte-final.png" });
   item = transition(item, "internal_approved");
