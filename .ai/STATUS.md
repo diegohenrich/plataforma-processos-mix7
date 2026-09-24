@@ -5,7 +5,7 @@
 - Criado `docs/GLOSSARIO.md` com termos do fluxo-alvo e critério explícito: aprovação não encerra; registrar resultado e evidência, uma pessoa designada confere e então a demanda pode ser concluída. Os papéis e comprovantes específicos seguem pendentes do caso real.
 - `README.md` aponta para o glossário. Código e documentação publicados em `ceef477ef856c5270351da1f0ee1279baf360f8f` e SHA local/remoto confirmado na branch `implementation/primeira-jornada-local`.
 - Cartão 3 do Trello atualizado com o critério aprovado e mantido em contexto/decisões enquanto faltam fatos operacionais; PR #9 atualizado com o glossário e segue em rascunho.
-- Validação: `git diff --check` passou; links locais do README e do glossário verificados.
+- Validação: `git diff --check` passou; verificador percorreu 18 arquivos Markdown e não encontrou links locais quebrados.
 
 ## MVP-05: recuperar rascunho de arquivo substituído — 24/09/2026
 
