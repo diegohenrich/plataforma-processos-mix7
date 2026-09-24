@@ -28,6 +28,7 @@
 - 2026-09-24 — Pesquisa inicial de produtos oficiais comparou Planable, Frame.io, Filestage, Wekan e Plane Community. Recomendação registrada: núcleo próprio de processos com módulos configuráveis; testar soluções de gestão e revisão criativa como componentes distintos antes de definir stack. Licenças identificadas para Wekan (MIT) e Plane Community (AGPL-3.0); custos/limites comerciais ainda precisam de validação.
 - 2026-09-24 — Proposta de arquitetura de produto documentada sem fixar tecnologias. Inclui núcleo de demandas, tarefas, motor configurável de etapas/decisões, módulo de criativos com versões/comentários, trilha de auditoria, integrações a avaliar e IA sujeita a confirmação humana.
 - Esta sessão solicitou um exemplo real para validar briefing, papéis, revisão e encerramento; a resposta ainda está pendente. Até lá, o fluxo é somente desenho-alvo.
+- Sincronização desta etapa: [PR #6](https://github.com/diegohenrich/plataforma-processos-mix7/pull/6), commit `15f122bde5d5ea10884148448af444392f947280`; branch publicada e SHA local/remoto conferidos como iguais. `git diff --check` e verificação dos links locais de Markdown passaram. PR permanece aberto para revisão; ainda não foi integrado à `main`.
 
 ## Próximo passo
 
