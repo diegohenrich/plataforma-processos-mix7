@@ -106,11 +106,28 @@ test("fluxo feliz só conclui após aprovação e evidência de entrega", () => 
   assert.equal(item.stage, "clientReview");
   item = transition(item, "client_approved", { versionId: "d-1-v1" });
   assert.equal(item.stage, "delivery");
-  assert.throws(() => transition(item, "record_delivery", { evidence: " " }), /evidência/);
-  item = transition(item, "record_delivery", { evidence: "URL de publicação" });
+  assert.throws(() => transition(item, "record_delivery", { evidence: "URL de publicação" }), /Selecione se o material/);
+  assert.throws(() => transition(item, "record_delivery", { destinationType: "published", evidence: " " }), /evidência/);
+  item = transition(item, "record_delivery", { destinationType: "published", evidence: "URL de publicação" });
   assert.equal(item.stage, "completed");
+  assert.equal(item.delivery.destinationType, "published");
   assert.equal(item.delivery.evidence, "URL de publicação");
+  assert.deepEqual(item.history.at(-1).details, { evidence: "URL de publicação", destinationType: "published" });
   assert.equal(item.history.length, 8);
+});
+
+test("conclusão distingue entrega, agendamento e publicação, sempre com evidência", () => {
+  for (const destinationType of ["delivered", "scheduled", "published"]) {
+    let item = demand();
+    item = planRoundOne(item);
+    item = completeCurrentTasks(item);
+    item = transition(item, "submit_internal_review");
+    item = transition(item, "internal_approved");
+    item = transition(item, "client_approved", { versionId: item.versions[0].id });
+    item = transition(item, "record_delivery", { destinationType, evidence: `Registro ${destinationType}` });
+    assert.equal(item.delivery.destinationType, destinationType);
+    assert.throws(() => transition({ ...item, stage: "delivery" }, "record_delivery", { destinationType }), /evidência/);
+  }
 });
 
 test("briefing sem origem, canal ou critérios não avança e as correções ficam no histórico", () => {

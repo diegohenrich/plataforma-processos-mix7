@@ -168,6 +168,10 @@ function makeCard(request) {
   const row = node("div", "card-label-row");
   const client = node("span", "client-label label-blue", request.client);
   row.append(client);
+  if (request.stage === "completed" && request.delivery?.destinationType) {
+    const outcomeLabels = { delivered: "✓ Entregue", scheduled: "◷ Agendado", published: "↗ Publicado" };
+    row.append(node("span", "status-pill status-approved", outcomeLabels[request.delivery.destinationType] || "✓ Concluído"));
+  }
   if (request.versions?.at(-1)?.decision?.result === "approved") row.append(node("span", "status-pill status-approved", "✓ Aprovado"));
   if (request.versions?.at(-1)?.decision?.result === "changes_requested") row.append(node("span", "status-pill status-changes", "↺ Ajustes"));
   card.append(row, node("h3", "", request.title), node("p", "card-description", request.brief));
@@ -390,6 +394,9 @@ function renderHistory(request) {
       summary = `${details.taskTitle || task?.title || "Tarefa"} · ${details.status === "completed" ? "concluída" : "reaberta"}`;
     } else if (event.type === "set_task_blocker") {
       summary = `${details.taskTitle || task?.title || "Tarefa"} · ${details.blocked ? `impedimento: ${details.reason}` : "impedimento removido"}`;
+    } else if (event.type === "record_delivery") {
+      const labels = { delivered: "entregue ao cliente", scheduled: "agendado", published: "publicado" };
+      summary = `${labels[details.destinationType] || "resultado sem tipo registrado"}${details.evidence ? ` · evidência: ${details.evidence}` : ""}`;
     }
     const row = node("li", "", `${eventLabel(event.type)}${summary ? ` · ${summary}` : ""} · ${formatTimestamp(event.at)}`);
     list.append(row);
@@ -462,13 +469,30 @@ function renderActions(request) {
     const attach = appendAction(buttons, "Anexar nova versão", () => chooseFile("new_version"), "approve-button");
     attach.disabled = !tasks.length || tasks.some(task => task.status !== "completed");
   } else if (request.stage === "delivery") {
+    const destinationType = node("select", "workflow-input");
+    destinationType.id = "deliveryType";
+    destinationType.setAttribute("aria-label", "Resultado após aprovação do cliente");
+    destinationType.required = true;
+    destinationType.add(new Option("Selecione o resultado após aprovação", ""));
+    destinationType.add(new Option("Material entregue ao cliente", "delivered"));
+    destinationType.add(new Option("Publicação agendada", "scheduled"));
+    destinationType.add(new Option("Material publicado", "published"));
     const evidence = node("input", "workflow-input");
     evidence.id = "deliveryEvidence";
+    evidence.setAttribute("aria-label", "Evidência de entrega, agendamento ou publicação");
     evidence.placeholder = "URL ou descrição da entrega/publicação (obrigatório)";
+    const updateReady = () => { finish.disabled = !destinationType.value || !evidence.value.trim(); };
+    destinationType.addEventListener("change", updateReady);
+    evidence.addEventListener("input", updateReady);
+    container.insertBefore(destinationType, buttons);
     container.insertBefore(evidence, buttons);
-    appendAction(buttons, "Registrar entrega e concluir", () => updateRequest("record_delivery", { evidence: evidence.value }, "Entrega registrada e demanda concluída."), "approve-button");
+    const finish = appendAction(buttons, "Registrar resultado e concluir", () => updateRequest("record_delivery", { destinationType: destinationType.value, evidence: evidence.value }, "Resultado registrado e demanda concluída."), "approve-button");
+    finish.disabled = true;
+    container.append(node("small", "workflow-hint", "Escolha entrega, agendamento ou publicação e registre a evidência correspondente."));
   } else {
-    container.append(node("small", "workflow-hint", `Concluída com evidência: ${request.delivery?.evidence || "não registrada"}`));
+    const outcomes = { delivered: "Material entregue ao cliente", scheduled: "Publicação agendada", published: "Material publicado" };
+    const outcome = outcomes[request.delivery?.destinationType] || "Resultado pós-aprovação não discriminado";
+    container.append(node("small", "workflow-hint", `${outcome} · evidência: ${request.delivery?.evidence || "não registrada"}`));
   }
 }
 

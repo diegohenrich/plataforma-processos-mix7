@@ -21,7 +21,7 @@ O baseline P0 está na [especificação priorizada em revisão no PR #8](https:/
 | MVP-07 Comentários de mídia | Parcial local: comentário por versão, ponto percentual de imagem e timecode de vídeo. | A referência depende do mesmo perfil local; acesso remoto e armazenamento seguro de mídia faltam. |
 | MVP-08 Ajustes e nova versão | Parcial local: comentário e decisão permanecem na versão; tarefas manuais alimentam a nova rodada. | Consolidação cronológica assistida por IA não existe; tarefas não são criadas automaticamente do feedback. |
 | MVP-09 Revisão interna | Parcial local: a etapa bloqueia compartilhamento até aprovar; devolução pede motivo. | Papel e identidade do revisor não são verificados; exceções e substituições não são configuráveis. |
-| MVP-10 Entrega e conclusão | Parcial local: aprovação conduz à entrega, e conclusão exige evidência textual. | Não diferencia entrega, agendamento e publicação nem exige metadados próprios por destino. |
+| MVP-10 Entrega e conclusão | Parcial local: resultado pós-aprovação registrado como material entregue, publicação agendada ou material publicado; exige evidência e mostra o tipo no histórico/quadro. | Sem integração externa, data/destino ou metadados próprios do serviço; a evidência é texto livre local. |
 | MVP-11 Histórico | Parcial local: transições e várias mudanças são registradas no navegador. | Sem identidade confiável, histórico central ou proteção contra alteração local. |
 | MVP-12 Módulos futuros | Não implementado: estados do fluxo estão definidos no código. | Aprovações configuráveis e cadastros compartilhados ainda são arquitetura conceitual, não comportamento executável. |
 
@@ -35,7 +35,7 @@ O caminho implementado é:
 
 Durante a execução, a equipe pode registrar uma alteração do briefing e seu motivo. A demanda retorna a planejamento, preserva o texto anterior e pausa a execução. Uma pessoa precisa revisar o briefing e as tarefas e confirmar o plano para retomar. Esta regra é exercitada com dados fictícios; ainda não há permissões reais que identifiquem a pessoa revisora.
 
-O plano exige ao menos uma tarefa atribuída; revisão interna exige que as tarefas da rodada estejam concluídas e que haja um arquivo. O cliente só decide uma versão compartilhada após a revisão interna. Pedido de ajustes requer justificativa e fica preso à versão; a nova versão exige tarefas da rodada de ajuste concluídas e preserva a decisão anterior. A aprovação conduz a entrega, mas só há conclusão após registrar evidência.
+O plano exige ao menos uma tarefa atribuída; revisão interna exige que as tarefas da rodada estejam concluídas e que haja um arquivo. O cliente só decide uma versão compartilhada após a revisão interna. Pedido de ajustes requer justificativa e fica preso à versão; a nova versão exige tarefas da rodada de ajuste concluídas e preserva a decisão anterior. Após a aprovação, a demonstração registra se houve entrega, agendamento ou publicação e exige evidência antes de concluir; não executa essas ações em canais externos.
 
 ## Implementação atual
 

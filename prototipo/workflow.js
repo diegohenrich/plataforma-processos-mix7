@@ -232,8 +232,9 @@
         break;
       case "record_delivery":
         if (next.stage !== "delivery") throw new Error("A demanda ainda não foi aprovada pelo cliente.");
+        if (!["delivered", "scheduled", "published"].includes(payload.destinationType)) throw new Error("Selecione se o material foi entregue, agendado ou publicado.");
         if (!String(payload.evidence || "").trim()) throw new Error("Registre a evidência de entrega ou publicação.");
-        next.delivery = { evidence: payload.evidence.trim(), at: now, author: payload.author || "Equipe" };
+        next.delivery = { destinationType: payload.destinationType, evidence: payload.evidence.trim(), at: now, author: payload.author || "Equipe" };
         next.stage = "completed";
         break;
       case "add_comment":
@@ -245,6 +246,7 @@
     }
 
     const eventDetails = payload.evidence ? { evidence: payload.evidence.trim() } : {};
+    if (action === "record_delivery") eventDetails.destinationType = payload.destinationType;
     if (action === "briefing_revised") {
       const revision = next.briefingRevisions.at(-1);
       eventDetails.reason = revision.reason;
