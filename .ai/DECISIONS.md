@@ -2,6 +2,7 @@
 
 - 2026-09-24 — Usar o quadro Trello existente **Desenvolvimento de Projetos - Mix7** para organizar o projeto. Listas representam andamento; etiquetas coloridas representam áreas. Revisar se o quadro passar a reunir outros projetos da agência.
 - 2026-09-24 — Guardar a plataforma em repositório GitHub privado separado do `crm-mix7`, sob `diegohenrich/plataforma-processos-mix7`. Trello segue como fonte de andamento; GitHub guarda documentação, código e revisão de mudanças. Revisar a visibilidade ou titularidade apenas por decisão explícita.
+- 2026-09-24 — Após cada alteração ou tarefa concluída, criar commit, fazer push, conferir o commit remoto e atualizar o Trello antes de declarar a entrega concluída. Vincular cartão e commit ou pull request; registrar impedimentos em `.ai/STATUS.md`. Não reescrever histórico publicado nem excluir branches ou tags sem autorização. Registrar marcos importantes com tags anotadas no GitHub. Regra solicitada explicitamente pelo usuário e aplicável ao projeto inteiro.
 - 2026-09-24 — Primeira versão voltada à Mix7, com fluxo integrado de gestão e aprovação. Revisar após validar o percurso real de uma demanda e o significado de conclusão.
 - 2026-09-24 — IA apresenta propostas para revisão humana antes da criação ou distribuição de tarefas. Revisar somente se houver nova decisão explícita sobre autonomia.
 - 2026-09-24 — Interface dos sistemas deve priorizar branco e azul claros, usando o site da Mix7 como referência. Revisar tons e tipografia no protótipo.
