@@ -15,10 +15,10 @@
 - A integração do Trello permite aplicar etiquetas existentes, mas não renomeá-las; as cinco etiquetas coloridas ainda estão sem nome no próprio Trello. A legenda no cartão de decisões é provisória.
 - Validação final pela integração: seis listas na ordem planejada; 18 cartões (3 de contexto, 10 de requisitos, 5 de entregas); etiquetas azul, verde, roxa, amarela e laranja aplicadas conforme a legenda; descrições e links conferidos em cartões de amostra; checklists conferidos pela leitura direta, inclusive as três etapas do protótipo.
 - Uma atualização intermediária substituiu a descrição de cinco cartões de entrega; os textos completos foram restaurados e conferidos por leitura posterior.
-- Publicação do commit inicial e verificação remota ainda pendentes nesta etapa.
+- Commit inicial `904ca87` publicado em `main` no repositório privado `diegohenrich/plataforma-processos-mix7`. A checagem `git diff --cached --check` passou; 11 arquivos Markdown foram examinados e nenhum link local quebrado foi encontrado. A aplicação ainda não tem código, portanto não há testes ou build aplicáveis.
 
 ## Próximo passo
 
 - Renomear as cinco etiquetas pelo Trello quando houver interface autenticada disponível. Até lá, a legenda do cartão de decisões define o significado de cada cor.
 - Levantar um caso real de demanda da Mix7 para resolver fluxo, papéis, revisão interna e significado de conclusão antes de especificar a primeira versão.
-- Publicar e verificar o commit inicial no GitHub.
+- Manter a documentação sincronizada com as decisões tomadas durante a descoberta e, quando houver código, vincular mudanças aos cartões do Trello por pull requests.
