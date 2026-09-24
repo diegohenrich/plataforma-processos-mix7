@@ -64,6 +64,18 @@ node --check prototipo/app.js
 
 Os testes cobrem briefing incompleto e registro histórico de correções, plano com tarefa atribuída, dependências entre tarefas, reabertura ordenada, impedimento com motivo/histórico, bloqueio de revisão com tarefas incompletas, fluxo feliz, aprovação de versão não compartilhada, motivo obrigatório na revisão interna, pedido de alteração ligado à versão antiga, preservação do histórico na versão seguinte, âncoras de imagem/vídeo, alteração de briefing com retomada bloqueada até revisão humana, evidência obrigatória e metadados de auditoria por arquivo, decisão, comentário e versão. Em Chromium, dependência, impedimento, pedido de ajuste, geração da próxima versão e aprovação interna foram percorridos; histórico mostra versão, nome de arquivo e comentário/motivo. Viewport de 390×844: painel e documento sem overflow horizontal; resumo de comentário longo limitado visualmente e screenshot móvel inspecionado. Console sem avisos/erros. A integração ainda requer validação da equipe Mix7.
 
+## Simulações manuais de demandas — 24/09/2026
+
+Foram percorridos cenários fictícios isolados no navegador:
+
+- **Briefing novo e incompleto:** o formulário impediu salvar sem os campos mínimos. Com origem, canal/peça e critério de aceite, a demanda avançou até planejamento; a execução ficou bloqueada até existir tarefa atribuída.
+- **Planejamento e dependências:** uma tarefa atribuída foi criada e outra ficou dependente dela. A segunda não pôde ser concluída antes da primeira. Um impedimento com motivo também bloqueou a conclusão; ao removê-lo e concluir a tarefa anterior, a dependente foi liberada. Sem arquivo anexado, o envio para revisão interna permaneceu bloqueado.
+- **Ajuste do cliente:** um pedido fictício na V03 foi preservado com vínculo à versão. A equipe transformou manualmente o comentário em rascunho de tarefa, atribuiu a uma pessoa fictícia e concluiu a tarefa; o fluxo então liberou a anexação da nova versão.
+- **Variações de demanda:** foram criadas demandas fictícias para vídeo e newsletter, incluindo e omitindo prazo e referência opcionais.
+- **Aprovação e conclusão:** em sessões isoladas, testar aprovação direta e publicação agendada. Aprovar moveu a demanda para entrega/publicação, mas não a concluiu. O registro só foi aceito após escolher o resultado e informar evidência fictícia; o histórico guardou ambos.
+
+As sessões usaram armazenamento local separado por origem do navegador. Nenhum arquivo foi enviado e nenhum dado real de cliente foi usado. Portanto, não foi validada a jornada completa de uma demanda nova com mídia, revisão interna, versão enviada ao cliente e aprovação. Os cenários confirmam regras da demonstração, não a rotina real da Mix7; atores, exceções e evidências precisam do caso anonimizado descrito em [VALIDACAO-CASO-REAL.md](VALIDACAO-CASO-REAL.md).
+
 ## Próximas decisões
 
 Antes de usar dados reais, fechar o caso real da Mix7 e sua matriz de papéis; escolher persistência central, autenticação, isolamento, hospedagem, backup, retenção e integração de arquivos; validar o comportamento das âncoras com equipe e cliente. A escolha final de tecnologias deve seguir a pesquisa e as restrições operacionais.
