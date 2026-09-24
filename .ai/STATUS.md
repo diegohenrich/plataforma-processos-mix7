@@ -1,5 +1,13 @@
 # Estado em 2026-09-24
 
+## Continuidade — fluxo-alvo e documentação alinhados
+
+- O usuário aprovou como fluxo-alvo: demanda/briefing → planejamento revisado → execução → revisão interna → aprovação do cliente → ajustes e nova versão quando pedidos → entrega/agendamento/publicação com evidência → conclusão conferida. Isso define o comportamento desejado do produto; não é prova de como a Mix7 opera hoje.
+- `.ai/CONTEXT.md`, `README.md`, `docs/PRODUCT.md` e `docs/REQUIREMENTS.md` foram alinhados a essa decisão. O caso real ainda deve revelar quem exerce os papéis, exceções e evidência aplicável por tipo de serviço.
+- Verificações executadas nesta rodada: `node --test tests/workflow.test.js` (6/6 passaram), `node --check prototipo/workflow.js`, `node --check prototipo/app.js` e `git diff --check` passaram.
+- Commit documental `cf16550d6c4792c5cef6ed2b07329539be82cc15` publicado e confirmado idêntico no remoto da branch `implementation/primeira-jornada-local`; PR #9 segue como rascunho. Cartão 18 do Trello atualizado e resposta da ferramenta conferiu descrição, fluxo, limites e link do commit.
+- Próximo passo: obter um caso real anonimizado de demanda da Mix7 e comparar os fatos (papéis, exceções e evidências) ao fluxo-alvo; depois revisar protótipo e detalhar arquitetura/modelo de dados para produção. Nenhum dado de cliente deve ser incluído no protótipo local.
+
 ## Concluído
 
 - Quadro Trello existente localizado e conexão verificada.
