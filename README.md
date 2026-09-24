@@ -11,6 +11,7 @@ Demanda → planejamento revisado → execução → aprovação do cliente → 
 ## Organização
 
 - [Requisitos e dúvidas abertas](docs/REQUIREMENTS.md)
+- [Especificação funcional inicial do MVP](docs/ESPECIFICACAO-MVP.md)
 - [Fluxo proposto para uma demanda de criativo](docs/FLUXO-PROPOSTO.md)
 - [Produto e público](docs/PRODUCT.md)
 - [Fases e critérios de avanço](docs/ROADMAP.md)
