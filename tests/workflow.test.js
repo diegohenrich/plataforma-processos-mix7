@@ -101,8 +101,13 @@ test("fluxo feliz só conclui após aprovação e evidência de entrega", () => 
   let item = demand();
   item = planRoundOne(item);
   item = completeCurrentTasks(item);
+  item = transition(item, "attach_file", { fileKey: "asset-v1a", fileName: "arte-original.png" });
+  item = transition(item, "attach_file", { fileKey: "asset-v1b", fileName: "arte-final.png" });
+  assert.deepEqual(item.history.at(-1).details, { versionId: "d-1-v1", versionNumber: 1, previousFileName: "arte-original.png", fileName: "arte-final.png" });
   item = transition(item, "submit_internal_review");
+  assert.deepEqual(item.history.at(-1).details, { versionId: "d-1-v1", versionNumber: 1, fileName: "arte-final.png" });
   item = transition(item, "internal_approved");
+  assert.deepEqual(item.history.at(-1).details, { versionId: "d-1-v1", versionNumber: 1, result: "approved" });
   assert.equal(item.stage, "clientReview");
   item = transition(item, "client_approved", { versionId: "d-1-v1" });
   assert.equal(item.stage, "delivery");
@@ -112,8 +117,8 @@ test("fluxo feliz só conclui após aprovação e evidência de entrega", () => 
   assert.equal(item.stage, "completed");
   assert.equal(item.delivery.destinationType, "published");
   assert.equal(item.delivery.evidence, "URL de publicação");
-  assert.deepEqual(item.history.at(-1).details, { evidence: "URL de publicação", destinationType: "published" });
-  assert.equal(item.history.length, 8);
+  assert.deepEqual(item.history.at(-1).details, { evidence: "URL de publicação", versionId: "d-1-v1", versionNumber: 1, destinationType: "published" });
+  assert.equal(item.history.length, 10);
 });
 
 test("conclusão distingue entrega, agendamento e publicação, sempre com evidência", () => {
@@ -162,6 +167,15 @@ test("pedido de alteração é comentário ancorado e decisão imutáveis da ver
   assert.equal(item.versions[0].decision.result, "changes_requested");
   assert.equal(item.comments[0].versionId, "d-1-v1");
   assert.deepEqual(item.comments[0].anchor, { type: "image", x: 0.6, y: 0.25 });
+  assert.deepEqual(item.history.at(-1).details, {
+    versionId: "d-1-v1",
+    versionNumber: 1,
+    commentId: "d-1-comment-1",
+    commentText: "Ajustar a chamada",
+    author: "Aprovador do cliente",
+    result: "changes_requested",
+    anchor: { type: "image", x: 0.6, y: 0.25 },
+  });
   item = transition(item, "add_task", { title: "Ajustar chamada", assignee: "Designer" });
   item = completeCurrentTasks(item);
   item = transition(item, "new_version", { fileName: "arte-v2.png", fileKey: "asset-v2" });
@@ -178,7 +192,15 @@ test("comentário de vídeo preserva o instante e a versão e valida a âncora",
   }, "2026-09-24T15:00:00.000Z");
   assert.equal(item.comments[0].versionId, "d-1-v1");
   assert.deepEqual(item.comments[0].anchor, { type: "video", timeSeconds: 12.75 });
-  assert.deepEqual(item.history[0].details, { versionId: "d-1-v1", anchor: { type: "video", timeSeconds: 12.75 } });
+  assert.deepEqual(item.history[0].details, {
+    versionId: "d-1-v1",
+    versionNumber: 1,
+    commentId: "d-1-comment-1",
+    commentText: "Rever esta fala",
+    author: "Equipe",
+    audience: "internal",
+    anchor: { type: "video", timeSeconds: 12.75 },
+  });
   assert.throws(() => transition(demand(), "add_comment", { comment: "Ponto inválido", anchor: { type: "image", x: 1.1, y: 0.5 } }), /fora dos limites/);
   assert.throws(() => transition(demand(), "add_comment", { comment: "Tempo inválido", anchor: { type: "video", timeSeconds: -1 } }), /instante.*inválido/);
 });
@@ -204,6 +226,8 @@ test("revisão interna exige motivo ao devolver e não compartilha material", ()
   assert.equal(item.stage, "doing");
   assert.equal(item.versions[0].sharedAt, null);
   assert.equal(item.comments[0].audience, "internal");
+  assert.equal(item.history.at(-1).details.commentText, "Corrigir contraste");
+  assert.equal(item.history.at(-1).details.versionNumber, 1);
 });
 
 test("nova versão continua a numeração informada mesmo com histórico parcial", () => {

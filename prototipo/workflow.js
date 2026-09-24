@@ -190,36 +190,46 @@
         const roundTasks = next.tasks.filter(task => task.round === version.number);
         if (!roundTasks.length || roundTasks.some(task => task.status !== "completed")) throw new Error("Conclua as tarefas atribuídas desta versão antes de iniciar a revisão.");
         next.stage = "internalReview";
+        payload = { ...payload, fileName: version.fileName };
         break;
-      case "attach_file":
+      case "attach_file": {
         if (next.stage !== "doing") throw new Error("O arquivo só pode ser anexado durante a produção.");
         if (!String(payload.fileKey || "").trim() || !String(payload.fileName || "").trim()) throw new Error("Arquivo inválido.");
+        const previousFileName = version.fileName || "";
         version.fileKey = payload.fileKey;
         version.fileName = payload.fileName;
         version.createdBy = payload.author || "Equipe";
         version.createdAt = now;
+        payload = { ...payload, previousFileName };
         break;
+      }
       case "internal_approved":
         if (next.stage !== "internalReview") throw new Error("A demanda não está em revisão interna.");
         version.sharedAt = now;
         next.stage = "clientReview";
+        payload = { ...payload, result: "approved" };
         break;
       case "internal_changes":
         if (next.stage !== "internalReview") throw new Error("A demanda não está em revisão interna.");
         if (!String(payload.comment || "").trim()) throw new Error("Registre o motivo da devolução.");
         next.stage = "doing";
-        next.comments.push({ id: `${next.id}-comment-${next.comments.length + 1}`, versionId: version.id, author: "Revisão interna", audience: "internal", text: payload.comment.trim(), anchor: captureAnchor(payload.anchor), at: now });
+        const internalComment = { id: `${next.id}-comment-${next.comments.length + 1}`, versionId: version.id, author: "Revisão interna", audience: "internal", text: payload.comment.trim(), anchor: captureAnchor(payload.anchor), at: now };
+        next.comments.push(internalComment);
+        payload = { ...payload, commentId: internalComment.id, commentText: internalComment.text };
         break;
       case "client_approved":
         if (next.stage !== "clientReview" || version.id !== payload.versionId || !version.sharedAt) throw new Error("A versão enviada para aprovação mudou ou não está compartilhada.");
         version.decision = { result: "approved", author: payload.author || "Aprovador do cliente", at: now };
         next.stage = "delivery";
+        payload = { ...payload, result: version.decision.result, author: version.decision.author };
         break;
       case "client_changes":
         if (next.stage !== "clientReview" || version.id !== payload.versionId || !version.sharedAt) throw new Error("A versão enviada para aprovação mudou ou não está compartilhada.");
         if (!String(payload.comment || "").trim()) throw new Error("Descreva as alterações solicitadas.");
         version.decision = { result: "changes_requested", author: payload.author || "Aprovador do cliente", at: now };
-        next.comments.push({ id: `${next.id}-comment-${next.comments.length + 1}`, versionId: version.id, author: payload.author || "Aprovador do cliente", audience: "client", text: payload.comment.trim(), anchor: captureAnchor(payload.anchor), at: now });
+        const clientComment = { id: `${next.id}-comment-${next.comments.length + 1}`, versionId: version.id, author: payload.author || "Aprovador do cliente", audience: "client", text: payload.comment.trim(), anchor: captureAnchor(payload.anchor), at: now };
+        next.comments.push(clientComment);
+        payload = { ...payload, commentId: clientComment.id, commentText: clientComment.text, result: version.decision.result, author: version.decision.author };
         next.stage = "adjustments";
         break;
       case "new_version":
@@ -227,8 +237,10 @@
         if (!String(payload.fileName || "").trim() || !String(payload.fileKey || "").trim()) throw new Error("Selecione um arquivo para criar uma nova versão.");
         const adjustmentTasks = next.tasks.filter(task => task.round === version.number + 1);
         if (!adjustmentTasks.length || adjustmentTasks.some(task => task.status !== "completed")) throw new Error("Adicione e conclua ao menos uma tarefa para esta rodada antes de anexar a versão.");
-        next.versions.push({ id: `${next.id}-v${version.number + 1}`, number: version.number + 1, fileName: payload.fileName, fileKey: payload.fileKey, createdBy: payload.author || "Equipe", createdAt: now, sharedAt: null, decision: null });
+        const createdVersion = { id: `${next.id}-v${version.number + 1}`, number: version.number + 1, fileName: payload.fileName, fileKey: payload.fileKey, createdBy: payload.author || "Equipe", createdAt: now, sharedAt: null, decision: null };
+        next.versions.push(createdVersion);
         next.stage = "internalReview";
+        payload = { ...payload, versionId: createdVersion.id, versionNumber: createdVersion.number };
         break;
       case "record_delivery":
         if (next.stage !== "delivery") throw new Error("A demanda ainda não foi aprovada pelo cliente.");
@@ -239,14 +251,35 @@
         break;
       case "add_comment":
         if (!String(payload.comment || "").trim()) throw new Error("Escreva um comentário antes de enviar.");
-        next.comments.push({ id: `${next.id}-comment-${next.comments.length + 1}`, versionId: version.id, author: payload.author || "Equipe", audience: payload.audience || "internal", text: payload.comment.trim(), anchor: captureAnchor(payload.anchor), at: now });
+        const addedComment = { id: `${next.id}-comment-${next.comments.length + 1}`, versionId: version.id, author: payload.author || "Equipe", audience: payload.audience || "internal", text: payload.comment.trim(), anchor: captureAnchor(payload.anchor), at: now };
+        next.comments.push(addedComment);
+        payload = { ...payload, commentId: addedComment.id, commentText: addedComment.text, author: addedComment.author, audience: addedComment.audience };
         break;
       default:
         throw new Error("Ação de fluxo desconhecida.");
     }
 
     const eventDetails = payload.evidence ? { evidence: payload.evidence.trim() } : {};
+    const eventVersion = action === "new_version" ? next.versions.at(-1) : version;
+    if (["submit_internal_review", "attach_file", "internal_approved", "internal_changes", "client_approved", "client_changes", "new_version", "record_delivery", "add_comment"].includes(action)) {
+      eventDetails.versionId = eventVersion.id;
+      eventDetails.versionNumber = eventVersion.number;
+    }
     if (action === "record_delivery") eventDetails.destinationType = payload.destinationType;
+    if (action === "submit_internal_review") eventDetails.fileName = payload.fileName;
+    if (action === "attach_file") {
+      eventDetails.previousFileName = payload.previousFileName;
+      eventDetails.fileName = payload.fileName;
+    }
+    if (action === "internal_approved") eventDetails.result = payload.result;
+    if (["internal_changes", "client_changes", "add_comment"].includes(action)) {
+      eventDetails.commentId = payload.commentId;
+      eventDetails.commentText = payload.commentText;
+      eventDetails.author = payload.author || (action === "internal_changes" ? "Revisão interna" : "");
+      if (action === "add_comment") eventDetails.audience = payload.audience;
+    }
+    if (["client_approved", "client_changes"].includes(action)) eventDetails.result = payload.result;
+    if (action === "new_version") eventDetails.fileName = eventVersion.fileName;
     if (action === "briefing_revised") {
       const revision = next.briefingRevisions.at(-1);
       eventDetails.reason = revision.reason;
@@ -260,7 +293,7 @@
       eventDetails.due = next.due || "";
     }
     if (["add_comment", "internal_changes", "client_changes"].includes(action)) {
-      eventDetails.versionId = version.id;
+      eventDetails.versionId = eventVersion.id;
       const comment = next.comments.at(-1);
       if (comment?.anchor) eventDetails.anchor = comment.anchor;
     }

@@ -380,6 +380,16 @@ function formatTimecode(value) {
   return hours ? [hours, minutes, seconds].map(part => String(part).padStart(2, "0")).join(":") : [minutes, seconds].map(part => String(part).padStart(2, "0")).join(":");
 }
 
+function historyExcerpt(value, maxLength = 180) {
+  const text = String(value || "").replace(/\s+/g, " ").trim();
+  return text.length > maxLength ? `${text.slice(0, maxLength - 1)}…` : text;
+}
+
+function historyVersionLabel(value) {
+  const number = Number(value);
+  return Number.isInteger(number) && number > 0 ? `V${String(number).padStart(2, "0")}` : "Versão";
+}
+
 function renderHistory(request) {
   const list = document.querySelector("#historyList");
   list.replaceChildren();
@@ -389,14 +399,27 @@ function renderHistory(request) {
     let summary = "";
     if (event.type === "add_task") {
       const dependencies = (details.dependencyTaskIds || []).map(id => request.tasks.find(item => item.id === id)?.title).filter(Boolean);
-      summary = `${details.taskTitle || task?.title || "Tarefa"}${dependencies.length ? ` · após ${dependencies.join(", ")}` : ""}`;
+      const title = details.taskTitle || task?.title;
+      if (title) summary = `${title}${dependencies.length ? ` · após ${dependencies.join(", ")}` : ""}`;
     } else if (event.type === "toggle_task") {
-      summary = `${details.taskTitle || task?.title || "Tarefa"} · ${details.status === "completed" ? "concluída" : "reaberta"}`;
+      const title = details.taskTitle || task?.title;
+      if (title && ["completed", "pending"].includes(details.status)) summary = `${title} · ${details.status === "completed" ? "concluída" : "reaberta"}`;
     } else if (event.type === "set_task_blocker") {
-      summary = `${details.taskTitle || task?.title || "Tarefa"} · ${details.blocked ? `impedimento: ${details.reason}` : "impedimento removido"}`;
+      const title = details.taskTitle || task?.title;
+      if (title) summary = `${title} · ${details.blocked ? `impedimento: ${historyExcerpt(details.reason, 120)}` : "impedimento removido"}`;
     } else if (event.type === "record_delivery") {
       const labels = { delivered: "entregue ao cliente", scheduled: "agendado", published: "publicado" };
-      summary = `${labels[details.destinationType] || "resultado sem tipo registrado"}${details.evidence ? ` · evidência: ${details.evidence}` : ""}`;
+      summary = `${historyVersionLabel(details.versionNumber)} · ${labels[details.destinationType] || "resultado sem tipo registrado"}${details.evidence ? ` · evidência: ${historyExcerpt(details.evidence)}` : ""}`;
+    } else if (event.type === "briefing_revised") {
+      summary = details.reason ? `Motivo: ${historyExcerpt(details.reason)}` : "";
+    } else if (["submit_internal_review", "internal_approved", "internal_changes", "client_approved", "client_changes", "attach_file", "new_version", "add_comment"].includes(event.type)) {
+      const versionLabel = historyVersionLabel(details.versionNumber);
+      if (event.type === "submit_internal_review") summary = `${versionLabel} · ${details.fileName || "arquivo"}`;
+      if (event.type === "internal_approved" || event.type === "client_approved") summary = versionLabel;
+      if (event.type === "internal_changes" || event.type === "client_changes") summary = `${versionLabel}${details.commentText ? ` · ${historyExcerpt(details.commentText)}` : ""}`;
+      if (event.type === "attach_file") summary = `${versionLabel} · ${details.previousFileName ? `${historyExcerpt(details.previousFileName, 72)} → ` : ""}${historyExcerpt(details.fileName || "arquivo", 72)}`;
+      if (event.type === "new_version") summary = `${versionLabel} · ${details.fileName || "arquivo"}`;
+      if (event.type === "add_comment") summary = `${versionLabel}${details.commentText ? ` · ${historyExcerpt(details.commentText)}` : ""}`;
     }
     const row = node("li", "", `${eventLabel(event.type)}${summary ? ` · ${summary}` : ""} · ${formatTimestamp(event.at)}`);
     list.append(row);

@@ -17,7 +17,7 @@ Não há autenticação, separação de clientes, portal externo, API, servidor,
 7. Percorrer revisão interna e compartilhamento da versão; devolver à produção e exigir justificativa.
 8. Simular pedido de alterações do cliente, atribuir e concluir tarefa(s) para o ajuste, criar versão 2 e conferir que decisão/comentário da versão 1 permanecem.
 9. Aprovar a versão 2, selecionar se o resultado foi entrega, agendamento ou publicação e conferir que a demanda continua aberta até registrar evidência.
-10. Conferir quadro/lista, busca, filtro por profissional, recarga da página e persistência local; testar em desktop e celular.
+10. Conferir histórico com versão, arquivo anterior/atualização, motivo do pedido e resultado pós-aprovação; recarregar para confirmar persistência local. Testar quadro/lista, busca e filtro em desktop e celular.
 
 Os testes de regra de negócio usam `node --test tests/workflow.test.js` na raiz do repositório.
 
