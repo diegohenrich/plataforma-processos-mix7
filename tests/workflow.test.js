@@ -205,6 +205,40 @@ test("comentário de vídeo preserva o instante e a versão e valida a âncora",
   assert.throws(() => transition(demand(), "add_comment", { comment: "Tempo inválido", anchor: { type: "video", timeSeconds: -1 } }), /instante.*inválido/);
 });
 
+test("tarefa de ajuste mantém vínculo verificável com feedback do cliente", () => {
+  const item = demand();
+  item.stage = "adjustments";
+  const withClientComment = transition(item, "add_comment", {
+    comment: "Aumentar a chamada na arte.",
+    audience: "client",
+    author: "Cliente Mix7",
+  }, "2026-09-24T15:00:00.000Z");
+  const commentId = withClientComment.comments[0].id;
+  const updated = transition(withClientComment, "add_task", {
+    title: "Aumentar chamada",
+    assignee: "Designer",
+    sourceCommentId: commentId,
+  });
+
+  assert.equal(updated.tasks[0].sourceCommentId, commentId);
+  assert.equal(updated.tasks[0].round, 2);
+  assert.equal(updated.history.at(-1).details.sourceCommentId, commentId);
+  assert.equal(updated.history.at(-1).details.sourceVersionNumber, 1);
+  assert.throws(() => transition(withClientComment, "add_task", {
+    title: "Tarefa com origem inválida",
+    assignee: "Designer",
+    sourceCommentId: "ausente",
+  }), /comentário válido do cliente/);
+
+  const internalComment = transition(demand(), "add_comment", { comment: "Nota interna" });
+  internalComment.stage = "adjustments";
+  assert.throws(() => transition(internalComment, "add_task", {
+    title: "Tarefa baseada em nota interna",
+    assignee: "Designer",
+    sourceCommentId: internalComment.comments[0].id,
+  }), /comentário válido do cliente/);
+});
+
 test("bloqueia aprovação de versão antiga ou ainda não enviada", () => {
   const item = demand();
   assert.throws(() => transition(item, "client_approved", { versionId: "d-1-v1" }), /versão/);

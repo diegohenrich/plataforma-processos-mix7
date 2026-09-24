@@ -272,6 +272,13 @@ function renderTasks(request) {
   const form = document.querySelector("#taskForm");
   form.hidden = !["planning", "adjustments"].includes(request.stage);
   const dependencySelect = form.elements.namedItem("taskDependencies");
+  const sourceHint = document.querySelector("#taskSourceHint");
+  const sourceCommentField = form.elements.namedItem("taskSourceCommentId");
+  if (request.stage !== "adjustments" && sourceCommentField.value) {
+    sourceCommentField.value = "";
+    sourceHint.hidden = true;
+    sourceHint.textContent = "";
+  }
   dependencySelect.replaceChildren(new Option("Sem dependência", ""));
   for (const task of tasks.filter(task => task.round === round)) dependencySelect.add(new Option(`${task.title} · ${task.assignee}`, task.id));
   document.querySelector("#taskHint").textContent = request.stage === "planning" ? "Inclua pelo menos uma tarefa atribuída antes de iniciar a execução." : request.stage === "adjustments" ? `Tarefas para a versão V${String(round).padStart(2, "0")}; conclua todas antes de anexá-la.` : `Tarefas da rodada V${String(round).padStart(2, "0")}. Os nomes são texto livre nesta demonstração.`;
@@ -280,6 +287,11 @@ function renderTasks(request) {
     const item = node("li", `task-list-item${task.status === "completed" ? " task-done" : ""}${blockers.length ? " task-blocked" : ""}`);
     const details = node("div", "task-list-details");
     details.append(node("strong", "", `V${String(task.round).padStart(2, "0")} · ${task.title}`), node("span", "", `${task.assignee}${task.estimateHours ? ` · ${task.estimateHours} h` : ""}${task.due ? ` · ${formatDue(task.due)}` : ""}`));
+    const sourceComment = task.sourceCommentId && request.comments.find(comment => comment.id === task.sourceCommentId);
+    if (sourceComment) {
+      const sourceVersion = request.versions.find(version => version.id === sourceComment.versionId)?.number;
+      details.append(node("span", "task-source-reference", `Feedback do cliente V${String(sourceVersion || "?").padStart(2, "0")}: ${historyExcerpt(sourceComment.text, 100)}`));
+    }
     for (const blocker of blockers) details.append(node("span", "task-blocker-note", `Impedida: ${blocker}`));
     item.append(details);
     if (task.round === round && ["doing", "adjustments"].includes(request.stage)) {
@@ -346,6 +358,23 @@ function renderComments(request) {
       body.append(anchor);
     }
     item.append(body);
+    if (request.stage === "adjustments" && comment.audience === "client" && comment.id) {
+      const linkedTasks = request.tasks.filter(task => task.sourceCommentId === comment.id);
+      const sourceVersion = request.versions.find(version => version.id === comment.versionId)?.number;
+      const action = node("button", "comment-anchor comment-task-action", linkedTasks.length ? `＋ Outra tarefa deste feedback (${linkedTasks.length} vinculada${linkedTasks.length === 1 ? "" : "s"})` : "＋ Planejar tarefa deste feedback");
+      action.type = "button";
+      action.addEventListener("click", () => {
+        const form = document.querySelector("#taskForm");
+        form.elements.namedItem("taskSourceCommentId").value = comment.id;
+        form.elements.namedItem("taskTitle").value = `Ajustar: ${historyExcerpt(comment.text, 110 - "Ajustar: ".length)}`;
+        const sourceHint = document.querySelector("#taskSourceHint");
+        sourceHint.textContent = `Rascunho baseado no comentário do cliente da V${String(sourceVersion || "?").padStart(2, "0")}. Edite a tarefa e confirme o responsável antes de adicionar.`;
+        sourceHint.hidden = false;
+        form.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        form.elements.namedItem("taskAssignee").focus({ preventScroll: true });
+      });
+      body.append(action);
+    }
     container.append(item);
   }
   if (!comments.length) container.append(node("p", "empty-comments", "Ainda não há comentários registrados."));
@@ -400,7 +429,9 @@ function renderHistory(request) {
     if (event.type === "add_task") {
       const dependencies = (details.dependencyTaskIds || []).map(id => request.tasks.find(item => item.id === id)?.title).filter(Boolean);
       const title = details.taskTitle || task?.title;
-      if (title) summary = `${title}${dependencies.length ? ` · após ${dependencies.join(", ")}` : ""}`;
+      const sourceComment = details.sourceCommentId && request.comments.find(comment => comment.id === details.sourceCommentId);
+      const source = sourceComment ? ` · feedback ${historyVersionLabel(details.sourceVersionNumber)}: ${historyExcerpt(sourceComment.text, 100)}` : "";
+      if (title) summary = `${title}${dependencies.length ? ` · após ${dependencies.join(", ")}` : ""}${source}`;
     } else if (event.type === "toggle_task") {
       const title = details.taskTitle || task?.title;
       if (title && ["completed", "pending"].includes(details.status)) summary = `${title} · ${details.status === "completed" ? "concluída" : "reaberta"}`;
@@ -872,8 +903,13 @@ document.querySelector("#sendComment").addEventListener("click", () => {
 document.querySelector("#taskForm").addEventListener("submit", event => {
   event.preventDefault();
   const data = new FormData(event.currentTarget);
-  const saved = updateRequest("add_task", { title: data.get("taskTitle"), assignee: data.get("taskAssignee"), estimateHours: data.get("taskEstimateHours"), due: data.get("taskDue"), dependencyTaskIds: data.getAll("taskDependencies").filter(Boolean) }, "Tarefa atribuída ao plano.");
-  if (saved) event.currentTarget.reset();
+  const saved = updateRequest("add_task", { title: data.get("taskTitle"), assignee: data.get("taskAssignee"), estimateHours: data.get("taskEstimateHours"), due: data.get("taskDue"), dependencyTaskIds: data.getAll("taskDependencies").filter(Boolean), sourceCommentId: data.get("taskSourceCommentId") }, "Tarefa adicionada ao plano.");
+  if (saved) {
+    event.currentTarget.reset();
+    const sourceHint = document.querySelector("#taskSourceHint");
+    sourceHint.hidden = true;
+    sourceHint.textContent = "";
+  }
 });
 
 fileInput.addEventListener("change", async () => {

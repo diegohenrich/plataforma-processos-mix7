@@ -273,6 +273,8 @@
           <p class="workflow-hint" id="taskHint">Adicione tarefas com responsável para iniciar a execução.</p>
           <ul class="task-list" id="taskList"></ul>
           <form class="task-form" id="taskForm">
+            <input name="taskSourceCommentId" type="hidden" />
+            <small class="task-source-hint" id="taskSourceHint" hidden></small>
             <label>Tarefa<input name="taskTitle" required maxlength="120" placeholder="Ex.: preparar primeira versão" /></label>
             <label>Responsável<input name="taskAssignee" required maxlength="80" placeholder="Nome ou função" /></label>
             <label>Depende de (opcional)<select name="taskDependencies" multiple size="3" aria-describedby="taskDependencyHelp"></select><small id="taskDependencyHelp">Selecione tarefas prévias da rodada. Use Ctrl ou ⌘ para múltiplas seleções.</small></label>

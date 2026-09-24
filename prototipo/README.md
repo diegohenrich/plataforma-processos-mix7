@@ -16,6 +16,7 @@ Não há autenticação, separação de clientes, portal externo, API, servidor,
 6. Sinalizar um impedimento com motivo em uma tarefa em execução; a conclusão fica bloqueada até remover o impedimento. As mudanças aparecem no histórico. Concluir todas as tarefas da rodada e anexar uma imagem/vídeo/PDF fictício; sem tarefas concluídas ou arquivo, o envio à revisão fica bloqueado.
 7. Percorrer revisão interna e compartilhamento da versão; devolver à produção e exigir justificativa.
 8. Simular pedido de alterações do cliente, atribuir e concluir tarefa(s) para o ajuste, criar versão 2 e conferir que decisão/comentário da versão 1 permanecem.
+   Durante a rodada de ajustes, use “Planejar tarefa deste feedback” em um comentário do cliente. Confira que o título preenchido continua editável, indique um responsável e adicione a tarefa; lista e histórico devem manter a referência ao comentário e à versão de origem.
 9. Aprovar a versão 2, selecionar se o resultado foi entrega, agendamento ou publicação e conferir que a demanda continua aberta até registrar evidência.
 10. Conferir histórico com versão, arquivo anterior/atualização, motivo do pedido e resultado pós-aprovação; recarregar para confirmar persistência local. Testar quadro/lista, busca e filtro em desktop e celular.
 

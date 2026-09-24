@@ -150,10 +150,15 @@
         const dependencyTaskIds = [...new Set(requestedDependencies.map(String).filter(Boolean))];
         const roundTaskIds = new Set(next.tasks.filter(task => task.round === round).map(task => task.id));
         if (dependencyTaskIds.some(id => !roundTaskIds.has(id))) throw new Error("Dependências devem apontar para tarefas da mesma rodada.");
+        const sourceCommentId = String(payload.sourceCommentId || "").trim();
+        const sourceComment = sourceCommentId ? next.comments.find(comment => comment.id === sourceCommentId) : null;
+        if (sourceCommentId && (!sourceComment || sourceComment.audience !== "client" || next.stage !== "adjustments")) {
+          throw new Error("A origem da tarefa deve ser um comentário válido do cliente nesta rodada de ajustes.");
+        }
         const estimateHours = Number(payload.estimateHours) > 0 ? Number(payload.estimateHours) : null;
-        const task = { id: `${next.id}-task-${round}-${next.tasks.filter(task => task.round === round).length + 1}`, title, assignee, estimateHours, due: String(payload.due || ""), round, status: "pending", dependencyTaskIds, blockedReason: "" };
+        const task = { id: `${next.id}-task-${round}-${next.tasks.filter(task => task.round === round).length + 1}`, title, assignee, estimateHours, due: String(payload.due || ""), round, status: "pending", dependencyTaskIds, blockedReason: "", sourceCommentId: sourceComment?.id || null };
         next.tasks.push(task);
-        payload = { ...payload, taskId: task.id, taskTitle: task.title, dependencyTaskIds };
+        payload = { ...payload, taskId: task.id, taskTitle: task.title, dependencyTaskIds, sourceCommentId: task.sourceCommentId, sourceVersionNumber: sourceComment ? next.versions.find(item => item.id === sourceComment.versionId)?.number : null };
         break;
       }
       case "toggle_task": {
@@ -300,7 +305,11 @@
     if (["add_task", "toggle_task", "set_task_blocker"].includes(action)) {
       eventDetails.taskId = payload.taskId;
       eventDetails.taskTitle = payload.taskTitle;
-      if (action === "add_task") eventDetails.dependencyTaskIds = payload.dependencyTaskIds;
+      if (action === "add_task") {
+        eventDetails.dependencyTaskIds = payload.dependencyTaskIds;
+        eventDetails.sourceCommentId = payload.sourceCommentId;
+        eventDetails.sourceVersionNumber = payload.sourceVersionNumber;
+      }
       if (action === "toggle_task") eventDetails.status = payload.status;
       if (action === "set_task_blocker") {
         eventDetails.previousReason = payload.previousReason;
