@@ -28,7 +28,7 @@
 - PR #6 contém pesquisa inicial de soluções e arquitetura de produto; PR #7 contém protótipo navegável. Ambos foram conferidos abertos como rascunhos e ainda não foram integrados à `main`.
 - 2026-09-24 — Transcrição original dos três áudios conferida no anexo fornecido. Requisitos reorganizados em P0/P1/P2 e especificação funcional inicial criada em `docs/ESPECIFICACAO-MVP.md`; as matrizes registram fontes, critérios verificáveis, dependências e rastreabilidade para cartões Trello 4–13 e 15. A diretriz aprovada foi separada dos fatos operacionais ainda não confirmados.
 - Validação documental desta etapa: `git diff --check` passou e todos os destinos locais de Markdown nos arquivos alterados existem. Não há código de produto novo nesta alteração, portanto build e testes de aplicação não se aplicam.
-- A especificação está em preparação na branch `spec/requisitos-priorizados`; falta publicar PR e atualizar o cartão 15. Fluxo real, papéis concretos e revisão do protótipo seguem pendentes.
+- Sincronização da especificação: [PR #8](https://github.com/diegohenrich/plataforma-processos-mix7/pull/8) aberto para revisão na branch `spec/requisitos-priorizados`; SHA local/remoto conferidos como iguais. Cartão 15 será atualizado após registrar o PR. Fluxo real, papéis concretos e revisão do protótipo seguem pendentes.
 
 ## Próximo passo
 
