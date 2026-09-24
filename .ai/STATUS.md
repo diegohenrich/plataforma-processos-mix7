@@ -33,9 +33,12 @@
 - 2026-09-24 — Complementada a pesquisa comparativa com releases, licenças, páginas de preço e avisos de segurança publicados nos repositórios e sites oficiais. Wekan v11.95 foi publicado no dia da consulta; Plane v1.4.2 em 23/08/2026. Os repositórios exibem avisos recentes com versões corrigidas, portanto o protocolo da prova exige verificar versão candidata, avisos, permissões, configuração e restauração de backup, sem concluir que releases atuais sejam vulneráveis ou certificadas. Foram registrados limites comerciais disponíveis de Planable, Frame.io e Filestage e a divergência de preço encontrada nas páginas oficiais de Planable para confirmar com fornecedor.
 - Validação documental desta atualização: `git diff --check`; links oficiais incluídos na tabela e nas fontes. Não houve teste de produto, cotação, auditoria independente nem execução auto-hospedada.
 
+- 2026-09-24 — Revisão de fontes e arquitetura conceitual concluída nesta atualização. `docs/PESQUISA-SOLUCOES.md` agora deixa explícita a diferença entre preços mostrados em duas páginas oficiais do Planable, não afirma o preço dinâmico do Frame.io sem confirmação e registra limites publicados do Filestage. `docs/ARQUITETURA-PROPOSTA.md` inclui conceitos e relações dos dados, fronteiras de acesso/histórico e contratos recomendados entre núcleo, módulos e integrações. Esses elementos são conceitos de produto, não esquema de banco ou especificação técnica.
+- Validação: `git diff --check` passou; fontes oficiais conferidas em 24/09/2026. Conteúdo publicado no commit `f2d12a30c58bd69cf276f1e14a94e2b384d995e8`; SHA local e remoto conferidos como iguais. [PR #10](https://github.com/diegohenrich/plataforma-processos-mix7/pull/10) aberto como rascunho sobre PR #6 para revisão encadeada. Sem piloto de produto, cotação ou auditoria independente.
+
 ## Próximo passo
 
 - Incorporar um caso real de demanda da Mix7 e resolver fluxo, papéis, revisão interna e significado de conclusão.
-- Preparar protótipo navegável do fluxo depois de validar os estados e papéis; então testar com equipe e cliente.
-- Executar prova ponta a ponta das soluções candidatas, incluindo revisão de arquivo/vídeo, permissões, versões, exportação e integração.
+- Incorporar um caso real de demanda da Mix7 para confirmar estados, papéis, exceções e critério de encerramento; o protótipo navegável e a primeira jornada local já existem em PRs #7 e #9, ainda aguardando revisão.
+- Depois do caso real, preparar piloto ponta a ponta com dados fictícios e comparar revisão de arquivo/vídeo, permissões, versões, exportação e integração das soluções candidatas.
 - Manter documentação, GitHub e Trello sincronizados após cada entrega.
