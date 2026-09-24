@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f6f9fd" />
+    <title>Mix7 · Central de processos</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Navegação principal">
+        <a class="brand" href="#inicio" aria-label="Mix7 início">
+          <span class="brand-symbol"><i></i><i></i><i></i></span>
+          <span class="brand-word">mix<span>7</span></span>
+        </a>
+        <div class="workspace-switcher">
+          <span class="workspace-mark">M</span>
+          <span class="workspace-copy"><strong>Mix7 Agência</strong><small>Espaço de trabalho</small></span>
+          <span class="chevron">⌄</span>
+        </div>
+        <span class="nav-caption">ESPAÇO DE TRABALHO</span>
+        <nav class="main-nav">
+          <a class="nav-item" href="#visao"><span class="nav-icon">▦</span> Visão geral</a>
+          <a class="nav-item active" href="#demandas"><span class="nav-icon">▤</span> Demandas <span class="nav-count">12</span></a>
+          <a class="nav-item" href="#aprovacoes"><span class="nav-icon">◉</span> Aprovações <span class="nav-dot"></span></a>
+          <a class="nav-item" href="#equipe"><span class="nav-icon">♙</span> Equipe</a>
+          <a class="nav-item" href="#clientes"><span class="nav-icon">◇</span> Clientes</a>
+        </nav>
+        <span class="nav-caption section-caption">GESTÃO</span>
+        <nav class="main-nav">
+          <a class="nav-item" href="#calendario"><span class="nav-icon">▦</span> Calendário</a>
+          <a class="nav-item" href="#conhecimento"><span class="nav-icon">▧</span> Conhecimento</a>
+          <a class="nav-item" href="#acessos"><span class="nav-icon">▣</span> Acessos</a>
+        </nav>
+        <div class="sidebar-bottom">
+          <div class="help-card">
+            <span class="help-spark">✳</span>
+            <strong>Primeiros passos</strong>
+            <p>Conheça o espaço e organize o próximo projeto.</p>
+            <a href="#ajuda">Ver guia <span>↗</span></a>
+          </div>
+          <button class="profile-button" type="button">
+            <span class="avatar avatar-self">LM</span>
+            <span class="profile-copy"><strong>Laura Martins</strong><small>Gestora de projetos</small></span>
+            <span class="chevron">···</span>
+          </button>
+        </div>
+      </aside>
+
+      <main class="main-content" id="demandas">
+        <header class="topbar">
+          <div class="breadcrumbs"><span>Mix7 Agência</span><b>/</b><strong>Demandas</strong></div>
+          <div class="top-actions">
+            <button class="icon-button" aria-label="Buscar" title="Buscar">⌕</button>
+            <button class="icon-button notification-button" aria-label="Notificações" title="Notificações">♧<i></i></button>
+            <span class="avatar avatar-self top-avatar">LM</span>
+          </div>
+        </header>
+
+        <section class="page-content">
+          <div class="page-heading">
+            <div>
+              <div class="eyebrow"><span class="eyebrow-line"></span> QUINTA-FEIRA, 24 DE SETEMBRO</div>
+              <h1>Central de processos</h1>
+              <p class="subtitle">Acompanhe demandas, equipe e aprovações em um só lugar.</p>
+            </div>
+            <button class="primary-button" id="newRequestButton"><span>＋</span> Nova demanda</button>
+          </div>
+
+          <div class="summary-grid" aria-label="Resumo das demandas">
+            <article class="summary-card">
+              <div class="summary-top"><span>Demandas ativas</span><span class="metric-icon blue-icon">▤</span></div>
+              <div class="metric-row"><strong>24</strong><span class="metric-change positive">↗ 12%</span></div>
+              <small>em relação à semana passada</small>
+              <div class="metric-bars"><i style="height:36%"></i><i style="height:48%"></i><i style="height:42%"></i><i style="height:66%"></i><i style="height:52%"></i><i style="height:78%"></i><i class="bar-current" style="height:92%"></i></div>
+            </article>
+            <article class="summary-card">
+              <div class="summary-top"><span>Aguardando cliente</span><span class="metric-icon amber-icon">◷</span></div>
+              <div class="metric-row"><strong>06</strong><span class="metric-note">2 vencem hoje</span></div>
+              <small>aprovações pendentes</small>
+              <div class="summary-bottom"><span class="tiny-avatars"><i class="tiny-avatar a1">AC</i><i class="tiny-avatar a2">RB</i><i class="tiny-avatar a3">+4</i></span><span>6 peças em revisão</span></div>
+            </article>
+            <article class="summary-card">
+              <div class="summary-top"><span>Capacidade da equipe</span><span class="metric-icon green-icon">♙</span></div>
+              <div class="metric-row"><strong>78<span class="metric-percent">%</span></strong><span class="capacity-label"><i></i> saudável</span></div>
+              <small>horas planejadas nesta semana</small>
+              <div class="capacity-track"><i></i></div>
+              <div class="capacity-legend"><span>0h</span><span>96h de 123h</span></div>
+            </article>
+          </div>
+
+          <div class="board-heading">
+            <div class="view-tabs" role="tablist" aria-label="Visualização">
+              <button class="view-tab active" role="tab" aria-selected="true"><span>▦</span> Quadro</button>
+              <button class="view-tab" role="tab" aria-selected="false"><span>☷</span> Lista</button>
+            </div>
+            <div class="board-tools">
+              <label class="search-field"><span>⌕</span><input id="searchInput" type="search" placeholder="Buscar demanda" aria-label="Buscar demanda" /></label>
+              <button class="filter-button" id="filterButton"><span>☷</span> Filtros <i class="filter-indicator"></i></button>
+              <button class="people-filter" aria-label="Filtrar por pessoa"><span class="avatar avatar-tiny avatar-teal">AC</span><span class="avatar avatar-tiny avatar-lilac">RB</span><span class="avatar avatar-tiny avatar-coral">JP</span><b>⌄</b></button>
+              <button class="more-button" aria-label="Mais opções">···</button>
+            </div>
+          </div>
+
+          <div class="list-view-header" id="listViewHeader" hidden><span>CLIENTE</span><span>DEMANDA</span><span>ETAPA</span><span>PRAZO</span><span></span></div>
+
+          <div class="filter-strip" id="filterStrip" hidden>
+            <span>Filtrando por:</span><button class="filter-chip">Social <b>×</b></button><button class="filter-chip">Esta semana <b>×</b></button><button id="clearFilters">Limpar filtros</button>
+          </div>
+
+          <section class="kanban-board" aria-label="Quadro de demandas">
+            <div class="kanban-column" data-stage="briefing">
+              <div class="column-heading"><span class="stage-dot dot-slate"></span><h2>Novas demandas</h2><span class="column-count">3</span><button class="column-menu">···</button></div>
+              <div class="card-stack">
+                <article class="task-card" data-title="Campanha de primavera — conceito visual" data-client="Casa Aurora" data-stage-name="Briefing">
+                  <div class="card-label-row"><span class="client-label label-blue">Casa Aurora</span><span class="card-menu">···</span></div>
+                  <h3>Campanha de primavera — conceito visual</h3>
+                  <p class="card-description">Conceito e KV para lançamento da coleção.</p>
+                  <div class="card-progress"><span class="progress-track"><i style="width:18%"></i></span><span>1/5</span></div>
+                  <div class="card-footer"><span class="due-date"><span>◷</span> 29 set</span><span class="avatar avatar-small avatar-teal">AC</span></div>
+                </article>
+                <article class="task-card" data-title="Roteiro Reels — bastidores da marca" data-client="Café Aroeira" data-stage-name="Briefing">
+                  <div class="card-label-row"><span class="client-label label-amber">Café Aroeira</span><span class="card-menu">···</span></div>
+                  <h3>Roteiro Reels — bastidores da marca</h3>
+                  <p class="card-description">Vídeo curto para série “Feito com tempo”.</p>
+                  <div class="card-progress"><span class="progress-track"><i style="width:8%"></i></span><span>0/4</span></div>
+                  <div class="card-footer"><span class="due-date due-soon"><span>◷</span> 30 set</span><span class="avatar avatar-small avatar-coral">JP</span></div>
+                </article>
+                <button class="add-card" data-add="briefing">＋ Adicionar demanda</button>
+              </div>
+            </div>
+
+            <div class="kanban-column" data-stage="planning">
+              <div class="column-heading"><span class="stage-dot dot-blue"></span><h2>Planejamento</h2><span class="column-count">2</span><button class="column-menu">···</button></div>
+              <div class="card-stack">
+                <article class="task-card" data-title="Calendário editorial — outubro" data-client="Nativa Saúde" data-stage-name="Planejamento">
+                  <div class="card-label-row"><span class="client-label label-green">Nativa Saúde</span><span class="card-menu">···</span></div>
+                  <h3>Calendário editorial — outubro</h3>
+                  <p class="card-description">12 posts para Instagram e LinkedIn.</p>
+                  <div class="card-progress"><span class="progress-track"><i style="width:46%"></i></span><span>3/6</span></div>
+                  <div class="card-footer"><span class="due-date"><span>◷</span> 02 out</span><span class="avatar avatar-small avatar-lilac">RB</span></div>
+                </article>
+                <button class="add-card" data-add="planning">＋ Adicionar demanda</button>
+              </div>
+            </div>
+
+            <div class="kanban-column" data-stage="doing">
+              <div class="column-heading"><span class="stage-dot dot-violet"></span><h2>Em produção</h2><span class="column-count">4</span><button class="column-menu">···</button></div>
+              <div class="card-stack">
+                <article class="task-card" data-title="Carrossel — 5 mitos sobre protetor solar" data-client="Nativa Saúde" data-stage-name="Em produção">
+                  <div class="card-label-row"><span class="client-label label-green">Nativa Saúde</span><span class="card-menu">···</span></div>
+                  <h3>Carrossel — 5 mitos sobre protetor solar</h3>
+                  <p class="card-description">Série educativa · Instagram</p>
+                  <div class="card-progress"><span class="progress-track"><i style="width:72%"></i></span><span>4/5</span></div>
+                  <div class="card-footer"><span class="due-date due-today"><span>◷</span> Hoje</span><span class="avatar avatar-small avatar-teal">AC</span></div>
+                </article>
+                <article class="task-card" data-title="Edição de vídeo — depoimento cliente" data-client="Casa Aurora" data-stage-name="Em produção">
+                  <div class="card-label-row"><span class="client-label label-blue">Casa Aurora</span><span class="card-menu">···</span></div>
+                  <h3>Edição de vídeo — depoimento cliente</h3>
+                  <p class="card-description">Vídeo manifesto · 45 segundos</p>
+                  <div class="card-progress"><span class="progress-track"><i style="width:64%"></i></span><span>2/3</span></div>
+                  <div class="card-footer"><span class="due-date"><span>◷</span> 26 set</span><span class="avatar avatar-small avatar-coral">JP</span></div>
+                </article>
+                <button class="add-card" data-add="doing">＋ Adicionar demanda</button>
+              </div>
+            </div>
+
+            <div class="kanban-column column-review" data-stage="review">
+              <div class="column-heading"><span class="stage-dot dot-amber"></span><h2>Aguardando cliente</h2><span class="column-count">2</span><button class="column-menu">···</button></div>
+              <div class="card-stack">
+                <article class="task-card card-featured" data-title="Post de lançamento — linha Botânica" data-client="Casa Aurora" data-stage-name="Aguardando cliente">
+                  <div class="card-label-row"><span class="client-label label-blue">Casa Aurora</span><span class="status-pill status-waiting">● Aguardando</span></div>
+                  <h3>Post de lançamento — linha Botânica</h3>
+                  <div class="creative-thumb" aria-label="Prévia fictícia de criativo da linha Botânica">
+                    <span class="thumb-leaf leaf-one"></span><span class="thumb-leaf leaf-two"></span><span class="thumb-sun"></span>
+                    <span class="thumb-brand">CASA AURORA</span><strong>Floresça<br />no seu tempo.</strong><small>linha botânica · primavera 2026</small>
+                  </div>
+                  <div class="approval-detail"><span class="approval-icon">✓</span><span><strong>Versão 03</strong><small>Enviada para aprovação há 4h</small></span><span class="avatar avatar-small avatar-client">CA</span></div>
+                  <div class="card-footer"><span class="due-date due-today"><span>◷</span> Hoje, 17h</span><span class="avatar avatar-small avatar-lilac">RB</span></div>
+                </article>
+                <button class="add-card" data-add="review">＋ Adicionar demanda</button>
+              </div>
+            </div>
+
+            <div class="kanban-column" data-stage="adjustments">
+              <div class="column-heading"><span class="stage-dot dot-rose"></span><h2>Ajustes</h2><span class="column-count">1</span><button class="column-menu">···</button></div>
+              <div class="card-stack">
+                <article class="task-card" data-title="Stories — semana do consumidor" data-client="Café Aroeira" data-stage-name="Ajustes">
+                  <div class="card-label-row"><span class="client-label label-amber">Café Aroeira</span><span class="status-pill status-changes">↺ Ajustes</span></div>
+                  <h3>Stories — semana do consumidor</h3>
+                  <p class="card-description">Cliente pediu ajuste no texto do último quadro.</p>
+                  <div class="card-progress"><span class="progress-track progress-rose"><i style="width:82%"></i></span><span>4/5</span></div>
+                  <div class="card-footer"><span class="due-date"><span>◷</span> 25 set</span><span class="avatar avatar-small avatar-coral">JP</span></div>
+                </article>
+              </div>
+            </div>
+
+            <div class="kanban-column column-publish" data-stage="delivery">
+              <div class="column-heading"><span class="stage-dot dot-green"></span><h2>Entrega e publicação</h2><span class="column-count">2</span><button class="column-menu">···</button></div>
+              <div class="card-stack">
+                <article class="task-card" data-title="Reel — receita de café gelado" data-client="Café Aroeira" data-stage-name="Entrega e publicação">
+                  <div class="card-label-row"><span class="client-label label-amber">Café Aroeira</span><span class="status-pill status-approved">✓ Aprovado</span></div>
+                  <h3>Reel — receita de café gelado</h3>
+                  <p class="card-description">Aprovado pelo cliente · agendar publicação.</p>
+                  <div class="card-footer"><span class="due-date"><span>◷</span> 25 set</span><span class="avatar avatar-small avatar-coral">JP</span></div>
+                </article>
+              </div>
+            </div>
+          </section>
+          <div class="board-footnote"><span class="info-mark">i</span> Exemplo demonstrativo: clientes e demandas exibidos são fictícios.</div>
+        </section>
+      </main>
+    </div>
+
+    <div class="scrim" id="scrim" hidden></div>
+    <aside class="detail-drawer" id="detailDrawer" aria-label="Detalhes da demanda" aria-hidden="true">
+      <div class="drawer-topline"><span class="drawer-breadcrumb">DEMANDA <b>/</b> <span id="drawerStage">AGUARDANDO CLIENTE</span></span><button class="close-button" id="closeDrawer" aria-label="Fechar detalhes">×</button></div>
+      <div class="drawer-content">
+        <div class="drawer-client"><span class="client-label label-blue" id="drawerClient">Casa Aurora</span><button class="subtle-button">···</button></div>
+        <h2 id="drawerTitle">Post de lançamento — linha Botânica</h2>
+        <div class="drawer-meta"><span class="due-date due-today"><span>◷</span> Hoje, 17h</span><span class="meta-divider"></span><span>Responsável</span><span class="avatar avatar-tiny avatar-lilac">RB</span><strong>Rafaela</strong></div>
+
+        <section class="flow-section">
+          <div class="section-title-row"><h3>Etapas da demanda</h3><button class="text-action">Ver histórico</button></div>
+          <div class="flow-track">
+            <div class="flow-step complete"><span>✓</span><small>Pedido</small></div><i class="flow-line complete-line"></i>
+            <div class="flow-step complete"><span>✓</span><small>Planejado</small></div><i class="flow-line complete-line"></i>
+            <div class="flow-step complete"><span>✓</span><small>Produção</small></div><i class="flow-line active-line"></i>
+            <div class="flow-step current"><span>4</span><small>Cliente</small></div><i class="flow-line"></i>
+            <div class="flow-step"><span>5</span><small>Entrega</small></div>
+          </div>
+        </section>
+
+        <div class="drawer-tabs" role="tablist"><button class="drawer-tab active" role="tab">Material e feedback</button><button class="drawer-tab" role="tab">Tarefas <span>3</span></button></div>
+        <section class="asset-section">
+          <div class="asset-heading"><div><strong>Post de lançamento — linha Botânica</strong><small>Imagem para Instagram · 1080 × 1350</small></div><button class="subtle-button">•••</button></div>
+          <div class="asset-preview">
+            <span class="asset-leaf asset-leaf-one"></span><span class="asset-leaf asset-leaf-two"></span><span class="asset-sun"></span>
+            <span class="asset-brand">CASA AURORA</span><strong>Floresça<br />no seu tempo.</strong><small>linha botânica · primavera 2026</small>
+          </div>
+          <div class="version-row"><span class="version-tag">V03</span><span>Enviada por Rafaela · hoje, 12:42</span><button class="version-link">Ver versões (3) <b>⌄</b></button></div>
+        </section>
+
+        <section class="feedback-section">
+          <div class="section-title-row"><h3>Feedback do cliente <span class="comment-count">2</span></h3><button class="filter-comments">Todos ⌄</button></div>
+          <div class="comment-item">
+            <span class="avatar avatar-small avatar-client">CA</span>
+            <div class="comment-body"><div class="comment-meta"><strong>Camila Alves</strong><span>13:08</span><span class="client-role">CLIENTE</span></div><p>Gostei bastante! Podemos deixar a chamada um pouquinho maior para ganhar mais destaque?</p><span class="comment-anchor">◉ Ponto marcado na imagem</span></div>
+          </div>
+          <div class="comment-item">
+            <span class="avatar avatar-small avatar-client2">CA</span>
+            <div class="comment-body"><div class="comment-meta"><strong>Camila Alves</strong><span>13:11</span></div><p>A cor do fundo está aprovada 🌿</p></div>
+          </div>
+          <div class="internal-note"><span>✳</span> Nota interna: consolidar ajustes e enviar uma nova versão para revisão.</div>
+          <label class="reply-box"><textarea rows="2" placeholder="Escreva uma resposta ou mencione alguém…"></textarea><span class="reply-actions"><span>↗</span><button type="button" aria-label="Anexar arquivo">＋</button><button class="send-reply" type="button" aria-label="Enviar comentário">↑</button></span></label>
+        </section>
+      </div>
+      <div class="drawer-footer"><span class="client-approval-note"><i></i> Cliente tem acesso somente a este material</span><div class="approval-buttons"><button class="secondary-button" id="requestChangesButton">Solicitar ajustes</button><button class="approve-button" id="approveButton"><span>✓</span> Aprovar versão</button></div></div>
+    </aside>
+
+    <dialog class="request-dialog" id="requestDialog">
+      <form method="dialog" id="requestForm">
+        <div class="dialog-heading"><div><span class="dialog-kicker">NOVA DEMANDA</span><h2>Comece com o briefing</h2><p>Registre o contexto antes de dividir o trabalho.</p></div><button class="close-button" value="cancel" aria-label="Fechar">×</button></div>
+        <label class="form-label">Nome da demanda<input name="title" required placeholder="Ex.: Campanha de lançamento" /></label>
+        <div class="form-grid"><label class="form-label">Cliente<input name="client" required placeholder="Selecione ou digite" /></label><label class="form-label">Tipo de entrega<select name="type"><option>Post para redes sociais</option><option>Vídeo</option><option>Outro material</option></select></label></div>
+        <label class="form-label">Objetivo e contexto<textarea name="brief" rows="3" required placeholder="O que precisa ser feito? Para quem e com qual objetivo?"></textarea></label>
+        <label class="form-label">Prazo desejado<input name="due" type="date" /></label>
+        <div class="briefing-hint"><span>✳</span><p>A equipe revisa o briefing e combina responsáveis e prazos antes de iniciar.</p></div>
+        <div class="dialog-footer"><button class="secondary-button" value="cancel">Cancelar</button><button class="primary-button" type="submit" value="submit">Salvar demanda <span>→</span></button></div>
+      </form>
+    </dialog>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="app.js"></script>
+  </body>
+</html>

@@ -25,7 +25,14 @@
 - `README.md` atualizado para destacar a regra de sincronização e a tag do marco inicial. A validação da publicação deste ajuste consta no histórico Git.
 - Proteção automática da branch `main` indisponível no plano atual do GitHub para este repositório privado (API retornou HTTP 403 e exigiu GitHub Pro ou repositório público). Não alterar a privacidade por esse motivo. O processo de push verificado, pull request e preservação de histórico é a proteção operacional adotada.
 
+- PR #6 publicado na branch `research/comparativo-arquitetura-inicial` para revisão; pesquisa e arquitetura de produto permanecem sem integração à `main` até revisão do PR.
+- 2026-09-24 — Protótipo estático navegável criado em `prototipo/`. Usa dados fictícios; quadro, lista, formulário de demanda, painel lateral com versão/comentários, busca e simulações de aprovação/ajustes não salvam dados. Isto não é a aplicação de produção.
+- Validação visual/funcional do protótipo: aberto e renderizado em Chromium a 1440×1000 e 390×844; screenshots de quadro, lista e painel inspecionados; viewport móvel ficou com 390 px de largura sem overflow global; painel mediu 510 px em desktop e 390 px em celular; busca por Nativa Saúde retornou 2 cartões; criação gerou uma demanda de briefing; aprovar e solicitar ajustes exibiram a próxima ação esperada; nenhum erro JavaScript de página no percurso principal.
+- Ainda faltam revisão do usuário/equipe, validar o fluxo contra um caso real, persistência, backend, login/permissões reais, arquivos e comentários de vídeo funcionais. Não há stack de produto definida.
+
 ## Próximo passo
 
-- Levantar um caso real de demanda da Mix7 para resolver fluxo, papéis, revisão interna e significado de conclusão antes de especificar a primeira versão.
-- Manter a documentação sincronizada com as decisões tomadas durante a descoberta e, quando houver código, vincular mudanças aos cartões do Trello por pull requests.
+- Incorporar um caso real de demanda da Mix7 e resolver fluxo, papéis, revisão interna e significado de conclusão.
+- Revisar o protótipo com usuário/equipe e ajustar o fluxo à descrição real da operação.
+- Depois de validar estados e papéis, especificar modelo de dados/arquitetura técnica e preparar teste com equipe e cliente.
+- Manter documentação, GitHub e Trello sincronizados após cada entrega.

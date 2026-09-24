@@ -16,7 +16,11 @@ A primeira versão atende à Mix7 e seus clientes. Transformar a plataforma em p
 
 Gestão interna focada, com Kanban e lista; aprovações de imagem e vídeo conectadas às demandas; comentários preservados por versão e, no vídeo, associados a um instante. O produto deve permitir ampliar os tipos de aprovação conforme as necessidades da agência forem validadas.
 
-A interface deve tomar https://mix7.com.br/ como referência de identidade e priorizar branco e azul claros, conforme preferência explícita do usuário. Tons, fontes e composição serão fechados no protótipo.
+A interface deve tomar https://mix7.com.br/ como referência de identidade e priorizar branco e azul claros, conforme preferência explícita do usuário. Tons, fontes e composição do protótipo são escolhas iniciais para validar com a Mix7.
+
+## Protótipo navegável
+
+O [protótipo do fluxo integrado](../prototipo/README.md) materializa uma primeira proposta de quadro, briefing, versões, feedback e decisões de aprovação. Os nomes, números, clientes e demandas da tela são dados fictícios. As ações são demonstrações locais sem persistência; o protótipo ainda precisa de revisão da Mix7 e não representa a aplicação pronta.
 
 ## Limites atuais
 
