@@ -9,8 +9,11 @@ Quadro: [Desenvolvimento de Projetos - Mix7](https://trello.com/b/RkWOzDcu/desen
 | Roxo | IA e automações | Sugestões de tarefas, estimativas, distribuição revisada e organização de feedbacks. |
 | Amarelo | Conhecimento e acessos | Referências, treinamento, onboarding, permissões e concessão de acessos. |
 | Laranja | Pesquisa de soluções | Comparação de ferramentas existentes, bases open source, licenças e custos. |
+| Vermelho | Bloqueio | Impedimento real que exige ação ou decisão antes de continuar. Use junto da etiqueta da área afetada. |
 
 **Exemplo:** o cartão do fluxo integrado recebe azul e verde porque envolve execução da equipe e aprovação do cliente. O cartão de entrada de demandas e IA recebe azul e roxo.
+
+Os nomes foram configurados nas etiquetas do quadro. Se um usuário enxergar somente barras coloridas nos cartões, pode clicar em uma etiqueta para alternar a exibição dos nomes.
 
 ## Listas
 
