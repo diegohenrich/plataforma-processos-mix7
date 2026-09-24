@@ -108,3 +108,10 @@
 - Validação: `node --test tests/workflow.test.js` passou 12/12; `node --check prototipo/workflow.js`, `node --check prototipo/app.js`, `git diff --check` e links locais passaram. Chromium percorreu criação, dependência, bloqueio, motivo, remoção, desbloqueio, reabertura ordenada e histórico. Viewport 390×844 inspecionado, painel/documento sem overflow, console sem erros/avisos.
 - Código e docs em `a59ba5de49e7cf710ddbde1d41e3b20c853e9a5c`, publicado na branch `implementation/primeira-jornada-local`; SHA local/remoto idêntico. Cartões 8 e 18 foram atualizados e relidos no Trello; PR #9 teve descrição atualizada e continua em rascunho.
 - Limite: isso demonstra comportamento local; não há identidade, notificação, coordenação multiusuário ou medição de tempo. A rotina e os papéis da Mix7 continuam sujeitos a validação com caso anonimizado.
+
+## MVP-10: resultado pós-aprovação — 2026-09-24
+
+- O registro final diferencia material entregue ao cliente, publicação agendada e material publicado. Tipo e evidência são obrigatórios antes de concluir; o tipo aparece na demanda concluída e no histórico. Nenhuma ação é executada em serviço externo.
+- Cobertura P0/limites e roteiro do protótipo atualizados. Validação: `node --test tests/workflow.test.js` passou 13/13; `node --check prototipo/workflow.js`, `node --check prototipo/app.js`, `git diff --check` e links locais passaram. Chromium cobriu os três tipos e bloqueio até evidência; inspeção desktop e 390×844 sem overflow/erros de console.
+- Commit `9e427e9f9ac004bd7d897348fe951dc184924814` publicado e SHA local/remoto confirmado na branch `implementation/primeira-jornada-local`. Cartão 18 do Trello atualizado com MVP-10, teste e limites; PR #9 atualizado, aberto e em rascunho.
+- Limite: tipo e evidência ficam no armazenamento local. Datas, canais e metadados por serviço seguem pendentes de validação da rotina real.
