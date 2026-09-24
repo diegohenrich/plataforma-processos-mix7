@@ -13,8 +13,8 @@
 ## Estado atual e validação
 
 - Os cartões ainda não representam requisitos aprovados: questões abertas permanecem em **Requisitos a validar**.
-- A integração do Trello permite aplicar etiquetas existentes, mas não renomeá-las; as cinco etiquetas coloridas ainda estão sem nome no próprio Trello. A legenda no cartão de decisões é provisória.
-- O usuário apontou que a legenda isolada não resolve a falta de identificação. `docs/TRELLO.md` e `README.md` agora explicam nome, cor, finalidade e uso cruzado das etiquetas. A renomeação efetiva no Trello depende de login da Atlassian no navegador; a tela foi aberta para o usuário.
+- Após login da Atlassian no navegador, as cinco etiquetas de área e a etiqueta vermelha de **Bloqueio** foram nomeadas diretamente no Trello. O usuário apontou que a legenda isolada não bastava; a descrição do quadro e `docs/TRELLO.md` agora explicam a finalidade de cada uma.
+- Validação das etiquetas: leitura pela integração confirmou os seis pares nome/cor e a descrição do quadro; a interface mostrou os nomes nos cartões após ativar a exibição expandida e recarregar o quadro. Nenhuma etiqueta permanece sem nome.
 - Validação final pela integração: seis listas na ordem planejada; 18 cartões (3 de contexto, 10 de requisitos, 5 de entregas); etiquetas azul, verde, roxa, amarela e laranja aplicadas conforme a legenda; descrições e links conferidos em cartões de amostra; checklists conferidos pela leitura direta, inclusive as três etapas do protótipo.
 - Uma atualização intermediária substituiu a descrição de cinco cartões de entrega; os textos completos foram restaurados e conferidos por leitura posterior.
 - Commit inicial `904ca87` publicado em `main` no repositório privado `diegohenrich/plataforma-processos-mix7`. A checagem `git diff --cached --check` passou; 11 arquivos Markdown foram examinados e nenhum link local quebrado foi encontrado. A aplicação ainda não tem código, portanto não há testes ou build aplicáveis.
@@ -25,6 +25,5 @@
 
 ## Próximo passo
 
-- Renomear as cinco etiquetas pelo Trello quando houver interface autenticada disponível. Até lá, a legenda do cartão de decisões define o significado de cada cor.
 - Levantar um caso real de demanda da Mix7 para resolver fluxo, papéis, revisão interna e significado de conclusão antes de especificar a primeira versão.
 - Manter a documentação sincronizada com as decisões tomadas durante a descoberta e, quando houver código, vincular mudanças aos cartões do Trello por pull requests.
