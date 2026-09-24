@@ -176,3 +176,10 @@
 - O cartão 18 virou índice da primeira entrega e foi movido para “Em andamento”. Criados cartões 19–21 para três grupos de simulação, com checklists de 11 passos conferidos no total; os três estão em “Concluído”. Criado cartão 22 para anexos no briefing, em “Em andamento”, com checklist de 15 passos: 9 concluídos, 6 pendentes.
 - Etiquetas conferidas: todos os 22 cartões têm ao menos uma etiqueta de área apropriada. Leitura do quadro confirmou 3 cartões de contexto, 10 requisitos, 4 em andamento, 2 em revisão e 3 concluídos. Nenhum cartão original estava fechado ou marcado como concluído antes dessa reorganização.
 - Validação: leitura posterior confirmou nomes, descrições (máximo 707 caracteres), listas e etiquetas; as simulações 19–21 aparecem como concluídas e a implementação 22 como aberta/em andamento. Próximo: terminar MVP-01 e publicar a atualização desta rodada no GitHub e nos cartões relacionados.
+
+## Cartões separados por entrega — 24/09/2026
+
+- Após o usuário apontar que uma entrega inteira não deve ficar resumida em um cartão, o cartão 18 foi reescrito em linguagem simples como mapa da primeira entrega, com links para os cartões 19–22. Cada cartão menor deve manter seus próprios passos e resultado.
+- O cartão 22 já contém a checklist atual do MVP-01. Uma checklist duplicada no cartão 18 foi renomeada para “Cópia antiga do MVP-01 — cartão 22 é o atual”; seu conteúdo foi preservado. A remoção dessa cópia via interface do Trello requer confirmação do usuário, conforme a política de ações de exclusão da skill computer-use; nenhum dado foi apagado.
+- `docs/TRELLO.md` atualizado para estabelecer que cartões principais só funcionam como índice e que checklists não devem ser duplicadas. Trello lido após atualização; cartão 18 e a cópia antiga retornaram com a identificação esperada.
+- Próximo: obter autorização antes de remover a checklist antiga; concluir e sincronizar separadamente a alteração de anexos que já estava em andamento.
