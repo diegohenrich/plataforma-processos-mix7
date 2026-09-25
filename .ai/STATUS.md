@@ -1,5 +1,12 @@
 # Estado em 2026-09-25
 
+## Anexos de briefing por arraste — 2026-09-25
+
+- Em Chromium/Playwright 1.63 num perfil descartável em `127.0.0.1:4206`, arrastei arquivos sintéticos PNG e PDF para a zona do briefing. O TXT foi recusado e o PNG acima de 15 MB foi recusado; em ambos os casos os dois arquivos válidos permaneceram selecionados.
+- Criei a demanda, recarreguei a página, abri o painel e baixei os dois anexos. Conteúdo, tamanho e SHA-256 conferiram byte a byte após a persistência no IndexedDB. A captura do painel com os anexos foi inspecionada; nenhum erro JavaScript ocorreu.
+- Limite da evidência: eventos de arraste foram enviados pelo harness do navegador. Ainda falta arrastar fisicamente um arquivo do Explorador de Arquivos do Windows para Chromium. Também permanece a inspeção do formulário e dos anexos em viewport móvel.
+- A matriz de áudios e o cartão Trello 18 serão atualizados após publicar este registro. Nenhum arquivo do usuário ou dado real foi usado.
+
 ## Ajuste visual validado contra o CRM — 2026-09-25
 
 - O CRM local respondeu em `127.0.0.1:8198`; Chromium renderizou a tela de login em 1440 × 900 e 390 × 844. Sem sessão, o dashboard administrativo redireciona a `/login`; nenhuma credencial foi usada e nenhum arquivo do CRM mudou.
