@@ -4,7 +4,7 @@
 
 - Criado `docs/IDENTIDADE-E-ACESSOS.md` com evidências dos quatro participantes citados nos áudios, distinção entre identidade, organização, papel e função por demanda, comparação documental entre autenticação no framework, provedor de identidade separado e Auth/RLS integrado, e testes necessários de isolamento por cliente.
 - `docs/REQUIREMENTS.md`, `docs/ARQUITETURA-PROPOSTA.md`, README e contexto foram ligados ao levantamento. Nenhum provedor foi selecionado, permissão incerta foi promovida a fato, ou conta real foi criada. Faltam lista de usuários/e-mails e matriz aprovada pela Mix7.
-- Fontes oficiais consultadas em 25/09/2026: documentação Laravel, Keycloak, authentik e Supabase. `git diff --check` passou; conferi os links relativos em seis arquivos e não há destinos quebrados; revisão manual confirmou que a mudança fica na documentação e não escolhe tecnologia. Não se aplicam testes de produto a esta atualização documental.
+- Fontes oficiais consultadas em 25/09/2026: documentação Laravel, Keycloak, authentik e Supabase. `git diff --check` passou; conferi os links relativos em seis arquivos e não há destinos quebrados; revisão manual confirmou que a mudança fica na documentação e não escolhe tecnologia. Não se aplicam testes de produto a esta atualização documental. GitHub informa que o branch do PR #10 não tem checks automáticos reportados.
 
 ## Fonte visual canônica corrigida — 2026-09-25
 
