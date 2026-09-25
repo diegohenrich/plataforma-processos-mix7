@@ -12,12 +12,11 @@ Após o pedido recente do usuário para aproximar mais a plataforma do CRM, sua 
 
 Depois da alteração, a página de demandas foi aberta em Chromium na janela desktop de 1270 × 720. A lateral escura, os rótulos e ícones da navegação, o estado ativo, o fundo claro, cartões de resumo e o quadro de demandas estão visíveis. O contraste e o alinhamento geral da lateral foram conferidos nessa renderização.
 
-A plataforma tem uma sessão local de demonstração aberta em outra aba com um formulário iniciado; ela foi preservada. As regras móveis existentes definem lateral compacta de 72 px até 900 px e 56 px até 600 px. A revisão desta mudança em janela móvel continua pendente; a janela disponível não expôs controle de viewport móvel nesta sessão.
+A plataforma tem uma sessão local de demonstração aberta em outra aba com um formulário iniciado; ela foi preservada. As regras móveis definem lateral compacta de 72 px até 900 px e 56 px até 600 px. A revisão móvel desta primeira alteração foi concluída depois, conforme a seção “Validação móvel da plataforma” abaixo.
 
 ## Pendências
 
-- Abrir o dashboard autenticado do CRM em sessão de demonstração para comparar sua composição, cabeçalho e cartões reais. O usuário precisa entrar manualmente na aba local `Entrar | CRM Mix7`, pois `/administrador/dashboard` redireciona para autenticação.
-- Conferir a alteração em viewport móvel e ajustar caso a lateral compacta ou o quadro apresente problema.
+- Inspecionar o dashboard autenticado do CRM renderizado e comparar a composição, o cabeçalho, o menu e os cartões com a plataforma. A validação móvel da plataforma foi concluída em Chromium; o teste não substitui a referência autenticada.
 - Reavaliar este documento quando houver evidência nova do dashboard renderizado. Nenhum arquivo do CRM foi alterado.
 
 ## Reinspeção solicitada — 25/09/2026
@@ -44,3 +43,9 @@ A plataforma tem uma sessão local de demonstração aberta em outra aba com um 
 - Em Chromium/Playwright, origem isolada `127.0.0.1:4200`, viewport de 390 × 844 e dados fictícios: quadro e documento ficaram com 390 px de largura, sem rolagem horizontal da página. Drawer de demanda e rodapé de aprovação ocuparam x=0–390 após a animação de entrada. “Solicitar ajustes” e “Aprovar versão” ficaram habilitados e dentro da tela. O conteúdo do drawer tem rolagem interna; o formulário de briefing mede x=19–371 e rola dentro da janela.
 - As capturas de quadro, briefing, demanda aberta e aprovação foram inspecionadas visualmente; nenhum erro JavaScript ocorreu. A primeira captura do drawer foi durante a animação e não foi usada como evidência; a captura posterior, com a transição terminada, confirma a posição correta. Nenhum dado da origem `4173` foi acessado ou alterado.
 - Esta verificação cobre apresentação móvel da plataforma, não sua semelhança com a composição autenticada do CRM. O painel CRM ainda precisa ser aberto manualmente para concluir a comparação visual.
+
+## Reexecução visual do CRM — 25/09/2026
+
+- Reaberta a rota `/administrador/dashboard` em Chromium no CRM local. O servidor respondeu e redirecionou para `/login`; a tela visível apresenta painel escuro de apresentação à esquerda e formulário claro à direita. Essa observação é específica do login e não define a composição do dashboard.
+- A aba local “Entrar | CRM Mix7” foi deixada aberta para o usuário autenticar. Nenhuma credencial foi inserida nem lida. A comparação renderizada do dashboard segue pendente; enquanto isso, não aplicar à plataforma elementos de composição inferidos da tela de login.
+- A inspeção móvel da plataforma permanece concluída em 390 × 844, incluindo quadro, briefing, drawer e ações de aprovação, com capturas inspecionadas e sem overflow horizontal. Esta validação não depende da sessão autenticada do CRM.
