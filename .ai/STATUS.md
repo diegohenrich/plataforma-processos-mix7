@@ -7,6 +7,12 @@
 - A inspeção estática identificou a view `resources/views/dashboard/index.blade.php` e a inclusão `dashboard/overview.blade.php`, úteis para entender os componentes, porém insuficientes para afirmar a composição renderizada. Próximo passo visual: comparar o dashboard autenticado e então corrigir a plataforma com base nessa evidência. Detalhes em `docs/REFERENCIA-VISUAL.md`.
 - `git diff --check` passou; documentação publicada no commit `42b904d3abb414cfddbf6c0c3bedd7a0150dbf5d`, com SHA local/remoto coincidente. Os checks do push passaram nas execuções [36096930370](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36096930370) e [36096926610](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36096926610).
 
+## Verificação visual móvel — 2026-09-25
+
+- Em contexto Chromium/Playwright descartável na origem `127.0.0.1:4200`, 390 × 844: quadro e documento sem overflow horizontal; drawer aberto ocupou x=0–390 depois da animação; painel de briefing abriu em x=19–371 com rolagem interna; botões habilitados de ajuste e aprovação ficaram dentro do rodapé móvel. Conteúdo longo do drawer tem rolagem interna e não houve erros JavaScript.
+- Capturas do quadro, briefing, drawer e aprovação foram inspecionadas visualmente. Teste usou apenas dados fictícios da origem isolada; a aba e os dados da origem `4173` não foram tocados. Nenhum CSS mudou nesta verificação.
+- A visualização móvel foi conferida, mas a validação de fidelidade ao CRM continua incompleta: a tela autenticada do CRM ainda requer sessão aberta manualmente. Nenhum ajuste de produto foi inferido a partir da tela de login.
+
 ## Ajuste de escala visual com referência do CRM — 2026-09-25
 
 - Executados lado a lado o CRM local e o protótipo. A rota administrativa do CRM segue redirecionando para login; nenhuma senha foi inserida. A tela de login e o CSS confirmado sustentam os tamanhos de corpo, títulos, navegação e cartões; a composição do dashboard autenticado continua sem evidência visual.
