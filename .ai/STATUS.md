@@ -12,6 +12,7 @@
 - Em contexto Chromium/Playwright descartável na origem `127.0.0.1:4200`, 390 × 844: quadro e documento sem overflow horizontal; drawer aberto ocupou x=0–390 depois da animação; painel de briefing abriu em x=19–371 com rolagem interna; botões habilitados de ajuste e aprovação ficaram dentro do rodapé móvel. Conteúdo longo do drawer tem rolagem interna e não houve erros JavaScript.
 - Capturas do quadro, briefing, drawer e aprovação foram inspecionadas visualmente. Teste usou apenas dados fictícios da origem isolada; a aba e os dados da origem `4173` não foram tocados. Nenhum CSS mudou nesta verificação.
 - A visualização móvel foi conferida, mas a validação de fidelidade ao CRM continua incompleta: a tela autenticada do CRM ainda requer sessão aberta manualmente. Nenhum ajuste de produto foi inferido a partir da tela de login.
+- Registro visual no commit `0a6d1ea7010a7217348c8eb30784c4c48b2fffaa`, SHA local/remoto coincidente; `git diff --check` passou e os checks do push passaram nas execuções [36097436751](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36097436751) e [36097431439](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36097431439). Servidores de teste 4199/4200 encerrados; CRM 8198 mantido ativo para login manual.
 
 ## Ajuste de escala visual com referência do CRM — 2026-09-25
 
