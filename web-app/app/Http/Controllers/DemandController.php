@@ -123,7 +123,7 @@ class DemandController extends Controller
         $this->authorize('view', $demand);
         $user = $request->user();
         $tasks = $demand->tasks()
-            ->with(['creator:id,name', 'assignee:id,name'])
+            ->with(['creator:id,name', 'assignee:id,name', 'timeEntries'])
             ->when($user->role === UserRole::Professional, fn (Builder $query) => $query->where('assigned_to', $user->id))
             ->get();
 
@@ -142,6 +142,7 @@ class DemandController extends Controller
                 ? User::query()->where('organization_id', $user->organization_id)->where('role', UserRole::Professional->value)->where('is_active', true)->orderBy('name')->get(['id', 'name'])
                 : collect(),
             'nextStatuses' => $demand->status->next(),
+            'activeTimeTaskId' => $user->activeTimeEntry()->value('task_id'),
         ]);
     }
 

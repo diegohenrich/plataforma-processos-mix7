@@ -17,6 +17,8 @@ Route::middleware(['auth', 'active'])->group(function (): void {
     Route::resource('demandas', DemandController::class)->only(['index', 'create', 'store', 'show'])->names('demands')->parameters(['demandas' => 'demand']);
     Route::patch('/demandas/{demand}/etapa', [DemandController::class, 'updateStatus'])->name('demands.status');
     Route::post('/demandas/{demand}/tarefas', [DemandTaskController::class, 'store'])->name('demand-tasks.store');
+    Route::post('/tarefas/{task}/cronometro/iniciar', [DemandTaskController::class, 'startTimer'])->name('demand-tasks.timer.start');
+    Route::post('/tarefas/{task}/cronometro/pausar', [DemandTaskController::class, 'pauseTimer'])->name('demand-tasks.timer.pause');
     Route::patch('/tarefas/{task}/status', [DemandTaskController::class, 'updateStatus'])->name('demand-tasks.status');
     Route::get('/equipe', [TeamMemberController::class, 'index'])->name('team.index');
     Route::post('/equipe', [TeamMemberController::class, 'store'])->name('team.store');
