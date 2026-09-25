@@ -18,6 +18,7 @@ Demanda/briefing → planejamento revisado → execução → revisão interna �
 - [Produto e público](docs/PRODUCT.md)
 - [Fases e critérios de avanço](docs/ROADMAP.md)
 - [Primeira implementação e seus limites](docs/PRIMEIRA-IMPLEMENTACAO.md)
+- [Histórico de validações anteriores](docs/VALIDACOES-HISTORICAS.md)
 - [Referência visual validada no CRM Mix7](docs/REFERENCIA-VISUAL.md)
 - [Como usar o quadro e as etiquetas do Trello](docs/TRELLO.md)
 - [Como contribuir](CONTRIBUTING.md)

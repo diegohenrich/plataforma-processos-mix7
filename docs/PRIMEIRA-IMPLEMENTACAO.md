@@ -12,7 +12,7 @@ Em contexto descartável no Chromium (`127.0.0.1:4233`), editei origem, canal/pe
 
 ### Verificação móvel dos formulários e comentários — 2026-09-25
 
-Repeti os formulários e o envio de comentário em Chromium, viewport 390 × 844 e origem descartável `127.0.0.1:4234`. O painel ocupou 390 px, o campo de comentário ficou visível após rolagem interna e o comentário apareceu na conversa e no histórico. O documento manteve 390 px de largura, sem rolagem horizontal; o rodapé mostrou os controles e a orientação de conclusão de tarefas. Captura renderizada e inspecionada: `%LOCALAPPDATA%/Temp/mix7-mobile-comment.png`. Sem erros JavaScript; nenhum dado do perfil de uso foi acessado.
+Repeti os formulários e o envio de comentário em Chromium, viewport 390 × 844 e origem descartável `127.0.0.1:4234`. O painel ocupou 390 px, o campo de comentário ficou visível após rolagem interna e o comentário apareceu na conversa e no histórico. O documento manteve 390 px de largura, sem rolagem horizontal; o rodapé mostrou os controles e a orientação de conclusão de tarefas. Captura renderizada e inspecionada: [comentário interno em 390 × 844](evidencias/visual/comentario-interno-mobile-390.png). Sem erros JavaScript; nenhum dado do perfil de uso foi acessado.
 
 ## O que já executa
 
