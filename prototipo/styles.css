@@ -372,6 +372,268 @@ h1 { margin: 9px 0 5px; font: 700 25px var(--font-body); letter-spacing: -.8px; 
 .minimized-dismiss:hover { color: var(--blue-dark); background: #f2f8fa; }
 .board-heading[hidden], .summary-grid[hidden], .board-footnote[hidden] { display: none !important; }
 
+/* Escala visual conferida no CRM-MIX7-RENEW: interface respirada, textos legíveis e ações confortáveis. */
+body { font-size: 16px; line-height: 1.55; -webkit-font-smoothing: antialiased; }
+.sidebar { width: 252px; padding: 30px 16px 18px; border-right-color: var(--line); }
+.main-content { margin-left: 252px; }
+.brand { height: 44px; }
+.workspace-switcher { margin: 21px 0 28px; padding: 12px 10px; border-radius: 13px; }
+.workspace-mark { width: 36px; height: 36px; border-radius: 11px; font-size: 15px; }
+.workspace-copy strong, .profile-copy strong { font-size: 13px; }
+.workspace-copy small, .profile-copy small { font-size: 11px; }
+.nav-caption { padding-inline: 12px; font-size: 11px; letter-spacing: .13em; }
+.main-nav { gap: 5px; margin-top: 11px; }
+.nav-item { height: 46px; gap: 12px; padding-inline: 13px; border-radius: 12px; font-size: 15px; }
+.nav-icon { width: 21px; font-size: 19px; }
+.nav-count { padding: 3px 7px; border-radius: 7px; font-size: 11px; }
+.section-caption { margin-top: 25px; }
+.help-card { padding: 16px; border-radius: 16px; }
+.help-card strong { margin-top: 7px; font-size: 14px; }
+.help-card p { font-size: 13px; }
+.help-card a { font-size: 13px; }
+.profile-button { min-height: 52px; }
+.avatar-self { width: 38px; height: 38px; font-size: 11px; }
+.topbar { height: 76px; padding-inline: 38px; }
+.breadcrumbs { gap: 12px; font-size: 14px; }
+.top-actions { gap: 17px; }
+.icon-button { width: 40px; height: 40px; border-radius: 12px; }
+.page-content { max-width: 1600px; padding: 30px 38px 40px; }
+.eyebrow { font-size: 11px; letter-spacing: .13em; }
+h1 { margin: 8px 0 10px; font-size: clamp(32px, 2.7vw, 42px); font-weight: 600; line-height: 1.12; letter-spacing: -.045em; }
+.subtitle { font-size: 16px; line-height: 1.55; }
+.primary-button { min-height: 48px; height: auto; padding: 11px 18px; border-radius: 12px; font-size: 15px; }
+.primary-button span { font-size: 19px; }
+.summary-grid { gap: 16px; margin-top: 28px; }
+.summary-card { min-height: 132px; height: auto; padding: 18px 20px; border-color: var(--line); border-radius: 20px; box-shadow: 0 6px 14px #253b4805, 0 18px 46px #253b4807; }
+.summary-top { font-size: 14px; }
+.metric-icon { width: 36px; height: 36px; border-radius: 11px; font-size: 16px; }
+.metric-row { gap: 11px; margin-top: 3px; }
+.metric-row strong { font-size: 29px; }
+.metric-note { padding: 4px 8px; border-radius: 7px; font-size: 11px; }
+.summary-card > small { margin-top: 2px; font-size: 12px; }
+.summary-bottom { margin-top: 10px; font-size: 11px; }
+.capacity-label { font-size: 12px; }
+.capacity-track { height: 6px; margin-top: 12px; }
+.capacity-legend { font-size: 10px; }
+.board-heading { align-items: flex-end; gap: 14px; margin-top: 34px; }
+.view-tabs { gap: 4px; padding: 4px; border-radius: 12px; }
+.view-tab { height: 40px; gap: 7px; padding-inline: 13px; border-radius: 9px; font-size: 13px; }
+.view-tab span { font-size: 16px; }
+.board-tools { gap: 9px; }
+.search-field { width: 190px; height: 42px; gap: 8px; padding-inline: 12px; border-radius: 10px; }
+.search-field input { font-size: 13px; }
+.search-field span { font-size: 19px; }
+.filter-button, .people-filter, .more-button { min-height: 42px; height: auto; padding-inline: 12px; border-radius: 10px; font-size: 13px; }
+.people-filter { max-width: 190px; padding-right: 27px; }
+.more-button { width: 42px; padding: 0; }
+.filter-strip { font-size: 12px; }
+.filter-chip { font-size: 12px; }
+.kanban-board { gap: 14px; margin-top: 20px; padding-bottom: 14px; }
+.kanban-column { min-width: 215px; }
+.column-heading { height: 42px; gap: 9px; }
+.stage-dot { width: 8px; height: 8px; }
+.column-heading h2 { font-size: 13px; }
+.column-count { min-width: 24px; height: 23px; border-radius: 7px; font-size: 11px; }
+.card-stack { gap: 12px; }
+.task-card { padding: 15px 15px 13px; border-radius: 15px; box-shadow: 0 3px 12px #204b6108; }
+.task-card:hover { border-color: #b8dce8; box-shadow: 0 9px 24px #204b6112; }
+.client-label { padding: 5px 8px; border-radius: 7px; font-size: 10px; }
+.task-card h3 { margin: 11px 0 7px; color: var(--ink); font-size: 14px; line-height: 1.45; }
+.card-description { min-height: 36px; font-size: 12px; line-height: 1.55; }
+.card-progress { gap: 9px; margin-top: 12px; font-size: 11px; }
+.progress-track { height: 5px; }
+.card-footer { margin-top: 12px; padding-top: 10px; }
+.due-date { gap: 6px; font-size: 11px; }
+.avatar-small { width: 30px; height: 30px; font-size: 9px; }
+.status-pill { padding: 5px 8px; border-radius: 7px; font-size: 10px; }
+.creative-thumb { height: 150px; margin-top: 12px; padding: 16px; border-radius: 12px; }
+.thumb-brand { font-size: 8px; }
+.creative-thumb strong { font-size: 21px; }
+.creative-thumb small { font-size: 8px; }
+.approval-detail { gap: 9px; margin-top: 12px; }
+.approval-icon { width: 26px; height: 26px; font-size: 14px; }
+.approval-detail strong { font-size: 11px; }
+.approval-detail small { font-size: 10px; }
+.add-card { min-height: 42px; height: auto; padding-inline: 12px; border-radius: 10px; font-size: 12px; }
+.board-footnote { margin-top: 8px; font-size: 11px; }
+.list-view-header { gap: 14px; margin-top: 17px; padding-inline: 15px; font-size: 10px; }
+.kanban-board.list-view { grid-template-columns: minmax(820px, 1fr); }
+.list-view .task-card { min-height: 64px; grid-template-columns: 145px minmax(260px, 1.5fr) minmax(160px, .8fr) 110px 38px; padding: 9px 15px; border-radius: 10px; }
+.list-view .task-card h3 { font-size: 13px; }
+.list-view .task-card::after { font-size: 12px; }
+.detail-drawer { width: min(620px, 100vw); }
+.drawer-topline { height: 62px; padding-inline: 26px; }
+.drawer-breadcrumb { font-size: 11px; }
+.close-button { width: 40px; height: 40px; border-radius: 11px; }
+.drawer-content { padding: 26px 30px 230px; }
+.drawer-content > h2 { margin: 12px 0 14px; font-size: 27px; }
+.drawer-meta, .drawer-meta strong { font-size: 12px; }
+.flow-section, .tasks-section { margin-top: 24px; padding: 18px; border-radius: 16px; }
+.section-title-row h3 { font-size: 15px; }
+.text-action, .version-link { min-height: 36px; font-size: 12px; }
+.flow-track { margin-top: 18px; }
+.flow-step { width: 58px; gap: 7px; }
+.flow-step span { width: 30px; height: 30px; font-size: 12px; }
+.flow-step small { font-size: 10px; }
+.flow-line { margin-top: 14px; }
+.drawer-tabs { gap: 22px; margin-top: 24px; }
+.drawer-tab { min-height: 44px; padding-bottom: 12px; font-size: 13px; }
+.drawer-tab span, .comment-count { font-size: 10px; }
+.asset-section { padding-top: 18px; }
+.asset-heading strong { font-size: 13px; }
+.asset-heading small { font-size: 11px; }
+.asset-preview { height: 220px; margin-top: 14px; border-radius: 14px; }
+.version-row { gap: 9px; margin-top: 11px; font-size: 11px; }
+.version-tag { padding: 4px 7px; border-radius: 6px; font-size: 10px; }
+.feedback-section { margin-top: 26px; }
+.feedback-section .section-title-row { padding-bottom: 12px; }
+.comment-item { gap: 11px; padding-top: 15px; }
+.comment-meta { gap: 9px; }
+.comment-meta strong { font-size: 12px; }
+.comment-meta > span { font-size: 10px; }
+.client-role { padding: 3px 6px; border-radius: 5px; font-size: 9px !important; }
+.comment-body p { margin: 7px 0 5px; font-size: 13px; }
+.internal-note { gap: 9px; margin: 12px 0 0 38px; padding: 11px 12px; border-radius: 10px; font-size: 12px; }
+.reply-box { margin-top: 16px; padding: 10px 12px 8px; border-radius: 12px; }
+.reply-box textarea { font-size: 13px; }
+.reply-actions button { width: 34px; height: 34px; border-radius: 9px; }
+.drawer-footer { padding: 15px 26px 18px; }
+.client-approval-note { gap: 7px; margin-bottom: 12px; font-size: 11px; }
+.client-approval-note i { width: 7px; height: 7px; }
+.approval-buttons { gap: 10px; }
+.secondary-button, .approve-button { min-height: 46px; height: auto; gap: 8px; border-radius: 11px; font-size: 13px; }
+.request-dialog { width: min(620px, calc(100vw - 32px)); max-height: min(90dvh, 860px); border-radius: 20px; }
+.request-dialog form { padding: 30px 32px 24px; }
+.dialog-heading { margin-bottom: 22px; }
+.dialog-kicker { font-size: 11px; letter-spacing: .13em; }
+.dialog-heading h2 { margin: 8px 0 6px; font-size: 26px; letter-spacing: -.035em; }
+.dialog-heading p { font-size: 14px; }
+.form-label { gap: 8px; margin-top: 16px; font-size: 13px; }
+.form-label input, .form-label select, .form-label textarea { min-height: 48px; padding: 12px 14px; border-color: #cad5db; border-radius: 10px; font-size: 15px; }
+.form-label textarea { min-height: 80px; }
+.form-grid { gap: 16px; }
+.briefing-hint { gap: 10px; margin-top: 18px; padding: 13px 15px; border-radius: 11px; background: #edf5f8; }
+.briefing-hint p { font-size: 12px; }
+.dialog-footer { gap: 10px; margin-top: 22px; padding-top: 17px; }
+.dialog-footer .secondary-button { min-height: 46px; flex-basis: 112px; }
+.dialog-footer .primary-button { min-height: 46px; font-size: 13px; }
+.workflow-input { min-height: 46px; margin-bottom: 10px; padding: 11px 13px; border-color: #cad5db; border-radius: 10px; font-size: 14px; }
+.briefing-section, .tasks-section { border-color: var(--line); border-radius: 16px; }
+.briefing-current, .history-list, .comment-body p, .empty-comments { font-size: 13px; }
+.briefing-revision-form label, .task-form label, .briefing-details-form label { font-size: 12px; }
+.briefing-revision-form label small, .task-form label small, .briefing-details-form label small { font-size: 11px; }
+.briefing-revision-notice, .workflow-hint, .task-form .task-source-hint { font-size: 12px; }
+.workflow-hint { line-height: 1.55; }
+.task-list-item { gap: 10px 12px; padding: 12px; border-radius: 10px; }
+.task-list-details strong { font-size: 13px; }
+.task-list-details span, .task-status { font-size: 11px; }
+.task-toggle, .history-file-download { min-height: 40px; padding: 8px 11px; border-radius: 8px; font-size: 11px; }
+.task-form { gap: 10px; }
+.task-form input, .task-form select { min-height: 44px; padding: 9px 11px; border-radius: 9px; font-size: 13px; }
+.task-form .secondary-button { min-height: 44px; }
+.task-blocker-form .workflow-input { min-height: 42px; font-size: 12px; }
+.task-blocker-form .secondary-button, .task-clear-blocker { min-height: 40px; padding: 8px 10px; border-radius: 8px; font-size: 11px; }
+.briefing-detail { grid-template-columns: 125px minmax(0, 1fr); gap: 10px; font-size: 12px; }
+.briefing-details { gap: 9px; margin-top: 14px; }
+.briefing-details-form { gap: 10px; margin-top: 14px; padding-top: 14px; }
+.briefing-details-form .secondary-button { min-height: 44px; }
+.briefing-files { gap: 8px; margin-top: 14px; padding-top: 13px; font-size: 12px; }
+.assignee-scope { font-size: 12px; }
+.minimized-label { padding: 6px 10px; font-size: 12px; }
+.minimized-item { padding: 6px; border-radius: 16px; }
+.minimized-request { gap: 4px; padding: 10px 12px; border-radius: 11px; }
+.minimized-request strong { font-size: 14px; }
+.minimized-request small { font-size: 12px; }
+.minimized-dismiss { width: 42px; border-radius: 11px; }
+.workspace-view { gap: 18px; margin-top: 28px; padding: 28px; border-radius: 22px; }
+.workspace-panel-heading h2 { font-size: 22px; }
+.workspace-panel-heading p { font-size: 15px; }
+.workspace-request, .workspace-task { padding: 16px 18px; border-radius: 14px; }
+.utility-dialog { padding: 28px; border-radius: 20px; }
+
+@media (max-width: 1250px) {
+  .sidebar { width: 220px; }
+  .main-content { margin-left: 220px; }
+  .page-content { padding-right: 26px; padding-left: 26px; }
+  .topbar { padding-inline: 26px; }
+  .nav-item { font-size: 14px; }
+  .kanban-column { min-width: 205px; }
+}
+
+@media (max-width: 900px) {
+  .sidebar { width: 72px; padding: 22px 8px 12px; }
+  .nav-item { width: 42px; min-width: 42px; max-width: 42px; overflow: hidden; color: transparent; font-size: 0; white-space: nowrap; }
+  .nav-item .nav-icon { flex: none; }
+  .main-content { margin-left: 72px; }
+  .topbar { padding-inline: 22px; }
+  .page-content { padding: 26px 22px 32px; }
+  .summary-card { padding: 16px; }
+}
+
+@media (max-width: 600px) {
+  .sidebar { width: 56px; padding: 16px 5px 10px; }
+  .main-content { margin-left: 56px; }
+  .topbar { height: 58px; padding-inline: 12px; }
+  .breadcrumbs { gap: 6px; font-size: 11px; }
+  .top-actions { gap: 4px; }
+  .icon-button { width: 34px; height: 36px; }
+  .top-avatar { width: 28px; height: 28px; }
+  .page-content { padding: 20px 12px 24px; }
+  .page-heading { gap: 12px; }
+  h1 { font-size: clamp(25px, 8vw, 32px); }
+  .subtitle { max-width: 340px; font-size: 14px; }
+  .eyebrow { font-size: 10px; }
+  .page-heading .primary-button { min-height: 46px; }
+  .summary-grid { gap: 10px; margin-top: 20px; }
+  .summary-card { min-height: 116px; padding: 14px; border-radius: 16px; }
+  .summary-top { font-size: 13px; }
+  .summary-card > small { max-width: 85%; font-size: 11px; }
+  .metric-row strong { font-size: 25px; }
+  .board-heading { align-items: stretch; gap: 12px; margin-top: 24px; flex-direction: column; }
+  .view-tabs { align-self: flex-start; }
+  .board-tools { display: grid; grid-template-columns: minmax(0, 1fr) auto 42px; width: 100%; gap: 7px; }
+  .search-field { width: auto; min-width: 0; height: 42px; }
+  .search-field input { font-size: 12px; }
+  .filter-button, .people-filter, .more-button { min-height: 42px; font-size: 12px; }
+  .people-filter-label { min-width: 0; grid-column: 1 / 3; }
+  .people-filter { max-width: 100%; width: 100%; padding-left: 8px; padding-right: 20px; }
+  .more-button { width: 42px; grid-column: 3; grid-row: 2; }
+  .kanban-board:not(.list-view) { grid-template-columns: repeat(8, 220px); gap: 11px; }
+  .column-heading h2 { font-size: 12px; }
+  .task-card { padding: 14px; }
+  .task-card h3 { font-size: 14px; }
+  .card-description { font-size: 12px; }
+  .drawer-content { padding: 20px 16px 240px; }
+  .drawer-content > h2 { font-size: 23px; }
+  .drawer-meta, .drawer-meta strong { font-size: 11px; }
+  .flow-section, .tasks-section { padding: 13px 10px; border-radius: 13px; }
+  .flow-step { width: 42px; }
+  .flow-step small { font-size: 8px; }
+  .drawer-tabs { gap: 14px; }
+  .drawer-tab { font-size: 11px; }
+  .drawer-footer { max-height: 43vh; padding: 10px 12px 13px; }
+  .client-approval-note { font-size: 10px; }
+  .approval-buttons { gap: 7px; }
+  .secondary-button, .approve-button { min-height: 46px; padding: 7px 6px; font-size: 11px; }
+  .request-dialog { max-height: 92dvh; border-radius: 18px; }
+  .request-dialog form { padding: 21px 17px 16px; }
+  .dialog-heading h2 { font-size: 23px; }
+  .dialog-heading p { font-size: 13px; }
+  .form-label { font-size: 12px; }
+  .form-label input, .form-label select, .form-label textarea { min-height: 46px; font-size: 14px; }
+  .briefing-hint p { font-size: 11px; }
+  .workspace-view { gap: 14px; padding: 16px; border-radius: 16px; }
+  .workspace-panel-heading h2 { font-size: 19px; }
+  .workspace-panel-heading p { font-size: 13px; }
+  .workspace-request strong, .workspace-task-copy strong { font-size: 13px; }
+  .workspace-request span, .workspace-task-copy span { font-size: 11px; }
+  .workspace-request small, .workspace-task-copy small { font-size: 10px; }
+  .utility-dialog { padding: 20px 16px; border-radius: 17px; }
+  .utility-dialog .dialog-heading h2 { font-size: 19px; }
+  .minimized-requests { right: 8px; bottom: max(8px, env(safe-area-inset-bottom)); max-width: calc(100vw - 72px); }
+  .minimized-item { width: min(360px, calc(100vw - 72px)); }
+}
+
 @media (max-width: 600px) {
   .workspace-view { margin-top: 16px; padding: 14px; border-radius: 13px; }
   .workspace-panel-heading h2 { font-size: 17px; }
