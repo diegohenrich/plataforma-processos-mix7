@@ -401,3 +401,10 @@
 - Inspecionei a tela renderizada do protótipo em 1270 × 920 e comparei os elementos visíveis com o CSS e as views do dashboard dentro da pasta CRM autorizada. Confirmei diferenças na posição do perfil/menu e na densidade/composição do conteúdo. As views descrevem a implementação, mas não substituem a renderização autenticada; nenhum ajuste visual foi presumido ou aplicado nesta execução.
 - Atualizei `docs/REFERENCIA-VISUAL.md` com as diferenças e o limite de evidência. Próximo passo: o usuário concluir login manual na aba aberta; depois comparar as duas telas em tamanhos iguais e ajustar somente o que a renderização confirmar.
 - Validação: visualização do protótipo em Chromium conferida; CRM verificado na tela de login. Comparação final bloqueada por ausência de sessão autenticada.
+
+## Auditoria adicional da navegação e filtros — 25/09/2026
+
+- Em perfil Chromium isolado na origem `127.0.0.1:4207`, percorri Visão geral, Demandas, Aprovações, Equipe, Clientes, Calendário, Conhecimento e Acessos. Os títulos e conteúdos mudaram conforme a área; Aprovações mostrou somente o item aguardando decisão; Clientes agrupou as oito demandas por três clientes fictícios; Calendário listou prazos existentes e indicou que não há tarefas datadas no Gantt inicial.
+- Alternei Quadro/Lista; abri o filtro por cliente, selecionei Café Aroeira e apliquei. A lista exibiu só as três demandas daquele cliente. Abri Pendências e selecionei um briefing; o painel correto da demanda foi aberto. Nenhuma falha de interação foi observada; não salvei alterações nos registros fictícios.
+- O painel Acessos informa que não há login, contas ou permissões reais; Equipe mostra fila vazia porque as fixtures iniciais não têm tarefas atribuídas. Isso confirma limites já documentados, não prova prontidão para múltiplos usuários.
+- Validação local geral: `node --test tests/workflow.test.js` passou 22/22; `node --check prototipo/workflow.js` e `node --check prototipo/app.js` passaram. Perfil de teste não acessou a origem `4173`. Jornada completa e autenticação continuam exigindo testes próprios e piloto com equipe/cliente.
