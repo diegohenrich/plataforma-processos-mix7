@@ -33,6 +33,13 @@
 - 2026-09-24 — Complementada a pesquisa comparativa com releases, licenças, páginas de preço e avisos de segurança publicados nos repositórios e sites oficiais. Wekan v11.95 foi publicado no dia da consulta; Plane v1.4.2 em 23/08/2026. Os repositórios exibem avisos recentes com versões corrigidas, portanto o protocolo da prova exige verificar versão candidata, avisos, permissões, configuração e restauração de backup, sem concluir que releases atuais sejam vulneráveis ou certificadas. Foram registrados limites comerciais disponíveis de Planable, Frame.io e Filestage e a divergência de preço encontrada nas páginas oficiais de Planable para confirmar com fornecedor.
 - Validação documental desta atualização: `git diff --check`; links oficiais incluídos na tabela e nas fontes. Não houve teste de produto, cotação, auditoria independente nem execução auto-hospedada.
 
+## Revalidação da pesquisa de soluções — 2026-09-25
+
+- `docs/PESQUISA-SOLUCOES.md` foi complementado com consulta às páginas oficiais atuais: preço do Planable diverge entre a página pública e o centro de ajuda; Frame.io cobra por membro e seu teste exige cancelamento antes da conversão; Filestage oferece plano gratuito limitado a 1 projeto/5 arquivos mensais e seus planos pagos publicam US$ 199/329 por mês; Wekan v11.99 é a release de 24/09 e lista avisos recentes de autorização; Plane Community segue em v1.4.2/AGPL-3.0 com avisos de segurança que precisam ser verificados contra a versão candidata.
+- O texto não recomenda compra nem uso de dados reais. Mantém como próximos critérios cotação de Planable, teste sintético sem upgrade, confirmação de licença e validação de avisos/permissões/backup antes de qualquer execução auto-hospedada.
+- Fontes primárias consultadas em 25/09: páginas oficiais Planable, Frame.io e Filestage; releases, avisos e licença nos repositórios oficiais Wekan e Plane. `git diff --check` e revisão manual da seção foram executados; links adicionados são URLs oficiais. Teste de produto, criação de contas e compra não foram realizados.
+- Sincronização com o cartão Trello de pesquisa e PR #6 ainda pendente até concluir commit, push, CI e registrar os links.
+
 ## Próximo passo
 
 - Incorporar um caso real de demanda da Mix7 e resolver fluxo, papéis, revisão interna e significado de conclusão.

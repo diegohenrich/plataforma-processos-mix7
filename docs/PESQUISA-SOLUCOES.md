@@ -39,6 +39,20 @@ Consulta aos repositórios oficiais e páginas comerciais em 24/09/2026 compleme
 
 Os avisos públicos citados não significam que as versões atuais continuem vulneráveis: alguns avisos informam versões corrigidas e releases posteriores. Também não substituem auditoria independente. Para qualquer teste auto-hospedado, registrar versão/tag e configuração, aplicar correções publicadas, restringir acesso à rede, não importar dados reais e conferir restauração de backup. Antes de integrar um serviço SaaS, confirmar contrato, tratamento/retensão dos arquivos, região de dados, permissões externas e exportabilidade.
 
+## Revalidação das fontes oficiais — 25/09/2026
+
+Esta consulta atualiza os preços, limites e versões registrados em 24/09. Os valores abaixo são publicados pelos fornecedores, em dólares americanos, e não incluem uma cotação da Mix7, impostos ou conversão cambial.
+
+| Solução | Evidência oficial atualizada | Consequência para uma prova Mix7 |
+| --- | --- | --- |
+| Planable | A página pública exibe Basic por US$ 33 e Pro por US$ 49 por workspace/mês; a página oficial de ajuda, atualizada em 04/09/2026, exibe US$ 39 e US$ 59, respectivamente, e diz que Enterprise começa tipicamente em US$ 2.500/ano. A página pública coloca aprovações multinível no Enterprise. O produto recomenda um workspace por cliente. | Há divergência de preço no próprio material oficial; não projetar custo sem cotação escrita. Simular o número real de clientes/workspaces e confirmar qual plano atende fluxo, armazenamento, histórico e usuários externos. |
+| Frame.io | A página de preços lista Pro por US$ 15 por membro/mês (até 5 membros) e Team por US$ 25 por membro/mês (até 15 membros), mais imposto; Pro inclui 2 TB e Team 3 TB. A tabela atribui comentários internos e pastas restritas ao Team. | A cobrança é por membro e a organização de acesso mais granular aparece no Team. O teste gratuito exige informações de contato e cobrança e, segundo o fornecedor, converte automaticamente em assinatura se não for cancelado antes do fim; não iniciar sem um plano de cancelamento e aprovação da Mix7. |
+| Filestage | O plano gratuito lista 1 projeto ativo, 5 arquivos novos/mês, 10 lugares e 2 grupos de revisores; revisores externos são ilimitados e não precisam criar conta. Starter aparece por US$ 199/mês e Business por US$ 329/mês; cada plano pago inclui 10 lugares, com pacotes adicionais de cinco. O teste de 14 dias retorna ao plano gratuito ao terminar, sem upgrade. | A faixa gratuita permite validar uma jornada pequena, mas cinco arquivos por mês não provam volume operacional. Cotar planos pagos e testar isolamento de revisores, exportação dos relatórios e comentários vinculados a versões. |
+| Wekan | A release oficial v11.99 foi publicada em 24/09/2026. O repositório lista avisos de controle de acesso publicados em 14/09. | A release recente não é evidência de que cada aviso esteja corrigido. Qualquer candidato exige mapear aviso→versão corrigida, conferir configuração e executar testes de permissão antes de importar dados. |
+| Plane Community | A release oficial mais recente continua v1.4.2 (23/08/2026), com código comunitário sob AGPL-3.0. A página de avisos lista divulgações críticas em 03/08; por exemplo, o limite de tentativas no login por código está corrigido desde 1.4.0. | Conferir todos os intervalos afetados e correções contra a imagem exata do piloto; revisar a licença com orientação jurídica antes de alterar/distribuir a edição comunitária. A análise de avisos não constitui auditoria de segurança. |
+
+**Síntese provisória:** a prova de revisão criativa pode usar um plano gratuito de Filestage para validar um caso sintético; isso não demonstra adequação de custo, privacidade ou escala. Planable deve entrar somente com preço confirmado devido à divergência pública. Frame.io exige atenção ao custo por membro e ao fim automático do teste. Wekan e Plane não são recomendados para dados da agência antes da verificação de avisos, permissões, backup e atualização. Esta revalidação não escolhe fornecedor nem arquitetura.
+
 ## Critérios para a prova de conceito
 
 1. Equipe consegue acompanhar demanda, responsáveis e prazo em uma visão simples de quadro e lista.
@@ -54,6 +68,7 @@ Os avisos públicos citados não significam que as versões atuais continuem vul
 - Planable, [aprovar um post](https://help.planable.io/hc/en-us/articles/21715469772188-Approve-a-post) e [modos e configuração de aprovação](https://planable.io/guides/content-approvals-in-planable/).
 - Adobe Frame.io, [comentários em mídia no Frame.io V4](https://help.frame.io/en/articles/9105251-commenting-on-your-media).
 - Filestage, [decisão de revisão](https://help.filestage.io/en/articles/2562896-submit-your-review-decision), [comparação de versões](https://help.filestage.io/en/articles/9113215-how-to-verify-that-everyone-s-feedback-has-been-met) e [insights e disponibilidade por plano](https://help.filestage.io/en/articles/7033846-monitor-your-review-progress-with-insights).
+- Filestage, [preços, limites e teste do plano atual](https://filestage.io/pricing/).
 - Wekan, [repositório oficial e licença](https://github.com/wekan/wekan) e [arquivo de licença MIT](https://github.com/wekan/wekan/blob/main/LICENSE).
 - Plane, [edições self-hosted e licença da Community](https://developers.plane.so/self-hosting/editions-and-versions).
 - Wekan, [releases](https://github.com/wekan/wekan/releases), [avisos de segurança](https://github.com/wekan/wekan/security) e [exemplo de aviso com versão afetada e corrigida](https://github.com/wekan/wekan/security/advisories/GHSA-j9p2-jm73-p549).
@@ -61,5 +76,7 @@ Os avisos públicos citados não significam que as versões atuais continuem vul
 - Planable, [preços e limites oficiais](https://planable.io/pricing/) e [artigo oficial sobre planos](https://help.planable.io/hc/en-us/articles/21715370520092-Questions-on-pricing).
 - Adobe Frame.io, [preços e recursos por plano](https://frame.io/pricing/).
 - Filestage, [preços, teste e limites por plano](https://filestage.io/pricing/).
+- Wekan, [releases oficiais](https://github.com/wekan/wekan/releases) e [avisos de segurança](https://github.com/wekan/wekan/security/advisories).
+- Plane, [releases oficiais](https://github.com/makeplane/plane/releases), [avisos de segurança](https://github.com/makeplane/plane/security/advisories), [exemplo de correção de aviso](https://github.com/makeplane/plane/security/advisories/GHSA-mqjv-rwgv-4gxq) e [licença AGPL-3.0](https://github.com/makeplane/plane/blob/preview/LICENSE.txt).
 
-Os recursos, páginas comerciais e metadados dos repositórios foram verificados nas fontes oficiais disponíveis em 24/09/2026. Preços, versões e avisos publicados podem mudar. A comparação não substitui demonstração, análise legal, auditoria de segurança ou teste com contas da Mix7.
+As características iniciais foram consultadas em 24/09/2026 e os preços, limites, releases e avisos foram revalidados nas fontes oficiais em 25/09/2026. Preços, versões e avisos publicados podem mudar. A comparação não substitui demonstração, análise legal, auditoria de segurança ou teste com contas da Mix7.
