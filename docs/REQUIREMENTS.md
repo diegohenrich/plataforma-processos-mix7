@@ -16,6 +16,7 @@ Fonte: transcrição dos três áudios fornecidos em 24/09/2026 e decisões expl
 | Conhecimento | Referências, treinamentos, contatos e trilha de onboarding em passos. |
 | Acessos | Matriz por função e possibilidade de usar serviços sem revelar senhas, quando tecnicamente viável. |
 | Experiência | Foco em menos opções que o Notion, inspiração na experiência do Trello e referência visual da Mix7. Preferência da interface: branco e azul claros. |
+| Arquivos e ambiente de trabalho | Soltar imagens/arquivos em uma demanda e mantê-los associados a ela; integração com Windows foi pedida, mas ainda sem comportamento definido. |
 | Construção | Comparar soluções existentes e opções open source antes de decidir o que desenvolver. Avaliar licenças, manutenção e segurança. |
 
 ## Decisões confirmadas para o primeiro recorte
@@ -34,9 +35,9 @@ Fonte: transcrição dos três áudios fornecidos em 24/09/2026 e decisões expl
 6. Qual escala e fórmula de avaliação serão usadas? Como tratar tarefas bloqueadas ou alteradas por terceiros? Qual política de uso dos resultados?
 7. Quais serviços exigem acesso, e quais permitem autenticação sem compartilhar senha? Como conceder e revogar acessos?
 8. Quais integrações com ChatGPT, Codex, Claude e Windows são realmente necessárias na primeira versão? Que dados podem ser enviados a cada serviço?
-9. Quais funções do Trello são indispensáveis? Quais formatos, limites de arquivo e tamanhos de tela precisam ser atendidos?
+9. “Tudo que o Trello tem” é uma expectativa ampla, não uma lista pronta. Quais funções do Trello são indispensáveis além de quadro/lista, atribuição, busca, etiquetas, checklists, comentários, prazos, anexos e arrastar arquivos? Quais formatos, limites de arquivo e tamanhos de tela precisam ser atendidos?
 10. Quais são as regras transparentes e a finalidade da avaliação de prazo, produção e qualidade? Como registrar bloqueios ou mudanças de escopo sem atribuir automaticamente o resultado à pessoa?
 
-As respostas serão registradas nos cartões da lista **Requisitos a validar** do [Trello](https://trello.com/b/RkWOzDcu/desenvolvimento-de-projetos-mix7). A [ficha de validação de caso real](VALIDACAO-CASO-REAL.md) separa fatos, fontes, hipóteses e decisões propostas. Não inferir regras finais a partir do resumo da transcrição quando a fala não as estabelece.
+As respostas serão registradas nos cartões da lista **Requisitos a validar** do [Trello](https://trello.com/b/RkWOzDcu/desenvolvimento-de-projetos-mix7). A [ficha de validação de caso real](VALIDACAO-CASO-REAL.md) separa fatos, fontes, hipóteses e decisões propostas. Não inferir regras finais a partir do resumo da transcrição quando a fala não as estabelece. A [rastreabilidade dos três áudios](TRACEABILIDADE-AUDIOS.md) liga cada pedido explícito à cobertura atual e às lacunas verificadas.
 
 Uma [proposta de fluxo](FLUXO-PROPOSTO.md) responde como o processo **deveria funcionar** para criativos de redes sociais. Ela não substitui a validação de um caso real da Mix7.

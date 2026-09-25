@@ -1,5 +1,13 @@
 # Estado em 2026-09-24
 
+## Auditoria dos três áudios — 24/09/2026
+
+- Os três OGG originais existem e têm 69,93 s, 66,09 s e 247,35 s; correspondem às durações apresentadas nas transcrições. `faster-whisper-base` local confirmou independentemente os temas gerais; nomes próprios e termos técnicos tiveram erros de reconhecimento, então a transcrição manual continua sendo a fonte textual.
+- Criado `docs/TRACEABILIDADE-AUDIOS.md`, que liga as falas às evidências atuais e mostra lacunas: sem cronômetro, Gantt/capacidade, integrações de IA, avaliação, portal de cliente, gestão real de conhecimento/acessos, contatos, drag-and-drop e integração Windows. O documento diferencia cobertura local de funcionalidade operacional e registra que “tudo do Trello” precisa de decomposição verificável.
+- Atualizados `docs/REQUIREMENTS.md` e README para explicitar arrastar arquivos e a questão ainda aberta sobre funções do Trello. Pesquisa/arquitetura e especificação prioritária continuam em PRs #6/#10 e #8, não integrados a esta branch.
+- Validação desta auditoria: `ffprobe` conferiu as durações; transcrição local foi executada sem baixar modelos; comparação manual confirmou que os temas e intervalos dos três áudios aparecem na transcrição fornecida. Nenhum OGG ou transcrição foi adicionado ao repositório.
+- Próximo: implementar e testar arrastar-e-soltar em arquivos do briefing; depois sincronizar tarefa específica no Trello/GitHub. O dashboard autenticado do CRM permanece aguardando o usuário abrir uma sessão local para inspeção visual direta.
+
 ## Mapa de revisão do GitHub — 24/09/2026
 
 - PRs verificados como abertos e em rascunho: #6 pesquisa inicial (`main`); #10 pesquisa/arquitetura detalhada (base #6); #7 protótipo (`main`); #8 requisitos priorizados (`main`); #9 implementação local (base #7). A sequência proposta respeita as bases: revisar #6 antes de #10 e #7 antes de #9; #8 pode ser revisado em paralelo, contra `main`.

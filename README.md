@@ -11,6 +11,7 @@ Demanda/briefing → planejamento revisado → execução → revisão interna �
 ## Organização
 
 - [Requisitos e dúvidas abertas](docs/REQUIREMENTS.md)
+- [Rastreabilidade dos três áudios](docs/TRACEABILIDADE-AUDIOS.md)
 - [Fluxo proposto para uma demanda de criativo](docs/FLUXO-PROPOSTO.md)
 - [Glossário e critério de conclusão](docs/GLOSSARIO.md)
 - [Ficha para validar um caso real da Mix7](docs/VALIDACAO-CASO-REAL.md)
