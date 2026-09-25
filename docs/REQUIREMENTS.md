@@ -15,7 +15,7 @@ Fonte: transcrição dos três áudios fornecidos em 24/09/2026 e decisões expl
 | Avaliação | Medir prazo, produção e qualidade; notas da direção com peso 2 e do gestor com peso 1, conforme fala do áudio. |
 | Conhecimento | Referências, treinamentos, contatos e trilha de onboarding em passos. |
 | Acessos | Matriz por função e possibilidade de usar serviços sem revelar senhas, quando tecnicamente viável. |
-| Experiência | Foco em menos opções que o Notion, inspiração na experiência do Trello e referência visual da Mix7. Preferência da interface: branco e azul claros. |
+| Experiência | Foco em menos opções que o Notion e inspiração funcional no Trello. A única referência visual autorizada é o projeto local `C:\Users\anony\ProjetosPessoais\Projetos de Sistemas\CRM-MIX7-RENEW`; não usar o site público nem outros projetos. A composição do dashboard autenticado ainda precisa de inspeção renderizada. |
 | Construção | Comparar soluções existentes e opções open source antes de decidir o que desenvolver. Avaliar licenças, manutenção e segurança. |
 
 ## Decisões confirmadas para o primeiro recorte

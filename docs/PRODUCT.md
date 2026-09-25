@@ -16,7 +16,7 @@ A primeira versão atende à Mix7 e seus clientes. Transformar a plataforma em p
 
 Gestão interna focada, com Kanban e lista; aprovações de imagem e vídeo conectadas às demandas; comentários preservados por versão e, no vídeo, associados a um instante. O produto deve permitir ampliar os tipos de aprovação conforme as necessidades da agência forem validadas.
 
-A interface deve tomar https://mix7.com.br/ como referência de identidade e priorizar branco e azul claros, conforme preferência explícita do usuário. Tons, fontes e composição serão fechados no protótipo.
+A interface deve seguir o projeto local `C:\Users\anony\ProjetosPessoais\Projetos de Sistemas\CRM-MIX7-RENEW`, única referência visual autorizada pelo usuário. O site público e outros projetos não são fontes de layout. A tela de login já foi renderizada; a composição do dashboard autenticado ainda precisa ser observada antes de fechar tons, fontes, proporções e componentes da plataforma.
 
 ## Direção aprovada para a primeira jornada
 

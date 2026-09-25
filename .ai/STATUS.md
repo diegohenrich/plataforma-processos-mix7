@@ -1,5 +1,11 @@
 # Estado em 2026-09-24
 
+## Fonte visual canônica corrigida — 2026-09-25
+
+- A instrução mais recente do usuário restringe a referência visual ao projeto local `CRM-MIX7-RENEW`; `CONTEXT.md`, `DECISIONS.md`, `docs/PRODUCT.md` e `docs/REQUIREMENTS.md` foram alinhados. A menção no histórico de que o site público serviu de referência inicial está marcada como decisão superada, não como fonte vigente.
+- O CRM está executando em `127.0.0.1:8198`. Chromium renderizou somente `/login`; `/administrador/dashboard` redireciona para `/login`. A comparação de composição autenticada continua pendente até o usuário abrir a sessão. Nenhuma credencial foi lida ou inserida e nenhum arquivo do CRM foi alterado.
+- Esta alteração corrige somente a fonte de verdade documental; nenhum CSS ou componente visual foi modificado. `git diff --check` passou e a busca confirmou que os requisitos atuais não direcionam mais ao site público. Sincronização no GitHub e Trello será registrada após o commit.
+
 ## Atualização da pesquisa oficial — 2026-09-25
 
 - Revisados `docs/PESQUISA-SOLUCOES.md` e `docs/PROVA-DE-CONCEITO.md` com páginas oficiais consultadas em 25/09: Wekan v11.99; avisos recentes de Wekan e Plane; preço publicado de Filestage Business; e limites iniciais gratuitos do Planable. Nenhum fornecedor foi escolhido. Avisos de segurança foram tratados como pendências de verificar intervalos vulneráveis/corrigidos, não como prova de que a release atual esteja vulnerável.
@@ -19,7 +25,7 @@
 - Criadas as seis listas planejadas e 18 cartões de contexto, requisitos e entregas.
 - Aplicadas as cinco cores de etiquetas já existentes no Trello aos cartões pertinentes. Legenda registrada no cartão **Decisões vigentes da primeira entrega**: azul = Gestão de equipe; verde = Aprovações; roxo = IA e automações; amarelo = Conhecimento e acessos; laranja = Pesquisa de soluções.
 - Criados checklists nas cinco entregas e no cartão de decisões; entregas ligadas aos cartões de dependência por URLs nas descrições.
-- Referência https://mix7.com.br/ inspecionada; preferência explícita por interface clara em branco e azul registrada no cartão visual.
+- Histórico da etapa inicial (decisão superada em 25/09): https://mix7.com.br/ foi inspecionado e a preferência de branco/azul foi registrada no cartão visual; a referência canônica atual é o projeto local CRM-MIX7-RENEW, conforme a decisão acima.
 - Criada documentação inicial em `README.md`, `docs/`, `CONTRIBUTING.md` e template de pull request; as duas pastas de módulos agora possuem README sem código. Inicializado Git local e criado repositório privado `diegohenrich/plataforma-processos-mix7`.
 - Regra de sincronização GitHub + Trello solicitada pelo usuário e registrada em `AGENTS.md`, `CONTRIBUTING.md`, `.ai/CONTEXT.md` e `.ai/DECISIONS.md`.
 - O usuário aprovou `docs/FLUXO-PROPOSTO.md` como direção de comportamento do produto. A documentação distingue essa decisão da operação real, que ainda requer um caso concreto da Mix7.
