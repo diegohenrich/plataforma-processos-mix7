@@ -27,7 +27,36 @@ Proposta para detalhamento, não decisão técnica:
 - **Função por demanda:** solicitante/briefing, responsável pela gestão, executor, revisor interno, aprovador do cliente ou responsável pela entrega e conclusão. A função é atribuída no contexto do trabalho e pode mudar sem mudar a identidade da pessoa.
 - **Permissão por ação e escopo:** conferir no servidor cada leitura e alteração de demanda, comentário, arquivo, versão, decisão, tarefa e usuário. Um filtro por profissional não protege dados.
 
-Antes de definir uma matriz, a Mix7 precisa confirmar quem pode convidar, atribuir e revogar usuários; se a mesma pessoa participa de clientes diferentes; o limite de visibilidade de cliente e profissional; quem acessa notas internas; como convites expiram; e o que ocorre com autoria e histórico quando uma conta é desativada.
+Antes de fechar a matriz, a Mix7 precisa confirmar quem pode convidar, atribuir e revogar usuários; se a mesma pessoa participa de clientes diferentes; o limite de visibilidade de cliente e profissional; quem acessa notas internas; como convites expiram; e o que ocorre com autoria e histórico quando uma conta é desativada.
+
+## Matriz preliminar para validação com a Mix7
+
+Esta matriz organiza a evidência disponível para orientar a conversa. Ela não concede acesso, não fecha a política de autorização e não transforma os nomes livres do protótipo em contas. “Confirmado” abaixo descreve somente a capacidade mencionada no áudio ou a etapa do fluxo aprovada; permissões adicionais continuam pendentes.
+
+| Participante ou função | Evidência atual | Capacidade que pode entrar na especificação | Ainda precisa ser decidido |
+| --- | --- | --- | --- |
+| Responsável da Mix7 citado em primeira pessoa | Áudio 3, 01:58–02:53: menciona avaliação com peso 2. | Registrar a necessidade de avaliar prazo e qualidade, com o peso relatado preservado como requisito por validar. | Cargo formal, acesso a demandas e equipe, criação/atribuição de tarefas, decisões de fluxo, fórmula, visibilidade e contestação da avaliação. Não habilitar notas nem consequências de pessoal ainda. |
+| Gerente | Áudio 3, 02:18–02:53: gerente citado na avaliação de qualidade com peso 1. | Registrar o segundo avaliador mencionado e o peso relatado como requisito por validar. | Atribuição de tarefas, acesso administrativo, revisão, decisões de fluxo, critérios e visibilidade dos resultados. O áudio não confirma autoridade de gestão de usuários ou de tarefas. |
+| Profissional da equipe | Áudio 3, 00:42–00:54 e 01:14–01:23: cada profissional vê o trabalho destinado a si; o áudio também pede cronômetro por tarefa. | Mostrar tarefas atribuídas à própria pessoa e permitir iniciar/parar o registro de tempo nelas. | Se pode consultar outras demandas ou dados do cliente, quais alterações executa, como delegar/substituir e quem pode reabrir tarefas. A visão individual pode ser conveniência ou limite de segurança; o áudio não decide. |
+| Cliente/aprovador | Áudio 2, 00:00–00:53: abre material enviado, aprova ou pede alteração e comenta imagem/vídeo; fluxo aprovado liga decisão à versão compartilhada. | Acessar o material encaminhado para sua revisão e emitir aprovação ou pedido de alteração com comentário associado à versão; em vídeo, preservar o instante comentado. | Quem convida e designa aprovadores, se são necessárias decisões conjuntas, quais informações do briefing aparecem, validade do acesso, prazo, delegação e acesso depois da decisão. |
+| Administrador técnico | Necessidade operacional de administrar autenticação e configuração; não foi identificado como participante com poder nos áudios. | Manter a necessidade separada dos quatro tipos citados até que a Mix7 escolha como operar contas e recuperação. | Quem exerce a função, quais ações técnicas terá, como se audita e se essa identidade fica separada dos dados de cliente. Não inferir acesso a conteúdo ou poder de aprovação. |
+| Funções exercidas em uma demanda | O fluxo aprovado inclui solicitar/preparar briefing, validar plano, executar, revisar internamente, aprovar como cliente e conferir entrega/conclusão. | Atribuir essas funções no contexto de cada demanda e registrar quem praticou cada ação. Uma pessoa pode acumular funções quando a Mix7 autorizar. | Quais combinações são permitidas, quem atribui/substitui cada função e quais transições exigem pessoas diferentes. Essas funções não criam automaticamente novos tipos globais de usuário. |
+
+### Ações que a validação deve responder
+
+| Ação/dado | Evidência disponível | Regra pendente para a Mix7 |
+| --- | --- | --- |
+| Ler e editar briefing | O fluxo aprovado começa por demanda/briefing. | Quem solicita, quem completa e quem corrige; quais campos podem ser vistos pelo cliente. |
+| Ver e atribuir tarefas | A equipe precisa acompanhar trabalho individual e o plano tem tarefas/responsáveis. | Quem cria, atribui, altera e reabre; se equipe pode consultar trabalho de colegas. |
+| Registrar horas e avaliar | Cronômetro por tarefa foi pedido; avaliação e pesos 2/1 foram citados. | Quem vê/edita horas, como registrar correções, fórmula de avaliação, finalidade, revisão e contestação. |
+| Revisar internamente e enviar ao cliente | Revisão interna é etapa do fluxo aprovado. | Quem pode revisar, quantas revisões existem, como substituir revisor e quem decide o envio externo. |
+| Consultar arquivos e comentários | Cliente comenta mídias; notas internas e feedback de cliente são conceitos diferentes do produto. | Conteúdo visível por etapa e por papel; validar que comentários internos nunca são expostos ao cliente. |
+| Aprovar, pedir alteração e concluir | O cliente decide a versão enviada; conclusão exige registro de destino/evidência no fluxo aprovado. | Quem pode aprovar em nome do cliente e quem registra entrega/publicação e confere a conclusão. |
+| Convidar, alterar ou revogar acesso | Autenticação e administração ainda não foram definidas. | Responsáveis autorizados, escopo por organização/cliente, validade do convite, remoção e auditoria. |
+
+Como base de segurança proposta para validar antes do uso real, toda leitura e escrita deve ser negada até a identidade, o vínculo de organização e o escopo de demanda serem conferidos no servidor. O aprovador do Cliente A não deve receber dados do Cliente B; notas internas não devem ser compartilhadas com o cliente; conhecer um endereço ou identificador não deve conceder acesso. A autorização precisa cobrir também busca, exportação, anexos, versões, comentários e notificações, não somente a tela principal.
+
+Para fechar a matriz, percorrer uma demanda sintética com as quatro categorias, registrar cada decisão como **permitir/negar + ação + recurso + escopo + responsável pela regra**, e testar tentativas permitidas e negadas. A saída deve incluir nome e e-mail de cada conta de teste somente quando fornecidos pela Mix7, organização vinculada, função por demanda, pessoa que autoriza o convite e evidência dos testes de isolamento. Até lá, as quatro categorias seguem documentadas como tipos de participante, não como contas criadas.
 
 ## Caminhos técnicos pesquisados
 

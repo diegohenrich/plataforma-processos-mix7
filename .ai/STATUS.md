@@ -1,5 +1,12 @@
 # Estado em 2026-09-25
 
+## Matriz preliminar de identidade e acesso — 2026-09-25
+
+- `docs/IDENTIDADE-E-ACESSOS.md` recebeu uma matriz para validação com a Mix7. Ela separa capacidades ditas nos áudios, funções exigidas pelo fluxo aprovado, proposta de segurança e decisões ainda abertas; não concede permissões nem cria contas.
+- Revisão de conteúdo contra `docs/REQUIREMENTS.md`, `docs/TRACEABILIDADE-AUDIOS.md` e o fluxo aprovado preserva quatro categorias citadas (responsável que fala, gerente, profissional, cliente/aprovador), mantém o administrador técnico como necessidade sem evidência nos áudios e não presume que gerente distribua tarefas.
+- `git diff --check` passou; os dois links locais dos documentos alterados resolvem; verificações textuais confirmaram as quatro categorias dos áudios, a função de administrador técnico separada e as funções por demanda. Teste de produto não se aplica a esta especificação documental.
+- O conteúdo foi publicado na branch `research/atualizar-comparativo-e-arquitetura`; o commit remoto será conferido. O cartão Trello de arquitetura (nº 16, conforme os registros anteriores) ainda precisa receber o comentário de sincronização; a confirmação de publicação solicitada para outro cartão segue pendente.
+
 ## Matriz de cobertura documental — 2026-09-25
 
 - Criada `docs/MATRIZ-ADEQUACAO-MIX7.md` com requisitos dos áudios e da especificação, cobertura documental por candidato, evidência ausente e ensaios necessários. A classificação P0/P1 é explicitamente proposta com base na primeira jornada aprovada; não foi encontrada priorização item a item aprovada pela Mix7.
