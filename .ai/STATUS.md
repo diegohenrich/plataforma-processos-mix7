@@ -266,3 +266,8 @@
 - Iniciado novamente o servidor local do `CRM-MIX7-RENEW` em `127.0.0.1:8198` e conferida a tela de login renderizada. A rota `/administrador/dashboard` ainda redireciona para `/login`; nenhuma senha foi inserida e não houve acesso autenticado.
 - Comparação de código confirmou uma diferença de escala na plataforma em larguras até 1399 px (navegação 14 px, títulos de coluna 13 px, títulos de cartão 14 px, descrição 12 px) ante o CRM (corpo 16 px, navegação 15 px, títulos do painel 32–46 px e cartões com raio de 24 px). Isso é evidência para revisar a escala, mas não basta para inferir a composição final do dashboard.
 - Nenhum CSS de produto foi alterado nesta rodada. A comparação completa de cabeçalho, composição e cartões depende do dashboard aberto pelo usuário; após a sessão, aplicar os ajustes comprovados e validar desktop/móvel. Evidência e limites registrados em `docs/REFERENCIA-VISUAL.md`.
+## Fechamento de briefing incompleto — 2026-09-25
+
+- Corrigido um defeito no formulário de nova demanda: os controles “Fechar” e “Cancelar” agora fecham o diálogo sem acionar validação ou salvamento. O rascunho incompleto não cria uma demanda.
+- Navegador Chromium em origem de teste isolada `127.0.0.1:4197`: abrir formulário vazio, clicar em “Fechar” e depois repetir com “Cancelar”; em ambos os casos o diálogo fechou e o quadro permaneceu com 8 demandas. Nenhum dado real foi usado.
+- Validação pendente nesta atualização: executar testes, verificações de sintaxe e diff; publicar commit no PR #9 e registrar evidência no cartão 18 do Trello.

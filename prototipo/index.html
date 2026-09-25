@@ -327,7 +327,7 @@
 
     <dialog class="request-dialog" id="requestDialog">
       <form method="dialog" id="requestForm">
-        <div class="dialog-heading"><div><span class="dialog-kicker">NOVA DEMANDA</span><h2>Comece com o briefing</h2><p>Registre o contexto antes de dividir o trabalho.</p></div><button class="close-button" value="cancel" aria-label="Fechar">×</button></div>
+        <div class="dialog-heading"><div><span class="dialog-kicker">NOVA DEMANDA</span><h2>Comece com o briefing</h2><p>Registre o contexto antes de dividir o trabalho.</p></div><button class="close-button" type="button" data-close-dialog="requestDialog" aria-label="Fechar">×</button></div>
         <label class="form-label">Nome da demanda<input name="title" required placeholder="Ex.: Campanha de lançamento" /></label>
         <div class="form-grid"><label class="form-label">Cliente<input name="client" required placeholder="Selecione ou digite" /></label><label class="form-label">Tipo de entrega<select name="type"><option>Post para redes sociais</option><option>Vídeo</option><option>Outro material</option></select></label></div>
         <label class="form-label">Objetivo e contexto<textarea name="brief" rows="3" required placeholder="O que precisa ser feito? Para quem e com qual objetivo?"></textarea></label>
@@ -344,7 +344,7 @@
           </div>
         </div>
         <div class="briefing-hint"><span>✳</span><p>Origem, canal/peça e critérios de aceite devem estar registrados antes do planejamento. Campos obrigatórios por serviço serão refinados com um caso real da Mix7.</p></div>
-        <div class="dialog-footer"><button class="secondary-button" value="cancel">Cancelar</button><button class="primary-button" type="submit" value="submit">Salvar demanda <span>→</span></button></div>
+        <div class="dialog-footer"><button class="secondary-button" type="button" data-close-dialog="requestDialog">Cancelar</button><button class="primary-button" type="submit" value="submit">Salvar demanda <span>→</span></button></div>
       </form>
     </dialog>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
