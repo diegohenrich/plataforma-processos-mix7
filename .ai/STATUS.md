@@ -290,3 +290,9 @@
 - Apenas a origem descartável `4198` recebeu o registro de teste; a origem `4173` e seu armazenamento não foram alterados. Não é conta de usuário real nem prova de controle de acesso. Próximo trecho E2E necessário: anexo de produção → revisão interna → cliente → ajustes/nova versão → evidência final.
 - O ambiente não encontrou Excel, LibreOffice ou executáveis/pacotes Office; a abertura visual do CSV em planilha permanece pendente.
 - Sem mudança de código nesta execução. `node --test` no código atual: 21/21; syntax checks e diff passaram antes do commit CSV. Registrar o E2E no cartão 18 e na descrição do PR #9.
+
+### Continuação E2E: conclusão de tarefa e limite de arquivo — 2026-09-25
+
+- Na mesma demanda sintética e origem isolada `127.0.0.1:4198`, concluí a tarefa atribuída; ela recebeu evento no histórico e desapareceu da fila pendente de Equipe. Não alterei dados reais.
+- A automação CUA do navegador não fornece acesso ao seletor nativo/atribuição de arquivo do input de versão. A tentativa de aguardar `filechooser` expirou sem expor o controle; não foi possível percorrer anexo → revisão → cliente nesta execução. Isso é limitação da ferramenta de teste, não evidência de falha da aplicação. O percurso de arquivo precisa de teste manual ou harness de navegador com `setInputFiles`.
+- Estado atual: briefing → planejamento → tarefa atribuída/estimada → produção → conclusão da tarefa foi percorrido na interface. Etapas de mídia e cliente continuam pendentes no E2E integrado.

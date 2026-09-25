@@ -79,3 +79,7 @@ As sessões anteriores usaram armazenamento local separado por origem do navegad
 ## Próximas decisões
 
 Antes de usar dados reais, fechar o caso real da Mix7 e sua matriz de papéis; escolher persistência central, autenticação, isolamento, hospedagem, backup, retenção e integração de arquivos; validar o comportamento das âncoras com equipe e cliente. A escolha final de tecnologias deve seguir a pesquisa e as restrições operacionais.
+
+### E2E adicional de briefing e tarefas — 25/09/2026
+
+Em Chromium numa origem isolada, uma demanda sintética avançou do formulário para planejamento, recebeu tarefa com responsável e estimativa, foi confirmada e chegou à execução. A página Equipe mostrou a atribuição e abriu a demanda. Ao concluir a tarefa, o evento entrou no histórico e a fila pendente ficou vazia. O seletor de arquivo nativo não é exposto pelo harness CUA; por isso, esta execução não percorreu anexo, revisão, aprovação do cliente ou conclusão completa. Essa limitação não substitui nem invalida testes anteriores de seleção de arquivo sintético, mas o E2E integrado dessas etapas segue aberto.
