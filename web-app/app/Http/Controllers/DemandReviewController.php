@@ -80,8 +80,14 @@ class DemandReviewController extends Controller
     {
         $data = $request->validate([
             'reviewer_name' => ['required', 'string', 'min:2', 'max:120'],
-            'type' => ['required', 'in:comment,approved,changes_requested'],
-            'comment' => ['nullable', 'string', 'max:5000', 'required_if:type,comment,changes_requested'],
+            'type' => ['required', 'in:comment,annotation,approved,changes_requested'],
+            'comment' => ['nullable', 'string', 'max:5000', 'required_if:type,comment,annotation,changes_requested'],
+            'anchor_type' => ['required_if:type,annotation', 'nullable', 'in:text,area,time,page'],
+            'anchor_text' => ['nullable', 'string', 'max:1000', 'required_if:anchor_type,text'],
+            'anchor_x' => ['nullable', 'numeric', 'between:0,100', 'required_if:anchor_type,area'],
+            'anchor_y' => ['nullable', 'numeric', 'between:0,100', 'required_if:anchor_type,area'],
+            'anchor_time' => ['nullable', 'date_format:H:i:s', 'required_if:anchor_type,time'],
+            'anchor_page' => ['nullable', 'integer', 'min:1', 'required_if:anchor_type,page'],
         ]);
 
         DB::transaction(function () use ($data, $token): void {
@@ -96,6 +102,15 @@ class DemandReviewController extends Controller
                 'reviewer_name' => $data['reviewer_name'],
                 'type' => $data['type'],
                 'comment' => $data['comment'] ?? null,
+                'anchor_type' => $data['type'] === 'annotation' ? $data['anchor_type'] : null,
+                'anchor_data' => $data['type'] === 'annotation' ? array_filter([
+                    'text' => $data['anchor_text'] ?? null,
+                    'url' => $reviewLink->material_url,
+                    'x' => isset($data['anchor_x']) ? (float) $data['anchor_x'] : null,
+                    'y' => isset($data['anchor_y']) ? (float) $data['anchor_y'] : null,
+                    'time' => $data['anchor_time'] ?? null,
+                    'page' => isset($data['anchor_page']) ? (int) $data['anchor_page'] : null,
+                ], fn ($value) => $value !== null) : null,
             ]);
 
             if (in_array($data['type'], ['approved', 'changes_requested'], true)) {

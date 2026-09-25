@@ -71,6 +71,89 @@ class DemandReviewLinkTest extends TestCase
         $this->assertDatabaseCount('demand_review_responses', 1);
     }
 
+    public function test_client_can_send_versioned_text_and_area_annotations_before_final_decision(): void
+    {
+        [$organization, $manager, $demand] = $this->setupApproval();
+        $token = $this->createLink($manager, $demand, 'https://preview.example.test/site-v1');
+
+        $this->get(route('client-reviews.show', $token))->assertOk()
+            ->assertSee('Ancorar este comentário em')
+            ->assertSee('Trecho de texto')
+            ->assertSee('Área da página');
+
+        $this->post(route('client-reviews.respond', $token), [
+            'reviewer_name' => 'Cliente Mix7',
+            'type' => 'annotation',
+            'comment' => 'Aumentar a leitura deste título.',
+            'anchor_type' => 'text',
+            'anchor_text' => 'Conheça nossos serviços',
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('demand_review_responses', [
+            'type' => 'annotation',
+            'anchor_type' => 'text',
+            'comment' => 'Aumentar a leitura deste título.',
+        ]);
+        $textAnnotation = $demand->reviewLinks()->firstOrFail()->responses()->firstOrFail();
+        $this->assertSame('Conheça nossos serviços', $textAnnotation->anchor_data['text']);
+        $this->assertSame('https://preview.example.test/site-v1', $textAnnotation->anchor_data['url']);
+        $this->assertSame(DemandStatus::ClientApproval, $demand->fresh()->status);
+        $this->actingAs($manager)->get(route('demands.show', $demand))
+            ->assertOk()->assertSee('Anotou no material')->assertSee('Conheça nossos serviços');
+
+        $this->post(route('client-reviews.respond', $token), [
+            'reviewer_name' => 'Cliente Mix7',
+            'type' => 'annotation',
+            'comment' => 'Mover o botão para o canto.',
+            'anchor_type' => 'area',
+            'anchor_x' => 82.5,
+            'anchor_y' => 47,
+        ])->assertRedirect();
+
+        $areaAnnotation = $demand->reviewLinks()->firstOrFail()->responses()->latest('id')->firstOrFail();
+        $this->assertSame(82.5, $areaAnnotation->anchor_data['x']);
+        $this->assertEquals(47, $areaAnnotation->anchor_data['y']);
+        $this->assertDatabaseCount('demand_review_responses', 2);
+
+        foreach ([['time', 'anchor_time', '00:01:25'], ['page', 'anchor_page', 3]] as [$anchorType, $field, $value]) {
+            $this->post(route('client-reviews.respond', $token), [
+                'reviewer_name' => 'Cliente Mix7',
+                'type' => 'annotation',
+                'comment' => 'Conferir este ponto.',
+                'anchor_type' => $anchorType,
+                $field => $value,
+            ])->assertRedirect();
+        }
+
+        $this->assertDatabaseCount('demand_review_responses', 4);
+        $this->assertSame('00:01:25', $demand->reviewLinks()->firstOrFail()->responses()->where('anchor_type', 'time')->firstOrFail()->anchor_data['time']);
+        $this->assertSame(3, $demand->reviewLinks()->firstOrFail()->responses()->where('anchor_type', 'page')->firstOrFail()->anchor_data['page']);
+    }
+
+    public function test_annotation_anchor_values_are_validated(): void
+    {
+        [$organization, $manager, $demand] = $this->setupApproval();
+        $token = $this->createLink($manager, $demand, 'https://preview.example.test/site-v1');
+
+        $this->post(route('client-reviews.respond', $token), [
+            'reviewer_name' => 'Cliente Mix7',
+            'type' => 'annotation',
+            'comment' => 'Corrigir aqui.',
+            'anchor_type' => 'area',
+            'anchor_x' => 101,
+            'anchor_y' => -1,
+        ])->assertSessionHasErrors(['anchor_x', 'anchor_y']);
+
+        $this->post(route('client-reviews.respond', $token), [
+            'reviewer_name' => 'Cliente Mix7',
+            'type' => 'annotation',
+            'comment' => 'Rever este quadro.',
+            'anchor_type' => 'time',
+            'anchor_time' => '25:90:99',
+        ])->assertSessionHasErrors('anchor_time');
+        $this->assertDatabaseCount('demand_review_responses', 0);
+    }
+
     public function test_expired_revoked_and_previous_version_links_cannot_be_opened_or_answered(): void
     {
         [$organization, $manager, $demand] = $this->setupApproval();
