@@ -189,8 +189,8 @@
 - Testes de regra passaram 15/15; `node --check` passou em `prototipo/workflow.js` e `prototipo/app.js`; `git diff --check` passou.
 - No servidor isolado `127.0.0.1:4191`, criei uma demanda sintética com PDF de teste. O painel mostrou o arquivo e seu tipo, o histórico listou a referência, os dados continuaram após recarregar e o download teve SHA-256 idêntico ao fixture. Nenhum dado real foi usado. O campo e o modal foram inspecionados visualmente em desktop.
 - Commit de implementação `0bc2c0b4651164e220e5ddcf0252c29c1e01fc53` publicado; SHA local e remoto conferem. CI do push [36069099172](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36069099172) e CI do PR [36069104400](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36069104400) passaram. PR #9 atualizado e continua aberto como rascunho: https://github.com/diegohenrich/plataforma-processos-mix7/pull/9.
-- Trello: cartão 22 atualizado e relido; descrição traz resultado, pendência móvel, links para o guia, commit de código `0bc2c0b`, registro `045fc33` e PR #9. Checklist está em 14/15: navegador, documentação, status, commits/CI e PR foram marcados; apenas a conferência móvel permanece pendente. O cartão 18 continua como mapa e aponta para o cartão 22.
-- Pendência antes de encerrar o MVP-01: validar visualmente em celular. O cartão 22 permanece em andamento. O desenho técnico segue local, sem servidor ou acesso multiusuário.
+- Trello antes desta validação móvel: cartão 22 em andamento, checklist 14/15; os demais passos já estavam concluídos. O cartão 18 continua como mapa e aponta para o cartão 22.
+- Validação móvel concluída em Chromium 390×844: formulário de demanda e drawer couberam na largura útil; campo de arquivo, botões, dica e rolagem inspecionados. Um PDF sintético foi escolhido, salvo localmente, permaneceu após recarga e apareceu no briefing e no histórico com nome e tipo. A largura do documento e drawer foi 390 px; console sem erros ou avisos. O botão de download apareceu; não repeti a inspeção de bytes, já validada na rodada de anexos anterior.
 
 ## Navegação da primeira versão: atalhos e demanda minimizada — 24/09/2026
 
