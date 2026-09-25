@@ -4,6 +4,7 @@
 - Inspecionei, apenas para localizar as fontes, `resources/views/dashboard/index.blade.php`, `resources/views/layouts/template.blade.php` e `public/css/dashboard-light.css` dentro de `CRM-MIX7-RENEW`. O dashboard inclui essa folha e a view ativa o redesenho; isso é evidência de implementação, não validação da composição renderizada. Nenhum arquivo do CRM foi alterado.
 - Não ajustei a interface da plataforma nesta execução: ainda falta observar o dashboard autenticado para comparar proporções, hierarquia, navegação e cartões sem suposições. A aba do login está preservada para o usuário abrir manualmente o painel; depois da abertura, retomar a comparação no cartão 25 do Trello.
 - Repositório da plataforma estava limpo e no commit `ad7bacfb31856d7f71edd95eb909abbead511c9d`, igual ao remoto antes deste registro.
+- git diff --check passou; CI do push e do PR #9 para o commit 73b28d58995a651b98f9487b319bd505340fcc68 passou nas execuções [36117997596](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36117997596) e [36118002250](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36118002250).
 # Estado em 2026-09-25
 
 ## Auditoria de navegação e criação de demanda — 2026-09-25
