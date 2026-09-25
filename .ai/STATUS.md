@@ -5,7 +5,7 @@
 - Executados lado a lado o CRM local e o protótipo. A rota administrativa do CRM segue redirecionando para login; nenhuma senha foi inserida. A tela de login e o CSS confirmado sustentam os tamanhos de corpo, títulos, navegação e cartões; a composição do dashboard autenticado continua sem evidência visual.
 - Em `prototipo/styles.css`, aumentada a legibilidade de cartões, detalhes, comentários, formulário de briefing, tarefas e painéis; conteúdo usa 14–16 px e títulos de diálogo/painel 28–32 px. Raio dos cartões de demanda e do formulário foi alinhado a 24 px, preservando cores claras/azuis de conteúdo e navegação existente. Nenhum arquivo do CRM foi copiado.
 - Chromium renderizou quadro e formulário em 1270×720 após as mudanças; captura mostrou os novos tamanhos e formulário rolável dentro da janela, sem corte do conteúdo visível. `node --test tests/workflow.test.js`: 20/20 passaram; `node --check prototipo/workflow.js`, `node --check prototipo/app.js` e `git diff --check` passaram.
-- Pendentes: validar em viewport móvel e comparar com o dashboard autenticado depois que o usuário abrir a sessão local. Nenhum teste de fluxo de negócio novo foi necessário para esta mudança de CSS. A sincronização com GitHub e o cartão 25 do Trello será registrada após o commit e a conferência remota.
+- Pendentes: validar em viewport móvel e comparar com o dashboard autenticado depois que o usuário abrir a sessão local. Nenhum teste de fluxo de negócio novo foi necessário para esta mudança de CSS. O commit `1346362a10048920d2fff87ad61db9af6424c55c` foi publicado na branch `implementation/primeira-jornada-local`; o SHA local e remoto coincide. A execução GitHub Actions `36093943883` passou.
 
 ## Auditoria dos três áudios — 24/09/2026
 
