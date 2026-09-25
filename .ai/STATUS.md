@@ -38,7 +38,8 @@
 - `docs/PESQUISA-SOLUCOES.md` foi complementado com consulta às páginas oficiais atuais: preço do Planable diverge entre a página pública e o centro de ajuda; Frame.io cobra por membro e seu teste exige cancelamento antes da conversão; Filestage oferece plano gratuito limitado a 1 projeto/5 arquivos mensais e seus planos pagos publicam US$ 199/329 por mês; Wekan v11.99 é a release de 24/09 e lista avisos recentes de autorização; Plane Community segue em v1.4.2/AGPL-3.0 com avisos de segurança que precisam ser verificados contra a versão candidata.
 - O texto não recomenda compra nem uso de dados reais. Mantém como próximos critérios cotação de Planable, teste sintético sem upgrade, confirmação de licença e validação de avisos/permissões/backup antes de qualquer execução auto-hospedada.
 - Fontes primárias consultadas em 25/09: páginas oficiais Planable, Frame.io e Filestage; releases, avisos e licença nos repositórios oficiais Wekan e Plane. `git diff --check` e revisão manual da seção foram executados; links adicionados são URLs oficiais. Teste de produto, criação de contas e compra não foram realizados.
-- Sincronização com o cartão Trello de pesquisa e PR #6 ainda pendente até concluir commit, push, CI e registrar os links.
+- Commit `e0e1841ddc72020cd385665e00d3cc56e40deac7` publicado na branch `research/comparativo-arquitetura-inicial`; SHA local e remoto conferem. `git diff --check` passou. `gh pr checks 6` não reportou verificações para esta branch documental; não houve CI, teste do produto, cotação ou auditoria.
+- Cartão 14 do Trello atualizado com a síntese, limitações, commit e PR: https://trello.com/c/DT5BeB96/14-comparar-solu%C3%A7%C3%B5es-existentes-e-bases-open-source#comment-6ab6102afda8f42058614170. PR #6 permanece em revisão e a prova controlada ainda não foi executada.
 
 ## Próximo passo
 
