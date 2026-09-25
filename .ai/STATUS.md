@@ -5,7 +5,7 @@
 - Em Chromium/Playwright 1.63 num perfil descartável em `127.0.0.1:4206`, arrastei arquivos sintéticos PNG e PDF para a zona do briefing. O TXT foi recusado e o PNG acima de 15 MB foi recusado; em ambos os casos os dois arquivos válidos permaneceram selecionados.
 - Criei a demanda, recarreguei a página, abri o painel e baixei os dois anexos. Conteúdo, tamanho e SHA-256 conferiram byte a byte após a persistência no IndexedDB. A captura do painel com os anexos foi inspecionada; nenhum erro JavaScript ocorreu.
 - Limite da evidência: eventos de arraste foram enviados pelo harness do navegador. Ainda falta arrastar fisicamente um arquivo do Explorador de Arquivos do Windows para Chromium. Também permanece a inspeção do formulário e dos anexos em viewport móvel.
-- A matriz de áudios e o cartão Trello 18 serão atualizados após publicar este registro. Nenhum arquivo do usuário ou dado real foi usado.
+- Registro publicado no commit `f2ef0b6a7a4cac5249fdf5342d61b459a39a7f36`, SHA local/remoto coincidente. Testes de regras passaram 22/22; sintaxe JavaScript e `git diff --check` passaram; CI push [36109076778](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36109076778) e PR #9 [36109081086](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36109081086) passaram. O cartão Trello 18 recebeu a evidência e o item de persistência/download foi concluído. Nenhum arquivo do usuário ou dado real foi usado.
 
 ## Ajuste visual validado contra o CRM — 2026-09-25
 
