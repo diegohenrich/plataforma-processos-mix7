@@ -4,7 +4,7 @@
 
 - Consultei `docker`, `podman` e `nerdctl`; nenhum comando está disponível no `PATH`. Verifiquei também os caminhos comuns de instalação do Docker Desktop e Podman no Windows; os executáveis não foram encontrados.
 - Não instalei runtime, não baixei imagens e não subi serviços. Não há neste ambiente atual evidência de release instalada, digest, configuração ou ensaio de isolamento, exportação e restauração.
-- `docs/PROVA-DE-CONCEITO.md` agora registra o resultado e o pré-requisito para retomar a prova. Portões operacionais/segurança e validação de caso real permanecem vigentes; nenhum produto foi escolhido. `git diff --check` passou; a alteração não acrescenta novos links relativos nem código executável. GitHub e cartão 14 do Trello serão sincronizados após o commit.
+- `docs/PROVA-DE-CONCEITO.md` agora registra o resultado e o pré-requisito para retomar a prova. Portões operacionais/segurança e validação de caso real permanecem vigentes; nenhum produto foi escolhido. `git diff --check` passou; a alteração não acrescenta novos links relativos nem código executável. Commit `96893a56792d8d2ce0c52040fa8e2436849a801e` publicado e SHA local/remoto idêntico; PR #10 continua rascunho e o GitHub não reportou checks automáticos para a branch documental. O cartão 14 do Trello recebeu o resultado; continua Em revisão com checklist 2/3.
 
 ## Mapeamento documental de avisos de segurança — 2026-09-25
 
