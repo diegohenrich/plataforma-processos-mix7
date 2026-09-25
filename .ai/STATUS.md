@@ -5,6 +5,12 @@
 - Trello: o cartão 23 está aberto na aba atual. A publicação de comentário ainda aguarda ação autorizada na interface; não declarar sincronização completa antes de verificar.
 - Próxima frente independente: seguir a auditoria funcional dos formulários restantes e requisitos; aguardar os prints do CRM sem bloquear o trabalho.
 
+# Painel de demanda fora da navegação por teclado — 2026-09-25
+
+- Reprodução: com o painel fechado e apenas deslocado por CSS, um teste de 100 teclas Tab focou 20 controles que estavam fora da tela. `prototipo/index.html` inicia o painel com `inert`; `openDrawer` o reativa e `closeDrawer` o inativa. A demanda minimizada continua reabrindo pela bandeja.
+- Chromium isolado em `127.0.0.1:4228`: zero controles do painel focados após 100 Tabs quando fechado; ao abrir, foco em Fechar; após minimizar, `inert=true`; após reabrir, `inert=false`. Sem erros JavaScript ou overflow horizontal. Capturas desktop 1440×900 e móvel 390×844 renderizadas e inspecionadas em `docs/evidencias/visual/demanda-drawer-inert-*.png`.
+- `node --test tests/workflow.test.js`: 26/26 passaram; `node --check prototipo/workflow.js`, `node --check prototipo/app.js` e `git diff --check` passaram. Capturas desktop e móvel inspecionadas; revisão do diff e commit/push/checks do PR ficam para a sequência desta alteração. O comentário de resultado no cartão 23 ainda depende da confirmação pontual já solicitada.
+
 # Menus de etapa do Kanban — 2026-09-25
 
 - Corrigi a sobreposição de colunas que interceptava o clique nos menus de etapa. Em Chromium/Playwright, os oito menus abriram o diálogo correto nas larguras 1440, 1399, 1280, 1250, 900, 768, 600 e 390 px; o documento não teve overflow e o Kanban rolou internamente. Capturas desktop e móvel foram inspecionadas. Perfil efêmero `127.0.0.1:4227`; nenhuma demanda foi salva e o perfil `4173` não foi tocado. `node --test tests/workflow.test.js`: 26/26; sintaxe JavaScript e `git diff --check` passaram.

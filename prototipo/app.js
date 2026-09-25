@@ -1330,6 +1330,7 @@ function openDrawer(id) {
   activeCommentAnchor = null;
   imageAnchorMode = false;
   renderDrawer();
+  drawer.inert = false;
   drawer.classList.add("open");
   drawer.setAttribute("aria-hidden", "false");
   scrim.hidden = false;
@@ -1340,6 +1341,7 @@ function openDrawer(id) {
 function closeDrawer() {
   drawer.classList.remove("open");
   drawer.setAttribute("aria-hidden", "true");
+  drawer.inert = true;
   scrim.hidden = true;
   document.body.style.overflow = "";
   activeRequestId = null;
