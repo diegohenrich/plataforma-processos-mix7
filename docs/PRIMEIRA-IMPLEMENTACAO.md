@@ -10,6 +10,10 @@ Em Chromium/Playwright, com demanda e perfil descartáveis na origem `127.0.0.1:
 
 Em contexto descartável no Chromium (`127.0.0.1:4233`), editei origem, canal/peça, critérios de aceite e referência de uma demanda sintética. Os valores atualizados apareceram no painel e o histórico registrou `briefing_details_updated`. Depois avancei até Em produção: enviar comentário interno vazio mostrou “Escreva um comentário antes de enviar.” e não acrescentou comentário ou evento; texto válido apareceu na conversa e no histórico, ligado à V01. Sem erros JavaScript. Esta é persistência local de demonstração, sem teste de visibilidade por papel ou sincronização multiusuário.
 
+### Verificação móvel dos formulários e comentários — 2026-09-25
+
+Repeti os formulários e o envio de comentário em Chromium, viewport 390 × 844 e origem descartável `127.0.0.1:4234`. O painel ocupou 390 px, o campo de comentário ficou visível após rolagem interna e o comentário apareceu na conversa e no histórico. O documento manteve 390 px de largura, sem rolagem horizontal; o rodapé mostrou os controles e a orientação de conclusão de tarefas. Captura renderizada e inspecionada: `%LOCALAPPDATA%/Temp/mix7-mobile-comment.png`. Sem erros JavaScript; nenhum dado do perfil de uso foi acessado.
+
 ## O que já executa
 
 ### Revisão interna pela interface — 2026-09-25
