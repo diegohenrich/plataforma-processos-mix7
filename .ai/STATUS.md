@@ -6,6 +6,7 @@
 - Confirmei no `layouts/template.blade.php` que o dashboard carrega `dashboard-light.css` e na view que escolhe a apresentação redesenhada. A folha define topo transparente com margens de 24/40 px, recuos de 38 px, indicador principal em degradê azul-petróleo e cartões de 24 px. A composição renderizada do dashboard autenticado continua pendente.
 - `prototipo/styles.css` agora alinha o topo desktop ao CSS do CRM e usa o degradê do cartão em destaque no primeiro resumo. Capturas desktop e móvel foram inspecionadas e guardadas em `docs/evidencias/visual/`; no desktop a barra ficou em x=290/y=24, 1112 × 44 px, e no celular o documento permaneceu com 390 px.
 - Validação: `node --test tests/workflow.test.js` passou 22/22; `node --check prototipo/workflow.js`, `node --check prototipo/app.js` e `git diff --check` passaram. A fidelidade ao painel real permanece parcialmente verificada até o usuário abrir uma sessão autenticada do CRM. Ver `docs/REFERENCIA-VISUAL.md`.
+- Código, guia e capturas publicados no commit `713d4971f01a868ddd37eecc9f9eca8509c3c4c9`; SHA local/remoto idêntico. CI do push [36107667498](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36107667498) e do PR #9 [36107671396](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36107671396) passou. Cartão 25 do Trello recebeu a descrição revisada e o comentário desta execução; conferi o comentário visível e o estado continua `Em andamento` com checklist 3/5, pois o painel autenticado segue pendente.
 
 ## Smoke test dos controles principais — 2026-09-25
 
