@@ -4,7 +4,7 @@
 
 - Fonte oficial atual confirma Community sob AGPL-3.0 e suporte a armazenamento S3 externo (`USE_MINIO=0`). Registrei que isso torna a substituição configurável, sem validar fornecedor, custo, região, backup/restauração ou operação. A síntese mantém Plane como candidato, não como produto escolhido, e separa avaliação de gestão de trabalho de revisão especializada.
 - Próximo entregável de pesquisa: matriz de cobertura P0/P1 com evidência direta por candidato; depois, prova controlada de jornada, permissões, versões, exportação e recuperação, quando houver runtime e condições aprovadas.
-- `docs/PESQUISA-SOLUCOES.md` foi atualizado com fontes oficiais atuais. A validação desta tarefa, publicação GitHub e atualização Trello ainda estão pendentes.
+- `docs/PESQUISA-SOLUCOES.md` atualizado com documentação oficial consultada em 25/09. `git diff --check` passou; revisão confirmou alteração apenas documental e que a recomendação não escolhe fornecedor. Não se aplicam testes de produto, pois nada foi instalado ou executado. Commit `f4c856cf8937647dd6a1772942d9ed211706f9ef` foi publicado e comparado com a branch remota; cartão Trello 14 ainda precisa receber o resultado desta tarefa.
 
 ## Atualização de manutenção do armazenamento do Plane — 2026-09-25
 
