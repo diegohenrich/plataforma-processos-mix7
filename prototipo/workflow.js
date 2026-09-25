@@ -114,6 +114,25 @@
     return `"${safeText.replaceAll('"', '""')}"`;
   }
 
+  function serializeRequestsJson(requests, schemaVersion = 1, exportedAt = new Date().toISOString()) {
+    return JSON.stringify({
+      schemaVersion,
+      exportedAt,
+      scope: "Dados de texto; arquivos de mídia não incluídos.",
+      requests,
+    }, null, 2);
+  }
+
+  function serializeRequestsCsv(requests) {
+    const lines = [["Demanda", "Cliente", "Etapa", "Prazo", "Responsáveis", "Tarefas", "Decisão atual"]];
+    for (const request of requests || []) {
+      const version = request.versions?.at(-1);
+      const assignees = [...new Set((request.tasks || []).map(task => task.assignee).filter(Boolean))].join(", ");
+      lines.push([request.title, request.client, stages[request.stage] || request.stage, request.due, assignees, request.tasks?.length || 0, version?.decision?.result || ""]);
+    }
+    return `\uFEFF${lines.map(row => row.map(csvCell).join(",")).join("\r\n")}`;
+  }
+
   function transition(request, action, payload = {}, now = new Date().toISOString()) {
     const next = structuredClone(request);
     const version = next.versions[next.versions.length - 1];
@@ -394,7 +413,7 @@
     return next;
   }
 
-  const api = { stages, transition, listAssignees, filterRequestsByAssignee, unmetTaskDependencies, taskBlockers, findActiveTaskTimer, validateLocalFiles, mergeLocalFiles, csvCell };
+  const api = { stages, transition, listAssignees, filterRequestsByAssignee, unmetTaskDependencies, taskBlockers, findActiveTaskTimer, validateLocalFiles, mergeLocalFiles, csvCell, serializeRequestsJson, serializeRequestsCsv };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   root.Mix7Workflow = api;
 })(globalThis);

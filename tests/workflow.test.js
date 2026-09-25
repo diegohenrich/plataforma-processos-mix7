@@ -1,6 +1,6 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { transition, listAssignees, filterRequestsByAssignee, taskBlockers, findActiveTaskTimer, validateLocalFiles, mergeLocalFiles, csvCell } = require("../prototipo/workflow.js");
+const { transition, listAssignees, filterRequestsByAssignee, taskBlockers, findActiveTaskTimer, validateLocalFiles, mergeLocalFiles, csvCell, serializeRequestsJson, serializeRequestsCsv } = require("../prototipo/workflow.js");
 
 test("CSV export neutralizes spreadsheet formula prefixes and preserves CSV quoting", () => {
   for (const value of ["=1+1", "+1+1", "-1+1", "@SUM(1,1)", "＝1+1", "\t=1+1", "\r=1+1", "\n=1+1", "  =1+1"]) {
@@ -8,6 +8,31 @@ test("CSV export neutralizes spreadsheet formula prefixes and preserves CSV quot
   }
   assert.equal(csvCell('texto, com "aspas"'), '"texto, com ""aspas"""');
   assert.equal(csvCell("campanha normal"), '"campanha normal"');
+});
+
+test("JSON export preserves the version, timestamp, scope and full request data", () => {
+  const request = { id: "d-1", title: "Peça de campanha", history: [{ type: "created" }] };
+  const exported = JSON.parse(serializeRequestsJson([request], 3, "2026-09-25T12:00:00.000Z"));
+  assert.deepEqual(exported, {
+    schemaVersion: 3,
+    exportedAt: "2026-09-25T12:00:00.000Z",
+    scope: "Dados de texto; arquivos de mídia não incluídos.",
+    requests: [request],
+  });
+});
+
+test("CSV export includes readable task fields, UTF-8 BOM and formula protection", () => {
+  const csv = serializeRequestsCsv([{
+    title: "=SOMA(A1:A2)",
+    client: "Cliente, Ltda",
+    stage: "clientReview",
+    due: "2026-10-02",
+    tasks: [{ assignee: "Ana" }],
+    versions: [{ decision: { result: "approved" } }],
+  }]);
+  assert.equal(csv.charCodeAt(0), 0xFEFF);
+  assert.equal(csv.slice(1).split("\r\n")[0], '"Demanda","Cliente","Etapa","Prazo","Responsáveis","Tarefas","Decisão atual"');
+  assert.equal(csv.slice(1).split("\r\n")[1], '"\t=SOMA(A1:A2)","Cliente, Ltda","Aguardando cliente","2026-10-02","Ana","1","approved"');
 });
 
 function demand() {

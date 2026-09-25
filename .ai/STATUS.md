@@ -13,11 +13,12 @@
 - git diff --check passou; CI do push e do PR #9 para o commit 73b28d58995a651b98f9487b319bd505340fcc68 passou nas execuções [36117997596](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36117997596) e [36118002250](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36118002250).
 # Estado em 2026-09-25
 
-## Ações de exportação JSON e CSV — 2026-09-25
+## Exportação JSON e CSV — 2026-09-25
 
-- Em Chromium, origem descartável `127.0.0.1:4210`, abri “Mais opções” e acionei os dois formatos. JSON exibiu “Cópia JSON das demandas baixada” e CSV exibiu “Lista CSV das demandas baixada”; as oito demandas sintéticas continuaram visíveis sem alteração.
-- Não foi possível inspecionar os arquivos no gerenciador interno de downloads: a política do navegador recusou a página `chrome://downloads`. Portanto, esta evidência cobre clique e confirmação da interface, não leitura/bytes do arquivo. CSV tem testes automatizados de serialização; abrir em Excel/Calc continua pendente.
-- Sem mudança de código. Testes de referência do estado atual: `node --test tests/workflow.test.js` passou 22/22; `node --check` nos dois arquivos JavaScript e `git diff --check` passaram. Registro do resultado foi publicado no cartão 23 após o commit `fba5393bbf1b9914a14c06d24db7683c8c629abb`; a sincronização final deste estado será registrada após novo commit.
+- Separei a serialização de JSON e CSV em funções puras de `workflow.js`, chamadas pela interface de exportação. Testes cobrem schema, timestamp, histórico completo, colunas/linhas, BOM UTF-8, CRLF e neutralização de fórmulas.
+- Em Chromium, origem isolada `127.0.0.1:4212` com dados fictícios, acionei ambos os botões e confirmei as mensagens específicas. Os arquivos novos foram identificados por horário e sufixo: JSON parseou com schema 1, 8 demandas e histórico; CSV importou com 8 demandas e 7 colunas esperadas, BOM UTF-8 e CRLF. O quadro manteve as oito demandas de exemplo.
+- `node --test tests/workflow.test.js` passou 24/24; `node --check prototipo/workflow.js`, `node --check prototipo/app.js` e `git diff --check` passaram. A apresentação em Excel/Calc ainda não foi validada.
+- Os testes criaram arquivos com sufixos numerados na pasta Downloads, devido a nomes existentes. Arquivos preexistentes foram preservados. Registro vinculado ao cartão 29: https://trello.com/c/XK4GdAAV/validar-exportacao-dos-arquivos-json-e-csv. O cartão permanece em Em revisão até conferência visual no Excel/Calc.
 
 ## Auditoria de navegação e criação de demanda — 2026-09-25
 
