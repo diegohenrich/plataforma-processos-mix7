@@ -1,5 +1,12 @@
 # Estado em 2026-09-25
 
+## Auditoria de navegação e criação de demanda — 2026-09-25
+
+- Em perfil local isolado `127.0.0.1:4207`, percorri as oito páginas da navegação; a visão Lista mostrou as demandas nas etapas corretas. O diálogo de filtros exibiu opções de etapa, cliente e prazo; Mais opções abriu os formatos JSON/CSV; Pendências listou dois briefings incompletos e uma aprovação aguardando cliente. Abrir uma pendência fechou o diálogo e mostrou o briefing correspondente.
+- Preenchi o formulário com dados sintéticos, salvei a demanda e confirmei sua presença na fila inicial. Após recarregar a página, a demanda permaneceu visível, confirmando persistência neste navegador. Os dados ficaram no perfil de origem isolada e nenhuma aba de uso foi alterada.
+- Escopo limitado: o diálogo de exportação foi aberto, mas os downloads não foram executados; filtros foram inspecionados, mas não aplicados nesta rodada. Esta verificação não cobre login, sincronização ou uso operacional. `node --test tests/workflow.test.js` passou 22/22; `node --check prototipo/workflow.js`, `node --check prototipo/app.js` e `git diff --check` também passaram.
+- Vinculado ao cartão 18 (primeira entrega integrada); atualizar após publicar este registro. A fidelidade visual ao CRM permanece pendente da comparação do painel autenticado.
+
 ## Acesso manual ao CRM para comparação visual — 2026-09-25
 
 - O servidor local respondeu em `127.0.0.1:8198`; abrir `/administrador/dashboard` resultou em redirecionamento HTTP 302 para `/login`. Reabri a rota no navegador local, onde a tela de entrada ficou disponível para autenticação manual do usuário. Nenhuma credencial foi lida ou inserida.

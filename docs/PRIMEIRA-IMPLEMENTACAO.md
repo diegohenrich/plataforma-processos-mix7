@@ -119,3 +119,9 @@ Validação de interface em Chromium, na origem distinta `localhost:4173`, com d
 ### Abrir demanda a partir de pendências — 2026-09-25
 
 Uma verificação isolada encontrou que clicar numa pendência abria sua demanda atrás do diálogo modal, deixando-a inacessível. O botão agora fecha o diálogo antes de abrir o drawer. Chromium no perfil sintético `127.0.0.1:4203` confirmou que clicar em “Briefing precisa ser completado” fecha a janela de pendências e deixa a demanda correta aberta; o botão Fechar do drawer retorna ao quadro. A sessão foi isolada das abas de uso em `127.0.0.1:4173`.
+
+### Navegação e criação de briefing em perfil isolado — 25/09/2026
+
+Em Chromium, numa origem descartável `127.0.0.1:4207`, percorri as oito páginas da navegação, alternei para Lista e abri filtros, Mais opções e Pendências. As opções de etapa, cliente e prazo apareceram; as pendências exibiram os briefings incompletos e a aprovação à espera do cliente. Abrir um briefing pela lista de pendências fechou o diálogo e abriu o detalhe correto.
+
+Preenchi todos os campos obrigatórios do formulário com conteúdo sintético, salvei a demanda e confirmei sua presença no começo do fluxo. Após recarregar, a demanda e seus dados continuaram visíveis. A execução confirmou gravação local no perfil do navegador. O diálogo de exportação foi aberto, mas não foram iniciados downloads; os filtros foram inspecionados, mas não aplicados. Esta rodada não valida autenticação, integração entre usuários ou operação de produção.
