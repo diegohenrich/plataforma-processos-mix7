@@ -101,3 +101,11 @@ O pedido de ajustes do cliente também foi bloqueado sem justificativa. Com just
 Asserções finais passaram: decisão da V1 preservada como `changes_requested`, V2 aprovada, histórico contendo devolução interna, pedido de ajuste e conclusão, destino `scheduled`, e nenhum erro JavaScript. A captura do comentário temporal em tela foi inspecionada em `%LOCALAPPDATA%/Temp/mix7-video-comment-anchor.png`. Os testes automatizados seguem em 21/21; checks de sintaxe e diff passaram.
 
 Limite: os papéis de cliente e equipe foram simulados na mesma sessão e todos os dados/mídias eram fictícios. A execução valida a interface local e a persistência no perfil do navegador; não valida contas, portal remoto, permissões nem o piloto real da Mix7.
+
+### Auditoria de navegação e filtros — 2026-09-25
+
+Uma checagem de interface em Chromium/Playwright 1.62.1, com perfil e dados descartáveis na origem `127.0.0.1:4201`, revelou que cada abertura do diálogo de filtros acrescentava outra cópia das etapas e dos clientes. A lista de etapas crescia de 9 para 17 e 25 opções nas três primeiras aberturas. `populateFilterDialog()` agora recria as opções-base antes de preencher os valores atuais; três aberturas consecutivas mantiveram 9 etapas, 4 clientes e 5 opções de prazo, e filtrar por Ajustes mostrou somente a coluna correspondente.
+
+No mesmo perfil descartável, passaram: navegação nas oito páginas; alternância quadro/lista; busca por “Botânica”; filtros de etapa; abrir/fechar perfil, pendências e opções; downloads JSON e CSV; cancelar briefing vazio sem criar demanda; e abrir, minimizar e reabrir uma demanda. Nenhum erro JavaScript ocorreu. A janela do filtro foi renderizada e inspecionada após a correção. A origem de uso `4173` não foi aberta nem alterada.
+
+Este smoke test cobre esses controles e não equivale a teste de produção nem à auditoria de cada campo e transição. Autenticação, contas e permissões permanecem ausentes no protótipo local.

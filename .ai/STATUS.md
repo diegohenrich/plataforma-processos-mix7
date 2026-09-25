@@ -335,3 +335,9 @@
 - Reaberta em Chromium a rota `/administrador/dashboard` do CRM local. Ela redirecionou para o login, que exibe uma composição dividida de apresentação escura e formulário claro. Isso comprova somente o layout da tela de entrada; não foi usado como referência do dashboard e nenhuma credencial foi lida ou inserida. A aba local permanece aberta para autenticação manual.
 - Corrigido `docs/REFERENCIA-VISUAL.md`: removida a pendência móvel obsoleta. A validação da plataforma em 390 × 844 já foi concluída com quadro, briefing, drawer e controles de aprovação inspecionados; o acesso ao dashboard autenticado do CRM e a comparação de composição seguem pendentes.
 - Cartão 25 do Trello: marcar a etapa combinada de inspeção desktop/móvel e atualização do guia como concluída; manter em aberto entrar no CRM e comparar painel, menu e cartões renderizados.
+
+## Auditoria de interface: filtros sem duplicação — 2026-09-25
+
+- Reproduzido no Chromium/Playwright 1.62.1 em `127.0.0.1:4201`: o diálogo de filtros acumulava opções de etapa/cliente em cada abertura (9/4, depois 17/7 e 25/10). `prototipo/app.js` agora recria as opções antes de inserir as atuais.
+- Smoke test passou: oito destinos de navegação, quadro/lista, busca, três aberturas consistentes do filtro, filtro de etapa e limpeza, perfil, pendências, downloads JSON/CSV, cancelamento do briefing vazio e reabertura de demanda minimizada. Nenhum `pageerror`. Janela do filtro renderizada e inspecionada; dados isolados, sem acessar a origem `4173`.
+- Documentado em `docs/PRIMEIRA-IMPLEMENTACAO.md`. `node --test tests/workflow.test.js` passou 21/21; `node --check prototipo/workflow.js`, `node --check prototipo/app.js` e `git diff --check` passaram. Correção validada no browser; falta concluir push/CI e comentário no cartão 18.

@@ -1281,6 +1281,8 @@ function populateFilterDialog() {
   const form = document.querySelector("#filterForm");
   const stageSelect = form.elements.namedItem("stage");
   const clientSelect = form.elements.namedItem("client");
+  stageSelect.replaceChildren(new Option("Todas as etapas", ""));
+  clientSelect.replaceChildren(new Option("Todos os clientes", ""));
   for (const [key, label] of Object.entries(stages)) stageSelect.add(new Option(label, key));
   [...new Set(state.requests.map(request => request.client).filter(Boolean))].sort((a, b) => a.localeCompare(b, "pt-BR")).forEach(client => clientSelect.add(new Option(client, client)));
   stageSelect.value = activeStageFilter;
