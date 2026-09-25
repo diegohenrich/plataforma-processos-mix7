@@ -1,6 +1,8 @@
 const { stages, participantTypes, transition, listAssignees, filterRequestsByAssignee, taskBlockers, findActiveTaskTimer, validateLocalFiles, mergeLocalFiles, serializeRequestsJson, serializeRequestsCsv } = window.Mix7Workflow;
+const { knowledgeTypes, saveKnowledgeItem, setKnowledgeItemArchived, filterKnowledgeItems } = window.Mix7Knowledge;
 const STORAGE_KEY = "mix7.workflow.v1";
 const MINIMIZED_KEY = "mix7.workflow.minimized.v1";
+const KNOWLEDGE_STORAGE_KEY = "mix7.knowledge.v1";
 const MAX_FILE_BYTES = 15 * 1024 * 1024;
 const drawer = document.querySelector("#detailDrawer");
 const appShell = document.querySelector(".app-shell");
@@ -29,6 +31,11 @@ let activeParticipantTypeId = participantTypes[0].id;
 let columnActionStage = "";
 let minimizedRequestIds = loadMinimizedIds();
 let state = loadState();
+let knowledgeRecords = loadKnowledgeRecords();
+let knowledgeSearch = "";
+let knowledgeTypeFilter = "";
+let knowledgeIncludeArchived = false;
+let knowledgeEditingId = null;
 
 function formatDuration(seconds) {
   const total = Math.max(0, Math.floor(Number(seconds) || 0));
@@ -373,12 +380,13 @@ function renderWorkspacePage() {
     team: ["Equipe", "Tarefas atribuídas e andamento nesta demonstração local."],
     clients: ["Clientes", "Clientes vinculados às demandas registradas."],
     calendar: ["Calendário", "Prazos informados em demandas e tarefas."],
-    knowledge: ["Conhecimento", "Guia rápido para usar o fluxo da Mix7."],
+    knowledge: ["Conhecimento", "Consulte e organize as informações úteis da agência."],
     accesses: ["Acessos", "O que esta versão local registra sobre acesso e privacidade."],
   };
   document.querySelector("#pageTitle").textContent = titles[activePage][0];
   document.querySelector("#pageSubtitle").textContent = titles[activePage][1];
   document.querySelector("#pageBreadcrumb").textContent = titles[activePage][0];
+  document.querySelector("#newRequestButton").hidden = ["knowledge", "accesses"].includes(activePage);
   if (boardPage) {
     const requests = selectedRequests();
     document.querySelectorAll(".task-card").forEach(card => {
@@ -416,6 +424,292 @@ function makeOpenRequestButton(request, detail = "", beforeOpen = null) {
     openDrawer(request.id);
   });
   return button;
+}
+
+function renderKnowledgeResults(container) {
+  container.replaceChildren();
+  const results = filterKnowledgeItems(knowledgeRecords, {
+    query: knowledgeSearch,
+    type: knowledgeTypeFilter,
+    includeArchived: knowledgeIncludeArchived,
+  });
+  container.setAttribute("aria-label", `${results.length} item(ns) na biblioteca`);
+  if (!results.length) {
+    const noRecords = knowledgeSearch || knowledgeTypeFilter || knowledgeIncludeArchived
+      ? emptyPanel("Nenhum item encontrado", "Tente outra busca ou escolha outro tipo.")
+      : emptyPanel("A biblioteca ainda está vazia", "Cadastre uma referência, um treinamento, um contato ou uma trilha de onboarding.");
+    container.append(noRecords);
+    return;
+  }
+
+  for (const record of results) {
+    const card = node("article", `knowledge-card${record.archived ? " is-archived" : ""}`);
+    const heading = node("div", "knowledge-card-heading");
+    const typeName = knowledgeTypes.find(item => item.id === record.type)?.label || "Conteúdo";
+    heading.append(node("span", "knowledge-type", typeName));
+    if (record.archived) heading.append(node("span", "knowledge-archived-label", "Arquivado"));
+    card.append(heading, node("h3", "", record.title), node("p", "knowledge-summary", record.summary));
+    if (record.link) {
+      try {
+        const link = new URL(record.link);
+        if (["https:", "http:"].includes(link.protocol)) {
+          const anchor = node("a", "knowledge-link", "Abrir material ↗");
+          anchor.href = link.href;
+          anchor.target = "_blank";
+          anchor.rel = "noopener noreferrer";
+          card.append(anchor);
+        }
+      } catch { /* Ignore links changed outside the validated form. */ }
+    }
+    if (record.steps?.length) {
+      const steps = node("ol", "knowledge-card-steps");
+      record.steps.forEach(step => steps.append(node("li", "", step)));
+      card.append(steps);
+    }
+    const meta = node("dl", "knowledge-meta");
+    for (const [label, value] of [["Responsável", record.owner], ["Público", record.audience], ["Revisar em", formatDue(record.reviewDate)]]) {
+      const pair = node("div", "knowledge-meta-pair");
+      pair.append(node("dt", "", label), node("dd", "", value));
+      meta.append(pair);
+    }
+    card.append(meta);
+    const actions = node("div", "knowledge-card-actions");
+    const edit = node("button", "secondary-button", "Editar");
+    edit.type = "button";
+    edit.dataset.knowledgeAction = "edit";
+    edit.dataset.knowledgeId = record.id;
+    edit.setAttribute("aria-label", `Editar ${record.title}`);
+    const archive = node("button", "secondary-button", record.archived ? "Restaurar" : "Arquivar");
+    archive.type = "button";
+    archive.dataset.knowledgeAction = record.archived ? "restore" : "archive";
+    archive.dataset.knowledgeId = record.id;
+    archive.setAttribute("aria-label", `${record.archived ? "Restaurar" : "Arquivar"} ${record.title}`);
+    actions.append(edit, archive);
+    card.append(actions);
+    container.append(card);
+  }
+}
+
+function renderKnowledgeEditor(container, record = null) {
+  container.replaceChildren();
+  container.hidden = false;
+  const form = node("form", "knowledge-form");
+  form.id = "knowledgeForm";
+  form.noValidate = true;
+  const heading = node("div", "knowledge-editor-heading");
+  heading.append(node("h3", "", record ? "Editar item" : "Novo item"), node("p", "", "Campos marcados com * são necessários para manter o conteúdo organizado."));
+  form.append(heading);
+
+  const typeLabel = node("label", "form-label", "Tipo de conteúdo *");
+  const type = document.createElement("select");
+  type.name = "type";
+  type.required = true;
+  knowledgeTypes.forEach(item => type.add(new Option(item.label, item.id)));
+  type.value = record?.type || "reference";
+  typeLabel.append(type);
+  form.append(typeLabel);
+
+  const titleLabel = node("label", "form-label", "Nome do item *");
+  const title = document.createElement("input");
+  title.name = "title";
+  title.required = true;
+  title.maxLength = 120;
+  title.placeholder = "Ex.: Guia de identidade visual";
+  title.value = record?.title || "";
+  titleLabel.append(title);
+  form.append(titleLabel);
+
+  const summaryLabel = node("label", "form-label");
+  const summaryCaption = node("span", "knowledge-summary-label");
+  const summary = document.createElement("textarea");
+  summary.name = "summary";
+  summary.required = true;
+  summary.maxLength = 1200;
+  summary.rows = 3;
+  summary.placeholder = "Registre o que a pessoa precisa saber.";
+  summary.value = record?.summary || "";
+  summaryLabel.append(summaryCaption, summary);
+  form.append(summaryLabel);
+
+  const formGrid = node("div", "knowledge-form-grid");
+  for (const [field, caption, placeholder, maxLength] of [
+    ["owner", "Responsável pelo conteúdo *", "Nome ou função responsável", 100],
+    ["audience", "Para quem serve *", "Ex.: equipe de criação", 160],
+  ]) {
+    const label = node("label", "form-label", caption);
+    const input = document.createElement("input");
+    input.name = field;
+    input.required = true;
+    input.maxLength = maxLength;
+    input.placeholder = placeholder;
+    input.value = record?.[field] || "";
+    label.append(input);
+    formGrid.append(label);
+  }
+  const reviewLabel = node("label", "form-label", "Data de revisão *");
+  const reviewDate = document.createElement("input");
+  reviewDate.type = "date";
+  reviewDate.name = "reviewDate";
+  reviewDate.required = true;
+  reviewDate.value = record?.reviewDate || "";
+  reviewLabel.append(reviewDate);
+  formGrid.append(reviewLabel);
+  form.append(formGrid);
+
+  const linkLabel = node("label", "form-label", "Link do material (opcional)");
+  const link = document.createElement("input");
+  link.type = "url";
+  link.name = "link";
+  link.placeholder = "https://...";
+  link.value = record?.link || "";
+  linkLabel.append(link);
+  form.append(linkLabel);
+
+  const stepsLabel = node("label", "form-label knowledge-steps-field", "Passos (um por linha)");
+  const steps = document.createElement("textarea");
+  steps.name = "steps";
+  steps.rows = 4;
+  steps.maxLength = 2000;
+  steps.placeholder = "1. Conhecer o espaço de trabalho\n2. Consultar as referências principais";
+  steps.value = (record?.steps || []).join("\n");
+  stepsLabel.append(steps);
+  form.append(stepsLabel);
+
+  const notice = node("p", "knowledge-editor-note", "Demonstração local: use apenas conteúdo e contatos fictícios. Não inclua senhas nem dados de clientes.");
+  form.append(notice);
+  const buttons = node("div", "knowledge-editor-actions");
+  const cancel = node("button", "secondary-button", "Cancelar");
+  cancel.type = "button";
+  cancel.dataset.knowledgeAction = "cancel-edit";
+  const save = node("button", "primary-button", record ? "Salvar alterações" : "Salvar item");
+  save.type = "submit";
+  buttons.append(cancel, save);
+  form.append(buttons);
+  container.append(form);
+
+  const updateTypeFields = () => {
+    const kind = type.value;
+    title.placeholder = kind === "contact" ? "Ex.: Suporte de hospedagem (fictício)" : kind === "training" ? "Ex.: Treinamento de ferramenta" : kind === "onboarding" ? "Ex.: Primeiros passos da equipe" : "Ex.: Guia de identidade visual";
+    summaryCaption.textContent = kind === "contact" ? "Como encontrar este contato *" : kind === "training" ? "O que a pessoa vai aprender *" : kind === "onboarding" ? "Objetivo desta trilha *" : "Resumo ou instrução *";
+    stepsLabel.hidden = !["training", "onboarding"].includes(kind);
+    steps.required = kind === "onboarding";
+  };
+  type.addEventListener("change", updateTypeFields);
+  updateTypeFields();
+  form.addEventListener("submit", event => {
+    event.preventDefault();
+    const data = new FormData(form);
+    const existing = record || knowledgeRecords.find(item => item.id === knowledgeEditingId);
+    try {
+      const nextRecords = saveKnowledgeItem(knowledgeRecords, Object.fromEntries(data.entries()), {
+        id: existing?.id || makeId(),
+        now: new Date().toISOString(),
+      });
+      if (!persistKnowledgeRecords(nextRecords)) return;
+      knowledgeEditingId = null;
+      renderBoard();
+      showToast(existing ? "Item atualizado na biblioteca deste navegador." : "Item salvo na biblioteca deste navegador.");
+    } catch (error) {
+      showToast(error.message || "Revise os campos antes de salvar.");
+    }
+  });
+  title.focus();
+}
+
+function renderKnowledgePage(panel) {
+  panel.append(panelHeading("Biblioteca da agência", "Encontre referências, treinamentos, contatos e passos de onboarding."));
+  const notice = node("p", "knowledge-safety-note", "Demonstração local: os itens ficam neste navegador. Use exemplos fictícios; não há contas, permissões ou conteúdo compartilhado entre pessoas.");
+  panel.append(notice);
+  const processGuide = document.createElement("details");
+  processGuide.className = "knowledge-process-guide";
+  const processSummary = document.createElement("summary");
+  processSummary.textContent = "Como uma demanda avança";
+  const processSteps = node("ol", "knowledge-steps");
+  [
+    "Briefing: registrar origem, canal ou peça e critérios de aceite.",
+    "Planejamento: dividir o trabalho em tarefas e revisar o plano.",
+    "Execução: acompanhar tarefas e registrar comentários e impedimentos.",
+    "Revisão interna: conferir o material antes de enviar ao cliente.",
+    "Aprovação do cliente: aprovar a versão ou pedir alterações.",
+    "Ajustes: produzir uma nova versão mantendo o vínculo ao feedback anterior.",
+    "Entrega: registrar se foi entregue, agendada ou publicada, com evidência.",
+    "Conclusão: conferir o registro final antes de encerrar a demanda.",
+  ].forEach(text => processSteps.append(node("li", "", text)));
+  processGuide.append(processSummary, processSteps);
+  panel.append(processGuide);
+
+  const toolbar = node("div", "knowledge-toolbar");
+  const searchLabel = node("label", "knowledge-search-label", "Buscar na biblioteca");
+  const search = document.createElement("input");
+  search.id = "knowledgeSearch";
+  search.type = "search";
+  search.placeholder = "Digite um nome, assunto ou responsável";
+  search.value = knowledgeSearch;
+  searchLabel.append(search);
+  const typeLabel = node("label", "knowledge-filter-label", "Tipo");
+  const typeFilter = document.createElement("select");
+  typeFilter.id = "knowledgeTypeFilter";
+  typeFilter.add(new Option("Todos os tipos", ""));
+  knowledgeTypes.forEach(item => typeFilter.add(new Option(item.label, item.id)));
+  typeFilter.value = knowledgeTypeFilter;
+  typeLabel.append(typeFilter);
+  const archivedLabel = node("label", "knowledge-archived-toggle", "");
+  const archivedToggle = document.createElement("input");
+  archivedToggle.type = "checkbox";
+  archivedToggle.checked = knowledgeIncludeArchived;
+  archivedToggle.setAttribute("aria-label", "Mostrar itens arquivados");
+  archivedLabel.append(archivedToggle, node("span", "", "Mostrar arquivados"));
+  const add = node("button", "primary-button", "+ Novo item");
+  add.type = "button";
+  add.id = "newKnowledgeItem";
+  toolbar.append(searchLabel, typeLabel, archivedLabel, add);
+  panel.append(toolbar);
+
+  const editor = node("section", "knowledge-editor");
+  editor.id = "knowledgeEditor";
+  editor.hidden = true;
+  panel.append(editor);
+  const results = node("section", "knowledge-results");
+  results.id = "knowledgeResults";
+  results.setAttribute("aria-live", "polite");
+  panel.append(results);
+  renderKnowledgeResults(results);
+
+  search.addEventListener("input", () => { knowledgeSearch = search.value; renderKnowledgeResults(results); });
+  typeFilter.addEventListener("change", () => { knowledgeTypeFilter = typeFilter.value; renderKnowledgeResults(results); });
+  archivedToggle.addEventListener("change", () => { knowledgeIncludeArchived = archivedToggle.checked; renderKnowledgeResults(results); });
+  add.addEventListener("click", () => {
+    knowledgeEditingId = null;
+    renderKnowledgeEditor(editor);
+    editor.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+  results.addEventListener("click", event => {
+    const button = event.target.closest("button[data-knowledge-action]");
+    if (!button) return;
+    const action = button.dataset.knowledgeAction;
+    const id = button.dataset.knowledgeId;
+    const item = knowledgeRecords.find(record => record.id === id);
+    if (action === "edit" && item) {
+      knowledgeEditingId = id;
+      renderKnowledgeEditor(editor, item);
+      editor.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else if (action === "archive" || action === "restore") {
+      try {
+        const nextRecords = setKnowledgeItemArchived(knowledgeRecords, id, action === "archive");
+        if (persistKnowledgeRecords(nextRecords)) {
+          renderKnowledgeResults(results);
+          showToast(action === "archive" ? "Item arquivado; você pode restaurá-lo depois." : "Item restaurado na biblioteca.");
+        }
+      } catch (error) { showToast(error.message); }
+    }
+  });
+  editor.addEventListener("click", event => {
+    if (!event.target.closest('[data-knowledge-action="cancel-edit"]')) return;
+    knowledgeEditingId = null;
+    editor.replaceChildren();
+    editor.hidden = true;
+    add.focus();
+  });
 }
 
 function renderWorkspacePanel(panel, requests) {
@@ -547,12 +841,7 @@ function renderWorkspacePanel(panel, requests) {
     return;
   }
   if (activePage === "knowledge") {
-    panel.append(panelHeading("Guia do fluxo", "Uma demanda só avança quando a etapa anterior está completa."));
-    const list = node("ol", "knowledge-steps");
-    ["Briefing: registre origem, canal/peça e critério de aceite.", "Planejamento: crie tarefas e informe quem fará cada uma.", "Execução: conclua as tarefas; dependências e impedimentos controlam a ordem.", "Revisão interna: confira o arquivo antes de compartilhar com o cliente.", "Aprovação: decisão ou pedido de ajuste fica ligado à versão analisada.", "Conclusão: registre entrega, agendamento ou publicação e sua evidência."].forEach(text => list.append(node("li", "", text)));
-    panel.append(list);
-    const note = node("p", "utility-note", "Este guia descreve o fluxo-alvo aprovado e exercitado no protótipo. A rotina e os papéis reais da Mix7 ainda precisam de validação com um caso anonimizado.");
-    panel.append(note);
+    renderKnowledgePage(panel);
     return;
   }
   panel.append(panelHeading("Tipos de usuário", "Quatro categorias citadas nos áudios, com responsabilidades confirmadas e decisões de acesso ainda abertas."));
@@ -583,6 +872,27 @@ function renderWorkspacePanel(panel, requests) {
   panel.append(roleDetails);
   panel.append(node("p", "utility-note", "Estes são tipos de usuário de referência, não contas. Esta demonstração não aplica restrições de acesso: todos os dados continuam visíveis a quem abrir o mesmo navegador."));
   panel.append(node("p", "utility-note", "Não há login nem cadastro de pessoas nesta versão. Antes de criar contas ou proteger dados, é preciso validar a matriz de permissões, o isolamento dos clientes e quem administrará os acessos. Não use dados reais de clientes nesta demonstração."));
+}
+
+function loadKnowledgeRecords() {
+  try {
+    const value = JSON.parse(localStorage.getItem(KNOWLEDGE_STORAGE_KEY) || "[]");
+    return Array.isArray(value) ? value.filter(item => item && typeof item.id === "string" && typeof item.title === "string") : [];
+  } catch {
+    showToast("A biblioteca local não pôde ser lida neste navegador.");
+    return [];
+  }
+}
+
+function persistKnowledgeRecords(nextRecords) {
+  try {
+    localStorage.setItem(KNOWLEDGE_STORAGE_KEY, JSON.stringify(nextRecords));
+    knowledgeRecords = nextRecords;
+    return true;
+  } catch {
+    showToast("Não foi possível salvar a biblioteca neste navegador. Libere espaço ou verifique as configurações de privacidade.");
+    return false;
+  }
 }
 
 function emptyPanel(title, detail) {
@@ -1390,7 +1700,7 @@ function setPage(page) {
     if (active) link.setAttribute("aria-current", "page");
     else link.removeAttribute("aria-current");
   });
-  renderBoard();
+  renderWorkspacePage();
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 

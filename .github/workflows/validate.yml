@@ -36,10 +36,11 @@ jobs:
         with:
           node-version: 22
 
-      - name: Executar testes das regras do fluxo
-        run: node --test tests/workflow.test.js
+      - name: Executar testes do fluxo e da biblioteca de conhecimento
+        run: node --test tests/*.test.js
 
       - name: Verificar sintaxe JavaScript
         run: |
           node --check prototipo/workflow.js
+          node --check prototipo/knowledge.js
           node --check prototipo/app.js
