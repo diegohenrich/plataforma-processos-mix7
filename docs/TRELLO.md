@@ -25,3 +25,16 @@ Os nomes foram configurados nas etiquetas do quadro. Se um usuário enxergar som
 6. **Concluído:** critérios de aceite atendidos e registro sincronizado com o GitHub.
 
 Ao concluir uma alteração ou tarefa, faça commit e push, confira o commit remoto e atualize o cartão com o resultado, estado e link para commit ou pull request, conforme [AGENTS.md](../AGENTS.md).
+
+## Como deixar os cartões fáceis de entender
+
+Cada cartão deve explicar, em poucas linhas:
+
+1. **Para quê serve?** Diga o objetivo com palavras simples.
+2. **O que falta fazer?** Use uma lista de passos curtos, começando com verbos.
+3. **Como saber que terminou?** Escreva um resultado que outra pessoa consiga conferir.
+4. **Onde estão os detalhes?** Ligue ao documento do GitHub, sem copiar a especificação inteira para o Trello.
+
+Divida entregas diferentes em cartões diferentes. Um cartão maior pode servir de índice: ele aponta para cartões menores e tem só um critério geral de conclusão. Cada cartão menor guarda os próprios passos, resultado e evidência. Não repita o mesmo checklist no cartão principal. Se uma cópia antiga precisar ser preservada, identifique-a claramente como antiga e indique qual cartão contém o andamento atual. Use checklist para os passos de uma mesma entrega e marque um passo só depois de conferir o resultado. As etiquetas mostram a área relacionada: aplique as que servem ao cartão, sem usar todas em tudo. Use “Concluído” somente depois do aceite e da sincronização GitHub/Trello.
+
+Exemplo atual: o cartão [primeira entrega integrada](https://trello.com/c/Bsb4M4Mm/18-implementar-e-validar-a-primeira-entrega-integrada) é o mapa. As três simulações e os anexos no briefing têm cartões próprios, com seus passos. O cartão 22 é a fonte atual para acompanhar os anexos; uma cópia antiga no cartão 18 está identificada como antiga e aguarda remoção autorizada.

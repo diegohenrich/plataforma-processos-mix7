@@ -1,6 +1,6 @@
 # Fluxo proposto para uma demanda de criativo
 
-**Estado:** proposta de funcionamento para a primeira entrega da plataforma, elaborada em resposta às cinco perguntas do usuário. Ainda não descreve um processo atual comprovado nem uma decisão final da Mix7. O primeiro exemplo é um criativo de redes sociais; os módulos futuros de aprovação poderão ter outro destino após o aceite.
+**Estado:** comportamento-alvo da primeira entrega, elaborado em resposta às cinco perguntas do usuário e aceito como diretriz do produto. Não descreve por si só o processo atual observado da Mix7. Um caso real deve confirmar os atores, variações, exceções e evidências por serviço; a estrutura do fluxo só deve ser revista mediante nova evidência ou decisão explícita. O primeiro exemplo é um criativo de redes sociais; módulos futuros podem definir outros destinos após o aceite.
 
 ## 1. Entrada do pedido e briefing
 
@@ -22,12 +22,14 @@ O **aprovador designado pelo cliente** acessa apenas as peças destinadas a ele.
 
 **Aprovação não encerra automaticamente a demanda.** Para post de rede social, o responsável pela publicação agenda ou publica conforme o calendário e a autorização recebida, registra data, canal, URL ou evidência e então pede encerramento ao responsável pela conta. Para um arquivo cuja entrega final não envolve publicação pela Mix7, registra-se o envio e o aceite do cliente. Outros módulos de aprovação definirão seu próprio passo final. O responsável pela conta confere a evidência, os arquivos e o histórico e marca a demanda como concluída; se a publicação falhar, ela permanece aberta para correção.
 
-## Regras a validar com a Mix7
+## Aplicação operacional a confirmar com a Mix7
 
 - Quem exerce os papéis de responsável pela conta, gestor, revisor e publicador em cada tipo de serviço? Uma pessoa pode acumular papéis, mas cada decisão precisa de um responsável identificado.
 - Quais campos do briefing são obrigatórios por tipo de peça? Qual prazo de resposta do cliente e quem pode reabrir uma aprovação?
-- A revisão interna deve ser sempre obrigatória ou há exceções formalmente autorizadas? Quem substitui o responsável ausente?
+- Quem realiza a revisão interna em cada serviço? Há exceções operacionais formalmente autorizadas, e quem assume quando o revisor está ausente? A revisão interna antes do envio ao cliente permanece parte do fluxo-alvo aprovado.
 - A aprovação é por peça, conjunto de peças ou campanha? Como tratar aprovação parcial e alteração depois do aceite?
-- Para cada tipo de demanda, o que comprova a conclusão: arquivo entregue, conteúdo agendado, conteúdo publicado ou campanha ativada?
+- Para cada tipo de demanda, qual evidência comprova entrega, agendamento, publicação ou outro destino e quem a confere antes da conclusão? A exigência de registrar e conferir evidência antes de concluir permanece parte do fluxo-alvo aprovado.
 
 Cartão de validação: [Mapear o percurso real de uma demanda na Mix7](https://trello.com/c/7ZHbl0kH/4-mapear-o-percurso-real-de-uma-demanda-na-mix7).
+
+Para registrar um exemplo sem confundir fatos com o comportamento desejado, use a [ficha para validar um caso real](VALIDACAO-CASO-REAL.md). Anonimize cliente e pessoas, não inclua arquivos nem credenciais, e deixe explícito o que continuar sem resposta.

@@ -1,15 +1,42 @@
-# Protótipo do fluxo integrado
+# Primeira fatia local do fluxo integrado
 
-Protótipo navegável estático para discussão de experiência. Abra `index.html` em um navegador moderno. A interface usa dados demonstrativos inventados e não salva nada fora da página. Não é uma aplicação conectada, não envia notificações nem registra aprovações de verdade.
+Aplicação experimental de navegador, construída sobre o protótipo visual para testar uma jornada funcional sem escolher a stack final. Para servir a pasta, execute `py -m http.server 4173 --bind 127.0.0.1` a partir de `prototipo/` e abra `http://127.0.0.1:4173`.
+
+Demandas e eventos são gravados no `localStorage`; arquivos de até 15 MB (imagem, vídeo ou PDF) ficam no `IndexedDB` do navegador. Os dados não são sincronizados entre computadores ou pessoas. Os cartões que aparecem inicialmente são fictícios; itens novos ficam salvos neste perfil do navegador. Não inserir dados de clientes ou materiais reais.
+
+Não há autenticação, separação de clientes, portal externo, API, servidor, backup ou publicação social. Aprovação e comentários são registros locais demonstrativos, não comunicações enviadas ao cliente. Esta implementação não define a arquitetura nem a stack de produção.
+
+Os cartões do quadro exibem somente um resumo do briefing; o texto completo fica no detalhe e o histórico começa recolhido. O detalhe permite abrir anexos PDF para consulta, com alternativa para abrir/baixar o arquivo. A tela também mantém uma lista compacta de tarefas e cronômetro acessível durante a navegação; concluir uma tarefa encerra e registra automaticamente sua sessão ativa. Esses recursos são locais e demonstrativos. A leitura visual do PDF embutido ainda não foi comprovada no Edge automatizado.
+
+Autoria por usuários reais, permissões por função, link externo de aprovação sem conta e anotações visuais em páginas de sites continuam requisitos sem implementação. Não compartilhe dados ou links reais usando este protótipo.
 
 ## Percursos para revisar
 
-1. Abrir uma demanda no quadro e conferir briefing, cliente, responsável, etapa, arquivo, versão e feedback.
-2. Simular aprovação ou pedido de ajustes; a mensagem deixa claro que aceite não encerra uma publicação pendente.
-3. Criar demanda e verificar que ela entra como briefing para revisão, antes do planejamento e da produção.
-4. Buscar uma demanda e abrir/fechar o painel lateral.
-5. Reduzir a janela e conferir a navegação e o quadro com rolagem horizontal.
+1. Criar demanda e conferir que ela começa como briefing com origem, canal/peça e critérios de aceite registrados. Prazo, links e arquivos de referência são opcionais. Imagem, vídeo e PDF de até 15 MB por arquivo podem ser selecionados ou arrastados para a área indicada; aparecem no briefing, ficam no navegador e podem ser baixados no painel. Não contam como criativo final nem liberam revisão interna.
+   Validação local: em 24/09, um PDF sintético permaneceu após recarga e o download foi conferido por SHA-256. Em 25/09, Chromium mostrou nomes de PNG e PDF selecionados, recusou `.txt` e arquivo acima de 15 MB, salvou dois arquivos sintéticos e os mostrou após recarga; os downloads foram idênticos byte a byte. Em viewport móvel 390×844, seletor, zona de anexos, painel e download foram inspecionados; o arquivo baixado também foi conferido byte a byte. Capturas em `../docs/evidencias/visual/`. O arraste físico do sistema operacional ainda precisa de teste manual.
+2. Tentar avançar um briefing antigo sem esses dados: o sistema deve listar o que falta e bloquear planejamento. Preencher pelo formulário do briefing e conferir o histórico da alteração.
+3. Atribuir tarefas com responsável; opcionalmente ligar tarefas prévias da mesma rodada. A tarefa dependente fica bloqueada até que as anteriores sejam concluídas; o histórico registra a relação.
+4. Filtrar por esse responsável e conferir que quadro e lista mostram demandas com tarefas pendentes da rodada atual; a busca deve continuar funcionando junto do filtro. Ao concluir a tarefa, a demanda sai da visão dessa pessoa. O filtro é somente visual, não uma permissão de acesso.
+5. Durante a execução, alterar o briefing com motivo; confirmar que a demanda volta ao planejamento, preserva a versão anterior e não retoma até alguém revisar e confirmar o plano.
+6. Sinalizar um impedimento com motivo em uma tarefa em execução; a conclusão fica bloqueada até remover o impedimento. As mudanças aparecem no histórico. Concluir todas as tarefas da rodada e anexar uma imagem/vídeo/PDF fictício; sem tarefas concluídas ou arquivo, o envio à revisão fica bloqueado. Antes de enviar, substitua o arquivo e use o histórico para baixar o rascunho anterior.
+7. Percorrer revisão interna e compartilhamento da versão; devolver à produção e exigir justificativa.
+8. Simular pedido de alterações do cliente, atribuir e concluir tarefa(s) para o ajuste, criar versão 2 e conferir que decisão/comentário da versão 1 permanecem.
+   Durante a rodada de ajustes, use “Planejar tarefa deste feedback” em um comentário do cliente. Confira que o título preenchido continua editável, indique um responsável e adicione a tarefa; lista e histórico devem manter a referência ao comentário e à versão de origem.
+9. Aprovar a versão 2, selecionar se o resultado foi entrega, agendamento ou publicação e conferir que a demanda continua aberta até registrar evidência.
+10. Conferir histórico com versão, arquivo anterior/atualização, motivo do pedido e resultado pós-aprovação; recarregar para confirmar persistência local. Testar quadro/lista, busca e filtro em desktop e celular.
+11. Na Agenda, atribuir tarefa com prazo e estimativa; cadastrar horas planejadas e uma ausência para uma pessoa fictícia na semana ISO selecionada. Conferir disponibilidade líquida, estimativas das tarefas com prazo, excesso e avisos para estimativas/prazos ausentes. Alterar e remover os dados e recarregar: a prévia fica neste navegador e não representa a escala da Mix7. O cálculo não distribui estimativas por dia nem desconta tempo realizado.
+12. Usar a navegação: Aprovações filtra itens aguardando cliente; Equipe reúne tarefas abertas; Clientes agrupa demandas; Calendário lista prazos registrados; Conhecimento cadastra e organiza referências, treinamento, contatos e modelos de onboarding. Atribua um modelo ativo a uma pessoa fictícia; marque e reabra passos, confira o progresso e recarregue para validar persistência. A cópia atribuída conserva os passos usados, mesmo se o modelo mudar. Acessos permite selecionar as quatro categorias de usuário citadas nos áudios e ver responsabilidades confirmadas e decisões ainda abertas. Tudo no Conhecimento e no Acessos continua fictício, local e sem contas ou restrições reais.
+13. Abrir os filtros e combinar etapa, cliente e prazo. Use os três pontos do título de uma coluna para filtrar por aquela etapa. Limpar filtros deve devolver o quadro inteiro.
+14. Abrir Mais opções e conferir que JSON inclui dados textuais/histórico e CSV resume demandas; arquivos binários não entram nas exportações.
+15. Durante a execução, iniciar o cronômetro em uma tarefa; confirmar que o contador avança, recarregar a página e conferir que continua; parar e iniciar novamente para validar a soma das sessões no histórico. Tentar usar outra tarefa com timer ativo e confirmar que ela fica bloqueada. Tarefa concluída ou impedida não aceita timer. O registro é local e não identifica pessoa autenticada.
+16. Abrir uma demanda, minimizá-la e confirmar que um atalho permanece fixo na tela. Clique no atalho para reabrir; recarregue a página para confirmar que o atalho continua. Remover o atalho não remove a demanda.
+
+Os testes automatizados usam `node --test tests/*.test.js` na raiz do repositório.
 
 ## Estado do fluxo
 
-Este protótipo materializa o fluxo-alvo aceito para receber feedback. Os nomes de papéis, etapas da operação atual, aprovação interna e definição final de conclusão continuam sujeitos à validação com um caso real da Mix7. É uma peça de descoberta; não define stack para a aplicação final.
+Esta fatia materializa regras do fluxo-alvo aceito: revisão interna, decisão do cliente vinculada à versão, nova rodada de ajustes e evidência antes de concluir. Os papéis concretos, exceções e evidência por tipo de serviço seguem sujeitos à validação com um caso real da Mix7. É uma avaliação local sem controles de produção.
+
+A referência visual vigente é `C:\Users\anony\ProjetosPessoais\Projetos de Sistemas\CRM-MIX7-RENEW`. A tela de entrada foi executada e inspecionada em Chromium; o CSS e a composição do dashboard foram conferidos no código do projeto. Após a solicitação de maior proximidade com o CRM, a plataforma passou a usar a navegação em degradê escuro definida nele; cartões e superfícies de trabalho ficam claros, com azul-petróleo e azul-claro da paleta confirmada. Tipografia, medidas da navegação e raios dos cartões também seguem os valores disponíveis. O CRM foi executado novamente em 25/09; o dashboard ainda retorna para login e exige sessão manual para inspeção renderizada. Fontes externas foram removidas. A função de minimizar mantém um atalho reabrível em uma bandeja fixa; só esse comportamento funcional foi reaproveitado, sem copiar aparência de outro projeto.
+
+O briefing inicial captura origem, canal/peça e critérios de aceite; sem eles, a demanda não avança ao planejamento. Referências e prazo aparecem no histórico, mas são opcionais nesta demonstração. Essa regra mínima é uma hipótese de protótipo para testar completude; campos obrigatórios específicos por tipo de serviço devem ser confirmados com um caso real.

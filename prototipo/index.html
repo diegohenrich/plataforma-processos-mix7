@@ -3,11 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#f6f9fd" />
+    <meta name="theme-color" content="#f5f6f5" />
     <title>Mix7 · Central de processos</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -17,33 +14,33 @@
           <span class="brand-symbol"><i></i><i></i><i></i></span>
           <span class="brand-word">mix<span>7</span></span>
         </a>
-        <div class="workspace-switcher">
+        <button class="workspace-switcher" id="workspaceButton" type="button" aria-label="Informações do espaço Mix7">
           <span class="workspace-mark">M</span>
           <span class="workspace-copy"><strong>Mix7 Agência</strong><small>Espaço de trabalho</small></span>
           <span class="chevron">⌄</span>
-        </div>
+        </button>
         <span class="nav-caption">ESPAÇO DE TRABALHO</span>
         <nav class="main-nav">
-          <a class="nav-item" href="#visao"><span class="nav-icon">▦</span> Visão geral</a>
-          <a class="nav-item active" href="#demandas"><span class="nav-icon">▤</span> Demandas <span class="nav-count">12</span></a>
-          <a class="nav-item" href="#aprovacoes"><span class="nav-icon">◉</span> Aprovações <span class="nav-dot"></span></a>
-          <a class="nav-item" href="#equipe"><span class="nav-icon">♙</span> Equipe</a>
-          <a class="nav-item" href="#clientes"><span class="nav-icon">◇</span> Clientes</a>
+          <a class="nav-item" data-page="overview" href="#visao"><span class="nav-icon">▦</span> Visão geral</a>
+          <a class="nav-item active" data-page="requests" href="#demandas" aria-current="page"><span class="nav-icon">▤</span> Demandas <span class="nav-count" id="navDemandCount">12</span></a>
+          <a class="nav-item" data-page="approvals" href="#aprovacoes"><span class="nav-icon">◉</span> Aprovações <span class="nav-dot"></span></a>
+          <a class="nav-item" data-page="team" href="#equipe"><span class="nav-icon">♙</span> Equipe</a>
+          <a class="nav-item" data-page="clients" href="#clientes"><span class="nav-icon">◇</span> Clientes</a>
         </nav>
         <span class="nav-caption section-caption">GESTÃO</span>
         <nav class="main-nav">
-          <a class="nav-item" href="#calendario"><span class="nav-icon">▦</span> Calendário</a>
-          <a class="nav-item" href="#conhecimento"><span class="nav-icon">▧</span> Conhecimento</a>
-          <a class="nav-item" href="#acessos"><span class="nav-icon">▣</span> Acessos</a>
+          <a class="nav-item" data-page="calendar" href="#calendario"><span class="nav-icon">▦</span> Calendário</a>
+          <a class="nav-item" data-page="knowledge" href="#conhecimento"><span class="nav-icon">▧</span> Conhecimento</a>
+          <a class="nav-item" data-page="accesses" href="#acessos"><span class="nav-icon">▣</span> Acessos</a>
         </nav>
         <div class="sidebar-bottom">
           <div class="help-card">
             <span class="help-spark">✳</span>
             <strong>Primeiros passos</strong>
             <p>Conheça o espaço e organize o próximo projeto.</p>
-            <a href="#ajuda">Ver guia <span>↗</span></a>
+            <a href="#ajuda" data-page="knowledge">Ver guia <span>↗</span></a>
           </div>
-          <button class="profile-button" type="button">
+          <button class="profile-button" id="profileButton" type="button" aria-label="Abrir informações do perfil demonstrativo">
             <span class="avatar avatar-self">LM</span>
             <span class="profile-copy"><strong>Laura Martins</strong><small>Gestora de projetos</small></span>
             <span class="chevron">···</span>
@@ -53,10 +50,10 @@
 
       <main class="main-content" id="demandas">
         <header class="topbar">
-          <div class="breadcrumbs"><span>Mix7 Agência</span><b>/</b><strong>Demandas</strong></div>
+          <div class="breadcrumbs"><span>Mix7 Agência</span><b>/</b><strong id="pageBreadcrumb">Demandas</strong></div>
           <div class="top-actions">
-            <button class="icon-button" aria-label="Buscar" title="Buscar">⌕</button>
-            <button class="icon-button notification-button" aria-label="Notificações" title="Notificações">♧<i></i></button>
+            <button class="icon-button" id="focusSearchButton" type="button" aria-label="Buscar" title="Buscar">⌕</button>
+            <button class="icon-button notification-button" id="notificationsButton" type="button" aria-label="Ver pendências" title="Pendências">♧<i></i></button>
             <span class="avatar avatar-self top-avatar">LM</span>
           </div>
         </header>
@@ -64,9 +61,9 @@
         <section class="page-content">
           <div class="page-heading">
             <div>
-              <div class="eyebrow"><span class="eyebrow-line"></span> QUINTA-FEIRA, 24 DE SETEMBRO</div>
-              <h1>Central de processos</h1>
-              <p class="subtitle">Acompanhe demandas, equipe e aprovações em um só lugar.</p>
+              <div class="eyebrow"><span class="eyebrow-line"></span> <span id="currentDateLabel"></span></div>
+              <h1 id="pageTitle">Demandas</h1>
+              <p class="subtitle" id="pageSubtitle">Organize o trabalho do briefing à conclusão.</p>
             </div>
             <button class="primary-button" id="newRequestButton"><span>＋</span> Nova demanda</button>
           </div>
@@ -74,22 +71,21 @@
           <div class="summary-grid" aria-label="Resumo das demandas">
             <article class="summary-card">
               <div class="summary-top"><span>Demandas ativas</span><span class="metric-icon blue-icon">▤</span></div>
-              <div class="metric-row"><strong>24</strong><span class="metric-change positive">↗ 12%</span></div>
-              <small>em relação à semana passada</small>
-              <div class="metric-bars"><i style="height:36%"></i><i style="height:48%"></i><i style="height:42%"></i><i style="height:66%"></i><i style="height:52%"></i><i style="height:78%"></i><i class="bar-current" style="height:92%"></i></div>
+              <div class="metric-row"><strong id="activeDemandCount">0</strong><span class="metric-note">neste quadro</span></div>
+              <small>não inclui demandas concluídas</small>
             </article>
             <article class="summary-card">
               <div class="summary-top"><span>Aguardando cliente</span><span class="metric-icon amber-icon">◷</span></div>
-              <div class="metric-row"><strong>06</strong><span class="metric-note">2 vencem hoje</span></div>
-              <small>aprovações pendentes</small>
-              <div class="summary-bottom"><span class="tiny-avatars"><i class="tiny-avatar a1">AC</i><i class="tiny-avatar a2">RB</i><i class="tiny-avatar a3">+4</i></span><span>6 peças em revisão</span></div>
+              <div class="metric-row"><strong id="pendingApprovalCount">0</strong><span class="metric-note">itens</span></div>
+              <small>aguardando decisão do cliente</small>
+              <div class="summary-bottom"><span>Exemplos fictícios aparecem no quadro</span></div>
             </article>
             <article class="summary-card">
               <div class="summary-top"><span>Capacidade da equipe</span><span class="metric-icon green-icon">♙</span></div>
-              <div class="metric-row"><strong>78<span class="metric-percent">%</span></strong><span class="capacity-label"><i></i> saudável</span></div>
-              <small>horas planejadas nesta semana</small>
-              <div class="capacity-track"><i></i></div>
-              <div class="capacity-legend"><span>0h</span><span>96h de 123h</span></div>
+              <div class="metric-row"><strong id="capacityOverviewValue">—</strong><span class="capacity-label" id="capacityOverviewLabel">sem configuração</span></div>
+              <small id="capacityOverviewNote">Configure horas fictícias na <a class="capacity-overview-link" href="#calendario" data-page="calendar">agenda</a>.</small>
+              <div class="capacity-track"><i id="capacityOverviewBar" style="width:0"></i></div>
+              <div class="capacity-legend"><span id="capacityOverviewLegend">Sem dados de horas</span></div>
             </article>
           </div>
 
@@ -100,21 +96,22 @@
             </div>
             <div class="board-tools">
               <label class="search-field"><span>⌕</span><input id="searchInput" type="search" placeholder="Buscar demanda" aria-label="Buscar demanda" /></label>
-              <button class="filter-button" id="filterButton"><span>☷</span> Filtros <i class="filter-indicator"></i></button>
-              <button class="people-filter" aria-label="Filtrar por pessoa"><span class="avatar avatar-tiny avatar-teal">AC</span><span class="avatar avatar-tiny avatar-lilac">RB</span><span class="avatar avatar-tiny avatar-coral">JP</span><b>⌄</b></button>
-              <button class="more-button" aria-label="Mais opções">···</button>
+              <button class="filter-button" id="filterButton" type="button"><span>☷</span> Filtros</button>
+              <label class="people-filter-label"><span class="visually-hidden">Filtrar por profissional</span><select class="people-filter" id="assigneeFilter" aria-label="Filtrar por profissional"><option value="">Equipe toda</option></select></label>
+              <button class="more-button" id="moreOptionsButton" type="button" aria-label="Mais opções" title="Exportar dados">···</button>
             </div>
           </div>
 
+          <p class="assignee-scope" id="assigneeScope" aria-live="polite" hidden></p>
+
           <div class="list-view-header" id="listViewHeader" hidden><span>CLIENTE</span><span>DEMANDA</span><span>ETAPA</span><span>PRAZO</span><span></span></div>
 
-          <div class="filter-strip" id="filterStrip" hidden>
-            <span>Filtrando por:</span><button class="filter-chip">Social <b>×</b></button><button class="filter-chip">Esta semana <b>×</b></button><button id="clearFilters">Limpar filtros</button>
-          </div>
+          <div class="filter-strip" id="filterStrip" hidden></div>
+          <section class="workspace-view" id="workspaceView" aria-live="polite" hidden></section>
 
           <section class="kanban-board" aria-label="Quadro de demandas">
             <div class="kanban-column" data-stage="briefing">
-              <div class="column-heading"><span class="stage-dot dot-slate"></span><h2>Novas demandas</h2><span class="column-count">3</span><button class="column-menu">···</button></div>
+              <div class="column-heading"><span class="stage-dot dot-slate"></span><h2>Novas demandas</h2><span class="column-count">3</span><button class="column-menu" data-column-menu="briefing" type="button" aria-label="Filtrar novas demandas">···</button></div>
               <div class="card-stack">
                 <article class="task-card" data-title="Campanha de primavera — conceito visual" data-client="Casa Aurora" data-stage-name="Briefing">
                   <div class="card-label-row"><span class="client-label label-blue">Casa Aurora</span><span class="card-menu">···</span></div>
@@ -135,7 +132,7 @@
             </div>
 
             <div class="kanban-column" data-stage="planning">
-              <div class="column-heading"><span class="stage-dot dot-blue"></span><h2>Planejamento</h2><span class="column-count">2</span><button class="column-menu">···</button></div>
+              <div class="column-heading"><span class="stage-dot dot-blue"></span><h2>Planejamento</h2><span class="column-count">2</span><button class="column-menu" data-column-menu="planning" type="button" aria-label="Filtrar planejamento">···</button></div>
               <div class="card-stack">
                 <article class="task-card" data-title="Calendário editorial — outubro" data-client="Nativa Saúde" data-stage-name="Planejamento">
                   <div class="card-label-row"><span class="client-label label-green">Nativa Saúde</span><span class="card-menu">···</span></div>
@@ -149,7 +146,7 @@
             </div>
 
             <div class="kanban-column" data-stage="doing">
-              <div class="column-heading"><span class="stage-dot dot-violet"></span><h2>Em produção</h2><span class="column-count">4</span><button class="column-menu">···</button></div>
+              <div class="column-heading"><span class="stage-dot dot-violet"></span><h2>Em produção</h2><span class="column-count">4</span><button class="column-menu" data-column-menu="doing" type="button" aria-label="Filtrar demandas em produção">···</button></div>
               <div class="card-stack">
                 <article class="task-card" data-title="Carrossel — 5 mitos sobre protetor solar" data-client="Nativa Saúde" data-stage-name="Em produção">
                   <div class="card-label-row"><span class="client-label label-green">Nativa Saúde</span><span class="card-menu">···</span></div>
@@ -169,8 +166,13 @@
               </div>
             </div>
 
-            <div class="kanban-column column-review" data-stage="review">
-              <div class="column-heading"><span class="stage-dot dot-amber"></span><h2>Aguardando cliente</h2><span class="column-count">2</span><button class="column-menu">···</button></div>
+            <div class="kanban-column" data-stage="internalReview">
+              <div class="column-heading"><span class="stage-dot dot-amber"></span><h2>Revisão interna</h2><span class="column-count">0</span><button class="column-menu" data-column-menu="internalReview" type="button" aria-label="Filtrar revisão interna">···</button></div>
+              <div class="card-stack"><button class="add-card" data-add="internalReview">＋ Adicionar demanda</button></div>
+            </div>
+
+            <div class="kanban-column column-review" data-stage="clientReview">
+              <div class="column-heading"><span class="stage-dot dot-amber"></span><h2>Aguardando cliente</h2><span class="column-count">2</span><button class="column-menu" data-column-menu="clientReview" type="button" aria-label="Filtrar aguardando cliente">···</button></div>
               <div class="card-stack">
                 <article class="task-card card-featured" data-title="Post de lançamento — linha Botânica" data-client="Casa Aurora" data-stage-name="Aguardando cliente">
                   <div class="card-label-row"><span class="client-label label-blue">Casa Aurora</span><span class="status-pill status-waiting">● Aguardando</span></div>
@@ -187,7 +189,7 @@
             </div>
 
             <div class="kanban-column" data-stage="adjustments">
-              <div class="column-heading"><span class="stage-dot dot-rose"></span><h2>Ajustes</h2><span class="column-count">1</span><button class="column-menu">···</button></div>
+              <div class="column-heading"><span class="stage-dot dot-rose"></span><h2>Ajustes</h2><span class="column-count">1</span><button class="column-menu" data-column-menu="adjustments" type="button" aria-label="Filtrar ajustes">···</button></div>
               <div class="card-stack">
                 <article class="task-card" data-title="Stories — semana do consumidor" data-client="Café Aroeira" data-stage-name="Ajustes">
                   <div class="card-label-row"><span class="client-label label-amber">Café Aroeira</span><span class="status-pill status-changes">↺ Ajustes</span></div>
@@ -200,7 +202,7 @@
             </div>
 
             <div class="kanban-column column-publish" data-stage="delivery">
-              <div class="column-heading"><span class="stage-dot dot-green"></span><h2>Entrega e publicação</h2><span class="column-count">2</span><button class="column-menu">···</button></div>
+              <div class="column-heading"><span class="stage-dot dot-green"></span><h2>Entrega e publicação</h2><span class="column-count">2</span><button class="column-menu" data-column-menu="delivery" type="button" aria-label="Filtrar entrega e publicação">···</button></div>
               <div class="card-stack">
                 <article class="task-card" data-title="Reel — receita de café gelado" data-client="Café Aroeira" data-stage-name="Entrega e publicação">
                   <div class="card-label-row"><span class="client-label label-amber">Café Aroeira</span><span class="status-pill status-approved">✓ Aprovado</span></div>
@@ -210,22 +212,58 @@
                 </article>
               </div>
             </div>
+
+            <div class="kanban-column" data-stage="completed">
+              <div class="column-heading"><span class="stage-dot dot-green"></span><h2>Concluídas</h2><span class="column-count">0</span><button class="column-menu" data-column-menu="completed" type="button" aria-label="Filtrar demandas concluídas">···</button></div>
+              <div class="card-stack"></div>
+            </div>
           </section>
-          <div class="board-footnote"><span class="info-mark">i</span> Exemplo demonstrativo: clientes e demandas exibidos são fictícios.</div>
+          <div class="board-footnote"><span class="info-mark">i</span> Clientes e itens iniciais são exemplos fictícios. Demandas criadas e alterações ficam salvas apenas neste navegador; não use dados reais ou sensíveis.</div>
         </section>
       </main>
     </div>
 
     <div class="scrim" id="scrim" hidden></div>
-    <aside class="detail-drawer" id="detailDrawer" aria-label="Detalhes da demanda" aria-hidden="true">
-      <div class="drawer-topline"><span class="drawer-breadcrumb">DEMANDA <b>/</b> <span id="drawerStage">AGUARDANDO CLIENTE</span></span><button class="close-button" id="closeDrawer" aria-label="Fechar detalhes">×</button></div>
+    <aside class="task-work-dock" id="taskWorkDock" aria-label="Tarefas da equipe" hidden>
+      <details open>
+        <summary id="taskWorkSummary">Tarefas da equipe</summary>
+        <div class="task-work-content">
+          <label class="task-work-picker">Escolha uma tarefa<select id="taskWorkSelect" aria-label="Selecionar tarefa para o cronômetro"></select></label>
+          <div class="task-work-controls"><span id="taskWorkTimer" role="timer" aria-live="off">Cronômetro pausado</span><button id="taskWorkToggle" class="minimized-timer-button" type="button">Iniciar</button></div>
+          <ul id="taskWorkList" class="task-work-list"></ul>
+        </div>
+      </details>
+    </aside>
+    <aside class="detail-drawer" id="detailDrawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle" aria-hidden="true" inert>
+      <div class="drawer-topline"><span class="drawer-breadcrumb">DEMANDA <b>/</b> <span id="drawerStage">AGUARDANDO CLIENTE</span></span><span class="drawer-timer-status" id="drawerTimerStatus" role="timer" aria-live="off" hidden></span><span class="drawer-window-actions"><button class="minimize-button" id="minimizeDrawer" type="button" aria-label="Minimizar demanda" title="Minimizar demanda">—</button><button class="close-button" id="closeDrawer" aria-label="Fechar detalhes">×</button></span></div>
       <div class="drawer-content">
-        <div class="drawer-client"><span class="client-label label-blue" id="drawerClient">Casa Aurora</span><button class="subtle-button">···</button></div>
+        <div class="drawer-client"><span class="client-label label-blue" id="drawerClient">Casa Aurora</span><button class="subtle-button" id="copyRequestId" type="button" aria-label="Copiar código da demanda" title="Copiar código da demanda">ID</button></div>
         <h2 id="drawerTitle">Post de lançamento — linha Botânica</h2>
-        <div class="drawer-meta"><span class="due-date due-today"><span>◷</span> Hoje, 17h</span><span class="meta-divider"></span><span>Responsável</span><span class="avatar avatar-tiny avatar-lilac">RB</span><strong>Rafaela</strong></div>
+        <div class="drawer-meta"><span class="due-date" id="drawerDue">Prazo não definido</span><span class="meta-divider"></span><span>Registro local de demonstração</span></div>
+
+        <section class="briefing-section">
+          <div class="section-title-row"><h3>Briefing</h3></div>
+          <p class="briefing-current" id="briefingText"></p>
+          <dl class="briefing-details" id="briefingDetails" aria-label="Dados do briefing"></dl>
+          <div class="briefing-files" id="briefingFiles" hidden></div>
+          <form class="briefing-details-form" id="briefingDetailsForm" hidden>
+            <label>Origem do pedido<input class="workflow-input" name="origin" required /></label>
+            <label>Canal ou peça<input class="workflow-input" name="channel" required /></label>
+            <label>Critérios de aceite<textarea class="workflow-input" name="acceptanceCriteria" rows="2" required></textarea></label>
+            <label>Referências ou links <small>(opcional)</small><textarea class="workflow-input" name="references" rows="2"></textarea></label>
+            <label>Prazo desejado <small>(opcional)</small><input class="workflow-input" name="due" type="date" /></label>
+            <button class="secondary-button" type="submit">Salvar dados do briefing</button>
+          </form>
+          <div class="briefing-revision-notice" id="briefingRevisionNotice" hidden></div>
+          <form class="briefing-revision-form" id="briefingRevisionForm" hidden>
+            <label>Briefing atualizado<textarea class="workflow-input" name="revisedBrief" rows="3" required maxlength="1200" placeholder="Descreva o novo objetivo e contexto"></textarea></label>
+            <label>O que mudou?<textarea class="workflow-input" name="revisionReason" rows="2" required maxlength="300" placeholder="Registre o motivo da alteração"></textarea></label>
+            <button class="secondary-button" type="submit">Enviar alteração para revisão do plano</button>
+          </form>
+        </section>
 
         <section class="flow-section">
-          <div class="section-title-row"><h3>Etapas da demanda</h3><button class="text-action">Ver histórico</button></div>
+          <div class="section-title-row"><h3>Etapas da demanda</h3><button class="text-action" id="sectionHistoryButton" type="button">Ver histórico</button></div>
           <div class="flow-track">
             <div class="flow-step complete"><span>✓</span><small>Pedido</small></div><i class="flow-line complete-line"></i>
             <div class="flow-step complete"><span>✓</span><small>Planejado</small></div><i class="flow-line complete-line"></i>
@@ -234,46 +272,97 @@
             <div class="flow-step"><span>5</span><small>Entrega</small></div>
           </div>
         </section>
+        <details class="history-section" id="historySection"><summary class="history-summary" id="historySummary">Histórico da demanda</summary><ol id="historyList" class="history-list"></ol></details>
 
-        <div class="drawer-tabs" role="tablist"><button class="drawer-tab active" role="tab">Material e feedback</button><button class="drawer-tab" role="tab">Tarefas <span>3</span></button></div>
+        <div class="drawer-tabs"><span class="drawer-tab active">Material e feedback</span></div>
+        <section class="tasks-section">
+          <div class="section-title-row"><h3>Tarefas do plano <span class="comment-count" id="taskCount">0</span></h3></div>
+          <p class="workflow-hint" id="taskHint">Adicione tarefas com responsável para iniciar a execução.</p>
+          <ul class="task-list" id="taskList"></ul>
+          <form class="task-form" id="taskForm">
+            <input name="taskSourceCommentId" type="hidden" />
+            <small class="task-source-hint" id="taskSourceHint" hidden></small>
+            <label>Tarefa<input name="taskTitle" required maxlength="120" placeholder="Ex.: preparar primeira versão" /></label>
+            <label>Responsável<input name="taskAssignee" required maxlength="80" placeholder="Nome ou função" /></label>
+            <label>Depende de (opcional)<select name="taskDependencies" multiple size="3" aria-describedby="taskDependencyHelp"></select><small id="taskDependencyHelp">Selecione tarefas prévias da rodada. Use Ctrl ou ⌘ para múltiplas seleções.</small></label>
+            <div class="task-form-row"><label>Estimativa (h)<input name="taskEstimateHours" type="number" min="0.25" step="0.25" /></label><label>Início planejado<input name="taskPlannedStart" type="date" /></label><label>Prazo final<input name="taskDue" type="date" /></label></div>
+            <button class="secondary-button" type="submit">＋ Adicionar tarefa</button>
+          </form>
+        </section>
         <section class="asset-section">
-          <div class="asset-heading"><div><strong>Post de lançamento — linha Botânica</strong><small>Imagem para Instagram · 1080 × 1350</small></div><button class="subtle-button">•••</button></div>
-          <div class="asset-preview">
+          <div class="asset-heading"><div><strong id="assetTitle">Material da demanda</strong><small id="assetMeta">Arquivo e versão</small></div></div>
+          <div class="asset-preview" id="assetPreview">
             <span class="asset-leaf asset-leaf-one"></span><span class="asset-leaf asset-leaf-two"></span><span class="asset-sun"></span>
             <span class="asset-brand">CASA AURORA</span><strong>Floresça<br />no seu tempo.</strong><small>linha botânica · primavera 2026</small>
           </div>
-          <div class="version-row"><span class="version-tag">V03</span><span>Enviada por Rafaela · hoje, 12:42</span><button class="version-link">Ver versões (3) <b>⌄</b></button></div>
+          <div class="asset-anchor-controls" id="assetAnchorControls" hidden></div>
+          <div class="version-row"><span class="version-tag" id="versionTag">V01</span><span id="versionMeta">Versão atual</span><span class="version-link" id="versionCount"></span></div>
+          <details class="version-history"><summary id="versionHistorySummary">Consultar versões</summary><ol id="versionHistoryList"></ol></details>
         </section>
 
         <section class="feedback-section">
-          <div class="section-title-row"><h3>Feedback do cliente <span class="comment-count">2</span></h3><button class="filter-comments">Todos ⌄</button></div>
+          <div class="section-title-row"><h3>Comentários e decisões <span class="comment-count" id="commentCount">0</span></h3></div>
+          <div id="commentsContainer">
           <div class="comment-item">
             <span class="avatar avatar-small avatar-client">CA</span>
-            <div class="comment-body"><div class="comment-meta"><strong>Camila Alves</strong><span>13:08</span><span class="client-role">CLIENTE</span></div><p>Gostei bastante! Podemos deixar a chamada um pouquinho maior para ganhar mais destaque?</p><span class="comment-anchor">◉ Ponto marcado na imagem</span></div>
+            <div class="comment-body"><div class="comment-meta"><strong>Camila Alves</strong><span>13:08</span><span class="client-role">CLIENTE</span></div><p>Gostei bastante! Podemos deixar a chamada um pouquinho maior para ganhar mais destaque?</p></div>
           </div>
           <div class="comment-item">
             <span class="avatar avatar-small avatar-client2">CA</span>
             <div class="comment-body"><div class="comment-meta"><strong>Camila Alves</strong><span>13:11</span></div><p>A cor do fundo está aprovada 🌿</p></div>
           </div>
           <div class="internal-note"><span>✳</span> Nota interna: consolidar ajustes e enviar uma nova versão para revisão.</div>
-          <label class="reply-box"><textarea rows="2" placeholder="Escreva uma resposta ou mencione alguém…"></textarea><span class="reply-actions"><span>↗</span><button type="button" aria-label="Anexar arquivo">＋</button><button class="send-reply" type="button" aria-label="Enviar comentário">↑</button></span></label>
+          </div>
+          <div class="reply-box"><span class="comment-anchor-status" id="commentAnchorStatus" hidden></span><label class="visually-hidden" for="commentDraft">Adicionar comentário interno</label><textarea id="commentDraft" rows="2" placeholder="Adicionar comentário interno…"></textarea><span class="reply-actions"><span>Interno</span><button class="send-reply" id="sendComment" type="button" aria-label="Enviar comentário">↑</button></span></div>
         </section>
       </div>
-      <div class="drawer-footer"><span class="client-approval-note"><i></i> Cliente tem acesso somente a este material</span><div class="approval-buttons"><button class="secondary-button" id="requestChangesButton">Solicitar ajustes</button><button class="approve-button" id="approveButton"><span>✓</span> Aprovar versão</button></div></div>
+      <div class="drawer-footer" id="workflowActions"></div>
     </aside>
+
+    <div class="minimized-requests" id="minimizedRequests" role="region" aria-live="polite" aria-label="Demandas minimizadas" hidden></div>
+
+    <dialog class="utility-dialog" id="filterDialog" aria-labelledby="filterDialogTitle">
+      <form method="dialog" id="filterForm">
+        <div class="dialog-heading"><div><span class="dialog-kicker">ENCONTRE UMA DEMANDA</span><h2 id="filterDialogTitle">Filtros</h2><p>Escolha os critérios e aplique ao quadro.</p></div><button class="close-button" value="cancel" aria-label="Fechar filtros">×</button></div>
+        <label class="form-label">Etapa<select name="stage"><option value="">Todas as etapas</option></select></label>
+        <label class="form-label">Cliente<select name="client"><option value="">Todos os clientes</option></select></label>
+        <label class="form-label">Prazo<select name="due"><option value="">Qualquer prazo</option><option value="overdue">Atrasadas</option><option value="today">Vencem hoje</option><option value="week">Próximos 7 dias</option><option value="none">Sem prazo</option></select></label>
+        <div class="dialog-footer"><button class="secondary-button" id="resetFilters" type="button">Limpar</button><button class="primary-button" type="submit" value="apply">Aplicar filtros</button></div>
+      </form>
+    </dialog>
+    <dialog class="utility-dialog" id="notificationsDialog" aria-labelledby="notificationsTitle"><div class="dialog-heading"><div><span class="dialog-kicker">ACOMPANHAMENTO LOCAL</span><h2 id="notificationsTitle">Pendências</h2><p>Itens que pedem atenção na demonstração atual.</p></div><button class="close-button" type="button" data-close-dialog="notificationsDialog" aria-label="Fechar pendências">×</button></div><div id="notificationList" class="utility-list"></div></dialog>
+    <dialog class="utility-dialog" id="profileDialog" aria-labelledby="profileTitle"><div class="dialog-heading"><div><span class="dialog-kicker">PERFIL DE DEMONSTRAÇÃO</span><h2 id="profileTitle">Laura Martins</h2><p>Gestora de projetos · identidade ilustrativa.</p></div><button class="close-button" type="button" data-close-dialog="profileDialog" aria-label="Fechar perfil">×</button></div><div class="utility-note"><strong>Dados neste navegador</strong><p>Demandas e histórico ficam neste perfil de navegador. Não há contas, permissões, sincronização ou backup central nesta versão.</p></div><button class="secondary-button" id="exportProfileData" type="button">Baixar cópia dos dados locais</button></dialog>
+    <dialog class="utility-dialog" id="optionsDialog" aria-labelledby="optionsTitle"><div class="dialog-heading"><div><span class="dialog-kicker">SEUS DADOS</span><h2 id="optionsTitle">Exportar quadro</h2><p>Baixe uma cópia das demandas e do histórico.</p></div><button class="close-button" type="button" data-close-dialog="optionsDialog" aria-label="Fechar opções">×</button></div><div class="utility-actions"><button class="secondary-button" id="exportJson" type="button">Baixar dados JSON</button><button class="secondary-button" id="exportCsv" type="button">Baixar lista CSV</button></div><p class="utility-footnote">Os arquivos de mídia ficam no armazenamento local e não são incluídos nos arquivos de exportação.</p></dialog>
+    <dialog class="utility-dialog" id="columnDialog" aria-labelledby="columnDialogTitle"><div class="dialog-heading"><div><span class="dialog-kicker">QUADRO DE DEMANDAS</span><h2 id="columnDialogTitle">Etapa</h2><p>Mostre somente as demandas desta etapa.</p></div><button class="close-button" type="button" data-close-dialog="columnDialog" aria-label="Fechar menu da etapa">×</button></div><button class="secondary-button" id="filterThisStage" type="button">Ver esta etapa</button></dialog>
 
     <dialog class="request-dialog" id="requestDialog">
       <form method="dialog" id="requestForm">
-        <div class="dialog-heading"><div><span class="dialog-kicker">NOVA DEMANDA</span><h2>Comece com o briefing</h2><p>Registre o contexto antes de dividir o trabalho.</p></div><button class="close-button" value="cancel" aria-label="Fechar">×</button></div>
+        <div class="dialog-heading"><div><span class="dialog-kicker">NOVA DEMANDA</span><h2>Comece com o briefing</h2><p>Registre o contexto antes de dividir o trabalho.</p></div><button class="close-button" type="button" data-close-dialog="requestDialog" aria-label="Fechar">×</button></div>
         <label class="form-label">Nome da demanda<input name="title" required placeholder="Ex.: Campanha de lançamento" /></label>
         <div class="form-grid"><label class="form-label">Cliente<input name="client" required placeholder="Selecione ou digite" /></label><label class="form-label">Tipo de entrega<select name="type"><option>Post para redes sociais</option><option>Vídeo</option><option>Outro material</option></select></label></div>
         <label class="form-label">Objetivo e contexto<textarea name="brief" rows="3" required placeholder="O que precisa ser feito? Para quem e com qual objetivo?"></textarea></label>
-        <label class="form-label">Prazo desejado<input name="due" type="date" /></label>
-        <div class="briefing-hint"><span>✳</span><p>A equipe revisa o briefing e combina responsáveis e prazos antes de iniciar.</p></div>
-        <div class="dialog-footer"><button class="secondary-button" value="cancel">Cancelar</button><button class="primary-button" type="submit" value="submit">Salvar demanda <span>→</span></button></div>
+        <label class="form-label">Origem do pedido<input name="origin" required placeholder="Ex.: cliente, calendário de conteúdo ou demanda interna" /></label>
+        <div class="form-grid"><label class="form-label">Canal ou peça<input name="channel" required placeholder="Ex.: Instagram · carrossel" /></label><label class="form-label">Prazo desejado <small>(opcional)</small><input name="due" type="date" /></label></div>
+        <label class="form-label">Critérios de aceite<textarea name="acceptanceCriteria" rows="2" required placeholder="Como a equipe e o cliente reconhecerão que a entrega atende ao pedido?"></textarea></label>
+        <label class="form-label">Referências ou links <small>(opcional)</small><textarea name="references" rows="2" placeholder="Links ou contexto de referência resumido"></textarea></label>
+        <div class="form-label briefing-file-field">
+          <label for="briefingFileInput">Arquivos de referência <small>(opcional · imagem, vídeo ou PDF até 15 MB cada)</small></label>
+          <div class="briefing-file-dropzone" id="briefingFileDropZone" aria-describedby="briefingFileStatus">
+            <p><strong>Arraste arquivos para esta área</strong><span>ou selecione pelo botão abaixo</span></p>
+            <input id="briefingFileInput" name="briefingFiles" type="file" accept="image/*,video/*,application/pdf" multiple />
+            <p class="briefing-file-status" id="briefingFileStatus" role="status" aria-live="polite">Nenhum arquivo selecionado.</p>
+          </div>
+        </div>
+        <div class="briefing-hint"><span>✳</span><p>Origem, canal/peça e critérios de aceite devem estar registrados antes do planejamento. Campos obrigatórios por serviço serão refinados com um caso real da Mix7.</p></div>
+        <div class="dialog-footer"><button class="secondary-button" type="button" data-close-dialog="requestDialog">Cancelar</button><button class="primary-button" type="submit" value="submit">Salvar demanda <span>→</span></button></div>
       </form>
     </dialog>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <input id="versionFileInput" type="file" accept="image/*,video/*,application/pdf" hidden />
+    <script src="workflow.js"></script>
+    <script src="capacity.js"></script>
+    <script src="knowledge.js"></script>
+    <script src="onboarding.js"></script>
     <script src="app.js"></script>
   </body>
 </html>
