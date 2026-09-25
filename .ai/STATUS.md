@@ -1,3 +1,9 @@
+# Menus de etapa do Kanban — 2026-09-25
+
+- Corrigi a sobreposição de colunas que interceptava o clique nos menus de etapa. Em Chromium/Playwright, os oito menus abriram o diálogo correto nas larguras 1440, 1399, 1280, 1250, 900, 768, 600 e 390 px; o documento não teve overflow e o Kanban rolou internamente. Capturas desktop e móvel foram inspecionadas. Perfil efêmero `127.0.0.1:4227`; nenhuma demanda foi salva e o perfil `4173` não foi tocado. `node --test tests/workflow.test.js`: 26/26; sintaxe JavaScript e `git diff --check` passaram.
+- Cartão relacionado: 18 (primeira entrega integrada). Commit, SHA remoto e CI serão acrescentados após a publicação.
+- O Trello segue indisponível nesta sessão: o quadro não aparece nas abas e a abertura do cartão 18 expirou. A sincronização do cartão fica pendente e será feita quando a interface puder ser usada; não afirmar sync antes disso.
+
 # Continuação sem os prints do CRM — 2026-09-25
 
 - O usuário pediu para aguardar os prints do dashboard CRM e seguir sem deixar essa comparação bloquear o projeto. Atualizei o contexto e as decisões para deixar esse encaminhamento claro; a comparação continua pendente, sem nova alteração visual.
