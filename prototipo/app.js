@@ -1,4 +1,4 @@
-const { stages, participantTypes, transition, listAssignees, filterRequestsByAssignee, taskBlockers, findActiveTaskTimer, validateLocalFiles, mergeLocalFiles, serializeRequestsJson, serializeRequestsCsv } = window.Mix7Workflow;
+const { stages, participantTypes, transition, listAssignees, filterRequestsByAssignee, taskBlockers, findActiveTaskTimer, getRunnableTasks, validateLocalFiles, mergeLocalFiles, serializeRequestsJson, serializeRequestsCsv } = window.Mix7Workflow;
 const { knowledgeTypes, saveKnowledgeItem, setKnowledgeItemArchived, filterKnowledgeItems } = window.Mix7Knowledge;
 const STORAGE_KEY = "mix7.workflow.v1";
 const MINIMIZED_KEY = "mix7.workflow.minimized.v1";
@@ -30,6 +30,7 @@ let activeDueFilter = "";
 let activeParticipantTypeId = participantTypes[0].id;
 let columnActionStage = "";
 let minimizedRequestIds = loadMinimizedIds();
+const minimizedTimerTaskSelections = new Map();
 let state = loadState();
 let knowledgeRecords = loadKnowledgeRecords();
 let knowledgeSearch = "";
@@ -314,11 +315,65 @@ function renderMinimizedRequests() {
   tray.append(node("span", "minimized-label", "Demandas minimizadas"));
   for (const request of requests) {
     const item = node("div", "minimized-item");
+    item.dataset.requestId = request.id;
+    const activeTimer = findActiveTaskTimer(state.requests);
+    const activeTaskForRequest = activeTimer?.request.id === request.id ? activeTimer.task : null;
+    const runnableTasks = getRunnableTasks(request, activeTimer);
     const chip = node("button", "minimized-request", "");
     chip.type = "button";
     chip.setAttribute("aria-label", `Reabrir ${request.title}`);
     chip.append(node("strong", "", request.title), node("small", "", `${request.client} · ${stages[request.stage]}`));
     chip.addEventListener("click", () => openDrawer(request.id));
+    if (activeTaskForRequest || runnableTasks.length) {
+      const timerControls = node("div", "minimized-timer-controls");
+      const taskSelect = node("select", "minimized-task-select");
+      taskSelect.setAttribute("aria-label", `Tarefa do cronômetro para ${request.title}`);
+      const availableTasks = activeTaskForRequest ? [activeTaskForRequest] : runnableTasks;
+      if (availableTasks.length > 1) taskSelect.append(new Option("Escolha a tarefa…", ""));
+      for (const task of availableTasks) taskSelect.add(new Option(`${task.title} · ${task.assignee}`, task.id));
+      const previousSelection = minimizedTimerTaskSelections.get(request.id);
+      taskSelect.value = activeTaskForRequest?.id || (availableTasks.some(task => task.id === previousSelection) ? previousSelection : availableTasks.length === 1 ? availableTasks[0].id : "");
+      taskSelect.disabled = Boolean(activeTaskForRequest);
+
+      const timeEntries = activeTaskForRequest || runnableTasks;
+      const selectedTask = availableTasks.find(task => task.id === taskSelect.value);
+      const totalSeconds = task => (task.timeEntries || []).reduce((sum, entry) => sum + (Number(entry.durationSeconds) || 0), 0);
+      const elapsed = node("small", "minimized-timer-total", selectedTask
+        ? `Registrado: ${formatDuration(totalSeconds(selectedTask))}`
+        : "Selecione uma tarefa para ver o tempo registrado.");
+      elapsed.setAttribute("role", "timer");
+      elapsed.setAttribute("aria-live", "off");
+      if (activeTaskForRequest) {
+        elapsed.textContent = `Ativo: ${formatDuration(totalSeconds(activeTaskForRequest) + Math.floor((Date.now() - Date.parse(activeTaskForRequest.timerStartedAt)) / 1000))} · ${activeTaskForRequest.title}`;
+        elapsed.dataset.timerStartedAt = activeTaskForRequest.timerStartedAt;
+        elapsed.dataset.timerBaseSeconds = String(totalSeconds(activeTaskForRequest));
+      }
+      taskSelect.addEventListener("change", () => {
+        minimizedTimerTaskSelections.set(request.id, taskSelect.value);
+        const task = availableTasks.find(candidate => candidate.id === taskSelect.value);
+        elapsed.textContent = task ? `Registrado: ${formatDuration(totalSeconds(task))}` : "Selecione uma tarefa para ver o tempo registrado.";
+      });
+
+      const timerButton = node("button", "minimized-timer-button", activeTaskForRequest ? "Pausar" : "Iniciar");
+      timerButton.type = "button";
+      timerButton.setAttribute("aria-label", activeTaskForRequest ? `Pausar cronômetro de ${activeTaskForRequest.title}` : `Iniciar cronômetro da tarefa selecionada em ${request.title}`);
+      timerButton.disabled = !activeTaskForRequest && (activeTimer || !selectedTask);
+      if (activeTimer && !activeTaskForRequest) timerButton.title = `Pause primeiro “${activeTimer.task.title}” em ${activeTimer.request.title}.`;
+      timerButton.addEventListener("click", event => {
+        event.stopPropagation();
+        const task = activeTaskForRequest || availableTasks.find(candidate => candidate.id === taskSelect.value);
+        if (!task) return;
+        if (activeTaskForRequest) updateRequestFor(request.id, "stop_task_timer", { taskId: task.id }, "Sessão de tempo registrada.");
+        else updateRequestFor(request.id, "start_task_timer", { taskId: task.id }, "Cronômetro iniciado.");
+      });
+      timerControls.append(taskSelect, elapsed, timerButton);
+      if (activeTimer && !activeTaskForRequest) {
+        timerControls.append(node("small", "minimized-timer-note", `Pause “${activeTimer.task.title}” em ${activeTimer.request.title} para iniciar outra tarefa.`));
+      }
+      item.append(timerControls);
+    } else if (["doing", "adjustments"].includes(request.stage)) {
+      item.append(node("small", "minimized-timer-unavailable", "Sem tarefas liberadas para cronometrar"));
+    }
     const dismiss = node("button", "minimized-dismiss", "×");
     dismiss.type = "button";
     dismiss.setAttribute("aria-label", `Remover atalho minimizado de ${request.title}`);
@@ -328,7 +383,8 @@ function renderMinimizedRequests() {
       saveMinimizedIds();
       renderMinimizedRequests();
     });
-    item.append(chip, dismiss);
+    item.prepend(chip);
+    item.append(dismiss);
     tray.append(item);
   }
 }
@@ -945,8 +1001,8 @@ function appendAction(container, label, action, className = "secondary-button") 
   return button;
 }
 
-function updateRequest(action, payload = {}, successMessage = "Alteração salva.") {
-  const request = currentRequest();
+function updateRequestFor(requestId, action, payload = {}, successMessage = "Alteração salva.") {
+  const request = state.requests.find(item => item.id === requestId);
   if (!request) return false;
   try {
     if (action === "start_task_timer") {
@@ -956,7 +1012,7 @@ function updateRequest(action, payload = {}, successMessage = "Alteração salva
       }
     }
     const commentActions = ["add_comment", "internal_changes", "client_changes"];
-    const anchorMatchesVersion = activeCommentAnchor?.versionId === request.versions.at(-1)?.id;
+    const anchorMatchesVersion = request.id === activeRequestId && activeCommentAnchor?.versionId === request.versions.at(-1)?.id;
     const actionPayload = commentActions.includes(action) && anchorMatchesVersion ? { ...payload, anchor: { ...activeCommentAnchor } } : payload;
     const updated = transition(request, action, actionPayload);
     state.requests = state.requests.map(item => item.id === request.id ? updated : item);
@@ -971,13 +1027,23 @@ function updateRequest(action, payload = {}, successMessage = "Alteração salva
     }
     saveState();
     renderBoard();
-    renderDrawer();
+    if (request.id === activeRequestId) renderDrawer();
+    if (minimizedRequestIds.includes(request.id)) {
+      [...minimizedRequests.querySelectorAll(".minimized-item")]
+        .find(item => item.dataset.requestId === request.id)
+        ?.querySelector(".minimized-timer-button")?.focus();
+    }
     showToast(successMessage);
     return true;
   } catch (error) {
     showToast(error.message);
     return false;
   }
+}
+
+function updateRequest(action, payload = {}, successMessage = "Alteração salva.") {
+  const request = currentRequest();
+  return request ? updateRequestFor(request.id, action, payload, successMessage) : false;
 }
 
 function renderTasks(request) {
@@ -1150,7 +1216,12 @@ function formatTimecode(value) {
 function refreshTaskTimerDisplays() {
   document.querySelectorAll("[data-timer-started-at]").forEach(element => {
     const elapsed = Math.floor((Date.now() - Date.parse(element.dataset.timerStartedAt)) / 1000);
-    element.textContent = `Cronômetro ativo: ${formatDuration(Number(element.dataset.timerBaseSeconds) + elapsed)}`;
+    if (element.classList.contains("minimized-timer-total")) {
+      const requestId = element.closest(".minimized-item")?.dataset.requestId;
+      const request = state.requests.find(item => item.id === requestId);
+      const active = findActiveTaskTimer([request].filter(Boolean));
+      if (active) element.textContent = `Ativo: ${formatDuration(Number(element.dataset.timerBaseSeconds) + elapsed)} · ${active.task.title}`;
+    } else element.textContent = `Cronômetro ativo: ${formatDuration(Number(element.dataset.timerBaseSeconds) + elapsed)}`;
   });
 }
 

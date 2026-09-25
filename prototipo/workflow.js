@@ -123,6 +123,18 @@
     return null;
   }
 
+  function getRunnableTasks(request, activeTimer = null) {
+    if (!request || !["doing", "adjustments"].includes(request.stage)) return [];
+    const round = currentTaskRound(request);
+    if (activeTimer?.request?.id === request.id) {
+      return (request.tasks || []).filter(task => task.round === round && task.id === activeTimer.task.id && task.timerStartedAt);
+    }
+    return (request.tasks || []).filter(task => {
+      if (task.round !== round) return false;
+      return !task.timerStartedAt && task.status !== "completed" && taskBlockers(request, task).length === 0;
+    });
+  }
+
   function validateLocalFiles(files, maxBytes) {
     const supported = file => file.type?.startsWith("image/") || file.type?.startsWith("video/") || file.type === "application/pdf";
     const localFiles = Array.from(files || []);
@@ -444,7 +456,7 @@
     return next;
   }
 
-  const api = { stages, participantTypes, transition, listAssignees, filterRequestsByAssignee, unmetTaskDependencies, taskBlockers, findActiveTaskTimer, validateLocalFiles, mergeLocalFiles, csvCell, serializeRequestsJson, serializeRequestsCsv };
+  const api = { stages, participantTypes, transition, listAssignees, filterRequestsByAssignee, unmetTaskDependencies, taskBlockers, findActiveTaskTimer, getRunnableTasks, validateLocalFiles, mergeLocalFiles, csvCell, serializeRequestsJson, serializeRequestsCsv };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   root.Mix7Workflow = api;
 })(globalThis);

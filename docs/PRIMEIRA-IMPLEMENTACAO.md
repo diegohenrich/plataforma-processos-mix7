@@ -2,6 +2,12 @@
 
 **Estado:** fatia funcional para demonstração e validação; não é ambiente de produção nem decisão de stack.
 
+### Cronômetro na demanda minimizada — 2026-09-25
+
+Conforme a confirmação do profissional da Mix7, a bandeja de demandas minimizadas agora permite escolher uma tarefa liberada, iniciar seu cronômetro e pausá-lo sem reabrir os detalhes. A tarefa e o total de sessões já registradas ficam visíveis; a sessão ativa atualiza o tempo decorrido. Tarefas concluídas, bloqueadas, dependentes e fora da rodada não podem iniciar o cronômetro. Se outra demanda estiver sendo cronometrada, suas tarefas elegíveis continuam identificadas, mas a ação de iniciar fica bloqueada até a sessão ativa ser pausada. Só pode haver uma sessão ativa globalmente nesta demonstração local.
+
+Estimativa planejada e tempo realizado são exibidos como dados diferentes. A disponibilidade e a capacidade diária continuam indisponíveis: jornada, ausências e regras de distribuição ainda não foram definidas. Os testes `node --test tests/*.test.js` verificam tarefas elegíveis, dependências, rodadas, atividade em outra demanda e conclusão de sessão. A inspeção renderizada da nova bandeja permanece pendente porque a ferramenta de navegador não conseguiu identificar com segurança a origem local; não declarar a interface visual validada até executar essa inspeção.
+
 ### Atualização imediata após criar demanda — 2026-09-25
 
 Corrigi a criação de briefing para redesenhar o quadro logo após salvar, sem exigir recarga ou outra interação. Em Chromium isolado, uma demanda sintética apareceu imediatamente e continuou visível após recarregar. Repeti o percurso com texto contendo marcação HTML e JavaScript: o conteúdo permaneceu literal, nenhum elemento foi injetado nem código executado, e não houve erros de página. Em nova rodada pela interface, criei uma demanda na visualização Lista em 1440 px e outra no Quadro em 390 px; ambas apareceram sem recarga e permaneceram após recarregar, sem overflow horizontal da página ou erros JavaScript. A captura renderizada em 1440 × 1000 está em [nova demanda no quadro](evidencias/visual/nova-demanda-imediata-1440.png). `node --test tests/*.test.js` passou 31/31; `node --check prototipo/app.js`, `node --check prototipo/workflow.js` e `git diff --check` passaram. Os ensaios usaram armazenamento descartável e dados sintéticos.

@@ -1,6 +1,6 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { participantTypes, transition, listAssignees, filterRequestsByAssignee, taskBlockers, findActiveTaskTimer, validateLocalFiles, mergeLocalFiles, csvCell, serializeRequestsJson, serializeRequestsCsv } = require("../prototipo/workflow.js");
+const { participantTypes, transition, listAssignees, filterRequestsByAssignee, taskBlockers, findActiveTaskTimer, getRunnableTasks, validateLocalFiles, mergeLocalFiles, csvCell, serializeRequestsJson, serializeRequestsCsv } = require("../prototipo/workflow.js");
 
 test("catálogo de participantes cobre os quatro tipos dos áudios sem inventar permissões", () => {
   assert.deepEqual(participantTypes.map(({ id }) => id), [
@@ -319,6 +319,34 @@ test("pedido de alteração é comentário ancorado e decisão imutáveis da ver
   assert.equal(item.versions[1].number, 2);
   assert.equal(item.versions[0].decision.result, "changes_requested");
   assert.deepEqual(item.tasks.map(task => [task.round, task.status]), [[1, "completed"], [2, "completed"]]);
+});
+
+test("bandeja minimizada só libera tarefas executáveis da rodada e identifica o cronômetro ativo", () => {
+  let item = transition(demand(), "briefing_ready");
+  item = transition(item, "add_task", { title: "Montar site", assignee: "Profissional" });
+  item = transition(item, "add_task", { title: "Revisar conteúdo", assignee: "Gestor", dependencyTaskId: item.tasks[0].id });
+  item = transition(item, "plan_confirmed");
+  assert.deepEqual(getRunnableTasks(item).map(task => task.title), ["Montar site"]);
+  item = transition(item, "start_task_timer", { taskId: item.tasks[0].id }, "2026-09-25T10:00:00.000Z");
+  const active = findActiveTaskTimer([item]);
+  assert.deepEqual(getRunnableTasks(item, active).map(task => task.title), ["Montar site"]);
+  assert.deepEqual(getRunnableTasks(item), []);
+  item = transition(item, "stop_task_timer", { taskId: item.tasks[0].id }, "2026-09-25T10:01:00.000Z");
+  item = transition(item, "toggle_task", { taskId: item.tasks[0].id });
+  assert.deepEqual(getRunnableTasks(item).map(task => task.title), ["Revisar conteúdo"]);
+  item.stage = "clientReview";
+  assert.deepEqual(getRunnableTasks(item), []);
+});
+
+test("bandeja mantém tarefas visíveis porém bloqueadas enquanto outra demanda está cronometrando", () => {
+  let first = planRoundOne(demand());
+  let second = planRoundOne({ ...demand(), id: "d-2" });
+  second = transition(second, "start_task_timer", { taskId: second.tasks[0].id }, "2026-09-25T10:00:00.000Z");
+  const active = findActiveTaskTimer([first, second]);
+  assert.equal(getRunnableTasks(first, active).length, 1);
+  assert.deepEqual(getRunnableTasks(second, active).map(task => task.id), [second.tasks[0].id]);
+  second = transition(second, "stop_task_timer", { taskId: second.tasks[0].id }, "2026-09-25T10:00:03.000Z");
+  assert.equal(getRunnableTasks(first, findActiveTaskTimer([first, second])).length, 1);
 });
 
 test("pedido de ajustes vazio ou só com espaços não altera a decisão do cliente", () => {
