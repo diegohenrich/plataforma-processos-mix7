@@ -67,4 +67,6 @@ jobs:
 
       - name: Executar testes Laravel
         working-directory: web-app
+        env:
+          APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
         run: php artisan test --compact
