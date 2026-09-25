@@ -11,9 +11,13 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use RuntimeException;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Throwable;
 
 class DemandReviewController extends Controller
 {
@@ -23,27 +27,49 @@ class DemandReviewController extends Controller
         abort_unless($demand->status === DemandStatus::ClientApproval, 409, 'A demanda precisa estar em aprovação do cliente.');
 
         $data = $request->validate([
-            'material_url' => ['required', 'url:http,https', 'max:2048'],
+            'material_url' => ['nullable', 'required_without:material_file', 'url:http,https', 'max:2048'],
+            'material_file' => ['nullable', 'required_without:material_url', 'file', 'max:20480', 'mimes:pdf,jpg,jpeg,png,webp,mp4,webm'],
             'expires_at' => ['required', 'date', 'after:now'],
         ]);
+        if ($request->filled('material_url') && $request->hasFile('material_file')) {
+            throw ValidationException::withMessages(['material_file' => 'Envie um link ou um arquivo por versão, não os dois.']);
+        }
 
         $plainToken = Str::random(64);
-        $link = DB::transaction(function () use ($demand, $request, $data, $plainToken): DemandReviewLink {
-            $lockedDemand = Demand::query()->whereKey($demand->id)->lockForUpdate()->firstOrFail();
-            abort_unless($lockedDemand->status === DemandStatus::ClientApproval, 409);
+        $uploadedFile = $request->file('material_file');
+        $storedPath = $uploadedFile?->store("review-materials/{$demand->organization_id}/{$demand->id}", 'local');
+        if ($uploadedFile && ! $storedPath) {
+            throw new RuntimeException('Não foi possível salvar o arquivo de revisão no armazenamento privado.');
+        }
 
-            $lockedDemand->reviewLinks()->whereNull('revoked_at')->update(['revoked_at' => now()]);
-            $version = ((int) $lockedDemand->reviewLinks()->max('version')) + 1;
+        try {
+            $link = DB::transaction(function () use ($demand, $request, $data, $plainToken, $uploadedFile, $storedPath): DemandReviewLink {
+                $lockedDemand = Demand::query()->whereKey($demand->id)->lockForUpdate()->firstOrFail();
+                abort_unless($lockedDemand->status === DemandStatus::ClientApproval, 409);
 
-            return $lockedDemand->reviewLinks()->create([
-                'organization_id' => $lockedDemand->organization_id,
-                'created_by' => $request->user()->id,
-                'version' => $version,
-                'token_hash' => hash('sha256', $plainToken),
-                'material_url' => $data['material_url'],
-                'expires_at' => $data['expires_at'],
-            ]);
-        });
+                $lockedDemand->reviewLinks()->whereNull('revoked_at')->update(['revoked_at' => now()]);
+                $version = ((int) $lockedDemand->reviewLinks()->max('version')) + 1;
+
+                return $lockedDemand->reviewLinks()->create([
+                    'organization_id' => $lockedDemand->organization_id,
+                    'created_by' => $request->user()->id,
+                    'version' => $version,
+                    'token_hash' => hash('sha256', $plainToken),
+                    'material_url' => $storedPath ? null : $data['material_url'],
+                    'material_file_path' => $storedPath,
+                    'material_file_name' => $uploadedFile ? basename(str_replace('\\', '/', $uploadedFile->getClientOriginalName())) : null,
+                    'material_mime' => $uploadedFile?->getMimeType(),
+                    'material_file_size' => $uploadedFile?->getSize(),
+                    'expires_at' => $data['expires_at'],
+                ]);
+            });
+        } catch (Throwable $exception) {
+            if ($storedPath) {
+                Storage::disk('local')->delete($storedPath);
+            }
+
+            throw $exception;
+        }
 
         return back()->with('review_link_url', route('client-reviews.show', ['token' => $plainToken]))
             ->with('review_link_id', $link->id)
@@ -73,7 +99,29 @@ class DemandReviewController extends Controller
             return response()->view('client-reviews.unavailable', status: 410);
         }
 
-        return view('client-reviews.show', compact('reviewLink', 'hasDecision'));
+        $materialUrl = $reviewLink->material_file_path
+            ? route('client-reviews.material', ['token' => $token])
+            : $reviewLink->material_url;
+
+        return view('client-reviews.show', compact('reviewLink', 'hasDecision', 'materialUrl'));
+    }
+
+    public function material(Request $request, string $token): BinaryFileResponse
+    {
+        $reviewLink = $this->findLink($token);
+        $hasDecision = $reviewLink->responses()->whereIn('type', ['approved', 'changes_requested'])->exists();
+        abort_unless($reviewLink->revoked_at === null && $reviewLink->expires_at->isFuture()
+            && ($reviewLink->demand->status === DemandStatus::ClientApproval || $hasDecision), 410);
+
+        return $this->streamPrivateMaterial($reviewLink, $request->boolean('download'));
+    }
+
+    public function teamMaterial(Request $request, Demand $demand, DemandReviewLink $reviewLink): BinaryFileResponse
+    {
+        abort_unless($reviewLink->demand_id === $demand->id && $reviewLink->organization_id === $request->user()->organization_id, 404);
+        $this->authorize('manage', $demand);
+
+        return $this->streamPrivateMaterial($reviewLink, $request->boolean('download'));
     }
 
     public function respond(Request $request, string $token): RedirectResponse
@@ -105,7 +153,7 @@ class DemandReviewController extends Controller
                 'anchor_type' => $data['type'] === 'annotation' ? $data['anchor_type'] : null,
                 'anchor_data' => $data['type'] === 'annotation' ? array_filter([
                     'text' => $data['anchor_text'] ?? null,
-                    'url' => $reviewLink->material_url,
+                    'url' => $reviewLink->material_url ?? 'arquivo privado da versão '.$reviewLink->version,
                     'x' => isset($data['anchor_x']) ? (float) $data['anchor_x'] : null,
                     'y' => isset($data['anchor_y']) ? (float) $data['anchor_y'] : null,
                     'time' => $data['anchor_time'] ?? null,
@@ -141,5 +189,39 @@ class DemandReviewController extends Controller
         }
 
         return $query->firstOrFail();
+    }
+
+    private function streamPrivateMaterial(DemandReviewLink $reviewLink, bool $download = false): BinaryFileResponse
+    {
+        $path = $reviewLink->material_file_path;
+        $prefix = "review-materials/{$reviewLink->organization_id}/{$reviewLink->demand_id}/";
+        abort_unless($path && Str::startsWith($path, $prefix) && ! in_array('..', explode('/', $path), true), 404);
+        abort_unless(Storage::disk('local')->exists($path), 404);
+
+        $types = [
+            'application/pdf' => ['review.pdf', 'application/pdf'],
+            'image/jpeg' => ['review.jpg', 'image/jpeg'],
+            'image/png' => ['review.png', 'image/png'],
+            'image/webp' => ['review.webp', 'image/webp'],
+            'video/mp4' => ['review.mp4', 'video/mp4'],
+            'video/webm' => ['review.webm', 'video/webm'],
+        ];
+        abort_unless(isset($types[$reviewLink->material_mime]), 415);
+        [$fileName, $mimeType] = $types[$reviewLink->material_mime];
+
+        $headers = [
+            'Content-Type' => $mimeType,
+            'X-Content-Type-Options' => 'nosniff',
+            'X-Frame-Options' => 'SAMEORIGIN',
+            'Referrer-Policy' => 'no-referrer',
+        ];
+        $response = $download
+            ? response()->download(Storage::disk('local')->path($path), $fileName, $headers)
+            : response()->file(Storage::disk('local')->path($path), $headers + ['Content-Disposition' => 'inline; filename="'.$fileName.'"']);
+        $response->setPrivate();
+        $response->setMaxAge(0);
+        $response->headers->set('Cache-Control', 'private, no-store');
+
+        return $response;
     }
 }

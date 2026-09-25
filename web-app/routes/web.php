@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/painel');
 Route::get('/revisao/{token}', [DemandReviewController::class, 'show'])->middleware('throttle:30,1')->name('client-reviews.show');
+Route::get('/revisao/{token}/material', [DemandReviewController::class, 'material'])->middleware('throttle:60,1')->name('client-reviews.material');
 Route::post('/revisao/{token}/respostas', [DemandReviewController::class, 'respond'])->middleware('throttle:10,1')->name('client-reviews.respond');
 Route::middleware('guest')->group(function (): void {
     Route::get('/entrar', [SessionController::class, 'create'])->name('login');
@@ -21,6 +22,7 @@ Route::middleware(['auth', 'active'])->group(function (): void {
     Route::patch('/demandas/{demand}/etapa', [DemandController::class, 'updateStatus'])->name('demands.status');
     Route::post('/demandas/{demand}/links-revisao', [DemandReviewController::class, 'store'])->name('demand-reviews.store');
     Route::delete('/demandas/{demand}/links-revisao/{reviewLink}', [DemandReviewController::class, 'revoke'])->name('demand-reviews.revoke');
+    Route::get('/demandas/{demand}/links-revisao/{reviewLink}/material', [DemandReviewController::class, 'teamMaterial'])->name('demand-reviews.team-material');
     Route::post('/demandas/{demand}/tarefas', [DemandTaskController::class, 'store'])->name('demand-tasks.store');
     Route::post('/tarefas/{task}/cronometro/iniciar', [DemandTaskController::class, 'startTimer'])->name('demand-tasks.timer.start');
     Route::post('/tarefas/{task}/cronometro/pausar', [DemandTaskController::class, 'pauseTimer'])->name('demand-tasks.timer.pause');

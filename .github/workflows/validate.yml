@@ -46,3 +46,25 @@ jobs:
           node --check prototipo/capacity.js
           node --check prototipo/onboarding.js
           node --check prototipo/app.js
+
+      - name: Instalar dependências PHP
+        working-directory: web-app
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Validar dependências e formatar PHP da revisão
+        working-directory: web-app
+        run: |
+          composer validate --no-check-publish
+          vendor/bin/pint --test app/Http/Controllers/DemandReviewController.php app/Models/DemandReviewLink.php tests/Feature/DemandReviewLinkTest.php database/migrations/2026_09_25_000007_add_private_material_files_to_review_links.php
+
+      - name: Instalar dependências JavaScript
+        working-directory: web-app
+        run: npm ci
+
+      - name: Compilar recursos do site
+        working-directory: web-app
+        run: npm run build
+
+      - name: Executar testes Laravel
+        working-directory: web-app
+        run: php artisan test --compact

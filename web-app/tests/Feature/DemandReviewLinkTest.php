@@ -8,6 +8,8 @@ use App\Models\Demand;
 use App\Models\Organization;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class DemandReviewLinkTest extends TestCase
@@ -202,6 +204,113 @@ class DemandReviewLinkTest extends TestCase
         $this->assertDatabaseCount('demand_review_links', 1);
     }
 
+    public function test_manager_can_upload_private_pdf_and_client_can_view_it_through_active_review_link(): void
+    {
+        Storage::fake('local');
+        [$organization, $manager, $demand] = $this->setupApproval();
+        $upload = UploadedFile::fake()->createWithContent('brief-preview.pdf', "%PDF-1.4\nSynthetic review PDF\n%%EOF");
+
+        $response = $this->actingAs($manager)->post(route('demand-reviews.store', $demand), [
+            'material_file' => $upload,
+            'expires_at' => now()->addDays(3)->toIso8601String(),
+        ])->assertRedirect();
+
+        $token = basename(parse_url($response->getSession()->get('review_link_url'), PHP_URL_PATH));
+        $link = $demand->reviewLinks()->firstOrFail();
+        $this->assertNull($link->material_url);
+        $this->assertSame('brief-preview.pdf', $link->material_file_name);
+        $this->assertSame('application/pdf', $link->material_mime);
+        $this->assertStringStartsWith("review-materials/{$organization->id}/{$demand->id}/", $link->material_file_path);
+        Storage::disk('local')->assertExists($link->material_file_path);
+        Storage::disk('public')->assertMissing($link->material_file_path);
+
+        $this->get(route('client-reviews.show', $token))->assertOk()
+            ->assertSee('brief-preview.pdf')
+            ->assertSee(route('client-reviews.material', $token), false)
+            ->assertSee('Prévia do material')
+            ->assertDontSee($link->material_file_path)
+            ->assertDontSee('Briefing privado do teste');
+
+        $this->get(route('client-reviews.material', $token))->assertOk()
+            ->assertHeader('Content-Type', 'application/pdf')
+            ->assertHeader('X-Content-Type-Options', 'nosniff')
+            ->assertHeader('X-Frame-Options', 'SAMEORIGIN')
+            ->assertHeader('Referrer-Policy', 'no-referrer')
+            ->assertHeader('Cache-Control', 'no-store, private');
+        $this->assertStringContainsString('Synthetic review PDF', Storage::disk('local')->get($link->material_file_path));
+
+        $this->actingAs($manager)->get(route('demands.show', $demand))->assertOk()
+            ->assertSee('Visualizar arquivo desta versão')
+            ->assertSee('Controles do PDF')
+            ->assertSee('data-pdf-preview', false)
+            ->assertSee(route('demand-reviews.team-material', [$demand, $link]), false);
+        $this->get(route('demand-reviews.team-material', [$demand, $link]))->assertOk()
+            ->assertHeader('Content-Type', 'application/pdf')
+            ->assertHeader('X-Frame-Options', 'SAMEORIGIN');
+        $download = $this->get(route('client-reviews.material', ['token' => $token, 'download' => 1]))->assertOk();
+        $this->assertStringStartsWith('attachment;', $download->headers->get('Content-Disposition'));
+    }
+
+    public function test_private_review_file_cannot_be_viewed_after_revocation_or_expiration(): void
+    {
+        Storage::fake('local');
+        [$organization, $manager, $demand] = $this->setupApproval();
+        $firstToken = $this->createFileLink($manager, $demand);
+        $firstLink = $demand->reviewLinks()->firstOrFail();
+
+        $this->actingAs($manager)->delete(route('demand-reviews.revoke', [$demand, $firstLink]))->assertRedirect();
+        $this->get(route('client-reviews.material', $firstToken))->assertStatus(410);
+
+        $secondToken = $this->createFileLink($manager, $demand);
+        $secondLink = $demand->reviewLinks()->where('version', 2)->firstOrFail();
+        $secondLink->update(['expires_at' => now()->subMinute()]);
+        $this->get(route('client-reviews.material', $secondToken))->assertStatus(410);
+
+        $thirdToken = $this->createFileLink($manager, $demand);
+        $demand->update(['status' => DemandStatus::InProgress]);
+        $this->get(route('client-reviews.material', $thirdToken))->assertStatus(410);
+    }
+
+    public function test_private_review_file_requires_same_organization_manager_and_rejects_invalid_uploads(): void
+    {
+        Storage::fake('local');
+        [$organization, $manager, $demand, $professional] = $this->setupApproval();
+        $token = $this->createFileLink($manager, $demand);
+        $link = $demand->reviewLinks()->firstOrFail();
+        $otherOrganization = Organization::create(['name' => 'Outra agência', 'slug' => 'outra-agencia']);
+        $otherManager = User::factory()->create(['organization_id' => $otherOrganization->id, 'role' => UserRole::AgencyOwner, 'is_active' => true]);
+
+        $this->actingAs($professional)->get(route('demand-reviews.team-material', [$demand, $link]))->assertForbidden();
+        $this->actingAs($otherManager)->get(route('demand-reviews.team-material', [$demand, $link]))->assertNotFound();
+        $this->get(route('client-reviews.material', str_repeat('x', 64)))->assertNotFound();
+
+        $this->actingAs($manager)->from(route('demands.show', $demand))->post(route('demand-reviews.store', $demand), [
+            'material_file' => UploadedFile::fake()->createWithContent('unsafe.html', '<script>alert(1)</script>'),
+            'expires_at' => now()->addDay()->toIso8601String(),
+        ])->assertSessionHasErrors('material_file');
+    }
+
+    public function test_private_review_upload_enforces_twenty_megabyte_limit_and_one_material_source(): void
+    {
+        Storage::fake('local');
+        [$organization, $manager, $demand] = $this->setupApproval();
+        $expiry = now()->addDay()->toIso8601String();
+
+        $this->actingAs($manager)->from(route('demands.show', $demand))->post(route('demand-reviews.store', $demand), [
+            'material_file' => UploadedFile::fake()->create('large.pdf', 20 * 1024 + 1, 'application/pdf'),
+            'expires_at' => $expiry,
+        ])->assertSessionHasErrors('material_file');
+
+        $this->actingAs($manager)->from(route('demands.show', $demand))->post(route('demand-reviews.store', $demand), [
+            'material_url' => 'https://preview.example.test/v1',
+            'material_file' => UploadedFile::fake()->createWithContent('valid.pdf', "%PDF-1.4\n%%EOF"),
+            'expires_at' => $expiry,
+        ])->assertSessionHasErrors('material_file');
+
+        $this->assertDatabaseCount('demand_review_links', 0);
+        $this->assertSame([], Storage::disk('local')->allFiles('review-materials'));
+    }
+
     private function setupApproval(): array
     {
         $organization = Organization::create(['name' => 'Mix7', 'slug' => 'mix7']);
@@ -222,6 +331,16 @@ class DemandReviewLinkTest extends TestCase
     {
         $response = $this->actingAs($manager)->post(route('demand-reviews.store', $demand), [
             'material_url' => $materialUrl,
+            'expires_at' => now()->addDays(3)->toIso8601String(),
+        ])->assertRedirect();
+
+        return basename(parse_url($response->getSession()->get('review_link_url'), PHP_URL_PATH));
+    }
+
+    private function createFileLink(User $manager, Demand $demand): string
+    {
+        $response = $this->actingAs($manager)->post(route('demand-reviews.store', $demand), [
+            'material_file' => UploadedFile::fake()->createWithContent('approval.pdf', "%PDF-1.4\nReview material\n%%EOF"),
             'expires_at' => now()->addDays(3)->toIso8601String(),
         ])->assertRedirect();
 

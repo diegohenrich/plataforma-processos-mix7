@@ -1,0 +1,75 @@
+.pdf-preview {
+    width: 100%;
+    margin: 10px 0;
+    overflow: hidden;
+    border: 1px solid #d6e0e1;
+    border-radius: 11px;
+    background: #f5f7f7;
+}
+
+.pdf-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px;
+    border-bottom: 1px solid #d6e0e1;
+    background: #eaf2f4;
+}
+
+.pdf-toolbar button {
+    min-height: 38px;
+    padding: 7px 11px;
+    border: 1px solid #cbd9dc;
+    border-radius: 8px;
+    background: #fff;
+    color: #204b61;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.pdf-toolbar button:disabled {
+    opacity: .5;
+    cursor: default;
+}
+
+.pdf-toolbar span {
+    color: #38515b;
+    font-size: 12px;
+}
+
+.pdf-zoom-controls {
+    display: inline-flex;
+    gap: 5px;
+}
+
+.pdf-canvas-wrap {
+    display: flex;
+    max-height: 620px;
+    align-items: flex-start;
+    justify-content: center;
+    overflow: auto;
+    padding: 16px;
+}
+
+.pdf-canvas-wrap canvas {
+    max-width: 100%;
+    height: auto !important;
+    background: #fff;
+    box-shadow: 0 2px 12px #202e3520;
+}
+
+.pdf-status {
+    margin: 0;
+    padding: 8px 12px;
+    color: #718087;
+    font-size: 12px;
+    text-align: center;
+}
+
+.pdf-status:empty {
+    display: none;
+}

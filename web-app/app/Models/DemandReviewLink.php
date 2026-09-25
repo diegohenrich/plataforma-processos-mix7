@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class DemandReviewLink extends Model
 {
-    protected $fillable = ['organization_id', 'demand_id', 'created_by', 'version', 'token_hash', 'material_url', 'expires_at', 'revoked_at'];
+    protected $fillable = ['organization_id', 'demand_id', 'created_by', 'version', 'token_hash', 'material_url', 'material_file_path', 'material_file_name', 'material_mime', 'material_file_size', 'expires_at', 'revoked_at'];
 
     protected function casts(): array
     {
