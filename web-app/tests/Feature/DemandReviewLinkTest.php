@@ -79,7 +79,9 @@ class DemandReviewLinkTest extends TestCase
         $this->get(route('client-reviews.show', $token))->assertOk()
             ->assertSee('Ancorar este comentário em')
             ->assertSee('Trecho de texto')
-            ->assertSee('Área da página');
+            ->assertSee('Área da página')
+            ->assertSee('Marcar área na prévia')
+            ->assertSee('sandbox="allow-scripts allow-forms"', false);
 
         $this->post(route('client-reviews.respond', $token), [
             'reviewer_name' => 'Cliente Mix7',
