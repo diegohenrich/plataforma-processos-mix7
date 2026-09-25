@@ -16,6 +16,31 @@
                 <section class="workflow-card"><div class="section-heading"><div><h2>Etapa do trabalho</h2><p>Avance conforme o trabalho e as decisões forem registrados.</p></div></div><ol class="stage-track">@foreach (App\Enums\DemandStatus::cases() as $stage)<li class="{{ $stage === $demand->status ? 'current' : (array_search($stage, App\Enums\DemandStatus::cases(), true) < array_search($demand->status, App\Enums\DemandStatus::cases(), true) ? 'past' : '') }}"><span class="stage-dot"></span><span>{{ $stage->label() }}</span></li>@endforeach</ol>@if ($nextStatuses)<div class="stage-actions"><span>Próxima ação:</span>@foreach ($nextStatuses as $next)<form method="post" action="{{ route('demands.status', $demand) }}">@csrf @method('PATCH')<input type="hidden" name="status" value="{{ $next->value }}"><button class="secondary-button" type="submit">{{ $next->label() }}</button></form>@endforeach</div>@else<span class="notice-inline">Demanda concluída.</span>@endif</section>
             @endif
 
+            @if ($canManage)
+                <section class="panel review-link-panel">
+                    <div class="section-heading"><div><h2>Revisão do cliente por link</h2><p>O briefing e as tarefas internas ficam privados. As respostas de todas as versões permanecem registradas aqui.</p></div></div>
+                    @if ($demand->status === App\Enums\DemandStatus::ClientApproval)
+                        @if (session('review_link_url'))
+                            <div class="notice notice-success"><strong>Link da versão {{ $reviewLinks->firstWhere('id', session('review_link_id'))?->version }} criado.</strong><p>Copie e envie ao cliente. Por segurança, o link completo aparece somente nesta confirmação.</p><a href="{{ session('review_link_url') }}" target="_blank" rel="noopener noreferrer">{{ session('review_link_url') }}</a></div>
+                        @endif
+                        <form method="post" action="{{ route('demand-reviews.store', $demand) }}" class="review-link-form">@csrf
+                            <label class="field">Link do material desta versão<input type="url" name="material_url" required maxlength="2048" placeholder="https://..." value="{{ old('material_url') }}"></label>
+                            <label class="field">Link válido até (horário local deste dispositivo)<input id="review-expires-local" type="datetime-local" required value="{{ old('expires_at_local') }}"></label><input id="review-expires-utc" type="hidden" name="expires_at" value="{{ old('expires_at') }}">
+                            <button class="primary-button" type="submit">Criar link de revisão</button>
+                        </form>
+                        @error('material_url')<span class="error">{{ $message }}</span>@enderror @error('expires_at')<span class="error">{{ $message }}</span>@enderror
+                    @else
+                        <p class="empty-inline">Para enviar uma nova versão, avance a demanda para Aprovação do cliente.</p>
+                    @endif
+                    @if ($reviewLinks->isNotEmpty())
+                        <h3 class="review-history-title">Versões enviadas</h3>
+                        <ul class="review-link-list">@foreach ($reviewLinks as $reviewLink)@php($hasFinalDecision = $reviewLink->responses->contains(fn ($response) => in_array($response->type, ['approved', 'changes_requested'], true)))<li><div><strong>Versão {{ $reviewLink->version }}</strong><span><time class="review-expiry" datetime="{{ $reviewLink->expires_at->toISOString() }}">{{ $reviewLink->expires_at->format('d/m/Y H:i') }}</time> (horário local)@if ($reviewLink->revoked_at) · Revogado @elseif ($hasFinalDecision) · Respondida @elseif ($reviewLink->expires_at->isPast()) · Expirado @else · Ativo @endif</span><span>{{ $reviewLink->responses->count() }} resposta(s)</span>@foreach ($reviewLink->responses as $response)<article class="review-feedback"><strong>{{ $response->reviewer_name }} · {{ match($response->type) {'approved' => 'Aprovou', 'changes_requested' => 'Pediu ajustes', default => 'Comentou'} }}</strong><p>{{ $response->comment ?: 'Sem comentário adicional.' }}</p><time>{{ $response->created_at->format('d/m/Y H:i') }}</time></article>@endforeach</div>@if (!$reviewLink->revoked_at && $reviewLink->expires_at->isFuture())<form method="post" action="{{ route('demand-reviews.revoke', [$demand, $reviewLink]) }}">@csrf @method('DELETE')<button class="secondary-button" type="submit">Revogar</button></form>@endif</li>@endforeach</ul>
+                    @endif
+                </section>
+                <script>document.querySelectorAll('.review-expiry').forEach((time) => { time.textContent = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(time.dateTime)); });</script>
+                @if ($demand->status === App\Enums\DemandStatus::ClientApproval)<script>document.querySelector('.review-link-form')?.addEventListener('submit', function () { const local = document.getElementById('review-expires-local'); document.getElementById('review-expires-utc').value = new Date(local.value).toISOString(); });</script>@endif
+            @endif
+
             <div class="detail-grid">
                 <div class="detail-main">
                     <section class="panel"><div class="section-heading"><div><h2>Briefing</h2><p>O pedido original fica guardado na demanda.</p></div></div><div class="brief-text">{{ $demand->brief }}</div></section>

@@ -143,6 +143,7 @@ class DemandController extends Controller
                 : collect(),
             'nextStatuses' => $demand->status->next(),
             'activeTimeTaskId' => $user->activeTimeEntry()->value('task_id'),
+            'reviewLinks' => $request->user()->can('manage', $demand) ? $demand->reviewLinks()->with('responses')->get() : collect(),
         ]);
     }
 

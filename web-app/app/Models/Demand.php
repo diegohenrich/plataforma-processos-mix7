@@ -38,4 +38,9 @@ class Demand extends Model
     {
         return $this->hasMany(DemandEvent::class)->latest();
     }
+
+    public function reviewLinks(): HasMany
+    {
+        return $this->hasMany(DemandReviewLink::class)->orderByDesc('version');
+    }
 }

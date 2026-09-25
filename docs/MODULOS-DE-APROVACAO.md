@@ -25,7 +25,9 @@ O tipo já descrito nos áudios aceita imagens e vídeos; cliente autorizado apr
 
 O usuário também confirmou revisão de sites por link sem exigir uma conta do cliente: a pessoa precisa conseguir avaliar, escrever comentários, selecionar texto e marcar uma área visual da página. Sites são, portanto, um segundo cenário concreto de revisão além dos criativos sociais. O modo de capturar as anotações (página incorporada, script, captura ou alternativa) depende de teste técnico; não presumir que um iframe pode ler ou marcar qualquer site, pois políticas de origem podem bloquear isso. As anotações precisam apontar para a versão revisada para continuar compreensíveis após atualização do site.
 
-O link sem login é requisito de acesso para o cliente. O próprio link passa a conceder a capacidade de revisar o item endereçado; antes de produção, a arquitetura precisa definir token não previsível, escopo mínimo por demanda/versão, expiração, revogação, prevenção de acesso entre clientes e como identificar ou registrar quem respondeu. A conversa ainda não aprovou os valores dessas políticas.
+O link sem login é requisito de acesso para o cliente. A primeira implementação Laravel estabelece uma política inicial: token aleatório de 64 caracteres, armazenado somente como SHA-256; escopo em uma demanda e versão; data de expiração escolhida por quem envia; revogação pela gerência; links abertos anteriores revogados ao gerar nova versão; nome informado pelo cliente registrado como autodeclarado; comentários permitidos até uma única decisão final. A resposta só é aceita enquanto a demanda estiver em Aprovação do cliente. Rate limit protege leitura e envio. Esta política técnica ainda precisa ser validada pela Mix7 antes de compartilhar material real; não representa identificação verificada do cliente.
+
+A tela pública exibe título, organização, número da demanda, versão e URL do material indicado pela gerência. Briefing, tarefas, equipe e histórico interno não são expostos. Comentários e decisão são vinculados à versão e entram na atividade interna. Aprovação leva a demanda para Entrega; pedido de ajuste leva para Ajustes. O próximo envio durante outra rodada cria nova versão. Marcações visuais, seleção de texto em site, anexos privados e revisão específica de imagem/vídeo ainda não estão implementados.
 
 O fluxo integrado aprovado para demanda também inclui briefing, planejamento revisado, execução, revisão interna, decisão do cliente, ajustes quando pedidos e conclusão conferida. Papéis e exceções do processo real continuam a validar com a Mix7.
 
@@ -47,6 +49,6 @@ Estes requisitos descrevem expansão funcional. Se um novo tipo exigir lógica e
 - O fluxo do cliente usa os mesmos aprovadores do módulo de criativos ou há aprovações internas/externas distintas?
 - Que informações são exclusivas daquele tipo e quais devem continuar na demanda compartilhada?
 - Para comentários de sites, a pessoa precisa revisar URL publicada, ambiente de teste ou captura? Como controlar a versão e os domínios que aceitam anotações?
-- Que contexto (nome, e-mail, código enviado ao cliente ou apenas identificador do link) deve ficar registrado numa decisão sem conta?
+- A política inicial registra nome autodeclarado, sem e-mail ou verificação. A Mix7 precisa validar se isso basta ou se deve exigir outra confirmação antes de uso real.
 
 Até haver esses exemplos, o produto deve provar a arquitetura reutilizável e concluir o módulo de criativos conhecido, mantendo os outros tipos como módulos ainda não especificados. Ver também [requisitos](REQUIREMENTS.md), [proposta de fluxo](FLUXO-PROPOSTO.md) e a [proposta de arquitetura em revisão no PR #10](https://github.com/diegohenrich/plataforma-processos-mix7/pull/10).

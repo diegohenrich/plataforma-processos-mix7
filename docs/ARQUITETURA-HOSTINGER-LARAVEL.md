@@ -26,6 +26,7 @@ Referências oficiais consultadas em 25/09/2026: [banco de dados na Hostinger](h
 - Demandas/tarefas têm telas, transições de estado com validação, autoria de ações e atribuição. A direção pode cadastrar contas profissionais vinculadas à organização, com senha armazenada por hash e sem cadastro público. Essa autorização é provisória até a matriz dos quatro papéis ser confirmada.
 - O profissional vê tarefas atribuídas a ele; o histórico também esconde eventos de tarefas de colegas. A revisão da demanda e briefing continuam visíveis para quem trabalha nela, necessários ao contexto da execução.
 - O cronômetro web registra intervalos na tabela `task_time_entries`, ligados a tarefa, profissional e organização. Um bloqueio transacional na linha do usuário serializa o início e impede mais de uma sessão ativa. Pausar salva o intervalo; retomar cria outro; concluir/impedir/pausar a tarefa fecha a sessão ativa. O contador do cabeçalho é calculado pelos intervalos salvos e continua visível ao navegar.
+- A primeira revisão do cliente por link fica em `demand_review_links` e `demand_review_responses`. O token tem 64 caracteres aleatórios e somente seu SHA-256 é persistido; o material é um URL HTTP/HTTPS informado pela gerência, a validade é escolhida no envio no fuso local do navegador e a gerência pode revogar. Criar nova versão revoga links não revogados anteriores. Rotas públicas têm limite de requisições; uma decisão final impede novas respostas e altera a etapa da demanda. Nome é autodeclarado. A tela pública mostra somente o material escolhido, título e versão; não mostra briefing nem tarefas. Esta é uma política técnica inicial, ainda pendente de validação da Mix7 antes de material real.
 
 ## Desenvolvimento local
 
@@ -49,7 +50,7 @@ No hPanel, confirmar plano vigente, versão PHP 8.2+, PDO MySQL, espaço dispon�
 
 O diretório público do domínio deve apontar para `web-app/public/`; código, `.env`, `vendor/`, logs e arquivos privados ficam fora do diretório público. Definir `APP_ENV=production`, `APP_DEBUG=false`, chave própria de produção, HTTPS e permissões de escrita restritas em `storage/` e `bootstrap/cache/`. Executar migrações versionadas após cópia de segurança. Se o plano não permitir SSH, validar upload completo de dependências e importação de esquema pelo phpMyAdmin antes de escolher o procedimento alternativo.
 
-Nenhum deploy foi feito e não foram acessados painel, domínio, banco ou credenciais da Hostinger.
+Nenhum deploy foi feito e não foram acessados painel, domínio, banco ou credenciais da Hostinger. A revisão externa foi exercitada somente com banco de teste/local e dados sintéticos.
 
 ## Contrato futuro do executável Windows
 
@@ -57,4 +58,4 @@ O desktop será um cliente da API HTTPS do mesmo sistema. Endpoints serão versi
 
 ## Não pronto para uso com dados reais
 
-As permissões por papel e isolamento por cliente ainda não estão completos; o MVP não deve receber material real ou links de cliente. O cronômetro não reconcilia encerramento abrupto nem registra tempo offline. Também faltam fluxo seguro de provisionamento e recuperação de contas, trilha de auditoria completa, política para links externos, armazenamento privado de anexos, cópias de segurança e restauração exercitada, gestão operacional de tokens e confirmação do plano Hostinger. A fundação e as primeiras telas de trabalho habilitam desenvolvimento; não representam a plataforma completa.
+As permissões por papel e isolamento por cliente ainda não estão completos; o MVP não deve receber material real ou links de cliente. O cronômetro não reconcilia encerramento abrupto nem registra tempo offline. Também faltam fluxo seguro de provisionamento e recuperação de contas, trilha de auditoria completa, aprovação das regras do link, marcação visual em sites/imagens/vídeos, armazenamento privado de anexos, cópias de segurança e restauração exercitada, gestão operacional de tokens e confirmação do plano Hostinger. A fundação e as primeiras telas de trabalho habilitam desenvolvimento; não representam a plataforma completa.

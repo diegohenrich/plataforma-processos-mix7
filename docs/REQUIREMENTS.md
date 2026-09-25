@@ -38,7 +38,7 @@ Estes pontos complementam os três áudios e decisões anteriores, com base na i
 2. O histórico começa recolhido e abre quando a pessoa aciona “Ver histórico”.
 3. Um PDF local válido pode ser lido no detalhe em desktop e celular, com ação alternativa clara caso o visualizador embutido não funcione.
 4. Um cronômetro continua visível ao navegar/minimizar, fica associado à tarefa escolhida e termina com registro quando a tarefa é concluída.
-5. Uma revisão compartilhada por link mostra somente a demanda, versão e materiais autorizados; comentários e decisão ficam ligados ao link, ao material e à versão. O cliente não precisa criar conta; identidade, validade e revogação do link precisam de projeto seguro antes de uso real.
+5. Uma revisão compartilhada por link mostra somente a demanda, versão e materiais autorizados; comentários e decisão ficam ligados ao link, ao material e à versão. O cliente não precisa criar conta. A política técnica inicial usa nome autodeclarado, validade definida por quem envia, revogação e token limitado à versão; a Mix7 precisa validar a política antes de material real. O detalhe está em [Aprovações por módulos](MODULOS-DE-APROVACAO.md).
 6. Comentários de site conservam a versão, URL e trecho/área selecionados; ao publicar uma nova versão, anotações antigas continuam consultáveis no contexto original.
 7. Cada função tem uma matriz verificável de leitura e ação. A tela de cada função é testada com sessões separadas antes do piloto.
 8. Indicadores de produção e evolução são rastreáveis às tarefas e avaliações, distinguem bloqueios e mudanças de escopo e não aplicam consequência automática de pessoal.
