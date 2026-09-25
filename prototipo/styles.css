@@ -685,3 +685,46 @@ h1 { margin: 8px 0 10px; font-size: clamp(32px, 2.7vw, 42px); font-weight: 600; 
   .minimized-requests { right: 10px; bottom: max(10px, env(safe-area-inset-bottom)); max-width: calc(100vw - 20px); }
   .minimized-item { width: min(360px, calc(100vw - 20px)); }
 }
+
+/* Tipografia de trabalho: aproxima textos e ações dos tamanhos definidos no CRM. */
+.breadcrumbs { font-size: 15px; }
+.task-card { border-radius: 24px; }
+.client-label, .status-pill { font-size: 12px; }
+.task-card h3 { font-size: 16px; }
+.card-description { font-size: 14px; }
+.card-progress, .due-date { font-size: 12px; }
+.list-view .task-card h3 { font-size: 15px; }
+.list-view .task-card::after { font-size: 13px; }
+.drawer-content > h2 { font-size: 32px; }
+.drawer-meta, .drawer-meta strong { font-size: 14px; }
+.section-title-row h3 { font-size: 17px; }
+.drawer-tab { font-size: 14px; }
+.comment-meta strong { font-size: 14px; }
+.comment-body p { font-size: 15px; }
+.internal-note, .client-approval-note { font-size: 14px; }
+.request-dialog { border-radius: 24px; }
+.dialog-heading h2 { font-size: 32px; line-height: 1.15; }
+.dialog-heading p { font-size: 16px; }
+.form-label { font-size: 14px; }
+.form-label input, .form-label select, .form-label textarea { font-size: 16px; }
+.briefing-hint p, .briefing-file-status { font-size: 14px; }
+.briefing-file-dropzone > p:first-child { font-size: 16px; }
+.briefing-file-dropzone > p:first-child span,
+.briefing-file-field > label small { font-size: 14px; }
+.dialog-footer .primary-button, .dialog-footer .secondary-button { font-size: 14px; }
+.task-form label, .briefing-revision-form label, .briefing-details-form label { font-size: 14px; }
+.task-form input, .task-form select { font-size: 15px; }
+.task-list-details strong { font-size: 15px; }
+.task-list-details span, .task-status, .task-toggle, .task-timer-button { font-size: 13px; }
+.workspace-request strong, .workspace-task-copy strong { font-size: 16px; }
+.workspace-request span, .workspace-task-copy span, .workspace-panel-heading p { font-size: 14px; }
+.utility-note, .workspace-empty p { font-size: 14px; }
+
+@media (max-width: 600px) {
+  .breadcrumbs { font-size: 12px; }
+  .task-card h3 { font-size: 15px; }
+  .card-description { font-size: 13px; }
+  .dialog-heading h2 { font-size: 28px; }
+  .dialog-heading p { font-size: 15px; }
+  .drawer-content > h2 { font-size: 28px; }
+}
