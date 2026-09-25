@@ -86,9 +86,17 @@
 
   function validateLocalFiles(files, maxBytes) {
     const supported = file => file.type?.startsWith("image/") || file.type?.startsWith("video/") || file.type === "application/pdf";
-    if (files.some(file => !supported(file))) return "Formato não permitido. Use imagem, vídeo ou PDF.";
-    if (files.some(file => file.size > maxBytes)) return `O limite local desta demonstração é ${Math.floor(maxBytes / (1024 * 1024))} MB por arquivo.`;
+    const localFiles = Array.from(files || []);
+    if (localFiles.some(file => !supported(file))) return "Formato não permitido. Use imagem, vídeo ou PDF.";
+    if (localFiles.some(file => file.size > maxBytes)) return `O limite local desta demonstração é ${Math.floor(maxBytes / (1024 * 1024))} MB por arquivo.`;
     return "";
+  }
+
+  function mergeLocalFiles(existingFiles, incomingFiles, maxBytes) {
+    const existing = Array.from(existingFiles || []);
+    const merged = [...existing, ...Array.from(incomingFiles || [])];
+    const error = validateLocalFiles(merged, maxBytes);
+    return { files: error ? existing : merged, error };
   }
 
   function transition(request, action, payload = {}, now = new Date().toISOString()) {
@@ -330,7 +338,7 @@
     return next;
   }
 
-  const api = { stages, transition, listAssignees, filterRequestsByAssignee, unmetTaskDependencies, taskBlockers, validateLocalFiles };
+  const api = { stages, transition, listAssignees, filterRequestsByAssignee, unmetTaskDependencies, taskBlockers, validateLocalFiles, mergeLocalFiles };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   root.Mix7Workflow = api;
 })(globalThis);

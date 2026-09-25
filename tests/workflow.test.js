@@ -1,6 +1,6 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { transition, listAssignees, filterRequestsByAssignee, taskBlockers, validateLocalFiles } = require("../prototipo/workflow.js");
+const { transition, listAssignees, filterRequestsByAssignee, taskBlockers, validateLocalFiles, mergeLocalFiles } = require("../prototipo/workflow.js");
 
 function demand() {
   return {
@@ -44,6 +44,27 @@ test("arquivos locais de briefing aceitam mídia/PDF e rejeitam tipo ou tamanho 
   ], maxBytes), "");
   assert.match(validateLocalFiles([{ type: "text/plain", size: 10 }], maxBytes), /Formato não permitido/);
   assert.match(validateLocalFiles([{ type: "application/pdf", size: maxBytes + 1 }], maxBytes), /15 MB por arquivo/);
+});
+
+test("arquivos arrastados se juntam à seleção e recusas preservam os arquivos válidos", () => {
+  const maxBytes = 15 * 1024 * 1024;
+  const selected = [{ name: "referencia.png", type: "image/png", size: 100 }];
+  const incoming = [
+    { name: "roteiro.mp4", type: "video/mp4", size: 200 },
+    { name: "briefing.pdf", type: "application/pdf", size: maxBytes },
+  ];
+
+  const accepted = mergeLocalFiles(selected, incoming, maxBytes);
+  assert.equal(accepted.error, "");
+  assert.deepEqual(accepted.files.map(file => file.name), ["referencia.png", "roteiro.mp4", "briefing.pdf"]);
+
+  const rejectedType = mergeLocalFiles(accepted.files, [{ name: "notas.txt", type: "text/plain", size: 10 }], maxBytes);
+  assert.match(rejectedType.error, /Formato não permitido/);
+  assert.deepEqual(rejectedType.files, accepted.files);
+
+  const rejectedSize = mergeLocalFiles(selected, [{ name: "grande.pdf", type: "application/pdf", size: maxBytes + 1 }], maxBytes);
+  assert.match(rejectedSize.error, /15 MB por arquivo/);
+  assert.deepEqual(rejectedSize.files, selected);
 });
 
 test("filtro por profissional considera tarefas da rodada vigente e opções distintas", () => {

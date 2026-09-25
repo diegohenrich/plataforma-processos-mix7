@@ -538,6 +538,15 @@ h1 { margin: 8px 0 10px; font-size: clamp(32px, 2.7vw, 42px); font-weight: 600; 
 .form-grid { gap: 16px; }
 .briefing-hint { gap: 10px; margin-top: 18px; padding: 13px 15px; border-radius: 11px; background: #edf5f8; }
 .briefing-hint p { font-size: 12px; }
+.briefing-file-field > label { display: grid; gap: 5px; }
+.briefing-file-field > label small { color: var(--muted); font-size: 12px; font-weight: 400; }
+.briefing-file-dropzone { display: grid; gap: 10px; padding: 17px; border: 2px dashed #b8d1db; border-radius: 12px; background: #f8fbfc; transition: border-color .15s, background .15s, box-shadow .15s; }
+.briefing-file-dropzone > p { margin: 0; text-align: center; }
+.briefing-file-dropzone > p:first-child { display: grid; gap: 4px; color: var(--ink); font-size: 14px; }
+.briefing-file-dropzone > p:first-child span { color: var(--muted); font-size: 12px; font-weight: 400; }
+.briefing-file-dropzone input { width: 100%; min-height: 46px; padding: 8px; border: 1px solid #cad5db; border-radius: 9px; color: var(--ink); background: #fff; font-size: 13px; }
+.briefing-file-dropzone.is-dragging { border-color: #4385a0; background: #eaf5f8; box-shadow: 0 0 0 3px #8ecde233; }
+.briefing-file-status { color: var(--muted); font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
 .dialog-footer { gap: 10px; margin-top: 22px; padding-top: 17px; }
 .dialog-footer .secondary-button { min-height: 46px; flex-basis: 112px; }
 .dialog-footer .primary-button { min-height: 46px; font-size: 13px; }
@@ -646,6 +655,9 @@ h1 { margin: 8px 0 10px; font-size: clamp(32px, 2.7vw, 42px); font-weight: 600; 
   .form-label { font-size: 12px; }
   .form-label input, .form-label select, .form-label textarea { min-height: 46px; font-size: 14px; }
   .briefing-hint p { font-size: 11px; }
+  .briefing-file-dropzone { gap: 9px; padding: 12px; }
+  .briefing-file-dropzone > p:first-child { font-size: 13px; }
+  .briefing-file-status { font-size: 11px; }
   .workspace-view { gap: 14px; padding: 16px; border-radius: 16px; }
   .workspace-panel-heading h2 { font-size: 19px; }
   .workspace-panel-heading p { font-size: 13px; }

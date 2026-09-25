@@ -21,7 +21,7 @@ O conteúdo abaixo é tratado como requisito ou contexto de produto, nunca como 
 | Áudio 3, 01:24–01:57 | Integrar ChatGPT/Codex/Claude Code, repartir briefing em tarefas, estimar horas, mostrar Gantt e disponibilidade. | O plano manual aceita tarefas, responsáveis, estimativas e dependências. IA deve aguardar confirmação humana. | Parcial/ausente: não há APIs de IA, geração de tarefas, capacidade, disponibilidade ou gráfico de Gantt. |
 | Áudio 3, 01:58–02:53 | Pontuar entrega no prazo e qualidade; direção tem peso 2 e gestor peso 1; usar resultados em reconhecimento e decisões de pessoal. | O requisito de avaliação e os pesos foram registrados na tabela de requisitos. | Ausente: não há avaliação, fórmula, contestação, controles de acesso nem política de uso. Não implementar efeitos sobre remuneração ou vínculo antes de definir regras, governança e revisão humana. |
 | Áudio 3, 02:54–03:45 | Central de referências, treinamento, trilha de onboarding e matriz de acessos sem revelar senhas. | Existem páginas explicativas sobre Conhecimento e Acessos. | Parcial informativo: sem conteúdo gerenciado, trilhas atribuídas, permissões reais, cofre ou autenticação federada. |
-| Áudio 3, 03:46–04:08 | Base de contatos, arrastar imagens/arquivos para o trabalho e integração com Windows. | Clientes são agrupados a partir dos nomes nas demandas; briefing aceita anexos pela seleção de arquivo. | Parcial/ausente: não há diretório de contatos, arrastar-e-soltar nem integração nativa com Windows. O trecho do Windows não especifica quais operações são necessárias. |
+| Áudio 3, 03:46–04:08 | Base de contatos, arrastar imagens/arquivos para o trabalho e integração com Windows. | Clientes são agrupados a partir dos nomes nas demandas; o briefing agora oferece seletor e área de arraste com validação local de tipo e tamanho. Seleção, recusas e persistência foram testadas; o arraste real do sistema operacional ainda aguarda validação manual. | Parcial/ausente: não há diretório de contatos nem integração nativa com Windows. A interação de arraste ainda precisa de teste manual ponta a ponta; o trecho do Windows não especifica quais operações são necessárias. |
 
 ## Decisões posteriores que prevalecem
 
@@ -38,7 +38,7 @@ O conteúdo abaixo é tratado como requisito ou contexto de produto, nunca como 
 4. Definir integrações e tratamento de dados antes de conectar qualquer provedor de IA; implementar sugestões revisáveis e histórico de aprovação.
 5. Especificar avaliação transparente, com revisão e contestação; validar tratamento dos dados antes de qualquer uso em remuneração ou vínculo.
 6. Criar conteúdo e operação para contatos, conhecimento, treinamento/onboarding e concessão/revogação de acessos; investigar cofre externo em vez de expor senhas.
-7. Implementar e testar arrastar-e-soltar arquivos na demanda, além da seleção de arquivo já existente.
+7. Confirmar em Chromium o arraste real de arquivos do sistema operacional para o briefing, incluindo rejeição de tipo/tamanho e persistência; depois fechar a lacuna de validação local.
 8. Perguntar quais ações de Windows e quais recursos de integração com cada serviço externo são necessários.
 
 Referências detalhadas e perguntas abertas: [requisitos](REQUIREMENTS.md), [primeira implementação](PRIMEIRA-IMPLEMENTACAO.md), [pesquisa e prova de conceito no PR #10](https://github.com/diegohenrich/plataforma-processos-mix7/pull/10) e [especificação priorizada no PR #8](https://github.com/diegohenrich/plataforma-processos-mix7/pull/8).

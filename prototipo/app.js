@@ -1,10 +1,13 @@
-const { stages, transition, listAssignees, filterRequestsByAssignee, taskBlockers, validateLocalFiles } = window.Mix7Workflow;
+const { stages, transition, listAssignees, filterRequestsByAssignee, taskBlockers, validateLocalFiles, mergeLocalFiles } = window.Mix7Workflow;
 const STORAGE_KEY = "mix7.workflow.v1";
 const MINIMIZED_KEY = "mix7.workflow.minimized.v1";
 const MAX_FILE_BYTES = 15 * 1024 * 1024;
 const drawer = document.querySelector("#detailDrawer");
 const scrim = document.querySelector("#scrim");
 const dialog = document.querySelector("#requestDialog");
+const briefingFileInput = document.querySelector("#briefingFileInput");
+const briefingFileDropZone = document.querySelector("#briefingFileDropZone");
+const briefingFileStatus = document.querySelector("#briefingFileStatus");
 const toast = document.querySelector("#toast");
 const fileInput = document.querySelector("#versionFileInput");
 let toastTimer;
@@ -248,6 +251,17 @@ function renderBoard() {
   document.querySelector("#navDemandCount").textContent = String(active);
   renderMinimizedRequests();
   renderWorkspacePage();
+}
+
+function updateBriefingFileStatus(files = briefingFileInput.files) {
+  const names = Array.from(files || []).map(file => file.name);
+  briefingFileStatus.textContent = names.length
+    ? `${names.length} arquivo(s): ${names.join(", ")}`
+    : "Nenhum arquivo selecionado.";
+}
+
+function hasFileTransfer(event) {
+  return Array.from(event.dataTransfer?.types || []).includes("Files");
 }
 
 function demoDueFromCard(card) {
@@ -1360,6 +1374,70 @@ document.querySelector("#requestForm").addEventListener("submit", event => {
   const submitButton = event.currentTarget.querySelector('button[type="submit"]');
   submitButton.disabled = true;
   void createRequestFromForm(event.currentTarget, data, selectedFiles, submitButton);
+});
+
+briefingFileInput.addEventListener("change", () => {
+  const error = validateLocalFiles(briefingFileInput.files, MAX_FILE_BYTES);
+  if (error) {
+    briefingFileInput.value = "";
+    briefingFileStatus.textContent = error;
+    showToast(error);
+    return;
+  }
+  updateBriefingFileStatus();
+});
+
+briefingFileDropZone.addEventListener("dragenter", event => {
+  if (!hasFileTransfer(event)) return;
+  event.preventDefault();
+  briefingFileDropZone.classList.add("is-dragging");
+  briefingFileStatus.textContent = "Solte para adicionar os arquivos ao briefing.";
+});
+
+briefingFileDropZone.addEventListener("dragover", event => {
+  if (!hasFileTransfer(event)) return;
+  event.preventDefault();
+  if (event.dataTransfer) event.dataTransfer.dropEffect = "copy";
+});
+
+briefingFileDropZone.addEventListener("dragleave", event => {
+  if (!hasFileTransfer(event)) return;
+  if (event.relatedTarget instanceof Node && briefingFileDropZone.contains(event.relatedTarget)) return;
+  briefingFileDropZone.classList.remove("is-dragging");
+  updateBriefingFileStatus();
+});
+
+briefingFileDropZone.addEventListener("drop", event => {
+  if (!hasFileTransfer(event)) return;
+  event.preventDefault();
+  briefingFileDropZone.classList.remove("is-dragging");
+  const incomingFiles = Array.from(event.dataTransfer?.files || []);
+  if (!incomingFiles.length) {
+    briefingFileStatus.textContent = "Nenhum arquivo foi recebido. Use o botão para selecionar.";
+    return;
+  }
+
+  const result = mergeLocalFiles(briefingFileInput.files, incomingFiles, MAX_FILE_BYTES);
+  if (result.error) {
+    briefingFileStatus.textContent = result.error;
+    showToast(result.error);
+    return;
+  }
+
+  try {
+    const transfer = new DataTransfer();
+    for (const file of result.files) transfer.items.add(file);
+    briefingFileInput.files = transfer.files;
+    updateBriefingFileStatus();
+  } catch {
+    briefingFileStatus.textContent = "Não foi possível adicionar pelo arraste. Use o botão para selecionar.";
+    showToast("Não foi possível adicionar pelo arraste. Use o botão para selecionar.");
+  }
+});
+
+dialog.addEventListener("close", () => {
+  briefingFileDropZone.classList.remove("is-dragging");
+  updateBriefingFileStatus();
 });
 
 async function createRequestFromForm(form, data, selectedFiles, submitButton) {

@@ -335,7 +335,14 @@
         <div class="form-grid"><label class="form-label">Canal ou peça<input name="channel" required placeholder="Ex.: Instagram · carrossel" /></label><label class="form-label">Prazo desejado <small>(opcional)</small><input name="due" type="date" /></label></div>
         <label class="form-label">Critérios de aceite<textarea name="acceptanceCriteria" rows="2" required placeholder="Como a equipe e o cliente reconhecerão que a entrega atende ao pedido?"></textarea></label>
         <label class="form-label">Referências ou links <small>(opcional)</small><textarea name="references" rows="2" placeholder="Links ou contexto de referência resumido"></textarea></label>
-        <label class="form-label">Arquivos de referência <small>(opcional · imagem, vídeo ou PDF até 15 MB cada)</small><input name="briefingFiles" type="file" accept="image/*,video/*,application/pdf" multiple /></label>
+        <div class="form-label briefing-file-field">
+          <label for="briefingFileInput">Arquivos de referência <small>(opcional · imagem, vídeo ou PDF até 15 MB cada)</small></label>
+          <div class="briefing-file-dropzone" id="briefingFileDropZone" aria-describedby="briefingFileStatus">
+            <p><strong>Arraste arquivos para esta área</strong><span>ou selecione pelo botão abaixo</span></p>
+            <input id="briefingFileInput" name="briefingFiles" type="file" accept="image/*,video/*,application/pdf" multiple />
+            <p class="briefing-file-status" id="briefingFileStatus" role="status" aria-live="polite">Nenhum arquivo selecionado.</p>
+          </div>
+        </div>
         <div class="briefing-hint"><span>✳</span><p>Origem, canal/peça e critérios de aceite devem estar registrados antes do planejamento. Campos obrigatórios por serviço serão refinados com um caso real da Mix7.</p></div>
         <div class="dialog-footer"><button class="secondary-button" value="cancel">Cancelar</button><button class="primary-button" type="submit" value="submit">Salvar demanda <span>→</span></button></div>
       </form>
