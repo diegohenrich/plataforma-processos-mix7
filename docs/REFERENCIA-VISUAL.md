@@ -2,18 +2,20 @@
 
 ## Fonte conferida
 
-Em 24/09/2026, o projeto `CRM-MIX7-RENEW` foi executado em servidor local e sua tela `/login` foi renderizada em navegador Chromium a 1270 × 713. A tela mostra a identidade Mix7 com azul-petróleo escuro, realces azul-claro e uma superfície clara; a hierarquia usa título grande, texto de apoio legível e campos/botão de bom tamanho.
+O CRM-MIX7-RENEW foi executado em ambiente local. Em 24/09/2026, Chromium renderizou a tela `/login` em 1270 × 713. A rota `/administrador/dashboard` redirecionou para o login, portanto o dashboard autenticado ainda não foi inspecionado renderizado; nenhuma credencial foi tentada. A decisão visual abaixo usa a tela que foi renderizada e os estilos do dashboard existentes em `public/css/dashboard-light.css`.
 
-O login exige autenticação. Não havia sessão de demonstração documentada; não foram tentadas credenciais. Por isso, o dashboard não foi apresentado como inspecionado ao vivo. Para entender seu tratamento interno, foram conferidos os estilos existentes em `public/css/dashboard-light.css`: corpo de 16 px, navegação de 15 px, títulos de 32–46 px, cartões com raio de 24 px, botões com pelo menos 44 px e primário azul-petróleo. O tema do dashboard usa navegação escura; esse contraste não foi transferido para a plataforma, pois o usuário pediu predominância clara em branco e azul-claro.
+O CSS define corpo de 16 px, títulos de 32–46 px, navegação de 15 px, lateral de 252 px (230 px até 1399 px), recuos de conteúdo de 38 px (28 px até 1399 px), cartões de raio 24 px e botões com altura mínima de 44 px. Define também a lateral em degradê `#243943` → `#10252f`, item ativo `#e8f3f8` e as cores `#202e35` (texto), `#204b61` (azul-petróleo), `#8ecde2` (azul-claro), `#f5f6f5` (fundo) e branco (superfícies).
 
-As cores confirmadas no CRM continuam sendo `#202e35` (texto), `#204b61` (azul-petróleo), `#8ecde2` (azul-claro), `#f5f6f5` (fundo) e branco (superfícies). Na plataforma, azul-petróleo marca ações primárias e azul-claro marca estados ativos, foco e realces. A navegação permanece branca, com seleção em azul-claro. Tipografia, espaçamento, tamanho dos controles e acabamento dos cartões foram ajustados a partir das medidas existentes, sem reutilizar imagens, logotipo gráfico, conteúdo ou composição dividida da tela de login.
+Após o pedido recente do usuário para aproximar mais a plataforma do CRM, sua navegação agora usa o degradê escuro, textos claros, item ativo azul-claro e as larguras confirmadas de 252/230 px. O conteúdo segue em superfícies brancas e fundo claro, com os azuis do CRM nas ações e destaques. Os cartões de resumo e de demandas foram ajustados para raios maiores. Nenhum arquivo ou asset do CRM foi copiado.
 
-## Revisão da plataforma
+## Inspeção renderizada
 
-Após a alteração, a página de demandas e o formulário “Nova demanda” foram renderizados e inspecionados em 1270 × 713. A navegação, o painel de resumo, o quadro e os cartões foram conferidos; o modal permanece rolável e mantém o conteúdo visível dentro da janela.
+Depois da alteração, a página de demandas foi aberta em Chromium na janela desktop de 1270 × 720. A lateral escura, os rótulos e ícones da navegação, o estado ativo, o fundo claro, cartões de resumo e o quadro de demandas estão visíveis. O contraste e o alinhamento geral da lateral foram conferidos nessa renderização.
 
-Em 390 × 844, a navegação compacta, o quadro, os controles e o formulário também foram inspecionados. O seletor de demanda manteve largura de 337 px entre x=19 e x=356; o documento mediu 375 px em uma viewport de 390 px, sem rolagem horizontal da página. O modal teve 776 px de área visível e rolagem interna para o restante do formulário.
+A plataforma tem uma sessão local de demonstração aberta em outra aba com um formulário iniciado; ela foi preservada. As regras móveis existentes definem lateral compacta de 72 px até 900 px e 56 px até 600 px. A revisão desta mudança em janela móvel continua pendente; a janela disponível não expôs controle de viewport móvel nesta sessão.
 
-## Limite desta comparação
+## Pendências
 
-Para revisar o dashboard do CRM como ele aparece após o login, é necessária uma sessão de demonstração já autorizada pela Mix7. A referência atual usa a tela pública de entrada renderizada e as regras visuais do dashboard verificadas no projeto local. Nenhum arquivo do CRM foi alterado.
+- Abrir o dashboard autenticado do CRM em sessão de demonstração para comparar sua composição, cabeçalho e cartões reais. O usuário precisa entrar manualmente na aba local `Entrar | CRM Mix7`, pois `/administrador/dashboard` redireciona para autenticação.
+- Conferir a alteração em viewport móvel e ajustar caso a lateral compacta ou o quadro apresente problema.
+- Reavaliar este documento quando houver evidência nova do dashboard renderizado. Nenhum arquivo do CRM foi alterado.

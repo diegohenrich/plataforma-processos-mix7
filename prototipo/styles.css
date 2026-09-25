@@ -291,14 +291,38 @@ h1 { margin: 9px 0 5px; font: 700 25px var(--font-body); letter-spacing: -.8px; 
 }
 
 /* CRM-MIX7-RENEW palette applied to the existing Mix7 workspace. */
+.sidebar {
+  background: linear-gradient(160deg, #243943, #10252f 80%);
+  border-right-color: #ffffff14;
+  box-shadow: 4px 0 24px #102b3710;
+}
+.brand { color: #fff; }
 .brand-symbol i { background: var(--blue); }
 .brand-symbol i:nth-child(2) { background: var(--sky); }
-.brand-word span, .help-card a, .metric-icon.blue-icon { color: var(--blue); }
-.workspace-switcher { border: 1px solid var(--line); border-radius: 10px; color: var(--ink); background: #fff; font: inherit; text-align: left; cursor: pointer; }
+.brand-word span { color: var(--sky); }
+.help-card a, .metric-icon.blue-icon { color: var(--blue); }
+.workspace-switcher { border: 1px solid #ffffff24; border-radius: 12px; color: #fff; background: #ffffff0d; font: inherit; text-align: left; cursor: pointer; }
+.workspace-mark { background: #e8f3f8; color: #153b4d; }
+.workspace-copy small, .profile-copy small { color: #abc0ca; }
+.chevron { color: #abc0ca; }
+.nav-caption { color: #9cb3bf; }
+.nav-item { color: #d6e2e8; }
+.nav-icon { color: #a8c7d4; }
+.nav-item:hover { color: #fff; background: #ffffff0d; }
+.nav-item:hover .nav-icon { color: #fff; }
 .nav-item.active { color: #153b4d; background: #e8f3f8; }
 .nav-item.active .nav-icon { color: #204b61; }
-.nav-item:hover { color: #204b61; background: #f3f8fa; }
+.nav-count { color: #d6e2e8; background: #ffffff14; }
+.nav-item.active .nav-count { color: #153b4d; background: #fff; }
+.nav-dot { background: var(--sky); }
 .nav-item.active::before { background: var(--sky); }
+.help-card { border-color: #ffffff24; background: #ffffff0d; }
+.help-spark { color: var(--sky); }
+.help-card strong { color: #fff; }
+.help-card p { color: #abc0ca; }
+.help-card a { color: var(--sky); }
+.profile-button { border-top-color: #ffffff24; }
+.profile-copy strong { color: #fff; }
 .eyebrow-line { background: var(--sky); }
 .primary-button { background: var(--blue); box-shadow: 0 3px 7px #204b6122; }
 .primary-button:hover { background: var(--blue-dark); }
@@ -374,7 +398,7 @@ h1 { margin: 9px 0 5px; font: 700 25px var(--font-body); letter-spacing: -.8px; 
 
 /* Escala visual conferida no CRM-MIX7-RENEW: interface respirada, textos legíveis e ações confortáveis. */
 body { font-size: 16px; line-height: 1.55; -webkit-font-smoothing: antialiased; }
-.sidebar { width: 252px; padding: 30px 16px 18px; border-right-color: var(--line); }
+.sidebar { width: 252px; padding: 36px 16px 18px; }
 .main-content { margin-left: 252px; }
 .brand { height: 44px; }
 .workspace-switcher { margin: 21px 0 28px; padding: 12px 10px; border-radius: 13px; }
@@ -404,7 +428,7 @@ h1 { margin: 8px 0 10px; font-size: clamp(32px, 2.7vw, 42px); font-weight: 600; 
 .primary-button { min-height: 48px; height: auto; padding: 11px 18px; border-radius: 12px; font-size: 15px; }
 .primary-button span { font-size: 19px; }
 .summary-grid { gap: 16px; margin-top: 28px; }
-.summary-card { min-height: 132px; height: auto; padding: 18px 20px; border-color: var(--line); border-radius: 20px; box-shadow: 0 6px 14px #253b4805, 0 18px 46px #253b4807; }
+.summary-card { min-height: 132px; height: auto; padding: 18px 20px; border-color: var(--line); border-radius: 24px; box-shadow: 0 6px 14px #253b4805, 0 18px 46px #253b4807; }
 .summary-top { font-size: 14px; }
 .metric-icon { width: 36px; height: 36px; border-radius: 11px; font-size: 16px; }
 .metric-row { gap: 11px; margin-top: 3px; }
@@ -435,7 +459,7 @@ h1 { margin: 8px 0 10px; font-size: clamp(32px, 2.7vw, 42px); font-weight: 600; 
 .column-heading h2 { font-size: 13px; }
 .column-count { min-width: 24px; height: 23px; border-radius: 7px; font-size: 11px; }
 .card-stack { gap: 12px; }
-.task-card { padding: 15px 15px 13px; border-radius: 15px; box-shadow: 0 3px 12px #204b6108; }
+.task-card { padding: 15px 15px 13px; border-radius: 20px; box-shadow: 0 3px 12px #204b6108; }
 .task-card:hover { border-color: #b8dce8; box-shadow: 0 9px 24px #204b6112; }
 .client-label { padding: 5px 8px; border-radius: 7px; font-size: 10px; }
 .task-card h3 { margin: 11px 0 7px; color: var(--ink); font-size: 14px; line-height: 1.45; }
@@ -545,17 +569,17 @@ h1 { margin: 8px 0 10px; font-size: clamp(32px, 2.7vw, 42px); font-weight: 600; 
 .minimized-request strong { font-size: 14px; }
 .minimized-request small { font-size: 12px; }
 .minimized-dismiss { width: 42px; border-radius: 11px; }
-.workspace-view { gap: 18px; margin-top: 28px; padding: 28px; border-radius: 22px; }
+.workspace-view { gap: 18px; margin-top: 28px; padding: 28px; border-radius: 24px; }
 .workspace-panel-heading h2 { font-size: 22px; }
 .workspace-panel-heading p { font-size: 15px; }
 .workspace-request, .workspace-task { padding: 16px 18px; border-radius: 14px; }
 .utility-dialog { padding: 28px; border-radius: 20px; }
 
-@media (max-width: 1250px) {
-  .sidebar { width: 220px; }
-  .main-content { margin-left: 220px; }
-  .page-content { padding-right: 26px; padding-left: 26px; }
-  .topbar { padding-inline: 26px; }
+@media (max-width: 1399px) {
+  .sidebar { width: 230px; }
+  .main-content { margin-left: 230px; }
+  .page-content { padding-right: 28px; padding-left: 28px; }
+  .topbar { padding-inline: 28px; }
   .nav-item { font-size: 14px; }
   .kanban-column { min-width: 205px; }
 }

@@ -27,7 +27,7 @@ O conteúdo abaixo é tratado como requisito ou contexto de produto, nunca como 
 
 - O usuário aprovou o fluxo integrado de demanda, planejamento revisado, execução, revisão interna, aprovação do cliente, ajustes, destino final com evidência e conclusão conferida.
 - O usuário pediu que sugestões da IA dependam de confirmação humana.
-- O usuário substituiu o site público como referência visual pelo projeto local `CRM-MIX7-RENEW`; também pediu branco e azul-claro. A tela de entrada e os arquivos CSS internos foram conferidos localmente. O painel autenticado ainda aguarda uma sessão aberta pelo próprio usuário.
+- O usuário substituiu o site público como referência visual pelo projeto local `CRM-MIX7-RENEW`; também pediu branco e azul-claro. O pedido posterior para aproximar mais a plataforma do CRM foi resolvido aplicando a lateral escura definida no CSS, preservando as superfícies claras e azuis. A tela de entrada foi renderizada e o CSS interno conferido; o painel autenticado ainda aguarda sessão para comparação direta.
 - Testes gratuitos servem para avaliação conforme os termos da solução; a pesquisa não autoriza copiar código, conteúdo ou ativos proprietários.
 
 ## Lacunas concretas para o plano
