@@ -185,7 +185,7 @@ Em Chromium, numa origem separada e descartável `127.0.0.1:4210`, abri “Mais 
 
 Em outra origem isolada (`127.0.0.1:4212`), acionei os dois botões e validei os arquivos recém-criados na pasta Downloads pelo horário e sufixo, preservando arquivos anteriores com o mesmo nome. O JSON parseou com schema 1, oito demandas, metadados de exportação e histórico. O CSV foi importado por `Import-Csv`: oito registros, as sete colunas esperadas, BOM UTF-8 e finais de linha CRLF. As mensagens da interface corresponderam ao formato escolhido e o quadro manteve as oito demandas fictícias.
 
-`serializeRequestsJson` e `serializeRequestsCsv` agora concentram a geração de conteúdo para testes determinísticos. `node --test tests/workflow.test.js` passou 24/24. Nenhum arquivo anterior foi sobrescrito ou removido. Continua pendente abrir o CSV em Excel ou Calc para conferir a apresentação visual; a estrutura e os bytes UTF-8 foram verificados nesta etapa.
+`serializeRequestsJson` e `serializeRequestsCsv` agora concentram a geração de conteúdo para testes determinísticos. `node --test tests/workflow.test.js` passou 24/24. Nenhum arquivo anterior foi sobrescrito ou removido. Na data desta etapa, ainda faltava conferir a apresentação visual do CSV; a conferência posterior consta na seção **Verificação de apresentação no LibreOffice Calc**. A estrutura e os bytes UTF-8 foram verificados aqui.
 
 ### Menus de etapa do Kanban — 2026-09-25
 
