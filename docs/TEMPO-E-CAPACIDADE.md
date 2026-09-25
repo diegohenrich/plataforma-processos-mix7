@@ -16,6 +16,10 @@ Para planejamento, a proposta é calcular a disponibilidade no período a partir
 
 Essa regra é uma proposta, não uma política aprovada. Horários, pausas, feriados, ausências, reuniões, tarefas sem estimativa, distribuição de tarefas longas entre dias, bloqueios externos e tratamento de tarefas paralelas precisam de exemplos reais. O sistema não deve escolher ou redistribuir responsáveis por conta própria; qualquer sugestão da IA exige revisão humana.
 
+### Prévia local em construção
+
+O protótipo deixa escolher um profissional com tarefas abertas, um período de semana ISO (segunda a domingo), horas previstas de trabalho e ausências em horas por dia. Não há valores iniciais de jornada. Para comparação, soma a estimativa integral de cada tarefa aberta atribuída à pessoa cujo prazo cai na semana; tarefas sem estimativa ou sem prazo aparecem como lacunas. O cronômetro não altera esses totais. Os dados são demonstrativos e ficam apenas neste navegador. A janela semanal e a regra baseada no prazo são escolhas de ensaio, não regras aprovadas pela Mix7.
+
 ## Relação com calendário e Gantt
 
 O Gantt deve mostrar prazos, duração planejada e dependências registradas. O tempo medido pode apoiar análise posterior, mas não muda datas, capacidade, estimativas ou responsáveis sem uma ação revisada e registrada. Alterar uma estimativa ou período deve preservar o valor anterior, autor e motivo quando a regra for definida.
@@ -26,7 +30,7 @@ O Gantt deve mostrar prazos, duração planejada e dependências registradas. O 
 2. Reabrir a demanda minimizada mantém o mesmo cronômetro e o histórico; iniciar outra tarefa enquanto houver sessão ativa é bloqueado ou exige a ação de pausa definida pela Mix7.
 3. Fechar normalmente e reabrir não conta tempo offline. A plataforma compartilhada recupera intervalos confirmados e registra falha ou encerramento incompleto de forma auditável.
 4. Estimativa, tempo realizado e disponibilidade permanecem campos/medidas distintos; corrigir um não reescreve os outros.
-5. Após a Mix7 aprovar a regra de jornada e ausência, a capacidade por período mostra entradas, tarefas incluídas e cálculo reproduzível; sobrecarga e tarefas sem estimativa ficam visíveis.
+5. A prévia local compara horas semanais inseridas manualmente, ausências registradas e estimativas das tarefas com prazo no período; sobrecarga e tarefas sem estimativa ficam visíveis. A regra operacional só se conclui após a Mix7 aprovar jornada, ausências e alocação.
 6. O Gantt respeita prazos e dependências salvos; dados do cronômetro não deslocam o cronograma automaticamente.
 
 ## Perguntas que ainda precisam de resposta

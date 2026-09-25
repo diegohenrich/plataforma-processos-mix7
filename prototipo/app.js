@@ -1,8 +1,10 @@
 const { stages, participantTypes, transition, listAssignees, filterRequestsByAssignee, taskBlockers, findActiveTaskTimer, stopAllActiveTaskTimers, getRunnableTasks, validateLocalFiles, mergeLocalFiles, serializeRequestsJson, serializeRequestsCsv } = window.Mix7Workflow;
+const { assigneeKey, weekStartFromIso, isoWeekFromDate, summarizeWeeklyCapacity } = window.Mix7Capacity;
 const { knowledgeTypes, saveKnowledgeItem, setKnowledgeItemArchived, filterKnowledgeItems } = window.Mix7Knowledge;
 const STORAGE_KEY = "mix7.workflow.v1";
 const MINIMIZED_KEY = "mix7.workflow.minimized.v1";
 const KNOWLEDGE_STORAGE_KEY = "mix7.knowledge.v1";
+const CAPACITY_STORAGE_KEY = "mix7.capacity-preview.v1";
 const MAX_FILE_BYTES = 15 * 1024 * 1024;
 const drawer = document.querySelector("#detailDrawer");
 const appShell = document.querySelector(".app-shell");
@@ -33,6 +35,9 @@ let minimizedRequestIds = loadMinimizedIds();
 const minimizedTimerTaskSelections = new Map();
 let state = loadState();
 let knowledgeRecords = loadKnowledgeRecords();
+let capacityData = loadCapacityData();
+let selectedCapacityAssignee = "";
+let selectedCapacityWeek = isoWeekFromDate(new Date());
 let knowledgeSearch = "";
 let knowledgeTypeFilter = "";
 let knowledgeIncludeArchived = false;
@@ -420,6 +425,63 @@ function selectedRequests() {
   });
 }
 
+function renderCapacityOverviewCard() {
+  const value = document.querySelector("#capacityOverviewValue");
+  if (!value) return;
+  const label = document.querySelector("#capacityOverviewLabel");
+  const note = document.querySelector("#capacityOverviewNote");
+  const bar = document.querySelector("#capacityOverviewBar");
+  const legend = document.querySelector("#capacityOverviewLegend");
+  const people = listAssignees(state.requests);
+  value.textContent = "—";
+  label.textContent = "sem configuração";
+  bar.style.width = "0%";
+  bar.classList.remove("is-overloaded");
+  note.replaceChildren(document.createTextNode("Configure horas fictícias na "));
+  const openCalendar = node("a", "capacity-overview-link", "agenda");
+  openCalendar.href = "#calendario";
+  openCalendar.dataset.page = "calendar";
+  note.append(openCalendar, document.createTextNode("."));
+  legend.textContent = "Sem dados de horas";
+
+  if (!people.length) {
+    label.textContent = "sem tarefas";
+    note.replaceChildren(document.createTextNode("Atribua tarefas para configurar a "));
+    note.append(openCalendar, document.createTextNode("capacidade."));
+    return;
+  }
+
+  const start = weekStartFromIso(selectedCapacityWeek);
+  const summaries = people.map(assignee => summarizeWeeklyCapacity({
+    requests: state.requests,
+    profile: findCapacityProfile(assignee, start),
+    absences: capacityData.absences,
+    assignee,
+    weekStart: start,
+  }));
+  const missing = summaries.filter(item => !item.configured).length;
+  if (missing) {
+    label.textContent = `${missing} sem jornada`;
+    note.replaceChildren(document.createTextNode(`Configure horas para ${missing} profissional${missing === 1 ? "" : "is"} na `));
+    note.append(openCalendar, document.createTextNode("."));
+    return;
+  }
+
+  const available = summaries.reduce((total, item) => total + item.availableHours, 0);
+  const planned = summaries.reduce((total, item) => total + item.plannedHours, 0);
+  const over = planned > available;
+  value.textContent = `${Number(available.toFixed(2))} h`;
+  label.textContent = over ? "carga acima" : "disponíveis";
+  note.replaceChildren(document.createTextNode(`${Number(planned.toFixed(2))} h estimadas nesta semana · `));
+  note.append(openCalendar);
+  const percent = available > 0 ? Math.min(100, planned / available * 100) : (planned > 0 ? 100 : 0);
+  bar.style.width = `${percent}%`;
+  bar.classList.toggle("is-overloaded", over);
+  legend.textContent = over
+    ? `Excesso estimado: ${Number((planned - available).toFixed(2))} h`
+    : `${Number(planned.toFixed(2))} h previstas de ${Number(available.toFixed(2))} h disponíveis`;
+}
+
 function renderWorkspacePage() {
   const panel = document.querySelector("#workspaceView");
   const boardPage = ["overview", "requests", "approvals"].includes(activePage);
@@ -443,6 +505,7 @@ function renderWorkspacePage() {
   document.querySelector("#pageSubtitle").textContent = titles[activePage][1];
   document.querySelector("#pageBreadcrumb").textContent = titles[activePage][0];
   document.querySelector("#newRequestButton").hidden = ["knowledge", "accesses"].includes(activePage);
+  renderCapacityOverviewCard();
   if (boardPage) {
     const requests = selectedRequests();
     document.querySelectorAll(".task-card").forEach(card => {
@@ -480,6 +543,33 @@ function makeOpenRequestButton(request, detail = "", beforeOpen = null) {
     openDrawer(request.id);
   });
   return button;
+}
+
+function loadCapacityData() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(CAPACITY_STORAGE_KEY) || "{}");
+    return {
+      profiles: Array.isArray(parsed.profiles) ? parsed.profiles.filter(item => item && typeof item.assignee === "string" && typeof item.weekStart === "string" && Number.isFinite(Number(item.scheduledHours))) : [],
+      absences: Array.isArray(parsed.absences) ? parsed.absences.filter(item => item && typeof item.id === "string" && typeof item.assignee === "string" && typeof item.date === "string" && Number.isFinite(Number(item.hours))) : [],
+    };
+  } catch {
+    return { profiles: [], absences: [] };
+  }
+}
+
+function saveCapacityData() {
+  try {
+    localStorage.setItem(CAPACITY_STORAGE_KEY, JSON.stringify(capacityData));
+    return true;
+  } catch {
+    showToast("Não foi possível salvar a prévia de capacidade neste navegador.");
+    return false;
+  }
+}
+
+function findCapacityProfile(assignee, weekStart) {
+  const key = assigneeKey(assignee);
+  return capacityData.profiles.find(item => assigneeKey(item.assignee) === key && item.weekStart === weekStart) || null;
 }
 
 function renderKnowledgeResults(container) {
@@ -768,6 +858,178 @@ function renderKnowledgePage(panel) {
   });
 }
 
+function capacityField(labelText, control, className = "") {
+  const label = node("label", `capacity-field${className ? ` ${className}` : ""}`, labelText);
+  label.append(control);
+  return label;
+}
+
+function renderWeeklyCapacityPanel(panel) {
+  const section = node("section", "capacity-planner");
+  section.append(panelHeading("Disponibilidade e carga estimada", "Configure horas de demonstração por pessoa e registre ausências. Não existe jornada padrão neste protótipo."));
+  const people = listAssignees(state.requests);
+  if (!people.length) {
+    section.append(emptyPanel("Nenhuma pessoa com tarefa atribuída", "Crie uma tarefa e informe um responsável para experimentar a prévia de capacidade."));
+    panel.append(section);
+    return;
+  }
+  if (!people.some(name => assigneeKey(name) === assigneeKey(selectedCapacityAssignee))) selectedCapacityAssignee = people[0];
+
+  const controls = node("div", "capacity-controls");
+  const weekInput = node("input", "");
+  weekInput.type = "week";
+  weekInput.name = "week";
+  weekInput.value = selectedCapacityWeek;
+  controls.append(capacityField("Semana (segunda a domingo)", weekInput));
+  const assigneeSelect = node("select", "");
+  assigneeSelect.name = "assignee";
+  for (const name of people) assigneeSelect.add(new Option(name, name));
+  assigneeSelect.value = selectedCapacityAssignee;
+  controls.append(capacityField("Profissional demonstrativo", assigneeSelect));
+  section.append(controls);
+
+  let weekStart;
+  try {
+    weekStart = weekStartFromIso(selectedCapacityWeek);
+  } catch {
+    weekStart = weekStartFromIso(isoWeekFromDate(new Date()));
+    selectedCapacityWeek = isoWeekFromDate(new Date());
+  }
+  const profile = findCapacityProfile(selectedCapacityAssignee, weekStart);
+  const weekEnd = new Date(`${weekStart}T00:00:00Z`);
+  weekEnd.setUTCDate(weekEnd.getUTCDate() + 6);
+  const weekEndStamp = weekEnd.toISOString().slice(0, 10);
+  const absenceHours = capacityData.absences
+    .filter(item => assigneeKey(item.assignee) === assigneeKey(selectedCapacityAssignee) && item.date >= weekStart && item.date <= weekEndStamp)
+    .reduce((total, item) => total + (Number(item.hours) || 0), 0);
+  const absencesForWeek = capacityData.absences.filter(item => assigneeKey(item.assignee) === assigneeKey(selectedCapacityAssignee) && item.date >= weekStart && item.date <= weekEndStamp);
+
+  const scheduleForm = node("form", "capacity-form");
+  scheduleForm.id = "capacityScheduleForm";
+  const hoursInput = node("input", "");
+  hoursInput.type = "number";
+  hoursInput.name = "scheduledHours";
+  hoursInput.min = "0";
+  hoursInput.max = "168";
+  hoursInput.step = "0.25";
+  hoursInput.required = true;
+  hoursInput.value = profile ? String(profile.scheduledHours) : "";
+  hoursInput.placeholder = "Informe as horas";
+  const scheduleFields = node("div", "capacity-form-fields");
+  scheduleFields.append(capacityField("Horas previstas de trabalho nesta semana", hoursInput));
+  const saveSchedule = node("button", "secondary-button", profile ? "Atualizar horas" : "Salvar horas");
+  saveSchedule.type = "submit";
+  scheduleForm.append(scheduleFields, saveSchedule);
+  section.append(scheduleForm);
+
+  if (!profile) {
+    section.append(emptyPanel("Disponibilidade não configurada", "Digite a quantidade de horas prevista para esta pessoa nesta semana. O protótipo não preenche uma jornada sozinho."));
+    panel.append(section);
+    return;
+  }
+
+  const summary = summarizeWeeklyCapacity({
+    requests: state.requests,
+    profile,
+    absences: capacityData.absences,
+    assignee: selectedCapacityAssignee,
+    weekStart,
+  });
+  const metrics = node("dl", "capacity-metrics");
+  for (const [label, value] of [
+    ["Horas previstas", summary.scheduledHours],
+    ["Ausências", summary.absenceHours],
+    ["Disponíveis", summary.availableHours],
+    ["Estimativa com prazo nesta semana", summary.plannedHours],
+  ]) {
+    const pair = node("div", "capacity-metric");
+    pair.append(node("dt", "", label), node("dd", "", `${Number(value.toFixed(2))} h`));
+    metrics.append(pair);
+  }
+  section.append(metrics);
+
+  const overCapacity = summary.plannedHours > summary.availableHours;
+  const utilization = summary.availableHours > 0
+    ? Math.min(100, summary.plannedHours / summary.availableHours * 100)
+    : (summary.plannedHours > 0 ? 100 : 0);
+  const balance = node("p", `capacity-balance${overCapacity ? " is-overloaded" : ""}`, "");
+  balance.textContent = overCapacity
+    ? `Excesso estimado: ${Number((summary.plannedHours - summary.availableHours).toFixed(2))} h`
+    : `Saldo após as estimativas: ${Number((summary.availableHours - summary.plannedHours).toFixed(2))} h`;
+  const meter = node("div", "capacity-meter");
+  meter.setAttribute("role", "progressbar");
+  meter.setAttribute("aria-label", "Estimativa comparada com a disponibilidade configurada");
+  meter.setAttribute("aria-valuemin", "0");
+  meter.setAttribute("aria-valuemax", "100");
+  meter.setAttribute("aria-valuenow", String(Math.round(utilization)));
+  const fill = node("i", overCapacity ? "is-overloaded" : "");
+  fill.style.width = `${utilization}%`;
+  meter.append(fill);
+  section.append(balance, meter, node("p", "capacity-method-note", "Prévia: soma estimativas de tarefas abertas com prazo nesta semana. Não distribui horas por dia e não desconta tempo já registrado."));
+
+  const absenceSection = node("section", "capacity-absence-section");
+  absenceSection.append(node("h3", "calendar-section-title", "Ausências nesta semana"));
+  const absenceForm = node("form", "capacity-absence-form");
+  absenceForm.id = "capacityAbsenceForm";
+  const dateInput = node("input", "");
+  dateInput.type = "date";
+  dateInput.name = "date";
+  dateInput.min = weekStart;
+  dateInput.max = weekEndStamp;
+  dateInput.required = true;
+  const absenceInput = node("input", "");
+  absenceInput.type = "number";
+  absenceInput.name = "hours";
+  absenceInput.min = "0.25";
+  absenceInput.step = "0.25";
+  absenceInput.max = String(Math.max(0, profile.scheduledHours - absenceHours));
+  absenceInput.required = true;
+  absenceInput.placeholder = "Horas";
+  const addAbsence = node("button", "secondary-button", "Registrar ausência");
+  addAbsence.type = "submit";
+  absenceForm.append(capacityField("Dia", dateInput), capacityField("Horas fora", absenceInput), addAbsence);
+  absenceSection.append(absenceForm);
+  if (absencesForWeek.length) {
+    const list = node("ul", "capacity-absence-list");
+    for (const absence of absencesForWeek) {
+      const item = node("li", "capacity-absence-item");
+      const date = new Date(`${absence.date}T12:00:00`);
+      const dateLabel = new Intl.DateTimeFormat("pt-BR", { weekday: "short", day: "2-digit", month: "short" }).format(date);
+      item.append(node("span", "", `${dateLabel} · ${Number(absence.hours)} h`));
+      const remove = node("button", "text-action", "Remover");
+      remove.type = "button";
+      remove.dataset.capacityRemoveAbsence = absence.id;
+      item.append(remove);
+      list.append(item);
+    }
+    absenceSection.append(list);
+  } else {
+    absenceSection.append(node("p", "capacity-muted", "Nenhuma ausência registrada."));
+  }
+  section.append(absenceSection);
+
+  const taskSection = node("section", "capacity-task-section");
+  taskSection.append(node("h3", "calendar-section-title", `Tarefas com prazo nesta semana (${summary.plannedTasks.length})`));
+  if (summary.plannedTasks.length) {
+    const list = node("div", "workspace-list");
+    for (const item of summary.plannedTasks) {
+      const detail = `${item.task.title} · ${item.estimateHours == null ? "sem estimativa" : `${Number(item.estimateHours)} h estimadas`} · prazo ${formatDue(item.task.due)}`;
+      list.append(makeOpenRequestButton(item.request, detail));
+    }
+    taskSection.append(list);
+  } else {
+    taskSection.append(node("p", "capacity-muted", "Nenhuma tarefa aberta desta pessoa tem prazo nesta semana."));
+  }
+  if (summary.undatedTasks.length) {
+    taskSection.append(node("p", "capacity-muted", `${summary.undatedTasks.length} tarefa${summary.undatedTasks.length === 1 ? "" : "s"} atribuída${summary.undatedTasks.length === 1 ? "" : "s"} sem prazo não entra${summary.undatedTasks.length === 1 ? "" : "m"} no cálculo.`));
+  }
+  if (summary.missingEstimateTasks.length) {
+    taskSection.append(node("p", "capacity-muted", `${summary.missingEstimateTasks.length} tarefa${summary.missingEstimateTasks.length === 1 ? "" : "s"} com prazo não tem estimativa; confira a lista antes de interpretar o total.`));
+  }
+  section.append(taskSection);
+  panel.append(section);
+}
+
 function renderWorkspacePanel(panel, requests) {
   panel.replaceChildren();
   if (activePage === "team") {
@@ -815,6 +1077,7 @@ function renderWorkspacePanel(panel, requests) {
   }
   if (activePage === "calendar") {
     panel.append(panelHeading("Cronograma e prazos", "O Gantt usa início e prazo informados nas tarefas; sem datas, não há previsão calculada nem disponibilidade estimada."));
+    renderWeeklyCapacityPanel(panel);
     const currentTasks = [];
     const undatedTasks = [];
     const events = [];
@@ -1877,6 +2140,83 @@ document.querySelectorAll(".add-card").forEach(button => {
 document.querySelectorAll("[data-page]").forEach(link => link.addEventListener("click", event => { event.preventDefault(); setPage(link.dataset.page); }));
 document.querySelector(".brand").addEventListener("click", event => { event.preventDefault(); setPage("overview"); });
 document.querySelector("#focusSearchButton").addEventListener("click", () => { setPage("requests"); document.querySelector("#searchInput").focus(); });
+document.querySelector("#workspaceView").addEventListener("change", event => {
+  if (event.target.name === "week" && event.target.type === "week") {
+    selectedCapacityWeek = event.target.value || isoWeekFromDate(new Date());
+    renderWorkspacePage();
+  }
+  if (event.target.name === "assignee" && event.target.tagName === "SELECT") {
+    selectedCapacityAssignee = event.target.value;
+    renderWorkspacePage();
+  }
+});
+document.querySelector("#workspaceView").addEventListener("submit", event => {
+  if (!(["capacityScheduleForm", "capacityAbsenceForm"].includes(event.target.id))) return;
+  event.preventDefault();
+  const data = new FormData(event.target);
+  const assignee = selectedCapacityAssignee;
+  const weekStart = weekStartFromIso(selectedCapacityWeek);
+  if (event.target.id === "capacityScheduleForm") {
+    const scheduledHours = Number(data.get("scheduledHours"));
+    if (!Number.isFinite(scheduledHours) || scheduledHours < 0 || scheduledHours > 168 || Math.round(scheduledHours * 4) !== scheduledHours * 4) {
+      showToast("Informe horas entre 0 e 168, em intervalos de 15 minutos.");
+      return;
+    }
+    const weekEnd = new Date(`${weekStart}T00:00:00Z`);
+    weekEnd.setUTCDate(weekEnd.getUTCDate() + 6);
+    const absenceHours = capacityData.absences
+      .filter(item => assigneeKey(item.assignee) === assigneeKey(assignee) && item.date >= weekStart && item.date <= weekEnd.toISOString().slice(0, 10))
+      .reduce((total, item) => total + Number(item.hours || 0), 0);
+    if (absenceHours > scheduledHours) {
+      showToast("As horas previstas não podem ficar abaixo das ausências já registradas.");
+      return;
+    }
+    const previous = capacityData;
+    const profile = { assignee, weekStart, scheduledHours };
+    capacityData = {
+      ...capacityData,
+      profiles: [...capacityData.profiles.filter(item => !(assigneeKey(item.assignee) === assigneeKey(assignee) && item.weekStart === weekStart)), profile],
+    };
+    if (!saveCapacityData()) capacityData = previous;
+    else {
+      showToast("Horas previstas salvas neste navegador.");
+      renderWorkspacePage();
+    }
+    return;
+  }
+
+  const profile = findCapacityProfile(assignee, weekStart);
+  const date = String(data.get("date") || "");
+  const hours = Number(data.get("hours"));
+  const weekEnd = new Date(`${weekStart}T00:00:00Z`);
+  weekEnd.setUTCDate(weekEnd.getUTCDate() + 6);
+  const weekEndStamp = weekEnd.toISOString().slice(0, 10);
+  if (!profile) return showToast("Configure as horas da semana antes de registrar uma ausência.");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || date < weekStart || date > weekEndStamp) return showToast("Escolha uma data dentro da semana selecionada.");
+  if (!Number.isFinite(hours) || hours <= 0 || hours > 168 || Math.round(hours * 4) !== hours * 4) return showToast("Informe horas de ausência em intervalos de 15 minutos.");
+  const existingAbsences = capacityData.absences
+    .filter(item => assigneeKey(item.assignee) === assigneeKey(assignee) && item.date >= weekStart && item.date <= weekEndStamp)
+    .reduce((total, item) => total + Number(item.hours || 0), 0);
+  if (existingAbsences + hours > Number(profile.scheduledHours)) return showToast("As ausências não podem superar as horas previstas nesta semana.");
+  const previous = capacityData;
+  capacityData = { ...capacityData, absences: [...capacityData.absences, { id: makeId(), assignee, date, hours }] };
+  if (!saveCapacityData()) capacityData = previous;
+  else {
+    showToast("Ausência registrada para esta semana.");
+    renderWorkspacePage();
+  }
+});
+document.querySelector("#workspaceView").addEventListener("click", event => {
+  const removeButton = event.target.closest("[data-capacity-remove-absence]");
+  if (!removeButton) return;
+  const previous = capacityData;
+  capacityData = { ...capacityData, absences: capacityData.absences.filter(item => item.id !== removeButton.dataset.capacityRemoveAbsence) };
+  if (!saveCapacityData()) capacityData = previous;
+  else {
+    showToast("Ausência removida.");
+    renderWorkspacePage();
+  }
+});
 document.querySelector("#workspaceButton").addEventListener("click", () => document.querySelector("#profileDialog").showModal());
 document.querySelector("#profileButton").addEventListener("click", () => document.querySelector("#profileDialog").showModal());
 document.querySelector("#exportProfileData").addEventListener("click", () => exportRequests("json"));

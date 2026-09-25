@@ -82,10 +82,10 @@
             </article>
             <article class="summary-card">
               <div class="summary-top"><span>Capacidade da equipe</span><span class="metric-icon green-icon">♙</span></div>
-              <div class="metric-row"><strong>—</strong><span class="capacity-label">em definição</span></div>
-              <small>indisponível até definirmos jornada, estimativas e ausências</small>
-              <div class="capacity-track"><i style="width:0"></i></div>
-              <div class="capacity-legend"><span>Sem dados de horas</span></div>
+              <div class="metric-row"><strong id="capacityOverviewValue">—</strong><span class="capacity-label" id="capacityOverviewLabel">sem configuração</span></div>
+              <small id="capacityOverviewNote">Configure horas fictícias na <a class="capacity-overview-link" href="#calendario" data-page="calendar">agenda</a>.</small>
+              <div class="capacity-track"><i id="capacityOverviewBar" style="width:0"></i></div>
+              <div class="capacity-legend"><span id="capacityOverviewLegend">Sem dados de horas</span></div>
             </article>
           </div>
 
@@ -350,6 +350,7 @@
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
     <input id="versionFileInput" type="file" accept="image/*,video/*,application/pdf" hidden />
     <script src="workflow.js"></script>
+    <script src="capacity.js"></script>
     <script src="knowledge.js"></script>
     <script src="app.js"></script>
   </body>

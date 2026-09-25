@@ -453,12 +453,51 @@ h1 { margin: 9px 0 5px; font: 700 25px var(--font-body); letter-spacing: -.8px; 
 .participant-role-details .utility-note { display: grid; gap: 3px; }
 .participant-role-pending { background: #fffaf0; border-color: #eee2c6; }
 .participant-role-pending strong { color: #795b1f; }
+
+.capacity-overview-link { color: var(--blue); font-weight: 650; text-decoration: underline; text-underline-offset: 2px; }
+.capacity-track i.is-overloaded { background: #d77b70; }
+.capacity-planner { display: grid; gap: 14px; padding: 17px; border: 1px solid #d8e8ee; border-radius: 14px; background: #f9fcfd; }
+.capacity-controls { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.capacity-field { display: grid; gap: 6px; min-width: 0; color: var(--muted); font-size: 12px; font-weight: 650; }
+.capacity-field input, .capacity-field select { width: 100%; min-width: 0; min-height: 44px; padding: 9px 11px; border: 1px solid var(--line); border-radius: 9px; color: var(--ink); background: #fff; font: inherit; font-size: 14px; }
+.capacity-form { display: flex; align-items: end; gap: 10px; }
+.capacity-form-fields { flex: 1 1 0; min-width: 0; }
+.capacity-form > button, .capacity-absence-form > button { min-height: 44px; padding: 9px 13px; border-radius: 9px; font-size: 12px; white-space: nowrap; }
+.capacity-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 0; }
+.capacity-metric { min-width: 0; display: grid; gap: 5px; padding: 12px; border: 1px solid #e1ebef; border-radius: 10px; background: #fff; }
+.capacity-metric dt { color: var(--muted); font-size: 11px; line-height: 1.35; }
+.capacity-metric dd { margin: 0; color: var(--ink); font-size: 18px; font-weight: 700; }
+.capacity-balance { margin: 0; color: #2f7b61; font-size: 13px; font-weight: 700; }
+.capacity-balance.is-overloaded { color: #a34d43; }
+.capacity-meter { height: 8px; overflow: hidden; border-radius: 999px; background: #e7eff2; }
+.capacity-meter i { display: block; height: 100%; border-radius: inherit; background: #66b997; transition: width .2s ease; }
+.capacity-meter i.is-overloaded { background: #d77b70; }
+.capacity-method-note, .capacity-muted { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+.capacity-absence-section, .capacity-task-section { display: grid; gap: 10px; min-width: 0; }
+.capacity-absence-form { display: grid; grid-template-columns: minmax(150px, .8fr) minmax(110px, .5fr) auto; gap: 10px; align-items: end; }
+.capacity-absence-list { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.capacity-absence-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 11px; border: 1px solid #e5edf0; border-radius: 9px; color: var(--ink); background: #fff; font-size: 12px; }
+.capacity-absence-item button { flex: 0 0 auto; }
+.capacity-task-section .workspace-request { display: grid; grid-template-columns: minmax(0, 1fr); justify-items: start; }
+.capacity-task-section .workspace-request > span, .capacity-task-section .workspace-request > small { grid-column: 1; overflow-wrap: anywhere; }
+.capacity-planner .workspace-empty { padding: 18px 14px; background: #fff; }
+
 @media (max-width: 600px) {
   .gantt-timeline { overflow-x: auto; }
   .gantt-axis, .gantt-row { width: 620px; grid-template-columns: 190px 400px; gap: 12px; }
   .gantt-axis { padding-inline: 12px; }
   .gantt-row { min-height: 64px; padding-inline: 12px; }
   .calendar-section-title { font-size: 14px; }
+  .capacity-planner { gap: 12px; padding: 12px; }
+  .capacity-controls { grid-template-columns: minmax(0, 1fr); gap: 9px; }
+  .capacity-form { align-items: stretch; flex-direction: column; }
+  .capacity-form > button, .capacity-absence-form > button { width: 100%; }
+  .capacity-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+  .capacity-metric { padding: 10px; }
+  .capacity-metric dt { font-size: 10px; }
+  .capacity-metric dd { font-size: 16px; }
+  .capacity-absence-form { grid-template-columns: minmax(0, 1fr); gap: 9px; }
+  .capacity-absence-item { padding: 9px; }
 }
 .filter-strip { flex-wrap: wrap; }
 .filter-chip { padding: 5px 9px; border: 1px solid #d8e8ee; border-radius: 100px; color: var(--blue); background: #f2f8fa; font: inherit; font-size: 11px; cursor: pointer; }
