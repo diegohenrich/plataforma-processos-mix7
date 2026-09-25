@@ -123,6 +123,16 @@
     return null;
   }
 
+  function stopAllActiveTaskTimers(requests, now = new Date().toISOString()) {
+    return (requests || []).map(request => {
+      let next = request;
+      for (const task of request.tasks || []) {
+        if (task.timerStartedAt) next = transition(next, "stop_task_timer", { taskId: task.id }, now);
+      }
+      return next;
+    });
+  }
+
   function getRunnableTasks(request, activeTimer = null) {
     if (!request || !["doing", "adjustments"].includes(request.stage)) return [];
     const round = currentTaskRound(request);
@@ -456,7 +466,7 @@
     return next;
   }
 
-  const api = { stages, participantTypes, transition, listAssignees, filterRequestsByAssignee, unmetTaskDependencies, taskBlockers, findActiveTaskTimer, getRunnableTasks, validateLocalFiles, mergeLocalFiles, csvCell, serializeRequestsJson, serializeRequestsCsv };
+  const api = { stages, participantTypes, transition, listAssignees, filterRequestsByAssignee, unmetTaskDependencies, taskBlockers, findActiveTaskTimer, stopAllActiveTaskTimers, getRunnableTasks, validateLocalFiles, mergeLocalFiles, csvCell, serializeRequestsJson, serializeRequestsCsv };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   root.Mix7Workflow = api;
 })(globalThis);

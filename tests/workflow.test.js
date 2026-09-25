@@ -1,6 +1,6 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { participantTypes, transition, listAssignees, filterRequestsByAssignee, taskBlockers, findActiveTaskTimer, getRunnableTasks, validateLocalFiles, mergeLocalFiles, csvCell, serializeRequestsJson, serializeRequestsCsv } = require("../prototipo/workflow.js");
+const { participantTypes, transition, listAssignees, filterRequestsByAssignee, taskBlockers, findActiveTaskTimer, stopAllActiveTaskTimers, getRunnableTasks, validateLocalFiles, mergeLocalFiles, csvCell, serializeRequestsJson, serializeRequestsCsv } = require("../prototipo/workflow.js");
 
 test("catálogo de participantes cobre os quatro tipos dos áudios sem inventar permissões", () => {
   assert.deepEqual(participantTypes.map(({ id }) => id), [
@@ -159,6 +159,18 @@ test("cronômetro rejeita horário final anterior ao início", () => {
   item = transition(item, "start_task_timer", { taskId }, "2026-09-25T10:00:00.000Z");
   assert.throws(() => transition(item, "stop_task_timer", { taskId }, "2026-09-24T10:00:00.000Z"), /horário do cronômetro é inválido/);
   assert.equal(item.tasks[0].timerStartedAt, "2026-09-25T10:00:00.000Z");
+});
+
+test("fechar o app encerra e registra as sessões ativas sem mantê-las correndo offline", () => {
+  let item = planRoundOne(demand());
+  const taskId = item.tasks[0].id;
+  item = transition(item, "start_task_timer", { taskId }, "2026-09-25T10:00:00.000Z");
+  const stopped = stopAllActiveTaskTimers([item], "2026-09-25T10:00:47.900Z")[0];
+  assert.equal(stopped.tasks[0].timerStartedAt, null);
+  assert.deepEqual(stopped.tasks[0].timeEntries, [{ startedAt: "2026-09-25T10:00:00.000Z", stoppedAt: "2026-09-25T10:00:47.900Z", durationSeconds: 47 }]);
+  assert.equal(stopped.history.at(-1).type, "stop_task_timer");
+  assert.equal(findActiveTaskTimer([stopped]), null);
+  assert.equal(stopAllActiveTaskTimers([stopped], "2026-09-25T11:00:00.000Z")[0].history.length, stopped.history.length);
 });
 
 test("procura timer ativo em qualquer demanda e libera a próxima tarefa ao parar", () => {

@@ -1,4 +1,4 @@
-const { stages, participantTypes, transition, listAssignees, filterRequestsByAssignee, taskBlockers, findActiveTaskTimer, getRunnableTasks, validateLocalFiles, mergeLocalFiles, serializeRequestsJson, serializeRequestsCsv } = window.Mix7Workflow;
+const { stages, participantTypes, transition, listAssignees, filterRequestsByAssignee, taskBlockers, findActiveTaskTimer, stopAllActiveTaskTimers, getRunnableTasks, validateLocalFiles, mergeLocalFiles, serializeRequestsJson, serializeRequestsCsv } = window.Mix7Workflow;
 const { knowledgeTypes, saveKnowledgeItem, setKnowledgeItemArchived, filterKnowledgeItems } = window.Mix7Knowledge;
 const STORAGE_KEY = "mix7.workflow.v1";
 const MINIMIZED_KEY = "mix7.workflow.minimized.v1";
@@ -1225,6 +1225,12 @@ function refreshTaskTimerDisplays() {
   });
 }
 
+function stopRunningTimersWhenAppCloses() {
+  if (!findActiveTaskTimer(state.requests)) return;
+  state.requests = stopAllActiveTaskTimers(state.requests, new Date().toISOString());
+  saveState();
+}
+
 async function removeFile(key) {
   const database = await openAssetDatabase();
   return new Promise((resolve, reject) => {
@@ -2081,4 +2087,5 @@ document.querySelectorAll(".view-tab").forEach(tab => tab.addEventListener("clic
 
 displayCurrentDate();
 renderBoard();
+window.addEventListener("pagehide", stopRunningTimersWhenAppCloses);
 window.setInterval(refreshTaskTimerDisplays, 1000);
