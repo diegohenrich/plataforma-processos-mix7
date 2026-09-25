@@ -13,6 +13,11 @@
 - git diff --check passou; CI do push e do PR #9 para o commit 73b28d58995a651b98f9487b319bd505340fcc68 passou nas execuções [36117997596](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36117997596) e [36118002250](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36118002250).
 # Estado em 2026-09-25
 
+## Aprovação direta e conclusão na interface — 2026-09-25
+
+- Em Chromium isolado `127.0.0.1:4214`, aprovei uma demanda fictícia V03 na página Aprovações. Ela saiu da fila de decisão e avançou para Entrega e publicação sem concluir automaticamente. O formulário bloqueou evidência vazia/só com espaços; ao escolher “Publicação agendada” e informar URL demonstrativa, registrou o resultado, concluiu a demanda e preservou aprovação e evidência no histórico. Capturei e inspecionei a tela final em 1280 × 720. A origem de uso `127.0.0.1:4173` não foi tocada.
+- Atualizei `docs/PRIMEIRA-IMPLEMENTACAO.md`. Vinculado ao cartão 18 (primeira entrega integrada). Validação automatizada e sincronização GitHub/Trello desta rodada ainda pendentes.
+
 ## Justificativa obrigatória para ajustes do cliente — 2026-09-25
 
 - O botão “Solicitar ajustes” fica desabilitado enquanto o texto estiver vazio ou contiver apenas espaços; uma justificativa preenchida habilita a ação. A regra de domínio preserva etapa, decisão e comentários quando a justificativa é inválida. “Solicitar ajustes” significa devolver para correção; rejeição final sem reenvio segue não confirmada.
