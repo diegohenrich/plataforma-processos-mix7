@@ -107,6 +107,13 @@
     return { files: error ? existing : merged, error };
   }
 
+  function csvCell(value) {
+    const text = String(value ?? "");
+    const formulaLike = /^[\t\r\n]/u.test(text) || /^[\s]*[=+\-@＝＋－＠]/u.test(text);
+    const safeText = formulaLike ? `\t${text}` : text;
+    return `"${safeText.replaceAll('"', '""')}"`;
+  }
+
   function transition(request, action, payload = {}, now = new Date().toISOString()) {
     const next = structuredClone(request);
     const version = next.versions[next.versions.length - 1];
@@ -381,7 +388,7 @@
     return next;
   }
 
-  const api = { stages, transition, listAssignees, filterRequestsByAssignee, unmetTaskDependencies, taskBlockers, findActiveTaskTimer, validateLocalFiles, mergeLocalFiles };
+  const api = { stages, transition, listAssignees, filterRequestsByAssignee, unmetTaskDependencies, taskBlockers, findActiveTaskTimer, validateLocalFiles, mergeLocalFiles, csvCell };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   root.Mix7Workflow = api;
 })(globalThis);

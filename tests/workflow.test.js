@@ -1,6 +1,14 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { transition, listAssignees, filterRequestsByAssignee, taskBlockers, findActiveTaskTimer, validateLocalFiles, mergeLocalFiles } = require("../prototipo/workflow.js");
+const { transition, listAssignees, filterRequestsByAssignee, taskBlockers, findActiveTaskTimer, validateLocalFiles, mergeLocalFiles, csvCell } = require("../prototipo/workflow.js");
+
+test("CSV export neutralizes spreadsheet formula prefixes and preserves CSV quoting", () => {
+  for (const value of ["=1+1", "+1+1", "-1+1", "@SUM(1,1)", "＝1+1", "\t=1+1", "\r=1+1", "\n=1+1", "  =1+1"]) {
+    assert.equal(csvCell(value), `"\t${value.replaceAll('"', '""')}"`);
+  }
+  assert.equal(csvCell('texto, com "aspas"'), '"texto, com ""aspas"""');
+  assert.equal(csvCell("campanha normal"), '"campanha normal"');
+});
 
 function demand() {
   return {

@@ -1,4 +1,4 @@
-const { stages, transition, listAssignees, filterRequestsByAssignee, taskBlockers, findActiveTaskTimer, validateLocalFiles, mergeLocalFiles } = window.Mix7Workflow;
+const { stages, transition, listAssignees, filterRequestsByAssignee, taskBlockers, findActiveTaskTimer, validateLocalFiles, mergeLocalFiles, csvCell } = window.Mix7Workflow;
 const STORAGE_KEY = "mix7.workflow.v1";
 const MINIMIZED_KEY = "mix7.workflow.minimized.v1";
 const MAX_FILE_BYTES = 15 * 1024 * 1024;
@@ -1319,14 +1319,13 @@ function exportRequests(format) {
     showToast("Cópia JSON das demandas baixada. Os arquivos de mídia não estão incluídos.");
     return;
   }
-  const quote = value => `"${String(value ?? "").replaceAll('"', '""')}"`;
   const lines = [["Demanda", "Cliente", "Etapa", "Prazo", "Responsáveis", "Tarefas", "Decisão atual"]];
   for (const request of state.requests) {
     const version = request.versions?.at(-1);
     const assignees = [...new Set((request.tasks || []).map(task => task.assignee).filter(Boolean))].join(", ");
     lines.push([request.title, request.client, stages[request.stage], request.due, assignees, request.tasks?.length || 0, version?.decision?.result || ""]);
   }
-  downloadData(`mix7-demandas-${date}.csv`, `\uFEFF${lines.map(row => row.map(quote).join(",")).join("\r\n")}`, "text/csv;charset=utf-8");
+  downloadData(`mix7-demandas-${date}.csv`, `\uFEFF${lines.map(row => row.map(csvCell).join(",")).join("\r\n")}`, "text/csv;charset=utf-8");
   showToast("Lista CSV das demandas baixada.");
 }
 
