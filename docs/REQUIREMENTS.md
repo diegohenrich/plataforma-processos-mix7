@@ -19,6 +19,30 @@ Fonte: transcrição dos três áudios fornecidos em 24/09/2026 e decisões expl
 | Arquivos e ambiente de trabalho | Soltar imagens/arquivos em uma demanda e mantê-los associados a ela; integração com Windows foi pedida, mas ainda sem comportamento definido. |
 | Construção | Comparar soluções existentes e opções open source antes de decidir o que desenvolver. Avaliar licenças, manutenção e segurança. |
 
+## Requisitos adicionais confirmados pelo usuário — 25/09/2026
+
+Estes pontos complementam os três áudios e decisões anteriores, com base na inspeção do protótipo feita pelo usuário. Não devem ser apresentados como falas dos áudios:
+
+- **Quadro legível:** cartões mostram um resumo curto do briefing; o contexto completo continua no detalhe. O histórico permanece disponível, mas recolhido por padrão para não alongar a tela.
+- **Documentos:** materiais anexados precisam ter uma ação de visualização clara. PDFs devem abrir no próprio detalhe e oferecer alternativa de nova guia ou download caso o navegador não consiga mostrá-los.
+- **Autoria e atribuição:** registrar quem criou a demanda, revisou o planejamento, atribuiu e executou cada tarefa, aprovou ou pediu alterações e confirmou a entrega. Os nomes precisam corresponder a usuários identificados, não texto livre apresentado como identidade comprovada.
+- **Visões por função:** separar informações e ações para dono da agência, gerente de marketing, profissional executor e cliente, conforme permissões explícitas. A visualização individual do protótipo não conta como controle de acesso.
+- **Tempo e trabalho individual:** manter o cronômetro e uma lista de tarefas da equipe facilmente visíveis fora do detalhe minimizado; concluir uma tarefa encerra e registra automaticamente seu cronômetro.
+- **Aprovação de cliente por link:** o cliente deve abrir a entrega por link sem criar conta, entender o que está revisando, aprovar ou sugerir alterações e escrever comentários. O escopo de cada link e as medidas contra encaminhamento, acesso indevido e exposição de outros clientes ainda precisam de decisão arquitetural.
+- **Revisão de sites:** permitir selecionar trechos de texto e marcar visualmente uma área da página para contextualizar comentários. Essa capacidade exige testar sites com iframe, restrições de origem, páginas móveis e versões publicadas; o mecanismo técnico ainda está em aberto.
+- **Gestão da equipe:** gerência precisa acompanhar produção e evolução por profissional; direção e gestão podem pontuar conforme a necessidade citada nos áudios. Os pesos 2 e 1 aparecem nos áudios, mas métricas, escala, período, justificativa, contestação e finalidade continuam sem fórmula aprovada.
+
+### Critérios de aceite adicionados
+
+1. Um cartão longo não expande a coluna do Kanban; o resumo é curto e o briefing completo pode ser consultado no detalhe.
+2. O histórico começa recolhido e abre quando a pessoa aciona “Ver histórico”.
+3. Um PDF local válido pode ser lido no detalhe em desktop e celular, com ação alternativa clara caso o visualizador embutido não funcione.
+4. Um cronômetro continua visível ao navegar/minimizar, fica associado à tarefa escolhida e termina com registro quando a tarefa é concluída.
+5. Uma revisão compartilhada por link mostra somente a demanda, versão e materiais autorizados; comentários e decisão ficam ligados ao link, ao material e à versão. O cliente não precisa criar conta; identidade, validade e revogação do link precisam de projeto seguro antes de uso real.
+6. Comentários de site conservam a versão, URL e trecho/área selecionados; ao publicar uma nova versão, anotações antigas continuam consultáveis no contexto original.
+7. Cada função tem uma matriz verificável de leitura e ação. A tela de cada função é testada com sessões separadas antes do piloto.
+8. Indicadores de produção e evolução são rastreáveis às tarefas e avaliações, distinguem bloqueios e mudanças de escopo e não aplicam consequência automática de pessoal.
+
 O sistema de aprovações deve ser reutilizável em áreas diferentes da agência. Criativos de redes sociais são o primeiro módulo conhecido; a Mix7 ainda precisa indicar os demais tipos concretos. Requisitos e critérios estão em [Aprovações por módulos](MODULOS-DE-APROVACAO.md).
 
 O comportamento de tempo confirmado, a proposta de capacidade e os critérios de aceite estão em [Tempo, disponibilidade e capacidade](TEMPO-E-CAPACIDADE.md). A proposta não fecha as regras de jornada que a Mix7 ainda precisa definir.
@@ -62,6 +86,10 @@ Antes de criar contas operacionais, ainda é necessário decidir autenticação,
 8. Quais integrações com ChatGPT, Codex, Claude e Windows são realmente necessárias na primeira versão? Que dados podem ser enviados a cada serviço?
 9. “Tudo que o Trello tem” é uma expectativa ampla, não uma lista pronta. Quais funções do Trello são indispensáveis além de quadro/lista, atribuição, busca, etiquetas, checklists, comentários, prazos, anexos e arrastar arquivos? Quais formatos, limites de arquivo e tamanhos de tela precisam ser atendidos?
 10. Quais são as regras transparentes e a finalidade da avaliação de prazo, produção e qualidade? Como registrar bloqueios ou mudanças de escopo sem atribuir automaticamente o resultado à pessoa?
+11. Que informação e ação são próprias do dono da agência, gerente de marketing, profissional e cliente? Quem pode ver dados de cada cliente, criar e atribuir tarefas, alterar briefing, revisar, compartilhar link, reabrir e consultar indicadores?
+12. Como se identifica o cliente ao responder por link sem conta? O link expira, pode ser revogado ou restringido a uma única demanda/versão? O que fazer se for encaminhado?
+13. Para revisar site, a Mix7 quer comentar sobre página publicada via script, imagem capturada, extensão ou outro mecanismo? Que interações e dispositivos precisam funcionar?
+14. Quais valores de produção a gerência precisa acompanhar (tarefas, horas, entregas, qualidade ou outros), e com que período e referência de evolução?
 
 As respostas serão registradas nos cartões da lista **Requisitos a validar** do [Trello](https://trello.com/b/RkWOzDcu/desenvolvimento-de-projetos-mix7). A [ficha de validação de caso real](VALIDACAO-CASO-REAL.md) separa fatos, fontes, hipóteses e decisões propostas. Não inferir regras finais a partir do resumo da transcrição quando a fala não as estabelece. A [rastreabilidade dos três áudios](TRACEABILIDADE-AUDIOS.md) liga cada pedido explícito à cobertura atual e às lacunas verificadas.
 

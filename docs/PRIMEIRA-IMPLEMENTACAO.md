@@ -46,6 +46,12 @@ Repeti os formulários e o envio de comentário em Chromium, viewport 390 × 844
 
 ## O que já executa
 
+### Cartões compactos, histórico recolhido, PDF e timer global — 2026-09-25
+
+Após a inspeção do usuário, os cartões do quadro passaram a mostrar um resumo de até 92 caracteres e o histórico do detalhe inicia recolhido. A bandeja fixa lista tarefas abertas e permite iniciar/pausar o timer; ao concluir tarefa com sessão ativa, o sistema encerra e registra o tempo antes de concluir. O detalhe mantém o contador no cabeçalho enquanto está aberto, pois o painel modal bloqueia a interação com a bandeja ao fundo. Anexos PDF agora oferecem visualização embutida e link alternativo para abrir o arquivo.
+
+`node --test tests/*.test.js` passou 42/42; `node --check prototipo/app.js`, `node --check prototipo/workflow.js` e `git diff --check` passaram. Em E2E isolado no Edge, validei resumo, histórico inicialmente recolhido, seleção de tarefa, timer no cabeçalho, conclusão com parada e registro de sessão, e viewport móvel 390×844 sem overflow horizontal nem erros JavaScript/rede. As capturas renderizadas foram inspecionadas em [desktop 1440×900](evidencias/visual/ux-densidade-desktop-1440.png) e [celular 390×844](evidencias/visual/ux-cronometro-mobile-390.png). O PDF gera URL Blob e oferece link alternativo, mas o Edge automatizado mostrou o painel embutido preto; a leitura do conteúdo não está validada. Identidade/autoria, permissões reais e o portal público de revisão seguem pendentes e documentados nos requisitos.
+
 ### Revisão interna pela interface — 2026-09-25
 
 Em Chromium/Playwright, numa origem e perfil descartáveis (`127.0.0.1:4231`), criei uma demanda sintética, avancei o briefing, atribuí e concluí uma tarefa, anexei um PNG sintético e enviei V01 para revisão interna. Tentar “Devolver” sem justificativa manteve a etapa em Revisão interna e mostrou “Registre o motivo da devolução.” Com justificativa, a demanda voltou a Em produção, o texto ficou registrado como comentário e o histórico recebeu “Devolvido pela revisão interna” ligado a V01. Não houve erros JavaScript. Esta execução valida a resposta da interface e o estado local; não valida identidade, papéis reais nem colaboração entre usuários.

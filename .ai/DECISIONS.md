@@ -1,5 +1,9 @@
 # Decisões vigentes
 
+- 2026-09-25 — A revisão do produto pelo cliente deve funcionar por link sem exigir conta, incluindo comentários de texto/área em sites. O link não terá regras de escopo, expiração ou revogação presumidas: defini-las na arquitetura antes de compartilhar material real. Papéis de acesso explicitados pelo usuário: dono da agência, gerente de marketing, profissional executor e cliente; permissões detalhadas ainda pendentes. Ver `docs/REQUIREMENTS.md` e `docs/MODULOS-DE-APROVACAO.md`.
+- 2026-09-25 — No quadro, resumir o briefing no cartão e manter o texto completo no detalhe; histórico fica disponível, recolhido por padrão. PDF deve ter visualização embutida e alternativa de nova guia. Ao concluir uma tarefa, encerrar e registrar seu cronômetro. Ver critérios em `docs/REQUIREMENTS.md`.
+- 2026-09-25 — Gerência precisa acompanhar produção e evolução por profissional. Os pesos 2 e 1 citados nos áudios continuam referência; métricas, fórmula, escala, período e uso seguem sujeitos a validação antes de exibir pontuação.
+
 - 2026-09-25 — A primeira versão operacional deve abranger o projeto completo descrito nos três áudios. Fases e protótipos organizam construção e validação, mas não reduzem o escopo nem adiam áreas para versões posteriores. Ver `docs/PRODUCT.md` e `docs/ROADMAP.md`.
 - 2026-09-25 — O sistema de aprovações deve expandir além de criativos sociais para outras áreas da agência. O núcleo será compartilhado; módulos podem ter campos, etapas e evidências próprios, com versões, permissões e histórico comuns. Criativos sociais são o primeiro exemplo confirmado; não inventar outros tipos. Ver `docs/MODULOS-DE-APROVACAO.md`.
 - 2026-09-24 — Usar o quadro Trello existente **Desenvolvimento de Projetos - Mix7** para organizar o projeto. Listas representam andamento; etiquetas coloridas representam áreas. Revisar se o quadro passar a reunir outros projetos da agência.

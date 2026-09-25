@@ -224,8 +224,18 @@
     </div>
 
     <div class="scrim" id="scrim" hidden></div>
+    <aside class="task-work-dock" id="taskWorkDock" aria-label="Tarefas da equipe" hidden>
+      <details open>
+        <summary id="taskWorkSummary">Tarefas da equipe</summary>
+        <div class="task-work-content">
+          <label class="task-work-picker">Escolha uma tarefa<select id="taskWorkSelect" aria-label="Selecionar tarefa para o cronômetro"></select></label>
+          <div class="task-work-controls"><span id="taskWorkTimer" role="timer" aria-live="off">Cronômetro pausado</span><button id="taskWorkToggle" class="minimized-timer-button" type="button">Iniciar</button></div>
+          <ul id="taskWorkList" class="task-work-list"></ul>
+        </div>
+      </details>
+    </aside>
     <aside class="detail-drawer" id="detailDrawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle" aria-hidden="true" inert>
-      <div class="drawer-topline"><span class="drawer-breadcrumb">DEMANDA <b>/</b> <span id="drawerStage">AGUARDANDO CLIENTE</span></span><span class="drawer-window-actions"><button class="minimize-button" id="minimizeDrawer" type="button" aria-label="Minimizar demanda" title="Minimizar demanda">—</button><button class="close-button" id="closeDrawer" aria-label="Fechar detalhes">×</button></span></div>
+      <div class="drawer-topline"><span class="drawer-breadcrumb">DEMANDA <b>/</b> <span id="drawerStage">AGUARDANDO CLIENTE</span></span><span class="drawer-timer-status" id="drawerTimerStatus" role="timer" aria-live="off" hidden></span><span class="drawer-window-actions"><button class="minimize-button" id="minimizeDrawer" type="button" aria-label="Minimizar demanda" title="Minimizar demanda">—</button><button class="close-button" id="closeDrawer" aria-label="Fechar detalhes">×</button></span></div>
       <div class="drawer-content">
         <div class="drawer-client"><span class="client-label label-blue" id="drawerClient">Casa Aurora</span><button class="subtle-button" id="copyRequestId" type="button" aria-label="Copiar código da demanda" title="Copiar código da demanda">ID</button></div>
         <h2 id="drawerTitle">Post de lançamento — linha Botânica</h2>
@@ -262,7 +272,7 @@
             <div class="flow-step"><span>5</span><small>Entrega</small></div>
           </div>
         </section>
-        <section class="history-section"><div class="section-title-row"><h3>Histórico da demanda</h3></div><ol id="historyList" class="history-list"></ol></section>
+        <details class="history-section" id="historySection"><summary class="history-summary" id="historySummary">Histórico da demanda</summary><ol id="historyList" class="history-list"></ol></details>
 
         <div class="drawer-tabs"><span class="drawer-tab active">Material e feedback</span></div>
         <section class="tasks-section">

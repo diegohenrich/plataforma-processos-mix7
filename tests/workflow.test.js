@@ -134,7 +134,7 @@ test("cronômetro de tarefa registra sessões, soma o total e permite retomar", 
   assert.equal(item.history.at(-1).details.totalSeconds, 71);
 });
 
-test("cronômetro não inicia em tarefa inválida, bloqueada ou concluída, nem permite sobreposição", () => {
+test("cronômetro para automaticamente ao concluir a tarefa e não inicia em tarefa inválida ou bloqueada", () => {
   let item = transition(demand(), "briefing_ready");
   item = transition(item, "add_task", { title: "Criar peça", assignee: "Designer" });
   item = transition(item, "add_task", { title: "Revisar peça", assignee: "Gestor" });
@@ -146,10 +146,12 @@ test("cronômetro não inicia em tarefa inválida, bloqueada ou concluída, nem 
   item = transition(item, "set_task_blocker", { taskId: second.id, reason: "" });
   item = transition(item, "start_task_timer", { taskId: first.id }, "2026-09-25T10:00:00.000Z");
   assert.throws(() => transition(item, "start_task_timer", { taskId: second.id }), /Já existe um cronômetro ativo/);
-  assert.throws(() => transition(item, "toggle_task", { taskId: first.id }), /Pare o cronômetro/);
   assert.throws(() => transition(item, "set_task_blocker", { taskId: first.id, reason: "Impedido" }), /Pare o cronômetro/);
-  item = transition(item, "stop_task_timer", { taskId: first.id }, "2026-09-25T10:00:01.000Z");
-  item = transition(item, "toggle_task", { taskId: first.id });
+  item = transition(item, "toggle_task", { taskId: first.id }, "2026-09-25T10:00:01.000Z");
+  assert.equal(item.tasks[0].status, "completed");
+  assert.equal(item.tasks[0].timerStartedAt, null);
+  assert.deepEqual(item.tasks[0].timeEntries.map(entry => entry.durationSeconds), [1]);
+  assert.deepEqual(item.history.slice(-2).map(event => event.type), ["stop_task_timer", "toggle_task"]);
   assert.throws(() => transition(item, "start_task_timer", { taskId: first.id }), /tarefa concluída/);
 });
 

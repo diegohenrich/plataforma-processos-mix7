@@ -29,6 +29,20 @@ O conteúdo abaixo é tratado como requisito ou contexto de produto, nunca como 
 - O usuário aprovou o fluxo integrado de demanda, planejamento revisado, execução, revisão interna, aprovação do cliente, ajustes, destino final com evidência e conclusão conferida.
 - O usuário pediu que sugestões da IA dependam de confirmação humana.
 - O usuário substituiu o site público como referência visual pelo projeto local `CRM-MIX7-RENEW`; também pediu branco e azul-claro. O pedido posterior para aproximar mais a plataforma do CRM foi resolvido aplicando a lateral escura definida no CSS, preservando as superfícies claras e azuis. A tela de entrada foi renderizada e o CSS interno conferido; o painel autenticado ainda aguarda sessão para comparação direta.
+
+## Requisitos posteriores dos relatos de uso — 25/09/2026
+
+As observações abaixo foram ditas pelo usuário durante a inspeção do protótipo; complementam os áudios e não devem ser atribuídas a eles:
+
+| Observação ou decisão | Cobertura e lacuna atual |
+| --- | --- |
+| Cartões e histórico estão visualmente empilhados; quer resumo do briefing e histórico opcional. | O resumo do cartão agora é limitado a 92 caracteres e o histórico começa recolhido. O briefing completo continua no detalhe. E2E e inspeção visual confirmaram os estados desktop e celular; evidências em `evidencias/visual/ux-densidade-desktop-1440.png` e `ux-cronometro-mobile-390.png`. |
+| PDF anexado precisa abrir para leitura. | Foram acrescentados controle “Visualizar PDF” e iframe local para referência, além de iframe e link alternativo na área de material. O iframe criou a URL Blob corretamente, mas o Edge automatizado exibiu tela preta; a leitura real ainda não está comprovada e segue como pendência. |
+| Saber quem criou, atribuiu, executou, revisou e decidiu. | Requisito explícito de autoria por conta identificada. Ainda não implementado; o protótipo não autentica e seus nomes digitados não provam identidade. |
+| Cada função deve ver as próprias informações: dono da agência, gerente de marketing, profissional e cliente. | Categorias agora confirmadas pelo usuário; matriz de permissões e isolamento ainda não implementados e exigem servidor/identidade. |
+| Ver cronômetro e lista de tarefas sem depender de reabrir o detalhe; concluir tarefa para parar o tempo. | Bandeja global com seleção e lista de tarefas acrescentada; o detalhe mantém o tempo ativo no cabeçalho. Conclusão encerra e registra sessão automaticamente. E2E sintético confirmou uma sessão de pelo menos um segundo e estado concluído. |
+| Cliente revisa por link sem conta; aprova ou sugere edição e comenta trechos/áreas de um site. | Requisito confirmado pelo usuário. Nenhum portal, link ou anotação de site foi implementado. Exige armazenamento compartilhado e revisão técnica de tokens, escopo, expiração/revogação e restrições de origem dos sites. |
+| Gerência acompanha produção e evolução e pode pontuar. | Visão de gestão confirmada; os áudios já citam peso 2 para responsável da Mix7 e 1 para gerente. Indicadores, fórmula, escala, períodos e governança ainda estão abertos; sem cálculo no protótipo. |
 - Testes gratuitos servem para avaliação conforme os termos da solução; a pesquisa não autoriza copiar código, conteúdo ou ativos proprietários.
 
 ## Lacunas concretas para o plano

@@ -22,6 +22,7 @@ let toastTimer;
 let activeRequestId = null;
 let selectedFileAction = null;
 let activePreviewUrl = null;
+let briefingPreviewUrls = [];
 let activeMediaObserver = null;
 let activeCommentAnchor = null;
 let imageAnchorMode = false;
@@ -35,6 +36,7 @@ let activeParticipantTypeId = participantTypes[0].id;
 let columnActionStage = "";
 let minimizedRequestIds = loadMinimizedIds();
 const minimizedTimerTaskSelections = new Map();
+let taskWorkSelection = "";
 let state = loadState();
 let knowledgeRecords = loadKnowledgeRecords();
 let onboardingAssignments = loadOnboardingAssignments();
@@ -233,7 +235,9 @@ function makeCard(request) {
   }
   if (request.versions?.at(-1)?.decision?.result === "approved") row.append(node("span", "status-pill status-approved", "✓ Aprovado"));
   if (request.versions?.at(-1)?.decision?.result === "changes_requested") row.append(node("span", "status-pill status-changes", "↺ Ajustes"));
-  card.append(row, node("h3", "", request.title), node("p", "card-description", request.brief));
+  const briefSummary = historyExcerpt(request.brief, 92);
+  card.append(row, node("h3", "", request.title), node("p", "card-description", briefSummary));
+  if (request.brief && request.brief.length > briefSummary.length) card.title = request.brief;
 
   const version = request.versions?.at(-1);
   if (version?.fileName) card.append(node("p", "card-description file-note", `Arquivo: ${version.fileName}`));
@@ -278,6 +282,7 @@ function renderBoard() {
   document.querySelector("#pendingApprovalCount").textContent = String(approvals);
   document.querySelector("#navDemandCount").textContent = String(active);
   renderMinimizedRequests();
+  renderTaskWorkDock();
   renderWorkspacePage();
 }
 
@@ -318,6 +323,7 @@ function renderMinimizedRequests() {
   minimizedRequestIds = requests.map(request => request.id);
   saveMinimizedIds();
   tray.replaceChildren();
+  document.querySelector("#taskWorkDock").classList.toggle("task-dock-with-minimized", requests.length > 0);
   tray.hidden = requests.length === 0;
   if (!requests.length) return;
   tray.append(node("span", "minimized-label", "Demandas minimizadas"));
@@ -426,6 +432,61 @@ function selectedRequests() {
       && matchesDueFilter(request, activeDueFilter)
       && (!query || `${request.title} ${request.client} ${request.brief}`.toLocaleLowerCase("pt-BR").includes(query));
   });
+}
+
+function renderTaskWorkDock() {
+  const dock = document.querySelector("#taskWorkDock");
+  const picker = document.querySelector("#taskWorkSelect");
+  const toggle = document.querySelector("#taskWorkToggle");
+  const timer = document.querySelector("#taskWorkTimer");
+  const list = document.querySelector("#taskWorkList");
+  const selectedAssignee = document.querySelector("#assigneeFilter").value;
+  const active = findActiveTaskTimer(state.requests);
+  const entries = state.requests.flatMap(request => {
+    if (!["doing", "adjustments"].includes(request.stage)) return [];
+    const round = request.versions.at(-1).number + (request.stage === "adjustments" ? 1 : 0);
+    return (request.tasks || []).filter(task => task.round === round && task.status !== "completed")
+      .map(task => ({ request, task, blockers: taskBlockers(request, task) }));
+  }).filter(({ task }) => !selectedAssignee || assigneeKey(task.assignee) === assigneeKey(selectedAssignee));
+  if (active && !entries.some(entry => entry.task.id === active.task.id)) entries.unshift({ request: active.request, task: active.task, blockers: taskBlockers(active.request, active.task) });
+  dock.hidden = entries.length === 0;
+  if (!entries.length) return;
+  const runnable = entries.filter(entry => entry.blockers.length === 0 && (active?.task.id === entry.task.id || !entry.task.timerStartedAt));
+  picker.replaceChildren(new Option("Selecione uma tarefa…", ""));
+  for (const entry of runnable) picker.add(new Option(`${entry.task.title} · ${entry.request.title}`, entry.task.id));
+  const selected = active?.task.id || (runnable.some(entry => entry.task.id === taskWorkSelection) ? taskWorkSelection : runnable.length === 1 ? runnable[0].task.id : "");
+  picker.value = selected;
+  picker.disabled = Boolean(active) || runnable.length === 0;
+  const chosen = runnable.find(entry => entry.task.id === selected);
+  if (active) {
+    const elapsed = active.task.timeEntries?.reduce((sum, entry) => sum + (Number(entry.durationSeconds) || 0), 0) || 0;
+    const seconds = elapsed + Math.max(0, Math.floor((Date.now() - Date.parse(active.task.timerStartedAt)) / 1000));
+    timer.textContent = `${formatDuration(seconds)} · ${active.task.title}`;
+    timer.dataset.timerStartedAt = active.task.timerStartedAt;
+    timer.dataset.timerBaseSeconds = String(elapsed);
+    timer.dataset.taskTitle = active.task.title;
+    toggle.textContent = "Pausar";
+    toggle.setAttribute("aria-label", `Pausar cronômetro de ${active.task.title}`);
+    toggle.disabled = false;
+  } else {
+    timer.textContent = chosen ? `Registrado: ${formatDuration(chosen.task.timeEntries?.reduce((sum, entry) => sum + (Number(entry.durationSeconds) || 0), 0) || 0)}` : "Cronômetro pausado";
+    delete timer.dataset.timerStartedAt;
+    delete timer.dataset.timerBaseSeconds;
+    toggle.textContent = "Iniciar";
+    toggle.setAttribute("aria-label", "Iniciar cronômetro da tarefa selecionada");
+    toggle.disabled = !chosen;
+  }
+  document.querySelector("#taskWorkSummary").textContent = `${selectedAssignee ? `Tarefas de ${selectedAssignee}` : "Tarefas da equipe"} · ${entries.length}`;
+  list.replaceChildren();
+  for (const entry of entries.slice(0, 6)) {
+    const item = node("li", "task-work-item");
+    const open = node("button", "task-work-open", `${entry.task.title} · ${entry.request.title}`);
+    open.type = "button";
+    open.addEventListener("click", () => openDrawer(entry.request.id));
+    item.append(open, node("small", "", entry.blockers[0] || entry.task.assignee || "Sem responsável"));
+    list.append(item);
+  }
+  if (entries.length > 6) list.append(node("li", "task-work-more", `+ ${entries.length - 6} tarefa(s)`));
 }
 
 function renderCapacityOverviewCard() {
@@ -1513,7 +1574,7 @@ function renderTasks(request) {
       item.append(timerButton);
       const button = node("button", "task-toggle", task.status === "completed" ? "Reabrir" : "Concluir tarefa");
       button.type = "button";
-      button.disabled = task.status !== "completed" && (blockers.length > 0 || Boolean(task.timerStartedAt));
+      button.disabled = task.status !== "completed" && blockers.length > 0;
       button.addEventListener("click", () => updateRequest("toggle_task", { taskId: task.id }, task.status === "completed" ? "Tarefa reaberta." : "Tarefa concluída."));
       item.append(button);
       if (task.status !== "completed" && !task.timerStartedAt) {
@@ -1633,7 +1694,8 @@ function refreshTaskTimerDisplays() {
       const request = state.requests.find(item => item.id === requestId);
       const active = findActiveTaskTimer([request].filter(Boolean));
       if (active) element.textContent = `Ativo: ${formatDuration(Number(element.dataset.timerBaseSeconds) + elapsed)} · ${active.task.title}`;
-    } else element.textContent = `Cronômetro ativo: ${formatDuration(Number(element.dataset.timerBaseSeconds) + elapsed)}`;
+    } else if (element.id === "taskWorkTimer" || element.id === "drawerTimerStatus") element.textContent = `${formatDuration(Number(element.dataset.timerBaseSeconds) + elapsed)} · ${element.dataset.taskTitle || "Tarefa ativa"}`;
+    else element.textContent = `Cronômetro ativo: ${formatDuration(Number(element.dataset.timerBaseSeconds) + elapsed)}`;
   });
 }
 
@@ -1667,6 +1729,7 @@ function historyVersionLabel(value) {
 function renderHistory(request) {
   const list = document.querySelector("#historyList");
   list.replaceChildren();
+  document.querySelector("#historySummary").textContent = `Histórico da demanda · ${request.history.length} registro(s)`;
   for (const event of [...request.history].reverse()) {
     const details = event.details || {};
     const task = request.tasks.find(item => item.id === details.taskId);
@@ -1775,7 +1838,7 @@ function renderActions(request) {
     if (confirm.disabled) container.append(node("small", "workflow-hint", "Adicione ao menos uma tarefa e informe o responsável."));
   }
   else if (request.stage === "doing") {
-    appendAction(buttons, "Anexar arquivo", () => chooseFile("attach_file"));
+    appendAction(buttons, "Anexar material para aprovação", () => chooseFile("attach_file"));
     const ready = Boolean(request.versions.at(-1)?.fileKey);
     const roundTasks = (request.tasks || []).filter(task => task.round === request.versions.at(-1).number);
     const tasksReady = roundTasks.length > 0 && roundTasks.every(task => task.status === "completed");
@@ -1933,6 +1996,7 @@ async function renderAsset(request) {
   anchorControls.replaceChildren();
   anchorControls.hidden = true;
   preview.classList.remove("has-uploaded-media");
+  preview.classList.remove("has-pdf-preview");
   activeMediaObserver?.disconnect();
   activeMediaObserver = null;
   if (activePreviewUrl) URL.revokeObjectURL(activePreviewUrl);
@@ -2031,9 +2095,28 @@ async function renderAsset(request) {
           anchorControls.append(latest, node("small", "anchor-help", "Esta versão é somente para consulta."));
         }
         anchorControls.hidden = false;
+      } else if (file.type === "application/pdf" || String(version.fileName || "").toLocaleLowerCase("pt-BR").endsWith(".pdf")) {
+        preview.classList.add("has-uploaded-media");
+        preview.classList.add("has-pdf-preview");
+        const viewer = node("iframe", "uploaded-pdf-preview");
+        viewer.src = activePreviewUrl;
+        viewer.title = `Visualizador do PDF ${version.fileName}`;
+        viewer.loading = "lazy";
+        preview.append(viewer);
+        const open = node("a", "asset-open-file", "Abrir PDF em outra guia");
+        open.href = activePreviewUrl;
+        open.target = "_blank";
+        open.rel = "noopener noreferrer";
+        anchorControls.append(open, node("small", "anchor-help", "Se o navegador não exibir o documento aqui, abra-o em outra guia."));
+        anchorControls.hidden = false;
       } else {
         preview.classList.add("has-uploaded-media");
-        preview.append(node("div", "asset-file-placeholder", `PDF anexado: ${version.fileName}`));
+        preview.append(node("div", "asset-file-placeholder", `Arquivo anexado: ${version.fileName}`));
+        const download = node("button", "secondary-button", "Baixar documento");
+        download.type = "button";
+        download.addEventListener("click", () => downloadLocalFile(version.fileKey, version.fileName));
+        anchorControls.append(download);
+        anchorControls.hidden = false;
       }
       showAnchorStatus();
       return;
@@ -2055,6 +2138,19 @@ function renderDrawer() {
   document.querySelector("#drawerTitle").textContent = request.title;
   document.querySelector("#drawerClient").textContent = request.client;
   document.querySelector("#drawerStage").textContent = stages[request.stage].toUpperCase();
+  const drawerTimer = document.querySelector("#drawerTimerStatus");
+  const activeTimer = findActiveTaskTimer(state.requests);
+  drawerTimer.hidden = !activeTimer;
+  if (activeTimer) {
+    const elapsed = activeTimer.task.timeEntries?.reduce((sum, entry) => sum + (Number(entry.durationSeconds) || 0), 0) || 0;
+    drawerTimer.dataset.timerStartedAt = activeTimer.task.timerStartedAt;
+    drawerTimer.dataset.timerBaseSeconds = String(elapsed);
+    drawerTimer.dataset.taskTitle = activeTimer.task.title;
+    drawerTimer.title = `${activeTimer.task.title} · ${activeTimer.request.title}`;
+    drawerTimer.textContent = `${formatDuration(elapsed + Math.floor((Date.now() - Date.parse(activeTimer.task.timerStartedAt)) / 1000))} · ${activeTimer.task.title}`;
+  } else {
+    for (const key of ["timerStartedAt", "timerBaseSeconds", "taskTitle"]) delete drawerTimer.dataset[key];
+  }
   document.querySelector("#drawerDue").textContent = request.due ? `◷ ${formatDue(request.due)}` : "Prazo não definido";
   renderBriefing(request);
   const flowIndex = ({ briefing: 0, planning: 1, doing: 2, internalReview: 2, clientReview: 3, adjustments: 2, delivery: 4, completed: 4 })[request.stage];
@@ -2089,6 +2185,8 @@ function renderBriefing(request) {
     details.append(row);
   }
   const briefingFiles = document.querySelector("#briefingFiles");
+  for (const url of briefingPreviewUrls) URL.revokeObjectURL(url);
+  briefingPreviewUrls = [];
   briefingFiles.replaceChildren();
   briefingFiles.hidden = !request.briefingFiles?.length;
   if (request.briefingFiles?.length) {
@@ -2097,6 +2195,33 @@ function renderBriefing(request) {
     for (const file of request.briefingFiles) {
       const item = node("li", "briefing-file-item");
       item.append(node("span", "", `${file.fileName} · ${file.type || "tipo desconhecido"}`));
+      const isPdf = file.type === "application/pdf" || String(file.fileName || "").toLocaleLowerCase("pt-BR").endsWith(".pdf");
+      if (isPdf) {
+        item.classList.add("has-pdf-viewer");
+        const viewer = node("details", "briefing-pdf-viewer");
+        const summary = node("summary", "text-action", "Visualizar PDF");
+        const frame = node("iframe", "briefing-pdf-frame");
+        frame.title = `Visualização do PDF ${file.fileName}`;
+        frame.loading = "lazy";
+        const fallback = node("a", "briefing-file-open", "Abrir PDF em outra guia");
+        fallback.target = "_blank";
+        fallback.rel = "noopener noreferrer";
+        viewer.append(summary, frame, fallback);
+        viewer.addEventListener("toggle", async () => {
+          if (!viewer.open || frame.src) return;
+          try {
+            const storedFile = await readFile(file.fileKey);
+            if (!storedFile) throw new Error("PDF indisponível");
+            const url = URL.createObjectURL(storedFile);
+            briefingPreviewUrls.push(url);
+            frame.src = url;
+            fallback.href = url;
+          } catch {
+            fallback.textContent = "PDF indisponível neste navegador";
+          }
+        });
+        item.append(viewer);
+      }
       const download = node("button", "text-action", "Baixar");
       download.type = "button";
       download.addEventListener("click", () => downloadLocalFile(file.fileKey, file.fileName));
@@ -2138,6 +2263,7 @@ function openDrawer(id) {
   drawer.inert = false;
   appShell.inert = true;
   minimizedRequests.inert = true;
+  document.querySelector("#taskWorkDock").inert = true;
   drawer.classList.add("open");
   drawer.setAttribute("aria-hidden", "false");
   scrim.hidden = false;
@@ -2152,11 +2278,14 @@ function closeDrawer() {
   drawer.inert = true;
   appShell.inert = false;
   minimizedRequests.inert = false;
+  document.querySelector("#taskWorkDock").inert = false;
   scrim.hidden = true;
   document.body.style.overflow = "";
   activeRequestId = null;
   viewedVersionId = null;
   if (activePreviewUrl) URL.revokeObjectURL(activePreviewUrl);
+  for (const url of briefingPreviewUrls) URL.revokeObjectURL(url);
+  briefingPreviewUrls = [];
   activePreviewUrl = null;
   activeMediaObserver?.disconnect();
   activeMediaObserver = null;
@@ -2396,7 +2525,26 @@ document.querySelector("#filterThisStage").addEventListener("click", () => {
   document.querySelector("#columnDialog").close();
   setPage("requests");
 });
-document.querySelector("#sectionHistoryButton").addEventListener("click", () => document.querySelector("#historyList").scrollIntoView({ behavior: "smooth", block: "center" }));
+document.querySelector("#sectionHistoryButton").addEventListener("click", () => {
+  const history = document.querySelector("#historySection");
+  history.open = true;
+  history.scrollIntoView({ behavior: "smooth", block: "center" });
+});
+
+document.querySelector("#taskWorkSelect").addEventListener("change", event => {
+  taskWorkSelection = event.currentTarget.value;
+  renderTaskWorkDock();
+});
+document.querySelector("#taskWorkToggle").addEventListener("click", () => {
+  const active = findActiveTaskTimer(state.requests);
+  if (active) {
+    updateRequestFor(active.request.id, "stop_task_timer", { taskId: active.task.id }, "Sessão de tempo registrada.");
+    return;
+  }
+  const taskId = document.querySelector("#taskWorkSelect").value;
+  const entry = state.requests.map(request => ({ request, task: request.tasks.find(task => task.id === taskId) })).find(item => item.task);
+  if (entry) updateRequestFor(entry.request.id, "start_task_timer", { taskId }, "Cronômetro iniciado.");
+});
 
 document.querySelector("#briefingRevisionForm").addEventListener("submit", event => {
   event.preventDefault();

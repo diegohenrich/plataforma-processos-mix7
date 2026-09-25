@@ -23,6 +23,10 @@ Um módulo pode acrescentar campos, validadores, âncoras de comentário, etapas
 
 O tipo já descrito nos áudios aceita imagens e vídeos; cliente autorizado aprova ou solicita alterações e pode comentar. Comentários identificam a versão; os de vídeo guardam o ponto de reprodução e os de imagem podem apontar a região. Ajustes geram nova versão e repetem revisão interna e aprovação do cliente. Aprovação, por si só, não encerra a demanda: o módulo registra agendamento/publicação ou entrega com evidência antes de concluir.
 
+O usuário também confirmou revisão de sites por link sem exigir uma conta do cliente: a pessoa precisa conseguir avaliar, escrever comentários, selecionar texto e marcar uma área visual da página. Sites são, portanto, um segundo cenário concreto de revisão além dos criativos sociais. O modo de capturar as anotações (página incorporada, script, captura ou alternativa) depende de teste técnico; não presumir que um iframe pode ler ou marcar qualquer site, pois políticas de origem podem bloquear isso. As anotações precisam apontar para a versão revisada para continuar compreensíveis após atualização do site.
+
+O link sem login é requisito de acesso para o cliente. O próprio link passa a conceder a capacidade de revisar o item endereçado; antes de produção, a arquitetura precisa definir token não previsível, escopo mínimo por demanda/versão, expiração, revogação, prevenção de acesso entre clientes e como identificar ou registrar quem respondeu. A conversa ainda não aprovou os valores dessas políticas.
+
 O fluxo integrado aprovado para demanda também inclui briefing, planejamento revisado, execução, revisão interna, decisão do cliente, ajustes quando pedidos e conclusão conferida. Papéis e exceções do processo real continuam a validar com a Mix7.
 
 ## Requisitos de expansão
@@ -38,9 +42,11 @@ Estes requisitos descrevem expansão funcional. Se um novo tipo exigir lógica e
 
 ## Perguntas para a Mix7
 
-- Quais outros trabalhos precisam de aprovação dentro da agência? Para cada tipo, que arquivo/entrega é avaliado e quem aprova?
+- Além de criativos sociais e sites, quais outros trabalhos precisam de aprovação dentro da agência? Para cada tipo, que arquivo/entrega é avaliado e quem aprova?
 - Quais etapas, comentários, versões, exceções e comprovantes finais esse trabalho exige?
 - O fluxo do cliente usa os mesmos aprovadores do módulo de criativos ou há aprovações internas/externas distintas?
 - Que informações são exclusivas daquele tipo e quais devem continuar na demanda compartilhada?
+- Para comentários de sites, a pessoa precisa revisar URL publicada, ambiente de teste ou captura? Como controlar a versão e os domínios que aceitam anotações?
+- Que contexto (nome, e-mail, código enviado ao cliente ou apenas identificador do link) deve ficar registrado numa decisão sem conta?
 
 Até haver esses exemplos, o produto deve provar a arquitetura reutilizável e concluir o módulo de criativos conhecido, mantendo os outros tipos como módulos ainda não especificados. Ver também [requisitos](REQUIREMENTS.md), [proposta de fluxo](FLUXO-PROPOSTO.md) e a [proposta de arquitetura em revisão no PR #10](https://github.com/diegohenrich/plataforma-processos-mix7/pull/10).

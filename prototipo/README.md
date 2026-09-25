@@ -6,6 +6,10 @@ Demandas e eventos são gravados no `localStorage`; arquivos de até 15 MB (imag
 
 Não há autenticação, separação de clientes, portal externo, API, servidor, backup ou publicação social. Aprovação e comentários são registros locais demonstrativos, não comunicações enviadas ao cliente. Esta implementação não define a arquitetura nem a stack de produção.
 
+Os cartões do quadro exibem somente um resumo do briefing; o texto completo fica no detalhe e o histórico começa recolhido. O detalhe permite abrir anexos PDF para consulta, com alternativa para abrir/baixar o arquivo. A tela também mantém uma lista compacta de tarefas e cronômetro acessível durante a navegação; concluir uma tarefa encerra e registra automaticamente sua sessão ativa. Esses recursos são locais e demonstrativos. A leitura visual do PDF embutido ainda não foi comprovada no Edge automatizado.
+
+Autoria por usuários reais, permissões por função, link externo de aprovação sem conta e anotações visuais em páginas de sites continuam requisitos sem implementação. Não compartilhe dados ou links reais usando este protótipo.
+
 ## Percursos para revisar
 
 1. Criar demanda e conferir que ela começa como briefing com origem, canal/peça e critérios de aceite registrados. Prazo, links e arquivos de referência são opcionais. Imagem, vídeo e PDF de até 15 MB por arquivo podem ser selecionados ou arrastados para a área indicada; aparecem no briefing, ficam no navegador e podem ser baixados no painel. Não contam como criativo final nem liberam revisão interna.

@@ -268,15 +268,18 @@
       }
       case "toggle_task": {
         if (next.stage !== "doing" && next.stage !== "adjustments") throw new Error("Tarefas só podem ser atualizadas durante a execução.");
-        const task = next.tasks.find(item => item.id === payload.taskId && item.round === version.number + (next.stage === "adjustments" ? 1 : 0));
+        let task = next.tasks.find(item => item.id === payload.taskId && item.round === version.number + (next.stage === "adjustments" ? 1 : 0));
         if (!task) throw new Error("Tarefa não encontrada nesta rodada.");
-        if (task.timerStartedAt) throw new Error("Pare o cronômetro antes de concluir esta tarefa.");
         if (task.status === "completed" && next.tasks.some(item => item.status === "completed" && item.dependencyTaskIds?.includes(task.id))) {
           throw new Error("Reabra as tarefas dependentes antes de reabrir esta tarefa prévia.");
         }
         if (task.status !== "completed") {
           if (task.blockedReason) throw new Error("Remova ou atualize o impedimento antes de concluir esta tarefa.");
           if (unmetTaskDependencies(next, task).length) throw new Error("Conclua as tarefas prévias antes desta tarefa.");
+          if (task.timerStartedAt) {
+            Object.assign(next, transition(next, "stop_task_timer", { taskId: task.id }, now));
+            task = next.tasks.find(item => item.id === payload.taskId);
+          }
         }
         task.status = task.status === "completed" ? "pending" : "completed";
         task.completedAt = task.status === "completed" ? now : null;
