@@ -38,10 +38,10 @@ Não reduzir a decisão a uma nota única. Para cada critério marcar **atende o
 1. Validar o cenário e os papéis contra ao menos um caso real da Mix7.
 2. Designar responsável da Mix7 pela conta de teste e confirmar termos, plano, região de dados, retenção, exclusão e forma de saída.
 3. Aprovar explicitamente ferramenta, conta, destinatários e os dados sintéticos que poderão ser enviados. Não carregar arquivos ou conversas de cliente.
-4. Fixar a edição/release avaliada; para auto-hospedagem, revisar licença, avisos de segurança, configuração, rede, backup e restauração antes de iniciar.
+4. Fixar a edição/release e, quando aplicável, os digests exatos das imagens avaliadas. Para auto-hospedagem, registrar uma matriz por aviso oficial: identificador, componente afetado, intervalo vulnerável, versão corrigida e presença dessa correção na imagem escolhida. Não iniciar o ensaio auto-hospedado se algum aviso relevante continuar sem correspondência verificável. Revisar também licença, configuração, rede, backup e restauração.
 5. Registrar resultado e recomendação no comparativo, arquitetura conceitual e cartão Trello antes de escolher stack ou comprar plano.
 
-Enquanto esses portões não forem atendidos, a comparação documental pode orientar protótipo local e perguntas, mas não prova segurança, integração, adequação operacional ou custo final.
+Enquanto esses portões não forem atendidos, a comparação documental pode orientar protótipo local e perguntas, mas não prova segurança, integração, adequação operacional ou custo final. A consulta de 25/09/2026 identificou avisos novos para Wekan e avisos críticos publicados para Plane; eles são pendências de correspondência entre versões, não evidência de que as releases citadas estejam vulneráveis.
 
 ## Resultado a preencher depois do ensaio
 

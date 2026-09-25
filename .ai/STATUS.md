@@ -1,5 +1,12 @@
 # Estado em 2026-09-24
 
+## Atualização da pesquisa oficial — 2026-09-25
+
+- Revisados `docs/PESQUISA-SOLUCOES.md` e `docs/PROVA-DE-CONCEITO.md` com páginas oficiais consultadas em 25/09: Wekan v11.99; avisos recentes de Wekan e Plane; preço publicado de Filestage Business; e limites iniciais gratuitos do Planable. Nenhum fornecedor foi escolhido. Avisos de segurança foram tratados como pendências de verificar intervalos vulneráveis/corrigidos, não como prova de que a release atual esteja vulnerável.
+- O roteiro agora exige registrar release e digest da imagem e fechar uma matriz dos avisos antes de iniciar prova auto-hospedada. Para Wekan v11.99 e Plane v1.4.2 essa matriz ainda não foi feita; nenhum teste externo ou instalação foi executado.
+- Fontes primárias consultadas: páginas oficiais de preço do Planable, Frame.io e Filestage; releases e avisos oficiais no GitHub de Wekan e Plane; documentação oficial do OpenProject. Pendentes validação operacional com caso real da Mix7, acesso autenticado ao CRM para referência visual, correspondência individual dos avisos e execução de prova autorizada.
+- Esta atualização documental ainda requer `git diff --check`, revisão dos links e do diff, commit e push, confirmação do SHA remoto e atualização do cartão 14 do Trello.
+
 ## Arquitetura coerente com o fluxo aprovado — 24/09/2026
 
 - `docs/ARQUITETURA-PROPOSTA.md` agora fixa a revisão interna como etapa do fluxo-alvo e trata o caso real como validação de atores, variações e exceções da operação; não como aprovação da estrutura do fluxo. `.ai/DECISIONS.md` e o resumo do estado também foram limpos de formulações antigas que reabriam a decisão.
