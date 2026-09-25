@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Reduzir a dependência de conhecimento informal no dia a dia da Mix7, mantendo demandas, responsáveis, instruções, versões, feedbacks e decisões em um processo recuperável.
+Concluir uma plataforma de processos para a Mix7 que reduza a dependência de cobranças informais e conhecimento individual, mantendo demandas, tarefas, responsáveis, instruções, versões, feedbacks e decisões em um sistema compartilhado e recuperável. O escopo inclui gestão da equipe, módulos de aprovação expansíveis, tempo e capacidade, IA sujeita à revisão humana, avaliação, conhecimento, onboarding e acessos seguros. A jornada local atual é uma demonstração para validar interações, não o produto completo.
 
 ## Público inicial
 
@@ -10,11 +10,11 @@ Reduzir a dependência de conhecimento informal no dia a dia da Mix7, mantendo d
 - Gestores e direção: planejam, acompanham, revisam e decidem.
 - Clientes: avaliam os materiais que lhes forem enviados para aprovação.
 
-A primeira versão atende à Mix7 e seus clientes. Transformar a plataforma em produto para outras agências não faz parte da decisão atual.
+A plataforma concluída atenderá à equipe e aos clientes da Mix7. O trabalho será entregue por etapas, mas a demonstração local ou a primeira jornada integrada não limita o escopo final. Transformar a plataforma em produto para outras agências não faz parte da decisão atual.
 
 ## Experiência pretendida
 
-Gestão interna focada, com Kanban e lista e consulta do trabalho atribuído a cada profissional; aprovações de imagem e vídeo conectadas às demandas; comentários preservados por versão e, no vídeo, associados a um instante. A visão por profissional organiza o trabalho, enquanto permissões de acesso seguem uma definição separada. O produto deve permitir ampliar os tipos de aprovação conforme as necessidades da agência forem validadas.
+Gestão interna focada, com Kanban e lista, consulta do trabalho de cada profissional, planejamento de tarefas, registro de tempo, disponibilidade e Gantt; aprovações de imagem e vídeo conectadas às demandas; comentários preservados por versão e, no vídeo, associados a um instante; conhecimento, contatos, treinamento e onboarding; gestão segura de acessos; e avaliação com regras transparentes. A IA sugere tarefas, responsáveis, estimativas e organização de feedback; uma pessoa revisa antes de aplicar. Permissões reais precisam ser definidas e aplicadas separadamente da visão individual. O produto deve permitir ampliar os tipos de aprovação conforme as necessidades da agência forem validadas.
 
 A referência visual vigente é a interface do projeto local `C:\Users\anony\ProjetosPessoais\Projetos de Sistemas\CRM-MIX7-RENEW`. Os arquivos `public/css/dashboard-light.css` e `resources/views/dashboard/overview.blade.php` foram inspecionados. A implementação deste protótipo usa as cores confirmadas no CRM (texto `#202e35`, azul-petróleo `#204b61`, azul-claro `#8ecde2`, fundo `#f5f6f5` e superfície branca) e mantém o pedido do usuário por predominância de branco e azul-claro. A paleta e o modo claro são diretrizes; a composição própria do protótipo continua validada nesta aplicação.
 
@@ -24,6 +24,6 @@ O [protótipo do fluxo integrado](../prototipo/README.md) materializa o fluxo-al
 
 Na demonstração, cada atalho visível deve responder à ação indicada. O painel de uma demanda pode ser minimizado sem apagar a demanda: ela permanece como atalho fixo reabrível no quadro e no perfil local do navegador. As telas de equipe, clientes e calendário são consultas derivadas desses mesmos dados. Conhecimento agora permite cadastrar, editar, pesquisar, filtrar e arquivar/restaurar referências, treinamentos, contatos e trilhas com passos, responsável, público e data de revisão; isso fica no navegador local, sem conteúdo real, distribuição pessoal do onboarding ou permissões. Acessos continua explicando categorias e limites sem simular contas.
 
-## Limites atuais
+## Estado e limites atuais
 
-Avaliação de desempenho, execução de onboarding por pessoa e gestão de acessos reais continuam sem fase de implementação definida. A biblioteca local valida a interação de gestão de conteúdo; nomes, materiais, contatos, regras de revisão e públicos reais precisam ser confirmados. Os requisitos de produção precisam ser validados antes de escolher stack, arquitetura ou solução reaproveitada.
+Há uma demonstração local de partes da gestão e aprovação e uma biblioteca local de conhecimento. Não há autenticação, permissões, dados ou arquivos compartilhados, contas reais, execução de onboarding por pessoa, gestão de acessos reais, cálculo de disponibilidade/capacidade, IA integrada, avaliação implementada, nem implantação operacional. Nomes, materiais, contatos, regras de revisão e públicos reais precisam ser confirmados. Requisitos e pesquisa de produção ainda estão em revisão; stack, arquitetura ou solução reaproveitada não estão aprovadas. Veja o [roteiro para concluir a plataforma](ROADMAP.md) e a [rastreabilidade dos áudios](TRACEABILIDADE-AUDIOS.md).
