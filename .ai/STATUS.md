@@ -2,7 +2,7 @@
 
 ## Escopo da primeira versão operacional — 2026-09-25
 - Registrada a decisão do usuário: a primeira versão em uso inclui a plataforma completa dos três áudios; protótipos e fases menores validam a construção sem cortar áreas do lançamento. Alinhados `docs/PRODUCT.md`, `docs/ROADMAP.md`, `.ai/CONTEXT.md` e `.ai/DECISIONS.md`; proposta de arquitetura e requisitos correspondentes estão sendo alinhados na branch de pesquisa/PR #10.
-- Validação desta alteração documental e sincronização: pendentes até concluir diff, commit e CI. O Trello continua pendente de confirmação pontual para publicar o comentário de escopo no cartão de roadmap correspondente.
+- `git diff --check` passou. A branch `implementation/primeira-jornada-local` publicou o escopo no commit `b0a0d98daf3fae00929865ec51d4811103125c73`, SHA remoto idêntico; checks de push e PR passaram ([push](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36165242333), [PR](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36165246348)). A branch de pesquisa/PR #10 publicou a proposta alinhada no commit `f57125daebdc9cf4d9efd409b05707a75d3e7f80`, SHA remoto idêntico; `gh pr checks 10` não reportou checks configurados. Atualização do cartão correspondente no Trello ainda aguarda confirmação pontual para publicar o comentário na interface.
 
 ## Objetivo
 Concluir a plataforma de processos inteira conforme os três áudios. O protótipo local é apenas uma etapa; o critério de projeto completo inclui gestão compartilhada, aprovações expansíveis, IA revisada por pessoa, conhecimento, acessos, avaliação, segurança e operação. O roteiro vigente está em `docs/ROADMAP.md`.
