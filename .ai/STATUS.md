@@ -1,3 +1,10 @@
+# Continuação sem os prints do CRM — 2026-09-25
+
+- O usuário pediu para aguardar os prints do dashboard CRM e seguir sem deixar essa comparação bloquear o projeto. Atualizei o contexto e as decisões para deixar esse encaminhamento claro; a comparação continua pendente, sem nova alteração visual.
+- Estado verificado: branch `implementation/primeira-jornada-local`, árvore limpa antes desta atualização; PR #9 aberto como rascunho, sem conflitos, head `fd631067344e87d30bb2f1f17677267df9d36b49`; CI do push e do PR aprovado. `node --test tests/workflow.test.js` passou 26/26; ambos `node --check` e `git diff --check` passaram.
+- Tentei retomar o cartão 5 do Trello, mas a aba não está mais disponível e a criação de nova aba expirou; nenhuma alteração foi feita no quadro nesta rodada. Sincronização desta atualização com Trello fica pendente até a interface voltar. Não houve mudança no protótipo; categorias de participantes seguem sem contas reais ou matriz de permissões.
+- Pesquisa e arquitetura já têm proposta documental no PR #10. A prova de conceito auto-hospedada não pode começar neste computador porque Docker/Podman não estão disponíveis; manter as avaliações documentais sem alegar validação prática. Próximo passo independente: continuar auditoria do protótipo/documentação e retomar a comparação visual quando os prints chegarem.
+
 ## Catálogo de tipos de usuário e correção de navegação — 2026-09-25
 
 - A tela Acessos lista e permite selecionar as quatro categorias identificadas nos áudios: responsável pela Mix7, gerente, profissional da equipe e cliente/aprovador. Cada ficha separa a capacidade literalmente citada das permissões ainda pendentes. Não há contas nem restrições reais. As transcrições foram conferidas em `docs/TRACEABILIDADE-AUDIOS.md`; os arquivos OGG/textos originais não foram copiados ao repositório.

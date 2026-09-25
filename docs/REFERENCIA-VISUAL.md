@@ -16,8 +16,8 @@ A plataforma tem uma sessão local de demonstração aberta em outra aba com um 
 
 ## Pendências
 
-- Inspecionar o dashboard autenticado do CRM renderizado e comparar a composição, o cabeçalho, o menu e os cartões com a plataforma. A validação móvel da plataforma foi concluída em Chromium; o teste não substitui a referência autenticada.
-- Reavaliar este documento quando houver evidência nova do dashboard renderizado. Nenhum arquivo do CRM foi alterado.
+- Comparar a composição autenticada do CRM com a plataforma quando o usuário fornecer os prints. O usuário pediu que essa validação não interrompa as demais frentes; continuar requisitos, pesquisa e testes enquanto isso.
+- Reavaliar este documento quando os prints chegarem. Nenhum arquivo do CRM foi alterado.
 
 ## Reinspeção solicitada — 25/09/2026
 
