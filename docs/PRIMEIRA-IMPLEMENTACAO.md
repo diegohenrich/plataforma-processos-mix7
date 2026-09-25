@@ -91,3 +91,13 @@ Com Playwright 1.63 e Chromium local, sem adicionar dependências ao projeto, fo
 A segunda execução capturou e inspecionou a tela final em 1440×1000: drawer, V02, feedback em V01, etapa Concluídas, resultado e toast de sucesso aparecem juntos, sem corte horizontal. A imagem de um pixel é apenas arquivo sintético para validar o percurso, não uma amostra visual de criativo.
 
 Limite: a mesma sessão local representou os cliques de cliente e equipe; portanto, isto valida estados e transições, não portal remoto, identidade, permissões ou isolamento real entre usuários. O navegador foi descartável, sem dados de cliente.
+
+### Devolução interna e comentário temporal de vídeo — 2026-09-25
+
+Em Chromium/Playwright 1.63, contexto descartável na origem `127.0.0.1:4201`, percorri com demanda e mídia sintéticas: briefing de vídeo → planejamento e tarefa atribuída → V1 de vídeo WebM → revisão interna. “Devolver” sem motivo manteve a etapa; com motivo, voltou à produção e registrou comentário interno. A demanda foi reenviada e aprovada para o cliente.
+
+O pedido de ajustes do cliente também foi bloqueado sem justificativa. Com justificativa, o comentário ficou ligado à V1 e ao instante pausado do vídeo (aproximadamente 1,56 s). Reabrir a âncora levou o player novamente ao ponto registrado. Uma tarefa de ajuste permitiu anexar V2; revisão interna e aprovação do cliente levaram ao registro de agendamento com evidência fictícia e à conclusão.
+
+Asserções finais passaram: decisão da V1 preservada como `changes_requested`, V2 aprovada, histórico contendo devolução interna, pedido de ajuste e conclusão, destino `scheduled`, e nenhum erro JavaScript. A captura do comentário temporal em tela foi inspecionada em `%LOCALAPPDATA%/Temp/mix7-video-comment-anchor.png`. Os testes automatizados seguem em 21/21; checks de sintaxe e diff passaram.
+
+Limite: os papéis de cliente e equipe foram simulados na mesma sessão e todos os dados/mídias eram fictícios. A execução valida a interface local e a persistência no perfil do navegador; não valida contas, portal remoto, permissões nem o piloto real da Mix7.

@@ -14,6 +14,12 @@
 - A visualização móvel foi conferida, mas a validação de fidelidade ao CRM continua incompleta: a tela autenticada do CRM ainda requer sessão aberta manualmente. Nenhum ajuste de produto foi inferido a partir da tela de login.
 - Registro visual no commit `0a6d1ea7010a7217348c8eb30784c4c48b2fffaa`, SHA local/remoto coincidente; `git diff --check` passou e os checks do push passaram nas execuções [36097436751](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36097436751) e [36097431439](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36097431439). Servidores de teste 4199/4200 encerrados; CRM 8198 mantido ativo para login manual.
 
+## Devolução e âncora temporal em vídeo — 2026-09-25
+
+- Chromium/Playwright 1.63 percorreu, em contexto isolado `127.0.0.1:4201`, briefing → produção → devolução interna → nova revisão → compartilhamento → pedido de ajustes do cliente em vídeo V1 → tarefa e versão V2 → aprovação do cliente → agendamento com evidência → Concluídas. PNG e WebM sintéticos; perfil sem dados preexistentes.
+- Devolução interna e solicitação de ajuste sem motivo não avançaram. Após justificativas, os eventos e comentários foram preservados. O comentário temporal do cliente ficou na V1 em ~1,56 s; acionar a âncora retornou o player ao ponto. V1 manteve decisão `changes_requested`, V2 terminou `approved`, histórico registrou os marcos e não houve `pageerror`.
+- Captura do estado de Ajustes e âncora em `%LOCALAPPDATA%/Temp/mix7-video-comment-anchor.png` foi inspecionada. A execução representa equipe e cliente na mesma sessão local; autenticação, isolamento de papéis e piloto real seguem pendentes. Ver `docs/PRIMEIRA-IMPLEMENTACAO.md` e `docs/TRACEABILIDADE-AUDIOS.md`.
+
 ## Ajuste de escala visual com referência do CRM — 2026-09-25
 
 - Executados lado a lado o CRM local e o protótipo. A rota administrativa do CRM segue redirecionando para login; nenhuma senha foi inserida. A tela de login e o CSS confirmado sustentam os tamanhos de corpo, títulos, navegação e cartões; a composição do dashboard autenticado continua sem evidência visual.
