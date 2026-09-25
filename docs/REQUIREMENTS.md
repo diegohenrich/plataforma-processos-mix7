@@ -18,6 +18,10 @@ Fonte: transcrição dos três áudios fornecidos em 24/09/2026 e decisões expl
 | Experiência | Foco em menos opções que o Notion e inspiração funcional no Trello. A única referência visual autorizada é o projeto local `C:\Users\anony\ProjetosPessoais\Projetos de Sistemas\CRM-MIX7-RENEW`; não usar o site público nem outros projetos. A composição do dashboard autenticado ainda precisa de inspeção renderizada. |
 | Construção | Comparar soluções existentes e opções open source antes de decidir o que desenvolver. Avaliar licenças, manutenção e segurança. |
 
+### Participantes citados não equivalem a contas criadas
+
+Os áudios distinguem a pessoa da Mix7 que declara peso 2, um gerente que avalia com peso 1, profissionais que precisam ver trabalho destinado a eles e clientes que aprovam/comentam versões. O áudio não estabelece o cargo formal da pessoa que declara peso 2, nem confirma o gerente como distribuidor de tarefas ou administrador técnico. Veja [Identidade e acessos](IDENTIDADE-E-ACESSOS.md) para a matriz de evidências, opções de autenticação e testes de isolamento. As contas reais dependem de uma lista de pessoas e e-mails fornecida pela Mix7, de uma matriz aprovada e da escolha da arquitetura; ainda não foram criadas.
+
 ## Decisões confirmadas para o primeiro recorte
 
 - Público: equipe e clientes da Mix7.
@@ -27,7 +31,7 @@ Fonte: transcrição dos três áudios fornecidos em 24/09/2026 e decisões expl
 ## Questões abertas que impedem especificação final
 
 1. Qual é o percurso real de uma demanda, da entrada ao encerramento? Existe revisão interna obrigatória? “Concluído” significa aprovado, entregue, agendado ou publicado?
-2. Quem pode ver, editar, aprovar e reabrir cada item? A visão individual é um filtro ou uma restrição de acesso?
+2. Quem pode ver, editar, aprovar e reabrir cada item? A visão individual é um filtro ou uma restrição de acesso? Quem administra contas, convites e vínculos com clientes?
 3. Quem aprova em nome do cliente? Há aprovação parcial, limite de rodadas, prazo de resposta ou alteração após aprovação?
 4. Como manter comentários ligados à versão correta? Comentários em imagem exigem marcação espacial? Como exibir feedback temporal em novas versões do vídeo?
 5. Como medir disponibilidade, pausas, tarefas simultâneas, atrasos externos e alterações de estimativa?

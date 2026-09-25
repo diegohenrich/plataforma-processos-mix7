@@ -15,6 +15,7 @@ Demanda/briefing → planejamento confirmado → execução → revisão interna
 - [Pesquisa inicial de soluções](docs/PESQUISA-SOLUCOES.md)
 - [Roteiro da prova de conceito](docs/PROVA-DE-CONCEITO.md)
 - [Proposta inicial de arquitetura de produto](docs/ARQUITETURA-PROPOSTA.md)
+- [Identidade, papéis e acessos](docs/IDENTIDADE-E-ACESSOS.md)
 - [Especificação funcional inicial](https://github.com/diegohenrich/plataforma-processos-mix7/blob/spec/requisitos-priorizados/docs/ESPECIFICACAO-MVP.md) (PR #8)
 - [Produto e público](docs/PRODUCT.md)
 - [Fases e critérios de avanço](docs/ROADMAP.md)
