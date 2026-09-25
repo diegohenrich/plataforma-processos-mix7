@@ -2,6 +2,10 @@
 
 **Estado:** fatia funcional para demonstração e validação; não é ambiente de produção nem decisão de stack.
 
+### Alteração do briefing durante a execução — 2026-09-25
+
+Em Chromium/Playwright, com demanda e perfil descartáveis na origem `127.0.0.1:4232`, confirmei o briefing, criei uma tarefa atribuída e iniciei a execução. Enviar a revisão sem os campos obrigatórios não alterou a etapa. Com novo contexto e motivo, a demanda voltou a Planejamento; o painel exibiu o motivo e o texto anterior, e o histórico registrou a alteração. A interface só retomou Em produção após “Confirmar revisão do plano”. Não ocorreram erros JavaScript. Renderizei e inspecionei o estado em 1440 × 1000; os dados eram fictícios e nenhuma conta ou colaboração multiusuário foi testada.
+
 ## O que já executa
 
 ### Revisão interna pela interface — 2026-09-25

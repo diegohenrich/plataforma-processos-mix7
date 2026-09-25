@@ -496,3 +496,7 @@
 
 - No Chromium/Playwright e em perfil descartável na origem `127.0.0.1:4231`, criei demanda sintética, confirmei briefing, atribuí/concluí tarefa, anexei PNG sintético e submeti V01 à revisão interna. “Devolver” vazio manteve Revisão interna e informou que o motivo é obrigatório; com motivo, voltou a Em produção, registrou comentário ligado à V01 e evento no histórico. Sem erros JavaScript.
 - Nenhuma mudança no código de produto; documentação atualizada em `docs/PRIMEIRA-IMPLEMENTACAO.md` e neste status. Origem/perfil de uso não foram tocados. Próximo passo: concluir testes automatizados, publicar a documentação no GitHub e seguir a auditoria das funções pendentes. Comentário Trello segue sem publicação até a confirmação pontual do usuário.
+# Alteração do briefing durante a execução — 2026-09-25
+
+- Chromium/Playwright em contexto descartável `127.0.0.1:4232`: criei demanda sintética, confirmei briefing, atribuí uma tarefa e iniciei produção. Envio da revisão vazia não avançou; alteração com motivo voltou a Planejamento, mostrou texto anterior e motivo, e gerou histórico. “Confirmar revisão do plano e retomar” devolveu a Em produção. Sem erros JavaScript.
+- Renderizei e inspecionei a interface do estado de revisão em 1440 × 1000 (`%LOCALAPPDATA%/Temp/mix7-briefing-review.png`). Nenhuma mudança de código; documentação atualizada neste status e em `docs/PRIMEIRA-IMPLEMENTACAO.md`. `node --test`, sintaxe JS e diff serão conferidos antes do commit. Atualização da checklist Trello no cartão 18 aguarda confirmação exigida para publicar o texto.
