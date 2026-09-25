@@ -8,6 +8,7 @@ use App\Enums\UserRole;
 use App\Models\Demand;
 use App\Models\DemandTask;
 use App\Models\Organization;
+use App\Models\TaskTimeEntry;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -152,6 +153,58 @@ class DemandWorkflowTest extends TestCase
         ])->assertSessionHasErrors('title');
 
         $this->assertDatabaseCount('demand_tasks', 0);
+    }
+
+    public function test_professional_can_start_pause_and_resume_persisted_task_time(): void
+    {
+        [$organization, $manager, $professional] = $this->team();
+        $demand = $this->demand($organization, $manager);
+        $task = $this->task($demand, $professional, $manager, 'Construir a página');
+
+        $this->actingAs($professional)->post(route('demand-tasks.timer.start', $task))->assertRedirect();
+        $task->refresh();
+        $this->assertSame(TaskStatus::InProgress, $task->status);
+        $this->assertDatabaseHas('task_time_entries', ['task_id' => $task->id, 'user_id' => $professional->id, 'ended_at' => null]);
+        $this->get(route('demands.show', $demand))->assertOk()->assertSee('Cronômetro ativo na tarefa Construir a página');
+
+        $this->travel(75)->seconds();
+        $this->post(route('demand-tasks.timer.pause', $task))->assertRedirect();
+        $entry = TaskTimeEntry::query()->where('task_id', $task->id)->firstOrFail();
+        $this->assertNotNull($entry->ended_at);
+        $this->assertSame(TaskStatus::Paused, $task->fresh()->status);
+
+        $this->travel(30)->seconds();
+        $this->post(route('demand-tasks.timer.start', $task))->assertRedirect();
+        $this->assertDatabaseCount('task_time_entries', 2);
+        $this->assertDatabaseHas('task_time_entries', ['task_id' => $task->id, 'user_id' => $professional->id, 'ended_at' => null]);
+    }
+
+    public function test_professional_cannot_run_two_timers_or_track_a_colleagues_task(): void
+    {
+        [$organization, $manager, $professional, $colleague] = $this->team();
+        $demand = $this->demand($organization, $manager);
+        $ownTask = $this->task($demand, $professional, $manager, 'Minha tarefa');
+        $otherTask = $this->task($demand, $professional, $manager, 'Outra tarefa');
+        $colleagueTask = $this->task($demand, $colleague, $manager, 'Tarefa do colega');
+
+        $this->actingAs($professional)->post(route('demand-tasks.timer.start', $ownTask))->assertRedirect();
+        $this->post(route('demand-tasks.timer.start', $otherTask))->assertSessionHasErrors('timer');
+        $this->post(route('demand-tasks.timer.start', $colleagueTask))->assertForbidden();
+        $this->assertDatabaseCount('task_time_entries', 1);
+    }
+
+    public function test_completing_task_closes_its_active_time_interval(): void
+    {
+        [$organization, $manager, $professional] = $this->team();
+        $demand = $this->demand($organization, $manager);
+        $task = $this->task($demand, $professional, $manager, 'Concluir a página');
+        $this->actingAs($professional)->post(route('demand-tasks.timer.start', $task));
+
+        $this->travel(45)->seconds();
+        $this->patch(route('demand-tasks.status', $task), ['status' => TaskStatus::Completed->value])->assertRedirect();
+
+        $this->assertNotNull(TaskTimeEntry::query()->firstOrFail()->ended_at);
+        $this->assertSame(TaskStatus::Completed, $task->fresh()->status);
     }
 
     /** @return array{Organization, User, User, User} */

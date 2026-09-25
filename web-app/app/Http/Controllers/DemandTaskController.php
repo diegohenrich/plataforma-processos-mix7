@@ -8,6 +8,9 @@ use App\Enums\UserRole;
 use App\Models\Demand;
 use App\Models\DemandEvent;
 use App\Models\DemandTask;
+use App\Models\TaskTimeEntry;
+use App\Models\User;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -15,6 +18,105 @@ use Illuminate\Validation\Rule;
 
 class DemandTaskController extends Controller
 {
+    public function startTimer(Request $request, DemandTask $task): RedirectResponse
+    {
+        $this->authorize('trackTime', $task);
+        $user = $request->user();
+
+        $result = DB::transaction(function () use ($task, $user): ?string {
+            User::query()->whereKey($user->id)->lockForUpdate()->firstOrFail();
+            $active = TaskTimeEntry::query()->where('user_id', $user->id)->whereNull('ended_at')->first();
+            if ($active && $active->task_id !== $task->id) {
+                return 'Pause sua tarefa atual antes de iniciar outra.';
+            }
+
+            if ($active) {
+                return null;
+            }
+
+            if ($task->status === TaskStatus::Completed) {
+                return 'Uma tarefa concluída não pode iniciar o cronômetro.';
+            }
+
+            $now = CarbonImmutable::now();
+            TaskTimeEntry::create([
+                'organization_id' => $task->organization_id,
+                'task_id' => $task->id,
+                'user_id' => $user->id,
+                'started_at' => $now,
+            ]);
+
+            if ($task->status !== TaskStatus::InProgress) {
+                $from = $task->status;
+                $task->update(['status' => TaskStatus::InProgress]);
+                DemandEvent::create([
+                    'organization_id' => $task->organization_id,
+                    'demand_id' => $task->demand_id,
+                    'task_id' => $task->id,
+                    'actor_id' => $user->id,
+                    'event_type' => 'task_status_changed',
+                    'summary' => $user->name.' iniciou "'.$task->title.'"',
+                    'from_status' => $from->value,
+                    'to_status' => TaskStatus::InProgress->value,
+                ]);
+            }
+
+            DemandEvent::create([
+                'organization_id' => $task->organization_id,
+                'demand_id' => $task->demand_id,
+                'task_id' => $task->id,
+                'actor_id' => $user->id,
+                'event_type' => 'timer_started',
+                'summary' => $user->name.' iniciou o cronômetro de "'.$task->title.'"',
+            ]);
+
+            return null;
+        });
+
+        return $result
+            ? back()->withErrors(['timer' => $result])
+            : back()->with('success', 'Cronômetro iniciado. O tempo será salvo nesta tarefa.');
+    }
+
+    public function pauseTimer(Request $request, DemandTask $task): RedirectResponse
+    {
+        $this->authorize('trackTime', $task);
+        $user = $request->user();
+
+        $result = DB::transaction(function () use ($task, $user): ?string {
+            User::query()->whereKey($user->id)->lockForUpdate()->firstOrFail();
+            $entry = TaskTimeEntry::query()
+                ->where('user_id', $user->id)
+                ->where('task_id', $task->id)
+                ->whereNull('ended_at')
+                ->lockForUpdate()
+                ->first();
+
+            if (! $entry) {
+                return 'Não há cronômetro ativo nesta tarefa.';
+            }
+
+            $entry->update(['ended_at' => CarbonImmutable::now()]);
+            if ($task->status === TaskStatus::InProgress) {
+                $task->update(['status' => TaskStatus::Paused]);
+            }
+            DemandEvent::create([
+                'organization_id' => $task->organization_id,
+                'demand_id' => $task->demand_id,
+                'task_id' => $task->id,
+                'actor_id' => $user->id,
+                'event_type' => 'timer_paused',
+                'summary' => $user->name.' pausou o cronômetro de "'.$task->title.'"',
+            ]);
+
+            return null;
+        });
+
+        return $result
+            ? back()->withErrors(['timer' => $result])
+            : back()->with('success', 'Cronômetro pausado e tempo salvo.');
+    }
+
     public function store(Request $request, Demand $demand): RedirectResponse
     {
         $this->authorize('manage', $demand);
@@ -69,6 +171,14 @@ class DemandTaskController extends Controller
         }
 
         DB::transaction(function () use ($task, $from, $to, $request): void {
+            if (in_array($to, [TaskStatus::Paused, TaskStatus::Blocked, TaskStatus::Completed], true)) {
+                User::query()->whereKey($task->assigned_to)->lockForUpdate()->firstOrFail();
+                TaskTimeEntry::query()
+                    ->where('user_id', $task->assigned_to)
+                    ->where('task_id', $task->id)
+                    ->whereNull('ended_at')
+                    ->update(['ended_at' => CarbonImmutable::now()]);
+            }
             $task->update(['status' => $to]);
             DemandEvent::create([
                 'organization_id' => $task->organization_id,

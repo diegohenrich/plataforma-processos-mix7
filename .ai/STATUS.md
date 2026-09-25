@@ -1,5 +1,11 @@
 # Estado atual — Plataforma Mix7 — 2026-09-25
 
+## Cronômetro persistido por tarefa no Laravel — 2026-09-25
+- Implementados intervalos em `task_time_entries`, controles de iniciar/pausar/retomar, exclusividade de sessão por profissional, contador no cabeçalho ao navegar e encerramento do intervalo ao pausar, bloquear ou concluir a tarefa. Acesso ao cronômetro restringe-se ao profissional responsável; estimativa continua separada do tempo medido.
+- Validação: `php artisan test --testdox` passou 16/16 (77 verificações), incluindo retomada, exclusividade, tentativa de acessar tarefa de colega e encerramento ao concluir. Migração local SQLite aplicada (7 migrações); Pint escopado e Composer validados. Rota de demanda renderizada; contador foi inspecionado visualmente no navegador. Registro sintético temporário removido após inspeção. Inspeção móvel, banco MariaDB Hostinger, comandos do timer pela API desktop, encerramento abrupto e política final de permissões seguem pendentes.
+- Trello #34 [Registrar tempo real por tarefa no Laravel](https://trello.com/c/b96sJ92N/34-registrar-tempo-real-por-tarefa-no-laravel) está em Em andamento, com etiqueta Gestão de equipe; registrar testes e commit depois do push. PR #11 segue em rascunho, sem merge nem deploy.
+- Próximo passo: concluir e sincronizar esta fatia; depois continuar o fluxo ponta a ponta por arquivos privados e aprovação externa, cada frente vinculada a cartão próprio.
+
 ## Laravel — demandas, tarefas e contas da equipe — 2026-09-25
 - A branch `codex/fundacao-compartilhada` estende a fundação Laravel 12, PHP 8.2+ e Sanctum com persistência de demandas/tarefas/eventos, autoria, atribuição, transições de fluxo, leitura API autenticada e cadastro de contas profissionais pelo dono da agência. Dados locais continuam sintéticos em SQLite; MariaDB/Hostinger ainda não foram conectados.
 - A autorização restringe cada registro à organização e profissionais às tarefas próprias; o histórico também oculta eventos de colegas. A direção vê e gerencia a equipe. Matriz completa, gerência de contas e acesso do cliente seguem pendentes de validação; não usar dados reais.
