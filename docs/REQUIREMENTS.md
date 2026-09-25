@@ -25,10 +25,18 @@ Fonte: transcrição dos três áudios fornecidos em 24/09/2026 e decisões expl
 - Fluxo-alvo aprovado: demanda/briefing → planejamento revisado → execução → revisão interna → aprovação do cliente → ajustes e nova versão quando pedidos → entrega/agendamento/publicação com evidência → conclusão conferida. Validar no caso real da Mix7 quem exerce cada papel, as exceções e as evidências exigidas por serviço; não reabrir o fluxo-alvo sem nova evidência ou decisão explícita.
 - IA: sugere; uma pessoa revisa antes de criar ou distribuir tarefas.
 
+## Tipos de usuário e papéis de trabalho
+
+Os áudios identificam quatro tipos de participante: direção (a pessoa que avalia com peso 2; cargo formal a confirmar), gestor/gerente, profissional da equipe e aprovador do cliente. São categorias de usuário respaldadas pelas falas, não contas nem permissões configuradas.
+
+O fluxo aprovado também exige atribuir funções por demanda: responsável pela conta/briefing, gestor da operação, executor, revisor interno e responsável por entrega/publicação. Essas funções descrevem o que alguém faz naquele processo; uma pessoa pode acumular funções. O aprovador é designado pelo cliente para a versão compartilhada. A fala “cada profissional vê o que é para fazer” confirma uma visão individual do trabalho, mas ainda não define se os demais dados ficam ocultos por segurança.
+
+Antes de criar contas operacionais, ainda é necessário decidir autenticação, administração da plataforma, associação de usuários internos à agência e aprovadores às contas de cliente, convites/recuperação, remoção e a matriz de leitura/escrita/aprovação/reabertura. Os áudios citam avaliação pela direção (peso 2) e pelo gestor (peso 1), mas não se deve habilitar nota, remuneração ou medida disciplinar sem critérios e política de uso. Não há nomes e e-mails de usuários para provisionamento. Até isso ser decidido, os nomes livres do protótipo continuam demonstrativos e não são contas.
+
 ## Questões abertas que impedem especificação final
 
 1. Em um caso real da Mix7, como se aplicam as etapas do fluxo-alvo já aprovado? Quem executa cada papel, quais exceções existem e o que comprova a conclusão para esse serviço (entrega, agendamento, publicação ou outro registro)?
-2. Quem pode ver, editar, aprovar e reabrir cada item? A visão individual é um filtro ou uma restrição de acesso?
+2. Que autenticação e administração serão usadas? Quem pode ver, editar, aprovar, publicar e reabrir cada item? A visão individual é um filtro ou uma restrição de acesso? Como associar clientes e aprovadores, convidar usuários e revogar acesso?
 3. Quem aprova em nome do cliente? Há aprovação parcial, limite de rodadas, prazo de resposta ou alteração após aprovação?
 4. Como manter comentários ligados à versão correta? Comentários em imagem exigem marcação espacial? Como exibir feedback temporal em novas versões do vídeo?
 5. Como medir disponibilidade, pausas, tarefas simultâneas, atrasos externos e alterações de estimativa?
