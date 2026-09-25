@@ -1,3 +1,10 @@
+## Catálogo de tipos de usuário e correção de navegação — 2026-09-25
+
+- A tela Acessos lista e permite selecionar as quatro categorias identificadas nos áudios: responsável pela Mix7, gerente, profissional da equipe e cliente/aprovador. Cada ficha separa a capacidade literalmente citada das permissões ainda pendentes. Não há contas nem restrições reais. As transcrições foram conferidas em `docs/TRACEABILIDADE-AUDIOS.md`; os arquivos OGG/textos originais não foram copiados ao repositório.
+- Corrigi `.kanban-board[hidden]`, que permitia o Kanban aparecer por baixo das páginas auxiliares. Playwright/Chromium percorreu as quatro fichas e Acessos ↔ Demandas em 1440×900 e 390×844. Acessos ocultou o quadro; Demandas o restaurou; sem overflow e sem erros JavaScript. Capturas inspecionadas: `docs/evidencias/visual/acessos-tipos-de-usuario-1440.png` e `...390.png`.
+- `node --test tests/workflow.test.js`: 26/26 passaram; `node --check prototipo/workflow.js`, `node --check prototipo/app.js` e `git diff --check` passaram. CI do push e do PR passou na execução https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36130617796.
+- Código publicado na branch `implementation/primeira-jornada-local`, commit `2d518cb637c5a801e63283929bc16187884f822a`; SHA local/remoto conferido. PR #9 continua rascunho, sem conflitos. O cartão 5 do Trello recebeu descrição e comentário com implementação e limites; permanece em Requisitos a validar, checklist 1/5.
+- Autenticação, criação de contas reais, dados/acessos por papel e isolamento dos clientes continuam sem decisão/implementação. O catálogo demonstra categorias baseadas em evidência, não cumpre ainda provisionamento ou autorização operacional.
 ## Auditoria funcional isolada: filtros e demanda minimizada — 2026-09-25
 
 - Em Chromium, no perfil descartável `127.0.0.1:4208`, apliquei o filtro de cliente Café Aroeira e confirmei três demandas distribuídas entre as etapas. O formulário vazio recusou o envio com mensagem de campo obrigatório; cancelei sem criar item e a contagem permaneceu em oito.
