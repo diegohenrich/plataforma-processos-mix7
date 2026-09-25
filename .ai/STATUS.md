@@ -1,5 +1,11 @@
 # Estado em 2026-09-24
 
+## Evidência dos tipos de usuário nos áudios — 2026-09-25
+
+- `docs/REQUIREMENTS.md` agora separa, com intervalos citados, as capacidades que os áudios atribuem ao responsável que fala como dono/representante da Mix7, gerente, profissional e cliente/aprovador, das permissões ainda desconhecidas. Cargo formal, administração técnica, criação de contas e matriz de acesso não são tratados como fatos.
+- `docs/TRACEABILIDADE-AUDIOS.md` esclarece que o áudio confirma o gerente como avaliador com peso 1, não como responsável por distribuir tarefas; o peso 2 é dito pela própria pessoa que fala, sem cargo formal confirmado. Não há dados para criar usuários reais.
+- A referência principal foi a transcrição fornecida, conferida nos trechos de áudio 2 (00:00–00:41) e áudio 3 (00:42–00:54; 01:58–02:53). `git diff --check`, revisão manual do diff, `node --test tests/workflow.test.js` (21/21), `node --check prototipo/workflow.js` e `node --check prototipo/app.js` passaram. O cartão 5 do Trello deve receber o link para o commit após o push.
+
 ## Nova execução do CRM para referência visual — 2026-09-25
 
 - Iniciado `CRM-MIX7-RENEW` via Laravel em `127.0.0.1:8198`; Chromium renderizou o login em 1270 × 713. A página mostra uma composição dividida entre painel escuro de apresentação e formulário claro. Esse visual pertence ao login e não confirma como o dashboard deve ser reproduzido.

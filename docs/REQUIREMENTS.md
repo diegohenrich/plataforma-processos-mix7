@@ -27,11 +27,22 @@ Fonte: transcrição dos três áudios fornecidos em 24/09/2026 e decisões expl
 
 ## Tipos de usuário e papéis de trabalho
 
-Os áudios identificam quatro tipos de participante: direção (a pessoa que avalia com peso 2; cargo formal a confirmar), gestor/gerente, profissional da equipe e aprovador do cliente. São categorias de usuário respaldadas pelas falas, não contas nem permissões configuradas.
+Os áudios dão evidência de quatro categorias de participante: a pessoa que fala como responsável pela Mix7, o gerente citado, o profissional da equipe e o cliente que aprova. As falas não definem os cargos formais de quem fala ou do gerente. São categorias respaldadas pelo áudio, não contas nem permissões configuradas.
 
-O fluxo aprovado também exige atribuir funções por demanda: responsável pela conta/briefing, gestor da operação, executor, revisor interno e responsável por entrega/publicação. Essas funções descrevem o que alguém faz naquele processo; uma pessoa pode acumular funções. O aprovador é designado pelo cliente para a versão compartilhada. A fala “cada profissional vê o que é para fazer” confirma uma visão individual do trabalho, mas ainda não define se os demais dados ficam ocultos por segurança.
+O fluxo aprovado exige identificar, em cada demanda, quem responde pelo briefing, executa tarefas, faz a revisão interna e confere a entrega ou publicação. A pessoa que valida o planejamento também precisa ser identificada. Essas funções descrevem o que alguém faz naquele processo; uma pessoa pode acumular funções. O aprovador é designado pelo cliente para a versão compartilhada. A fala “cada profissional vê o que é para fazer” (áudio 3, 00:42–00:54) confirma uma visão individual do trabalho, mas ainda não define se os demais dados ficam ocultos por segurança.
 
-Antes de criar contas operacionais, ainda é necessário decidir autenticação, administração da plataforma, associação de usuários internos à agência e aprovadores às contas de cliente, convites/recuperação, remoção e a matriz de leitura/escrita/aprovação/reabertura. Os áudios citam avaliação pela direção (peso 2) e pelo gestor (peso 1), mas não se deve habilitar nota, remuneração ou medida disciplinar sem critérios e política de uso. Não há nomes e e-mails de usuários para provisionamento. Até isso ser decidido, os nomes livres do protótipo continuam demonstrativos e não são contas.
+### O que os áudios permitem afirmar sobre cada categoria
+
+| Categoria mencionada | Capacidade explicitamente citada | Ainda não definido |
+| --- | --- | --- |
+| Responsável que fala como dono/representante da Mix7 | Avaliar prazo e qualidade; a avaliação pessoal tem peso 2 (áudio 3, 01:58–02:53). | Cargo formal, acesso administrativo, ações no fluxo e critérios de avaliação. “Direção” é um rótulo provisório, não um cargo confirmado. |
+| Gerente | Avaliar a qualidade com peso 1 (áudio 3, 02:18–02:53). | Autoridade para distribuir tarefas, acesso administrativo, ações no fluxo e critérios de avaliação. Atribuição de tarefas pelo gerente não foi estabelecida nessa fala. |
+| Profissional da equipe | Ver o trabalho destinado à própria pessoa; são dados como exemplo um programador chamado Diego (áudio 3, 00:42–00:54). | Se essa visão é filtro pessoal ou limite de segurança e quais outros dados ou ações ficam disponíveis. O exemplo não autoriza criar uma conta real para Diego. |
+| Cliente/aprovador | Acessar materiais enviados à aprovação, aprovar ou reprovar e comentar imagem ou vídeo (áudio 2, 00:00–00:41). | Como autenticar e vincular o aprovador, isolamento entre clientes, notas internas, rodadas, aprovações parciais e acesso após a decisão. |
+
+Administrador técnico, convites, recuperação e revogação de contas são necessidades do produto a especificar; não aparecem como capacidades atribuídas a uma dessas categorias nos áudios. Também não há nomes, e-mails ou autorização para provisionar usuários reais.
+
+Antes de criar contas operacionais, ainda é necessário decidir autenticação, administração da plataforma, associação de usuários internos à agência e aprovadores às contas de cliente, convites/recuperação, remoção e a matriz de leitura/escrita/aprovação/reabertura. O áudio menciona pontos por prazo e avaliações de qualidade, com pesos 2 e 1; não especifica fórmula, contestação ou governança. Não habilitar notas, remuneração ou medida disciplinar sem critérios e política de uso. Até as decisões e os dados de provisionamento existirem, os nomes livres do protótipo continuam demonstrativos e não são contas.
 
 ## Questões abertas que impedem especificação final
 
