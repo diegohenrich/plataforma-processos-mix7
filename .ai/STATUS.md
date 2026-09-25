@@ -1,3 +1,10 @@
+# Auditoria funcional isolada — 2026-09-25
+
+- Chromium em perfil descartável `127.0.0.1:4228`: oito páginas navegáveis; briefing vazio cancelado sem salvar; demanda sintética criada e mantida após recarga; atalho minimizado reabriu a mesma demanda, inclusive após recarga; filtro de etapa reduziu 8 cartões a 2 e Limpar restaurou a visão; menu Planejamento abriu seu diálogo; exportações JSON e CSV iniciaram downloads. Nenhum erro JavaScript. O endereço de uso `4173` não estava ativo e não foi alterado.
+- `node --test tests/workflow.test.js`: 26/26 passaram; `node --check prototipo/workflow.js`, `node --check prototipo/app.js` e `git diff --check` passaram. Nenhum código de produto mudou; atualizei apenas este estado e o guia `docs/PRIMEIRA-IMPLEMENTACAO.md`.
+- Trello: o cartão 23 está aberto na aba atual. A publicação de comentário ainda aguarda ação autorizada na interface; não declarar sincronização completa antes de verificar.
+- Próxima frente independente: seguir a auditoria funcional dos formulários restantes e requisitos; aguardar os prints do CRM sem bloquear o trabalho.
+
 # Menus de etapa do Kanban — 2026-09-25
 
 - Corrigi a sobreposição de colunas que interceptava o clique nos menus de etapa. Em Chromium/Playwright, os oito menus abriram o diálogo correto nas larguras 1440, 1399, 1280, 1250, 900, 768, 600 e 390 px; o documento não teve overflow e o Kanban rolou internamente. Capturas desktop e móvel foram inspecionadas. Perfil efêmero `127.0.0.1:4227`; nenhuma demanda foi salva e o perfil `4173` não foi tocado. `node --test tests/workflow.test.js`: 26/26; sintaxe JavaScript e `git diff --check` passaram.

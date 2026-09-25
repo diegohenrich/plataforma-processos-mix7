@@ -80,6 +80,10 @@ As sessões anteriores usaram armazenamento local separado por origem do navegad
 
 Antes de usar dados reais, fechar o caso real da Mix7 e sua matriz de papéis; escolher persistência central, autenticação, isolamento, hospedagem, backup, retenção e integração de arquivos; validar o comportamento das âncoras com equipe e cliente. A escolha final de tecnologias deve seguir a pesquisa e as restrições operacionais.
 
+### Auditoria isolada dos controles principais — 25/09/2026
+
+Em perfil Chromium descartável na origem `127.0.0.1:4228`, confirmei navegação nas oito páginas, cancelamento sem salvar briefing vazio, criação de demanda com dados sintéticos e persistência após recarga. Uma demanda minimizada reapareceu na bandeja, reabriu com o mesmo título e continuou disponível após outra recarga. Os filtros reduziram as oito demandas de demonstração a duas ao escolher uma etapa e o botão Limpar restaurou a visão. O menu da coluna Planejamento abriu o diálogo correspondente; JSON e CSV iniciaram downloads com nomes esperados. Não houve erro JavaScript. O perfil descartável foi fechado ao final e não tocou a origem de uso `4173`. Esta auditoria verifica interação funcional; não substitui validação de papéis, sincronização entre pessoas ou operação com clientes reais.
+
 ### E2E adicional de briefing e tarefas — 25/09/2026
 
 Em Chromium numa origem isolada, uma demanda sintética avançou do formulário para planejamento, recebeu tarefa com responsável e estimativa, foi confirmada e chegou à execução. A página Equipe mostrou a atribuição e abriu a demanda. Ao concluir a tarefa, o evento entrou no histórico e a fila pendente ficou vazia. O seletor de arquivo nativo não é exposto pelo harness CUA; por isso, esta execução não percorreu anexo, revisão, aprovação do cliente ou conclusão completa. Essa limitação não substitui nem invalida testes anteriores de seleção de arquivo sintético, mas o E2E integrado dessas etapas segue aberto.
