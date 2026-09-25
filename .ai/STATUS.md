@@ -1,5 +1,12 @@
 # Estado em 2026-09-25
 
+## Reinspeção solicitada do CRM — 2026-09-25
+
+- O CRM-MIX7-RENEW foi iniciado novamente em `http://127.0.0.1:8198` e a rota `/administrador/dashboard` foi aberta no Chromium. O middleware redirecionou para `/login`; a tela autenticada do dashboard não está disponível nesta sessão.
+- A aba do login foi preservada para entrada manual pelo usuário. Não foram lidas nem inseridas credenciais e nenhum arquivo do CRM foi alterado. A fidelidade do layout da plataforma ao dashboard ainda não pode ser concluída até o usuário autenticar e deixar o painel visível.
+- A bandeja de demandas minimizadas já existe em `prototipo/`: mantém atalhos fixos visíveis, permite reabrir cada demanda e não descarta seus dados. Sem mudança funcional ou visual nesta inspeção.
+- Próxima validação visual: comparar dashboard autenticado e protótipo nos mesmos tamanhos; revisar composição, tipografia, escala, cartões e navegação; ajustar apenas com evidência observada e inspecionar a renderização resultante.
+
 ## Anexos de briefing por arraste — 2026-09-25
 
 - Em Chromium/Playwright 1.63 num perfil descartável em `127.0.0.1:4206`, arrastei arquivos sintéticos PNG e PDF para a zona do briefing. O TXT foi recusado e o PNG acima de 15 MB foi recusado; em ambos os casos os dois arquivos válidos permaneceram selecionados.
