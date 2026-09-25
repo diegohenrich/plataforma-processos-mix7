@@ -13,6 +13,12 @@
 - git diff --check passou; CI do push e do PR #9 para o commit 73b28d58995a651b98f9487b319bd505340fcc68 passou nas execuções [36117997596](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36117997596) e [36118002250](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36118002250).
 # Estado em 2026-09-25
 
+## Ações de exportação JSON e CSV — 2026-09-25
+
+- Em Chromium, origem descartável `127.0.0.1:4210`, abri “Mais opções” e acionei os dois formatos. JSON exibiu “Cópia JSON das demandas baixada” e CSV exibiu “Lista CSV das demandas baixada”; as oito demandas sintéticas continuaram visíveis sem alteração.
+- Não foi possível inspecionar os arquivos no gerenciador interno de downloads: a política do navegador recusou a página `chrome://downloads`. Portanto, esta evidência cobre clique e confirmação da interface, não leitura/bytes do arquivo. CSV tem testes automatizados de serialização; abrir em Excel/Calc continua pendente.
+- Sem mudança de código. Testes de referência do estado atual: `node --test tests/workflow.test.js` passou 22/22; validações recentes de sintaxe JavaScript e `git diff --check` passaram. A auditoria foi vinculada ao cartão de exportação 23; sincronização será registrada após commit desta atualização documental.
+
 ## Auditoria de navegação e criação de demanda — 2026-09-25
 
 - Em perfil local isolado `127.0.0.1:4207`, percorri as oito páginas da navegação; a visão Lista mostrou as demandas nas etapas corretas. O diálogo de filtros exibiu opções de etapa, cliente e prazo; Mais opções abriu os formatos JSON/CSV; Pendências listou dois briefings incompletos e uma aprovação aguardando cliente. Abrir uma pendência fechou o diálogo e mostrou o briefing correspondente.
