@@ -2,6 +2,10 @@
 
 **Estado:** fatia funcional para demonstração e validação; não é ambiente de produção nem decisão de stack.
 
+### Atualização imediata após criar demanda — 2026-09-25
+
+Corrigi a criação de briefing para redesenhar o quadro logo após salvar, sem exigir recarga ou outra interação. Em Chromium isolado, uma demanda sintética apareceu imediatamente e continuou visível após recarregar. Repeti o percurso com texto contendo marcação HTML e JavaScript: o conteúdo permaneceu literal, nenhum elemento foi injetado nem código executado, e não houve erros de página. A captura renderizada em 1440 × 1000 está em [nova demanda no quadro](evidencias/visual/nova-demanda-imediata-1440.png). `node --test tests/*.test.js` passou 31/31; `node --check prototipo/app.js`, `node --check prototipo/workflow.js` e `git diff --check` passaram. O teste usou armazenamento descartável e dados sintéticos.
+
 ### Biblioteca local de Conhecimento e onboarding — 2026-09-25
 
 Implementei `prototipo/knowledge.js` e a página Conhecimento com cadastro, edição, busca, filtro por tipo, arquivamento e restauração de referências, treinamentos, contatos e trilhas de onboarding. Todos os itens pedem responsável, público e data de revisão conforme o critério do cartão Trello #10; isso é texto informativo, não define permissões. Treinamentos e trilhas guardam passos ordenados; onboarding sem passo, data impossível ou link fora de HTTP(S) são recusados. O fluxo-alvo aprovado continua visível em um guia recolhível na página.

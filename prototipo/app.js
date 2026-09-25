@@ -1955,6 +1955,7 @@ async function createRequestFromForm(form, data, selectedFiles, submitButton) {
   document.querySelector("#assigneeFilter").value = "";
   document.querySelector("#searchInput").value = "";
   setPage("requests");
+  renderBoard();
   showToast(saved ? `Demanda salva no navegador como briefing para revisão${briefingFiles.length ? ` com ${briefingFiles.length} arquivo(s) de referência` : ""}.` : "Demanda criada nesta sessão; o navegador não confirmou o salvamento.");
   submitButton.disabled = false;
 }
