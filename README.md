@@ -2,7 +2,7 @@
 
 Projeto da Mix7 para reunir gestão de equipe e aprovações em um fluxo documentado, rastreável e integrado. O primeiro módulo de aprovação tratará criativos de redes sociais; o modelo deverá comportar outras áreas da agência.
 
-**Estado:** descoberta e engenharia de requisitos. Ainda não há aplicação, stack ou arquitetura escolhidas. Nenhuma funcionalidade descrita aqui deve ser interpretada como implementada.
+**Estado:** descoberta e engenharia de requisitos. Ainda não há aplicação, stack ou arquitetura técnica escolhidas; há uma proposta inicial de arquitetura de produto. Nenhuma funcionalidade descrita aqui deve ser interpretada como implementada.
 
 ## Primeira entrega pretendida
 
@@ -12,6 +12,8 @@ Demanda → planejamento revisado → execução → aprovação do cliente → 
 
 - [Requisitos e dúvidas abertas](docs/REQUIREMENTS.md)
 - [Fluxo proposto para uma demanda de criativo](docs/FLUXO-PROPOSTO.md)
+- [Pesquisa inicial de soluções](docs/PESQUISA-SOLUCOES.md)
+- [Proposta inicial de arquitetura de produto](docs/ARQUITETURA-PROPOSTA.md)
 - [Produto e público](docs/PRODUCT.md)
 - [Fases e critérios de avanço](docs/ROADMAP.md)
 - [Como usar o quadro e as etiquetas do Trello](docs/TRELLO.md)
