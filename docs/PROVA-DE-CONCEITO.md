@@ -55,6 +55,12 @@ Fontes primárias: [índice e releases do Wekan](https://github.com/wekan/wekan/
 
 Enquanto esses portões não forem atendidos, a comparação documental pode orientar protótipo local e perguntas, mas não prova segurança, integração, adequação operacional ou custo final. A consulta de 25/09/2026 mapeou faixas e versões corrigidas publicadas para avisos selecionados do Wekan, Plane e OpenProject; não instalou releases, conferiu digests ou cobriu o inventário completo de componentes e dependências.
 
+## Pré-verificação do ambiente local — 25/09/2026
+
+- Resultado: **não foi possível iniciar uma prova auto-hospedada nesta sessão**. Os comandos `docker`, `podman` e `nerdctl` não estão disponíveis no `PATH`; também não foram encontrados executáveis do Docker Desktop ou Podman nos caminhos comuns verificados no Windows.
+- Nenhum runtime foi instalado, nenhuma imagem foi baixada e nenhum serviço de teste foi iniciado. Portanto, release efetiva, digest, configuração, licença aplicada e comportamento de isolamento/backup continuam sem evidência de ensaio.
+- Próximo requisito técnico para retomar esta etapa: disponibilizar um runtime suportado de contêineres, revalidar seus avisos e configurações, e então fixar as imagens por digest antes de iniciar o cenário sintético. A pré-verificação não substitui a validação da Mix7, os portões de conta/termos nem a aprovação dos dados do cenário.
+
 ## Resultado a preencher depois do ensaio
 
 Para cada ferramenta: data, edição/plano/release, cenário percorrido, evidências, critérios eliminatórios, limitações, estimativa de custo total, exportação testada, decisão provisória (descartar, repetir ou considerar) e responsável da Mix7. Uma decisão favorável exige sucesso no fluxo de ponta a ponta e recuperação independente do histórico, além da confirmação operacional da Mix7.

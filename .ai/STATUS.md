@@ -1,5 +1,11 @@
 # Estado em 2026-09-25
 
+## Pré-verificação da prova auto-hospedada — 2026-09-25
+
+- Consultei `docker`, `podman` e `nerdctl`; nenhum comando está disponível no `PATH`. Verifiquei também os caminhos comuns de instalação do Docker Desktop e Podman no Windows; os executáveis não foram encontrados.
+- Não instalei runtime, não baixei imagens e não subi serviços. Não há neste ambiente atual evidência de release instalada, digest, configuração ou ensaio de isolamento, exportação e restauração.
+- `docs/PROVA-DE-CONCEITO.md` agora registra o resultado e o pré-requisito para retomar a prova. Portões operacionais/segurança e validação de caso real permanecem vigentes; nenhum produto foi escolhido. `git diff --check` passou; a alteração não acrescenta novos links relativos nem código executável. GitHub e cartão 14 do Trello serão sincronizados após o commit.
+
 ## Mapeamento documental de avisos de segurança — 2026-09-25
 
 - Conferidos os intervalos afetados e versões corrigidas declarados nos avisos oficiais selecionados para Wekan v11.99, Plane Community v1.4.2 e OpenProject Community v17.8.0. As releases candidatas são posteriores às correções declaradas para os grupos mapeados. O aviso LDAP do OpenProject limita-se a 17.4.0 e não declara versão corrigida; a configuração correspondente requer teste explícito.
