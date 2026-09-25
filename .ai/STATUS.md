@@ -1,4 +1,10 @@
-# Estado em 2026-09-24
+# Estado em 2026-09-25
+
+## Mapeamento documental de avisos de segurança — 2026-09-25
+
+- Conferidos os intervalos afetados e versões corrigidas declarados nos avisos oficiais selecionados para Wekan v11.99, Plane Community v1.4.2 e OpenProject Community v17.8.0. As releases candidatas são posteriores às correções declaradas para os grupos mapeados. O aviso LDAP do OpenProject limita-se a 17.4.0 e não declara versão corrigida; a configuração correspondente requer teste explícito.
+- Pesquisa e roteiro de prova agora mostram os GHSAs, faixas e limites da conclusão. Esta etapa não verificou digest/imagem, dependências integrais, ausência de regressão, segurança operacional ou custo. Nenhum serviço foi instalado nem conta ou arquivo enviado.
+- Fontes primárias consultadas em 25/09/2026. `git diff --check` passou; 42 links Markdown em `PESQUISA-SOLUCOES.md` e 31 em `PROVA-DE-CONCEITO.md` foram verificados, sem destinos locais quebrados. Nenhum teste de produto se aplica à atualização documental. Depois da publicação, registrar commit e referência nos cartões Trello 14 (pesquisa) e 16 (arquitetura); manter a prova de produto pendente de caso real, responsável e ambiente de teste.
 
 ## Levantamento de identidade e acesso — 2026-09-25
 
