@@ -17,7 +17,7 @@
 
 - Em Chromium, origem descartável `127.0.0.1:4210`, abri “Mais opções” e acionei os dois formatos. JSON exibiu “Cópia JSON das demandas baixada” e CSV exibiu “Lista CSV das demandas baixada”; as oito demandas sintéticas continuaram visíveis sem alteração.
 - Não foi possível inspecionar os arquivos no gerenciador interno de downloads: a política do navegador recusou a página `chrome://downloads`. Portanto, esta evidência cobre clique e confirmação da interface, não leitura/bytes do arquivo. CSV tem testes automatizados de serialização; abrir em Excel/Calc continua pendente.
-- Sem mudança de código. Testes de referência do estado atual: `node --test tests/workflow.test.js` passou 22/22; validações recentes de sintaxe JavaScript e `git diff --check` passaram. A auditoria foi vinculada ao cartão de exportação 23; sincronização será registrada após commit desta atualização documental.
+- Sem mudança de código. Testes de referência do estado atual: `node --test tests/workflow.test.js` passou 22/22; `node --check` nos dois arquivos JavaScript e `git diff --check` passaram. Registro do resultado foi publicado no cartão 23 após o commit `fba5393bbf1b9914a14c06d24db7683c8c629abb`; a sincronização final deste estado será registrada após novo commit.
 
 ## Auditoria de navegação e criação de demanda — 2026-09-25
 
