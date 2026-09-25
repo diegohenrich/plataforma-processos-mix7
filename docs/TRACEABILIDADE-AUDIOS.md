@@ -25,6 +25,7 @@ O conteúdo abaixo é tratado como requisito ou contexto de produto, nunca como 
 
 ## Decisões posteriores que prevalecem
 
+- O usuário esclareceu que o sistema de aprovação não deve se limitar a criativos de redes sociais: deve expandir para outras áreas da agência. Nenhum tipo adicional específico foi nomeado até agora. Ver [Aprovações por módulos](MODULOS-DE-APROVACAO.md).
 - O usuário aprovou o fluxo integrado de demanda, planejamento revisado, execução, revisão interna, aprovação do cliente, ajustes, destino final com evidência e conclusão conferida.
 - O usuário pediu que sugestões da IA dependam de confirmação humana.
 - O usuário substituiu o site público como referência visual pelo projeto local `CRM-MIX7-RENEW`; também pediu branco e azul-claro. O pedido posterior para aproximar mais a plataforma do CRM foi resolvido aplicando a lateral escura definida no CSS, preservando as superfícies claras e azuis. A tela de entrada foi renderizada e o CSS interno conferido; o painel autenticado ainda aguarda sessão para comparação direta.

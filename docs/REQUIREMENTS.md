@@ -19,6 +19,8 @@ Fonte: transcrição dos três áudios fornecidos em 24/09/2026 e decisões expl
 | Arquivos e ambiente de trabalho | Soltar imagens/arquivos em uma demanda e mantê-los associados a ela; integração com Windows foi pedida, mas ainda sem comportamento definido. |
 | Construção | Comparar soluções existentes e opções open source antes de decidir o que desenvolver. Avaliar licenças, manutenção e segurança. |
 
+O sistema de aprovações deve ser reutilizável em áreas diferentes da agência. Criativos de redes sociais são o primeiro módulo conhecido; a Mix7 ainda precisa indicar os demais tipos concretos. Requisitos e critérios estão em [Aprovações por módulos](MODULOS-DE-APROVACAO.md).
+
 O comportamento de tempo confirmado, a proposta de capacidade e os critérios de aceite estão em [Tempo, disponibilidade e capacidade](TEMPO-E-CAPACIDADE.md). A proposta não fecha as regras de jornada que a Mix7 ainda precisa definir.
 
 ## Decisões confirmadas e escopo da primeira entrega operacional

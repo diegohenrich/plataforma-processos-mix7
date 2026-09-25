@@ -14,7 +14,7 @@ Concluir uma plataforma de processos para a Mix7 que reduza a dependência de co
 - Gestores e direção: planejam, acompanham, revisam e decidem.
 - Clientes: avaliam os materiais que lhes forem enviados para aprovação.
 
-A plataforma concluída atenderá à equipe e aos clientes da Mix7. O trabalho será entregue por etapas, mas a demonstração local ou a primeira jornada integrada não limita o escopo final. Transformar a plataforma em produto para outras agências não faz parte da decisão atual.
+A plataforma concluída atenderá à equipe e aos clientes da Mix7. O núcleo de gestão também sustentará módulos de aprovação para áreas diferentes; criativos sociais são o primeiro módulo conhecido, e os tipos adicionais serão definidos com exemplos da operação. O trabalho será entregue por etapas, mas a demonstração local ou a primeira jornada integrada não limita o escopo final. Transformar a plataforma em produto para outras agências não faz parte da decisão atual.
 
 ## Experiência pretendida
 

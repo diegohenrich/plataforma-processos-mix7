@@ -10,6 +10,10 @@
 - `git diff --check` passou; arquivos e link local `docs/REQUIREMENTS.md` → `TEMPO-E-CAPACIDADE.md` conferidos. A alteração é documental, então testes de produto não se aplicam. Commit e CI desta atualização ainda pendentes. Atualizar o cartão Trello de gestão de tempo com a decisão, critérios e link continua pendente de confirmação para publicar na interface.
 - Commit `d74556fc338fb45d47f0bd46a790cd67971ca3b3` publicado em `implementation/primeira-jornada-local`, SHA remoto idêntico. Os checks do push e da PR #9 passaram ([push](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36166443795), [PR](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36166450042)). O cartão #8 precisa receber a decisão e o link depois da confirmação pontual para comentar no Trello.
 
+## Aprovações expansíveis — 2026-09-25
+- Formalizada a decisão de que aprovação não se limita a criativos sociais. `docs/MODULOS-DE-APROVACAO.md` descreve núcleo e contratos de expansão; tipos concretos além de redes sociais continuam pergunta operacional, sem preencher lacuna por suposição.
+- `git diff --check` passou; os cinco documentos locais citados e o caminho para a arquitetura conceitual em PR #10 foram conferidos. Revisão confirmou que o primeiro módulo é o único tipo específico registrado, enquanto expansão e critérios comuns têm requisitos explícitos. Alteração documental; testes de produto não se aplicam. Commit, CI e anotação Trello ainda pendentes.
+
 ## Objetivo
 Concluir a plataforma de processos inteira conforme os três áudios. O protótipo local é apenas uma etapa; o critério de projeto completo inclui gestão compartilhada, aprovações expansíveis, IA revisada por pessoa, conhecimento, acessos, avaliação, segurança e operação. O roteiro vigente está em `docs/ROADMAP.md`.
 
