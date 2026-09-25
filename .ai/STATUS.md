@@ -4,7 +4,7 @@
 
 - A instrução mais recente do usuário restringe a referência visual ao projeto local `CRM-MIX7-RENEW`; `CONTEXT.md`, `DECISIONS.md`, `docs/PRODUCT.md` e `docs/REQUIREMENTS.md` foram alinhados. A menção no histórico de que o site público serviu de referência inicial está marcada como decisão superada, não como fonte vigente.
 - O CRM está executando em `127.0.0.1:8198`. Chromium renderizou somente `/login`; `/administrador/dashboard` redireciona para `/login`. A comparação de composição autenticada continua pendente até o usuário abrir a sessão. Nenhuma credencial foi lida ou inserida e nenhum arquivo do CRM foi alterado.
-- Esta alteração corrige somente a fonte de verdade documental; nenhum CSS ou componente visual foi modificado. `git diff --check` passou e a busca confirmou que os requisitos atuais não direcionam mais ao site público. Sincronização no GitHub e Trello será registrada após o commit.
+- Esta alteração corrige somente a fonte de verdade documental; nenhum CSS ou componente visual foi modificado. `git diff --check` passou e a busca confirmou que os requisitos atuais não direcionam mais ao site público. Commit `2be097bcfed3599b9f45d2d7f35a794be1854d80` foi enviado e SHA local/remoto conferido; o cartão 25 recebeu o registro em https://trello.com/c/7OQNiG8Y/25-alinhar-visual-da-plataforma-ao-crm-mix7#comment-6ab612eafdc1e8c9132ef081. PR #10 continua rascunho; sem checks automáticos reportados para esta alteração documental.
 
 ## Atualização da pesquisa oficial — 2026-09-25
 
