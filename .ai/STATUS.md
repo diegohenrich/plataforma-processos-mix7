@@ -1,5 +1,11 @@
 # Estado em 2026-09-25
 
+## Complemento documental Plane e próximo entregável — 2026-09-25
+
+- Fonte oficial atual confirma Community sob AGPL-3.0 e suporte a armazenamento S3 externo (`USE_MINIO=0`). Registrei que isso torna a substituição configurável, sem validar fornecedor, custo, região, backup/restauração ou operação. A síntese mantém Plane como candidato, não como produto escolhido, e separa avaliação de gestão de trabalho de revisão especializada.
+- Próximo entregável de pesquisa: matriz de cobertura P0/P1 com evidência direta por candidato; depois, prova controlada de jornada, permissões, versões, exportação e recuperação, quando houver runtime e condições aprovadas.
+- `docs/PESQUISA-SOLUCOES.md` foi atualizado com fontes oficiais atuais. A validação desta tarefa, publicação GitHub e atualização Trello ainda estão pendentes.
+
 ## Atualização de manutenção do armazenamento do Plane — 2026-09-25
 
 - Reabri o cartão 14 da pesquisa. A consulta direta ao Compose oficial do Plane v1.4.2 confirmou `minio/minio:latest`; a API Registry desafiou com Bearer e o token anônimo não concedeu escopo de leitura. Fonte oficial do [repositório MinIO](https://github.com/minio/minio): arquivado em 25/04/2026, read-only e não mantido. A documentação oficial do [Plane aceita armazenamento S3 externo](https://developers.plane.so/self-hosting/govern/database-and-storage), com `USE_MINIO=0`.

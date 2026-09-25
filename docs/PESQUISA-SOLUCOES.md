@@ -65,6 +65,14 @@ Esta consulta atualiza os preços, limites e versões registrados em 24/09. Os v
 
 **Síntese provisória:** a prova de revisão criativa pode usar um plano gratuito de Filestage para validar um caso sintético; isso não demonstra adequação de custo, privacidade ou escala. Planable deve entrar somente com preço confirmado devido à divergência pública. Frame.io exige atenção ao custo por membro e ao fim automático do teste. Wekan e Plane não são recomendados para dados da agência antes da verificação de avisos, permissões, backup e atualização. Esta revalidação não escolhe fornecedor nem arquitetura.
 
+## Edições e armazenamento: confirmação da documentação oficial — 25/09/2026
+
+A documentação atual do Plane distingue a Community autogerida, publicada sob AGPL-3.0, da edição Commercial de código fechado e da Airgapped. A página de edições descreve a Community como opção open source para experimentar e auditar, com recursos equivalentes ao plano Cloud Free; portanto, não se deve presumir que controles comerciais de governança estejam incluídos. A página de configuração confirma que a Community pode usar armazenamento compatível com S3 externo por variáveis de ambiente e `USE_MINIO=0`. Isso documenta viabilidade técnica da configuração, mas não indica um fornecedor, preço, região ou adequação operacional para a Mix7.
+
+**Recomendação de pesquisa, ainda sem escolha de produto:** preservar o núcleo integrado de demandas e processos como requisito do produto; avaliar gestores de trabalho (Plane Community, OpenProject Community e Wekan) separadamente de revisores especializados (Planable, Frame.io e Filestage). O Plane permanece candidato documental, condicionado à substituição e teste do armazenamento MinIO padrão. Não há evidência de que qualquer candidato cubra com segurança o fluxo completo da Mix7, e a comparação não recomenda adotar uma combinação específica. O próximo resultado de pesquisa deve ser uma matriz de cobertura dos requisitos P0/P1 com evidência direta por candidato; depois disso, um ensaio controlado deve verificar jornada, permissões, arquivo/versão, exportação e restauração.
+
+Referências oficiais consultadas em 25/09/2026: [edições do Plane](https://developers.plane.so/self-hosting/editions-and-versions), [implantação autogerida](https://developers.plane.so/self-hosting/overview), [configuração de PostgreSQL, Redis e armazenamento S3](https://developers.plane.so/self-hosting/govern/database-and-storage), [release Plane v1.4.2](https://github.com/makeplane/plane/releases/tag/v1.4.2) e [estado do repositório MinIO](https://github.com/minio/minio).
+
 ## Critérios para a prova de conceito
 
 1. Equipe consegue acompanhar demanda, responsáveis e prazo em uma visão simples de quadro e lista.
