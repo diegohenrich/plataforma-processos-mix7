@@ -5,7 +5,7 @@
 - Revisados `docs/PESQUISA-SOLUCOES.md` e `docs/PROVA-DE-CONCEITO.md` com páginas oficiais consultadas em 25/09: Wekan v11.99; avisos recentes de Wekan e Plane; preço publicado de Filestage Business; e limites iniciais gratuitos do Planable. Nenhum fornecedor foi escolhido. Avisos de segurança foram tratados como pendências de verificar intervalos vulneráveis/corrigidos, não como prova de que a release atual esteja vulnerável.
 - O roteiro agora exige registrar release e digest da imagem e fechar uma matriz dos avisos antes de iniciar prova auto-hospedada. Para Wekan v11.99 e Plane v1.4.2 essa matriz ainda não foi feita; nenhum teste externo ou instalação foi executado.
 - Fontes primárias consultadas: páginas oficiais de preço do Planable, Frame.io e Filestage; releases e avisos oficiais no GitHub de Wekan e Plane; documentação oficial do OpenProject. Pendentes validação operacional com caso real da Mix7, acesso autenticado ao CRM para referência visual, correspondência individual dos avisos e execução de prova autorizada.
-- Esta atualização documental ainda requer `git diff --check`, revisão dos links e do diff, commit e push, confirmação do SHA remoto e atualização do cartão 14 do Trello.
+- Validação concluída: `git diff --check` passou; links relativos dos dois documentos resolvem; diff limitado a pesquisa, roteiro e status. Commit de pesquisa `eb4207d3fc86cab97b6d0176d609220e36339402` publicado e SHA local/remoto confirmado na branch `research/atualizar-comparativo-e-arquitetura`. Cartão 14 do Trello atualizado, checklist documental em 2/3; recomendação continua aberta porque não há ferramenta selecionada. Sem testes de produto, instalação ou piloto.
 
 ## Arquitetura coerente com o fluxo aprovado — 24/09/2026
 
