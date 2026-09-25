@@ -4,7 +4,7 @@
 
 - Alinhados contexto, decisão, produto, requisitos, roteiro e proposta de arquitetura à decisão explícita do usuário: a primeira versão em uso inclui o projeto completo descrito nos três áudios. Fases e protótipos menores ordenam a construção/validação e não adiam áreas para depois do lançamento.
 - A revisão preserva dependências e regras ainda não confirmadas pela Mix7, incluindo tipos de aprovação, capacidade, identidade/permissões e integrações Windows. Nenhuma solução ou tecnologia foi escolhida.
-- Validação documental: `git diff --check` passou; revisão do diff confirmou seis arquivos Markdown e somente alinhamento de escopo/memória. Testes de produto não se aplicam. Commit/push e conferência do GitHub ainda pendentes; a atualização do Trello depende da confirmação de publicação do comentário na interface.
+- Validação documental: `git diff --check` passou; revisão do diff confirmou sete arquivos Markdown e somente alinhamento de escopo/memória. Testes de produto não se aplicam. Commit `f57125daebdc9cf4d9efd409b05707a75d3e7f80` publicado na branch de pesquisa com SHA remoto idêntico; PR #10 aberto em rascunho e sem checks configurados (`gh pr checks 10`). A branch de implementação publicou a decisão em `b0a0d98daf3fae00929865ec51d4811103125c73`; checks de push e PR passaram. A atualização do Trello ainda depende de confirmação pontual para publicar comentário na interface.
 
 ## Matriz preliminar de identidade e acesso — 2026-09-25
 
