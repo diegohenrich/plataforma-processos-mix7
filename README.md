@@ -4,9 +4,9 @@ Projeto da Mix7 para reunir gestão de equipe e aprovações em um fluxo documen
 
 **Estado:** engenharia de requisitos e primeira fatia funcional local em `prototipo/`. Esta fatia valida o fluxo no navegador; ainda não há arquitetura/stack de produção, servidor, login ou armazenamento compartilhado.
 
-## Primeira entrega pretendida
+## Fluxo integrado já definido
 
-Demanda/briefing → planejamento revisado → execução → revisão interna → aprovação do cliente → ajustes e nova versão quando pedidos → entrega/agendamento/publicação com evidência → conclusão conferida. A IA poderá sugerir tarefas, responsáveis e estimativas, mas uma pessoa deverá confirmar antes de aplicar as sugestões. O usuário aprovou este fluxo-alvo; um caso real ainda deve confirmar papéis, exceções e evidências por tipo de serviço, sem confundir essa validação factual com a diretriz do produto.
+Demanda/briefing → planejamento revisado → execução → revisão interna → aprovação do cliente → ajustes e nova versão quando pedidos → entrega/agendamento/publicação com evidência → conclusão conferida. Este fluxo é um módulo do projeto completo, não o limite do escopo. A IA poderá sugerir tarefas, responsáveis e estimativas, mas uma pessoa deverá confirmar antes de aplicar as sugestões. O usuário aprovou este fluxo-alvo; um caso real ainda deve confirmar papéis, exceções e evidências por tipo de serviço, sem confundir essa validação factual com a diretriz do produto.
 
 ## Organização
 
