@@ -121,6 +121,7 @@ h1 { margin: 9px 0 5px; font: 700 25px var(--font-body); letter-spacing: -.8px; 
 .filter-chip { padding: 5px 7px; border: 1px solid #dfe9f9; border-radius: 6px; color: #477ac7; background: #f2f7ff; font-size: 9px; }
 .filter-chip b { margin-left: 5px; color: #8ca5c8; }.filter-strip > button:last-child { border: 0; color: #6688b8; background: transparent; font-size: 9px; }
 .kanban-board { display: grid; grid-template-columns: repeat(8, minmax(165px, 1fr)); gap: 12px; margin-top: 16px; overflow-x: auto; padding-bottom: 11px; scrollbar-color: #d9e2ee transparent; scrollbar-width: thin; }
+.kanban-board[hidden] { display: none !important; }
 .kanban-column { min-width: 185px; }
 .column-heading { height: 32px; display: flex; align-items: center; gap: 7px; }
 .stage-dot { width: 7px; height: 7px; border-radius: 50%; }
@@ -387,6 +388,17 @@ h1 { margin: 9px 0 5px; font: 700 25px var(--font-body); letter-spacing: -.8px; 
 .workspace-empty { padding: 30px 18px; border: 1px dashed #cbd9de; border-radius: 12px; color: var(--muted); text-align: center; }
 .workspace-empty strong { display: block; margin-bottom: 5px; color: var(--ink); }
 .workspace-empty p { margin: 0; font-size: 13px; }
+.participant-role-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.participant-role-choice { display: grid; gap: 5px; min-height: 72px; padding: 13px 15px; border: 1px solid #d8e3e7; border-radius: 12px; color: var(--ink); background: var(--panel); text-align: left; }
+.participant-role-choice:hover, .participant-role-choice:focus-visible { border-color: var(--blue); outline: 2px solid #8ecde280; outline-offset: 1px; }
+.participant-role-choice.is-selected { border-color: var(--blue); background: #eef7fa; box-shadow: inset 3px 0 var(--blue); }
+.participant-role-choice strong { font-size: 14px; font-weight: 650; }
+.participant-role-choice small { color: var(--muted); font-size: 12px; }
+.participant-role-details { display: grid; gap: 10px; }
+.participant-role-details h3 { margin: 8px 0 0; color: var(--ink); font-size: 17px; }
+.participant-role-details .utility-note { display: grid; gap: 3px; }
+.participant-role-pending { background: #fffaf0; border-color: #eee2c6; }
+.participant-role-pending strong { color: #795b1f; }
 @media (max-width: 600px) {
   .gantt-timeline { overflow-x: auto; }
   .gantt-axis, .gantt-row { width: 620px; grid-template-columns: 190px 400px; gap: 12px; }
@@ -693,6 +705,7 @@ h1 { margin: 8px 0 10px; font-size: clamp(32px, 2.7vw, 42px); font-weight: 600; 
   .workspace-view { gap: 14px; padding: 16px; border-radius: 16px; }
   .workspace-panel-heading h2 { font-size: 19px; }
   .workspace-panel-heading p { font-size: 13px; }
+  .participant-role-grid { grid-template-columns: 1fr; }
   .workspace-request strong, .workspace-task-copy strong { font-size: 13px; }
   .workspace-request span, .workspace-task-copy span { font-size: 11px; }
   .workspace-request small, .workspace-task-copy small { font-size: 10px; }

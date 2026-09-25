@@ -10,6 +10,37 @@
     completed: "Concluídas",
   });
 
+  const participantTypes = Object.freeze([
+    Object.freeze({
+      id: "mix7_responsible",
+      name: "Responsável pela Mix7",
+      source: "Áudio 3 · 01:58–02:17",
+      confirmedCapability: "Avalia prazo e qualidade; a avaliação citada tem peso 2.",
+      stillToDefine: "Cargo formal, administração da plataforma, permissões no fluxo e regras de avaliação.",
+    }),
+    Object.freeze({
+      id: "manager",
+      name: "Gerente",
+      source: "Áudio 3 · 02:18–02:53",
+      confirmedCapability: "Avalia qualidade; a avaliação citada tem peso 1.",
+      stillToDefine: "Autoridade para distribuir tarefas, administração, permissões no fluxo e regras de avaliação.",
+    }),
+    Object.freeze({
+      id: "team_professional",
+      name: "Profissional da equipe",
+      source: "Áudio 3 · 00:42–00:54",
+      confirmedCapability: "Consulta o trabalho destinado à própria pessoa.",
+      stillToDefine: "Quais outros dados e ações ficam disponíveis e se a visão individual é filtro ou limite de segurança.",
+    }),
+    Object.freeze({
+      id: "client_approver",
+      name: "Cliente / aprovador",
+      source: "Áudio 2 · 00:00–00:53",
+      confirmedCapability: "Acessa materiais enviados para aprovação, aprova, solicita alterações e comenta imagem e vídeo.",
+      stillToDefine: "Vínculo e isolamento por cliente, acesso a notas internas, convite e acesso após a decisão.",
+    }),
+  ]);
+
   function recordEvent(request, type, details, now) {
     request.history.push({ type, details: details || {}, at: now });
   }
@@ -413,7 +444,7 @@
     return next;
   }
 
-  const api = { stages, transition, listAssignees, filterRequestsByAssignee, unmetTaskDependencies, taskBlockers, findActiveTaskTimer, validateLocalFiles, mergeLocalFiles, csvCell, serializeRequestsJson, serializeRequestsCsv };
+  const api = { stages, participantTypes, transition, listAssignees, filterRequestsByAssignee, unmetTaskDependencies, taskBlockers, findActiveTaskTimer, validateLocalFiles, mergeLocalFiles, csvCell, serializeRequestsJson, serializeRequestsCsv };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   root.Mix7Workflow = api;
 })(globalThis);

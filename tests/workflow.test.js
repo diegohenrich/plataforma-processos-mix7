@@ -1,6 +1,22 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { transition, listAssignees, filterRequestsByAssignee, taskBlockers, findActiveTaskTimer, validateLocalFiles, mergeLocalFiles, csvCell, serializeRequestsJson, serializeRequestsCsv } = require("../prototipo/workflow.js");
+const { participantTypes, transition, listAssignees, filterRequestsByAssignee, taskBlockers, findActiveTaskTimer, validateLocalFiles, mergeLocalFiles, csvCell, serializeRequestsJson, serializeRequestsCsv } = require("../prototipo/workflow.js");
+
+test("catálogo de participantes cobre os quatro tipos dos áudios sem inventar permissões", () => {
+  assert.deepEqual(participantTypes.map(({ id }) => id), [
+    "mix7_responsible",
+    "manager",
+    "team_professional",
+    "client_approver",
+  ]);
+  for (const participant of participantTypes) {
+    assert.ok(participant.name);
+    assert.match(participant.source, /^Áudio [23] · /);
+    assert.ok(participant.confirmedCapability);
+    assert.ok(participant.stillToDefine);
+    assert.equal(Object.hasOwn(participant, "permissions"), false);
+  }
+});
 
 test("CSV export neutralizes spreadsheet formula prefixes and preserves CSV quoting", () => {
   for (const value of ["=1+1", "+1+1", "-1+1", "@SUM(1,1)", "＝1+1", "\t=1+1", "\r=1+1", "\n=1+1", "  =1+1"]) {

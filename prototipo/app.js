@@ -1,4 +1,4 @@
-const { stages, transition, listAssignees, filterRequestsByAssignee, taskBlockers, findActiveTaskTimer, validateLocalFiles, mergeLocalFiles, serializeRequestsJson, serializeRequestsCsv } = window.Mix7Workflow;
+const { stages, participantTypes, transition, listAssignees, filterRequestsByAssignee, taskBlockers, findActiveTaskTimer, validateLocalFiles, mergeLocalFiles, serializeRequestsJson, serializeRequestsCsv } = window.Mix7Workflow;
 const STORAGE_KEY = "mix7.workflow.v1";
 const MINIMIZED_KEY = "mix7.workflow.minimized.v1";
 const MAX_FILE_BYTES = 15 * 1024 * 1024;
@@ -22,6 +22,7 @@ let activePage = "requests";
 let activeStageFilter = "";
 let activeClientFilter = "";
 let activeDueFilter = "";
+let activeParticipantTypeId = participantTypes[0].id;
 let columnActionStage = "";
 let minimizedRequestIds = loadMinimizedIds();
 let state = loadState();
@@ -551,9 +552,34 @@ function renderWorkspacePanel(panel, requests) {
     panel.append(note);
     return;
   }
-  panel.append(panelHeading("Acesso e privacidade", "Esta versão não tem login, contas ou permissões reais."));
-  panel.append(node("p", "utility-note", "Os nomes de responsáveis são texto livre. O filtro por profissional só organiza a tela; qualquer pessoa com acesso ao mesmo perfil de navegador pode ver os dados locais."));
-  panel.append(node("p", "utility-note", "A matriz de papéis e acessos depende de validação da operação da Mix7 e de uma futura versão com servidor. Não use dados reais de clientes nesta demonstração."));
+  panel.append(panelHeading("Tipos de usuário", "Quatro categorias citadas nos áudios, com responsabilidades confirmadas e decisões de acesso ainda abertas."));
+  const roleGrid = node("div", "participant-role-grid");
+  for (const participant of participantTypes) {
+    const choice = node("button", `participant-role-choice${participant.id === activeParticipantTypeId ? " is-selected" : ""}`, "");
+    choice.type = "button";
+    choice.setAttribute("aria-pressed", String(participant.id === activeParticipantTypeId));
+    choice.append(node("strong", "", participant.name), node("small", "", participant.source));
+    choice.addEventListener("click", () => {
+      activeParticipantTypeId = participant.id;
+      renderWorkspacePage();
+    });
+    roleGrid.append(choice);
+  }
+  panel.append(roleGrid);
+  const selectedParticipant = participantTypes.find(participant => participant.id === activeParticipantTypeId) || participantTypes[0];
+  const roleDetails = node("section", "participant-role-details");
+  roleDetails.setAttribute("aria-live", "polite");
+  roleDetails.setAttribute("aria-labelledby", "participantRoleTitle");
+  roleDetails.append(node("h3", "", selectedParticipant.name));
+  roleDetails.lastChild.id = "participantRoleTitle";
+  const capability = node("p", "utility-note", "");
+  capability.append(node("strong", "", "O áudio confirma"), node("span", "", selectedParticipant.confirmedCapability));
+  const pending = node("p", "utility-note participant-role-pending", "");
+  pending.append(node("strong", "", "Ainda precisa ser definido"), node("span", "", selectedParticipant.stillToDefine));
+  roleDetails.append(capability, pending);
+  panel.append(roleDetails);
+  panel.append(node("p", "utility-note", "Estes são tipos de usuário de referência, não contas. Esta demonstração não aplica restrições de acesso: todos os dados continuam visíveis a quem abrir o mesmo navegador."));
+  panel.append(node("p", "utility-note", "Não há login nem cadastro de pessoas nesta versão. Antes de criar contas ou proteger dados, é preciso validar a matriz de permissões, o isolamento dos clientes e quem administrará os acessos. Não use dados reais de clientes nesta demonstração."));
 }
 
 function emptyPanel(title, detail) {
