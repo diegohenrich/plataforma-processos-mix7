@@ -1,5 +1,11 @@
 # Estado em 2026-09-25
 
+## Acesso manual ao CRM para comparação visual — 2026-09-25
+
+- O servidor local respondeu em `127.0.0.1:8198`; abrir `/administrador/dashboard` resultou em redirecionamento HTTP 302 para `/login`. Reabri a rota no navegador local, onde a tela de entrada ficou disponível para autenticação manual do usuário. Nenhuma credencial foi lida ou inserida.
+- A composição autenticada continua sem evidência renderizada e o CSS da plataforma não foi alterado. A próxima ação visual é inspecionar o dashboard autenticado lado a lado com o protótipo e registrar diferenças observáveis antes de ajustar.
+- PR #9 continua aberto como rascunho. Esta verificação ainda será sincronizada com o commit e com o cartão Trello 25.
+
 ## Correção da cobertura da visão de equipe — 2026-09-25
 
 - Conferi `renderWorkspacePanel()` em `prototipo/app.js`: a página Equipe lista tarefas incompletas da rodada atual, ordena por prazo, exibe responsável/cliente e bloqueios e permite abrir a demanda associada. Assim, a lacuna “não mostra fila própria” na matriz P0 estava desatualizada; a funcionalidade já existia.
