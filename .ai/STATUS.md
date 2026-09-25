@@ -4,14 +4,14 @@
 Levar a plataforma integrada de gestão de equipe e processos de aprovação até uma primeira versão segura e utilizável no dia a dia. A meta permanece maior que a demonstração local atual.
 
 ## Estado do produto e do repositório
-- Branch `implementation/primeira-jornada-local`; último commit de implementação testado `9b4b42a051aa3dab75fdde35dcd877fbce6c3e1e`, SHA local/remoto conferido antes desta reorganização. A árvore de trabalho estava limpa antes da mudança documental.
+- Branch `implementation/primeira-jornada-local` sincronizada com `origin`; memória/documentação e captura móvel estão atualizadas.
 - PR #9 (implementação), PR #8 (requisitos priorizados) e PR #10 (pesquisa e arquitetura conceitual) estão abertos em rascunho. PR #10 não seleciona stack de produção.
 - O protótipo `prototipo/` é local e persiste por perfil de navegador. Não há autenticação, contas reais, matriz de permissões, servidor, armazenamento central, colaboração multiusuário nem implantação de produção.
 
 ## Validação mais recente
 - Em perfil descartável, edição de briefing e comentário interno passaram em 1440 px e 390 × 844; alteração durante execução exige motivo, volta a Planejamento e só retoma após confirmação do plano. Comentário vazio não cria registro; comentário válido aparece na conversa e no histórico.
-- `node --test tests/workflow.test.js`: 26/26 passaram; `node --check prototipo/workflow.js`, `node --check prototipo/app.js` e `git diff --check` passaram. CI push [36142796165](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36142796165) e PR [36142802182](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36142802182) passaram para o commit de implementação testado acima.
-- Captura móvel renderizada e inspecionada em `docs/evidencias/visual/comentario-interno-mobile-390.png`.
+- `node --test tests/workflow.test.js`: 26/26 passaram; `node --check prototipo/workflow.js`, `node --check prototipo/app.js` e `git diff --check` passaram. Para o commit documental atual, CI push [36143595502](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36143595502) e PR [36143599814](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36143599814) passaram.
+- Captura móvel em 390 × 844 foi renderizada e inspecionada em `docs/evidencias/visual/comentario-interno-mobile-390.png`; evidência agora está versionada. Status operacional histórico integral foi preservado em `docs/VALIDACOES-HISTORICAS.md`.
 
 ## Pendências que impedem declarar lançamento
 - O caso operacional real da Mix7, atores, exceções, permissões e evidências finais por serviço ainda precisam de validação.
