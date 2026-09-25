@@ -23,7 +23,8 @@ Não há autenticação, separação de clientes, portal externo, API, servidor,
 11. Usar a navegação: Aprovações filtra itens aguardando cliente; Equipe reúne tarefas abertas; Clientes agrupa demandas; Calendário lista prazos registrados; Conhecimento explica o fluxo; Acessos esclarece os limites de login e permissão desta demonstração.
 12. Abrir os filtros e combinar etapa, cliente e prazo. Use os três pontos do título de uma coluna para filtrar por aquela etapa. Limpar filtros deve devolver o quadro inteiro.
 13. Abrir Mais opções e conferir que JSON inclui dados textuais/histórico e CSV resume demandas; arquivos binários não entram nas exportações.
-14. Abrir uma demanda, minimizá-la e confirmar que um atalho permanece fixo na tela. Clique no atalho para reabrir; recarregue a página para confirmar que o atalho continua. Remover o atalho não remove a demanda.
+14. Durante a execução, iniciar o cronômetro em uma tarefa; confirmar que o contador avança, recarregar a página e conferir que continua; parar e iniciar novamente para validar a soma das sessões no histórico. Tentar usar outra tarefa com timer ativo e confirmar que ela fica bloqueada. Tarefa concluída ou impedida não aceita timer. O registro é local e não identifica pessoa autenticada.
+15. Abrir uma demanda, minimizá-la e confirmar que um atalho permanece fixo na tela. Clique no atalho para reabrir; recarregue a página para confirmar que o atalho continua. Remover o atalho não remove a demanda.
 
 Os testes de regra de negócio usam `node --test tests/workflow.test.js` na raiz do repositório.
 

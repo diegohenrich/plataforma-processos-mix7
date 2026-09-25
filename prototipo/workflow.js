@@ -84,6 +84,14 @@
     return reasons;
   }
 
+  function findActiveTaskTimer(requests) {
+    for (const request of requests || []) {
+      const task = (request.tasks || []).find(item => item.timerStartedAt);
+      if (task) return { request, task };
+    }
+    return null;
+  }
+
   function validateLocalFiles(files, maxBytes) {
     const supported = file => file.type?.startsWith("image/") || file.type?.startsWith("video/") || file.type === "application/pdf";
     const localFiles = Array.from(files || []);
@@ -180,6 +188,7 @@
         if (next.stage !== "doing" && next.stage !== "adjustments") throw new Error("Tarefas só podem ser atualizadas durante a execução.");
         const task = next.tasks.find(item => item.id === payload.taskId && item.round === version.number + (next.stage === "adjustments" ? 1 : 0));
         if (!task) throw new Error("Tarefa não encontrada nesta rodada.");
+        if (task.timerStartedAt) throw new Error("Pare o cronômetro antes de concluir esta tarefa.");
         if (task.status === "completed" && next.tasks.some(item => item.status === "completed" && item.dependencyTaskIds?.includes(task.id))) {
           throw new Error("Reabra as tarefas dependentes antes de reabrir esta tarefa prévia.");
         }
@@ -197,11 +206,39 @@
         const task = next.tasks.find(item => item.id === payload.taskId && item.round === version.number + (next.stage === "adjustments" ? 1 : 0));
         if (!task) throw new Error("Tarefa não encontrada nesta rodada.");
         if (task.status === "completed") throw new Error("Reabra a tarefa antes de registrar um impedimento.");
+        if (task.timerStartedAt) throw new Error("Pare o cronômetro antes de registrar um impedimento.");
         const reason = String(payload.reason || "").trim();
         if (reason.length > 500) throw new Error("O motivo do impedimento deve ter até 500 caracteres.");
         const previousReason = task.blockedReason || "";
         task.blockedReason = reason;
         payload = { ...payload, taskTitle: task.title, previousReason, reason, blocked: Boolean(reason) };
+        break;
+      }
+      case "start_task_timer": {
+        if (next.stage !== "doing" && next.stage !== "adjustments") throw new Error("O cronômetro só pode iniciar durante a execução.");
+        const round = version.number + (next.stage === "adjustments" ? 1 : 0);
+        const task = next.tasks.find(item => item.id === payload.taskId && item.round === round);
+        if (!task) throw new Error("Tarefa não encontrada nesta rodada.");
+        if (task.status === "completed") throw new Error("Não é possível iniciar o cronômetro em tarefa concluída.");
+        if (taskBlockers(next, task).length) throw new Error("Resolva os impedimentos antes de iniciar o cronômetro.");
+        if (next.tasks.some(item => item.timerStartedAt)) throw new Error("Já existe um cronômetro ativo nesta demanda.");
+        task.timerStartedAt = now;
+        payload = { ...payload, taskTitle: task.title };
+        break;
+      }
+      case "stop_task_timer": {
+        const task = next.tasks.find(item => item.id === payload.taskId && item.timerStartedAt);
+        if (!task) throw new Error("Esta tarefa não tem cronômetro ativo.");
+        const startedAtMs = Date.parse(task.timerStartedAt);
+        const stoppedAtMs = Date.parse(now);
+        if (!Number.isFinite(startedAtMs) || !Number.isFinite(stoppedAtMs) || stoppedAtMs < startedAtMs) {
+          throw new Error("O horário do cronômetro é inválido.");
+        }
+        const durationSeconds = Math.floor((stoppedAtMs - startedAtMs) / 1000);
+        task.timeEntries ||= [];
+        task.timeEntries.push({ startedAt: task.timerStartedAt, stoppedAt: now, durationSeconds });
+        task.timerStartedAt = null;
+        payload = { ...payload, taskTitle: task.title, startedAt: task.timeEntries.at(-1).startedAt, stoppedAt: now, durationSeconds, totalSeconds: task.timeEntries.reduce((sum, entry) => sum + (Number(entry.durationSeconds) || 0), 0) };
         break;
       }
       case "submit_internal_review":
@@ -319,7 +356,7 @@
       const comment = next.comments.at(-1);
       if (comment?.anchor) eventDetails.anchor = comment.anchor;
     }
-    if (["add_task", "toggle_task", "set_task_blocker"].includes(action)) {
+    if (["add_task", "toggle_task", "set_task_blocker", "start_task_timer", "stop_task_timer"].includes(action)) {
       eventDetails.taskId = payload.taskId;
       eventDetails.taskTitle = payload.taskTitle;
       if (action === "add_task") {
@@ -333,12 +370,18 @@
         eventDetails.reason = payload.reason;
         eventDetails.blocked = payload.blocked;
       }
+      if (action === "stop_task_timer") {
+        eventDetails.startedAt = payload.startedAt;
+        eventDetails.stoppedAt = payload.stoppedAt;
+        eventDetails.durationSeconds = payload.durationSeconds;
+        eventDetails.totalSeconds = payload.totalSeconds;
+      }
     }
     recordEvent(next, action, eventDetails, now);
     return next;
   }
 
-  const api = { stages, transition, listAssignees, filterRequestsByAssignee, unmetTaskDependencies, taskBlockers, validateLocalFiles, mergeLocalFiles };
+  const api = { stages, transition, listAssignees, filterRequestsByAssignee, unmetTaskDependencies, taskBlockers, findActiveTaskTimer, validateLocalFiles, mergeLocalFiles };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   root.Mix7Workflow = api;
 })(globalThis);

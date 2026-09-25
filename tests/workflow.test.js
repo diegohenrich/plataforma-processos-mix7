@@ -1,6 +1,6 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { transition, listAssignees, filterRequestsByAssignee, taskBlockers, validateLocalFiles, mergeLocalFiles } = require("../prototipo/workflow.js");
+const { transition, listAssignees, filterRequestsByAssignee, taskBlockers, findActiveTaskTimer, validateLocalFiles, mergeLocalFiles } = require("../prototipo/workflow.js");
 
 function demand() {
   return {
@@ -65,6 +65,60 @@ test("arquivos arrastados se juntam à seleção e recusas preservam os arquivos
   const rejectedSize = mergeLocalFiles(selected, [{ name: "grande.pdf", type: "application/pdf", size: maxBytes + 1 }], maxBytes);
   assert.match(rejectedSize.error, /15 MB por arquivo/);
   assert.deepEqual(rejectedSize.files, selected);
+});
+
+test("cronômetro de tarefa registra sessões, soma o total e permite retomar", () => {
+  let item = planRoundOne(demand());
+  const taskId = item.tasks[0].id;
+  item = transition(item, "start_task_timer", { taskId }, "2026-09-25T10:00:00.000Z");
+  assert.equal(item.tasks[0].timerStartedAt, "2026-09-25T10:00:00.000Z");
+  assert.equal(item.history.at(-1).type, "start_task_timer");
+
+  item = transition(item, "stop_task_timer", { taskId }, "2026-09-25T10:01:01.900Z");
+  assert.equal(item.tasks[0].timerStartedAt, null);
+  assert.deepEqual(item.tasks[0].timeEntries, [{ startedAt: "2026-09-25T10:00:00.000Z", stoppedAt: "2026-09-25T10:01:01.900Z", durationSeconds: 61 }]);
+  assert.equal(item.history.at(-1).details.totalSeconds, 61);
+
+  item = transition(item, "start_task_timer", { taskId }, "2026-09-25T10:02:00.000Z");
+  item = transition(item, "stop_task_timer", { taskId }, "2026-09-25T10:02:10.000Z");
+  assert.equal(item.tasks[0].timeEntries.length, 2);
+  assert.equal(item.history.at(-1).details.totalSeconds, 71);
+});
+
+test("cronômetro não inicia em tarefa inválida, bloqueada ou concluída, nem permite sobreposição", () => {
+  let item = transition(demand(), "briefing_ready");
+  item = transition(item, "add_task", { title: "Criar peça", assignee: "Designer" });
+  item = transition(item, "add_task", { title: "Revisar peça", assignee: "Gestor" });
+  item = transition(item, "plan_confirmed");
+  const [first, second] = item.tasks;
+  assert.throws(() => transition(item, "start_task_timer", { taskId: "missing" }), /Tarefa não encontrada/);
+  item = transition(item, "set_task_blocker", { taskId: second.id, reason: "Aguardando material" });
+  assert.throws(() => transition(item, "start_task_timer", { taskId: second.id }), /Resolva os impedimentos/);
+  item = transition(item, "set_task_blocker", { taskId: second.id, reason: "" });
+  item = transition(item, "start_task_timer", { taskId: first.id }, "2026-09-25T10:00:00.000Z");
+  assert.throws(() => transition(item, "start_task_timer", { taskId: second.id }), /Já existe um cronômetro ativo/);
+  assert.throws(() => transition(item, "toggle_task", { taskId: first.id }), /Pare o cronômetro/);
+  assert.throws(() => transition(item, "set_task_blocker", { taskId: first.id, reason: "Impedido" }), /Pare o cronômetro/);
+  item = transition(item, "stop_task_timer", { taskId: first.id }, "2026-09-25T10:00:01.000Z");
+  item = transition(item, "toggle_task", { taskId: first.id });
+  assert.throws(() => transition(item, "start_task_timer", { taskId: first.id }), /tarefa concluída/);
+});
+
+test("cronômetro rejeita horário final anterior ao início", () => {
+  let item = planRoundOne(demand());
+  const taskId = item.tasks[0].id;
+  item = transition(item, "start_task_timer", { taskId }, "2026-09-25T10:00:00.000Z");
+  assert.throws(() => transition(item, "stop_task_timer", { taskId }, "2026-09-24T10:00:00.000Z"), /horário do cronômetro é inválido/);
+  assert.equal(item.tasks[0].timerStartedAt, "2026-09-25T10:00:00.000Z");
+});
+
+test("procura timer ativo em qualquer demanda e libera a próxima tarefa ao parar", () => {
+  const first = planRoundOne(demand());
+  let second = planRoundOne({ ...demand(), id: "d-2" });
+  second = transition(second, "start_task_timer", { taskId: second.tasks[0].id }, "2026-09-25T10:00:00.000Z");
+  assert.equal(findActiveTaskTimer([first, second]).request.id, "d-2");
+  second = transition(second, "stop_task_timer", { taskId: second.tasks[0].id }, "2026-09-25T10:00:01.000Z");
+  assert.equal(findActiveTaskTimer([first, second]), null);
 });
 
 test("filtro por profissional considera tarefas da rodada vigente e opções distintas", () => {

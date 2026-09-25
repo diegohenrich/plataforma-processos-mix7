@@ -1,4 +1,4 @@
-const { stages, transition, listAssignees, filterRequestsByAssignee, taskBlockers, validateLocalFiles, mergeLocalFiles } = window.Mix7Workflow;
+const { stages, transition, listAssignees, filterRequestsByAssignee, taskBlockers, findActiveTaskTimer, validateLocalFiles, mergeLocalFiles } = window.Mix7Workflow;
 const STORAGE_KEY = "mix7.workflow.v1";
 const MINIMIZED_KEY = "mix7.workflow.minimized.v1";
 const MAX_FILE_BYTES = 15 * 1024 * 1024;
@@ -25,6 +25,12 @@ let activeDueFilter = "";
 let columnActionStage = "";
 let minimizedRequestIds = loadMinimizedIds();
 let state = loadState();
+
+function formatDuration(seconds) {
+  const total = Math.max(0, Math.floor(Number(seconds) || 0));
+  return [Math.floor(total / 3600), Math.floor((total % 3600) / 60), total % 60]
+    .map(part => String(part).padStart(2, "0")).join(":");
+}
 
 function loadMinimizedIds() {
   try {
@@ -65,6 +71,8 @@ function loadState() {
           for (const task of request.tasks) {
             if (!Array.isArray(task.dependencyTaskIds)) task.dependencyTaskIds = task.dependencyTaskId ? [task.dependencyTaskId] : [];
             if (typeof task.blockedReason !== "string") task.blockedReason = "";
+            if (!Array.isArray(task.timeEntries)) task.timeEntries = [];
+            if (typeof task.timerStartedAt !== "string") task.timerStartedAt = null;
           }
           if (!Array.isArray(request.briefingRevisions)) request.briefingRevisions = [];
           if (!Array.isArray(request.briefingFiles)) request.briefingFiles = [];
@@ -536,6 +544,12 @@ function updateRequest(action, payload = {}, successMessage = "Alteração salva
   const request = currentRequest();
   if (!request) return false;
   try {
+    if (action === "start_task_timer") {
+      const active = findActiveTaskTimer(state.requests);
+      if (active && (active.request.id !== request.id || active.task.id !== payload.taskId)) {
+        throw new Error("Pare o cronômetro atual antes de iniciar outro.");
+      }
+    }
     const commentActions = ["add_comment", "internal_changes", "client_changes"];
     const anchorMatchesVersion = activeCommentAnchor?.versionId === request.versions.at(-1)?.id;
     const actionPayload = commentActions.includes(action) && anchorMatchesVersion ? { ...payload, anchor: { ...activeCommentAnchor } } : payload;
@@ -586,6 +600,15 @@ function renderTasks(request) {
     const item = node("li", `task-list-item${task.status === "completed" ? " task-done" : ""}${blockers.length ? " task-blocked" : ""}`);
     const details = node("div", "task-list-details");
     details.append(node("strong", "", `V${String(task.round).padStart(2, "0")} · ${task.title}`), node("span", "", `${task.assignee}${task.estimateHours ? ` · ${task.estimateHours} h` : ""}${task.due ? ` · ${formatDue(task.due)}` : ""}`));
+    const recordedSeconds = (task.timeEntries || []).reduce((sum, entry) => sum + (Number(entry.durationSeconds) || 0), 0);
+    const timerLine = node("span", "task-time-total", `Tempo registrado: ${formatDuration(recordedSeconds)}`);
+    details.append(timerLine);
+    if (task.timerStartedAt) {
+      const runningLine = node("span", "task-time-running", `Cronômetro ativo: ${formatDuration(recordedSeconds + Math.floor((Date.now() - Date.parse(task.timerStartedAt)) / 1000))}`);
+      runningLine.dataset.timerStartedAt = task.timerStartedAt;
+      runningLine.dataset.timerBaseSeconds = String(recordedSeconds);
+      details.append(runningLine);
+    }
     const sourceComment = task.sourceCommentId && request.comments.find(comment => comment.id === task.sourceCommentId);
     if (sourceComment) {
       const sourceVersion = request.versions.find(version => version.id === sourceComment.versionId)?.number;
@@ -594,12 +617,22 @@ function renderTasks(request) {
     for (const blocker of blockers) details.append(node("span", "task-blocker-note", `Impedida: ${blocker}`));
     item.append(details);
     if (task.round === round && ["doing", "adjustments"].includes(request.stage)) {
+      const activeTimer = findActiveTaskTimer(state.requests);
+      const timerButton = node("button", "task-timer-button", task.timerStartedAt ? "Parar cronômetro" : "Iniciar cronômetro");
+      timerButton.type = "button";
+      timerButton.disabled = task.timerStartedAt ? activeTimer?.request.id !== request.id : task.status === "completed" || blockers.length > 0 || Boolean(activeTimer);
+      if (activeTimer && !task.timerStartedAt) timerButton.title = `Pare primeiro o cronômetro de “${activeTimer.task.title}”.`;
+      timerButton.addEventListener("click", () => {
+        if (task.timerStartedAt) updateRequest("stop_task_timer", { taskId: task.id }, "Sessão de tempo registrada.");
+        else updateRequest("start_task_timer", { taskId: task.id }, "Cronômetro iniciado.");
+      });
+      item.append(timerButton);
       const button = node("button", "task-toggle", task.status === "completed" ? "Reabrir" : "Concluir tarefa");
       button.type = "button";
-      button.disabled = task.status !== "completed" && blockers.length > 0;
+      button.disabled = task.status !== "completed" && (blockers.length > 0 || Boolean(task.timerStartedAt));
       button.addEventListener("click", () => updateRequest("toggle_task", { taskId: task.id }, task.status === "completed" ? "Tarefa reaberta." : "Tarefa concluída."));
       item.append(button);
-      if (task.status !== "completed") {
+      if (task.status !== "completed" && !task.timerStartedAt) {
         const blockerForm = node("form", "task-blocker-form");
         const reason = node("input", "workflow-input");
         reason.name = "reason";
@@ -708,6 +741,13 @@ function formatTimecode(value) {
   return hours ? [hours, minutes, seconds].map(part => String(part).padStart(2, "0")).join(":") : [minutes, seconds].map(part => String(part).padStart(2, "0")).join(":");
 }
 
+function refreshTaskTimerDisplays() {
+  document.querySelectorAll("[data-timer-started-at]").forEach(element => {
+    const elapsed = Math.floor((Date.now() - Date.parse(element.dataset.timerStartedAt)) / 1000);
+    element.textContent = `Cronômetro ativo: ${formatDuration(Number(element.dataset.timerBaseSeconds) + elapsed)}`;
+  });
+}
+
 async function removeFile(key) {
   const database = await openAssetDatabase();
   return new Promise((resolve, reject) => {
@@ -748,6 +788,9 @@ function renderHistory(request) {
     } else if (event.type === "set_task_blocker") {
       const title = details.taskTitle || task?.title;
       if (title) summary = `${title} · ${details.blocked ? `impedimento: ${historyExcerpt(details.reason, 120)}` : "impedimento removido"}`;
+    } else if (event.type === "start_task_timer" || event.type === "stop_task_timer") {
+      const title = details.taskTitle || task?.title;
+      if (title) summary = `${title}${event.type === "stop_task_timer" ? ` · sessão ${formatDuration(details.durationSeconds)} · total ${formatDuration(details.totalSeconds)}` : " · início registrado"}`;
     } else if (event.type === "record_delivery") {
       const labels = { delivered: "entregue ao cliente", scheduled: "agendado", published: "publicado" };
       summary = `${historyVersionLabel(details.versionNumber)} · ${labels[details.destinationType] || "resultado sem tipo registrado"}${details.evidence ? ` · evidência: ${historyExcerpt(details.evidence)}` : ""}`;
@@ -800,7 +843,7 @@ async function downloadLocalFile(fileKey, fileName, unavailableMessage = "O arqu
 
 function eventLabel(type) {
   const names = {
-    created: "Demanda criada", fixture_loaded: "Item demonstrativo carregado", briefing_ready: "Briefing liberado para planejamento", briefing_revised: "Briefing alterado; plano aguarda revisão", plan_confirmed: "Planejamento revisado e confirmado", add_task: "Tarefa atribuída", toggle_task: "Estado da tarefa alterado", set_task_blocker: "Impedimento da tarefa atualizado", submit_internal_review: "Enviado para revisão interna", internal_approved: "Revisão interna aprovada e versão compartilhada", internal_changes: "Devolvido pela revisão interna", client_approved: "Versão aprovada pelo cliente", client_changes: "Ajustes solicitados pelo cliente", attach_file: "Arquivo anexado à versão", new_version: "Nova versão criada", record_delivery: "Entrega/publicação registrada", add_comment: "Comentário registrado",
+    created: "Demanda criada", fixture_loaded: "Item demonstrativo carregado", briefing_ready: "Briefing liberado para planejamento", briefing_revised: "Briefing alterado; plano aguarda revisão", plan_confirmed: "Planejamento revisado e confirmado", add_task: "Tarefa atribuída", toggle_task: "Estado da tarefa alterado", set_task_blocker: "Impedimento da tarefa atualizado", start_task_timer: "Cronômetro iniciado", stop_task_timer: "Cronômetro parado", submit_internal_review: "Enviado para revisão interna", internal_approved: "Revisão interna aprovada e versão compartilhada", internal_changes: "Devolvido pela revisão interna", client_approved: "Versão aprovada pelo cliente", client_changes: "Ajustes solicitados pelo cliente", attach_file: "Arquivo anexado à versão", new_version: "Nova versão criada", record_delivery: "Entrega/publicação registrada", add_comment: "Comentário registrado",
   };
   return names[type] || type;
 }
@@ -1525,3 +1568,4 @@ document.querySelectorAll(".view-tab").forEach(tab => tab.addEventListener("clic
 
 displayCurrentDate();
 renderBoard();
+window.setInterval(refreshTaskTimerDisplays, 1000);

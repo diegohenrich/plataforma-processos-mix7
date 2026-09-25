@@ -214,6 +214,10 @@ h1 { margin: 9px 0 5px; font: 700 25px var(--font-body); letter-spacing: -.8px; 
 .task-list-details span, .task-status { color: #8a98aa; font-size: 8px; }
 .task-done .task-list-details strong { text-decoration: line-through; color: #8998a9; }
 .task-toggle { flex: none; padding: 6px 8px; border: 1px solid #dce7f4; border-radius: 6px; color: #527db4; background: #f6faff; font-size: 8px; }
+.task-timer-button { flex: none; min-height: 34px; padding: 6px 9px; border: 1px solid #c8e3ef; border-radius: 7px; color: #255d73; background: #f0f9fc; font-size: 9px; font-weight: 650; }
+.task-timer-button:disabled { color: #8494a4; background: #f6f8fa; cursor: not-allowed; }
+.task-list-details .task-time-total { color: #49647b; font-variant-numeric: tabular-nums; }
+.task-list-details .task-time-running { color: #176b7f; font-variant-numeric: tabular-nums; font-weight: 650; }
 .task-form { display: grid; gap: 7px; }
 .task-form .task-source-hint { padding: 7px 8px; border-radius: 6px; color: #5278a8; background: #f1f6fd; font-size: 8px; line-height: 1.45; }
 .task-list-details .task-source-reference { color: #5278a8; overflow-wrap: anywhere; }
@@ -561,6 +565,7 @@ h1 { margin: 8px 0 10px; font-size: clamp(32px, 2.7vw, 42px); font-weight: 600; 
 .task-list-details strong { font-size: 13px; }
 .task-list-details span, .task-status { font-size: 11px; }
 .task-toggle, .history-file-download { min-height: 40px; padding: 8px 11px; border-radius: 8px; font-size: 11px; }
+.task-timer-button { min-height: 40px; padding: 8px 11px; border-radius: 8px; font-size: 11px; }
 .task-form { gap: 10px; }
 .task-form input, .task-form select { min-height: 44px; padding: 9px 11px; border-radius: 9px; font-size: 13px; }
 .task-form .secondary-button { min-height: 44px; }
