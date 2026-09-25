@@ -228,7 +228,8 @@ h1 { margin: 9px 0 5px; font: 700 25px var(--font-body); letter-spacing: -.8px; 
 .task-form input, .task-form select { width: 100%; min-height: 32px; padding: 6px 8px; border: 1px solid #e2e8ef; border-radius: 6px; color: #52637a; background: white; font: inherit; font-size: 9px; }
 .task-form select[multiple] { min-height: 70px; }
 .task-form label small { color: #94a0b0; font-size: 7px; font-weight: 400; line-height: 1.4; }
-.task-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.task-form-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+@media (max-width: 600px) { .task-form-row { grid-template-columns: 1fr; } }
 .task-form .secondary-button { min-height: 32px; }
 .task-blocker-form { display: flex; flex-wrap: wrap; flex: 1 0 100%; gap: 5px; }
 .task-blocker-form .workflow-input { flex: 1 1 135px; min-width: 0; min-height: 29px; margin: 0; padding: 6px 7px; font-size: 8px; }
@@ -359,6 +360,25 @@ h1 { margin: 9px 0 5px; font: 700 25px var(--font-body); letter-spacing: -.8px; 
 .calendar-event { display: grid; grid-template-columns: 90px minmax(0, 1fr); align-items: center; }
 .calendar-event > :not(.calendar-date) { grid-column: 2; }
 .calendar-date { grid-column: 1; grid-row: 1 / span 3; color: var(--blue); font-size: 13px; font-weight: 700; }
+.calendar-section-title { margin: 2px 0 -6px; color: var(--ink); font-size: 15px; font-weight: 650; }
+.gantt-timeline { min-width: 0; overflow: hidden; border: 1px solid var(--line); border-radius: 14px; background: #fff; }
+.gantt-axis, .gantt-row { display: grid; grid-template-columns: minmax(170px, 30%) minmax(280px, 1fr); gap: 14px; align-items: center; }
+.gantt-axis { padding: 17px 16px 12px; border-bottom: 1px solid var(--line); color: var(--muted); font-size: 11px; font-weight: 650; }
+.gantt-axis-track, .gantt-track { position: relative; min-width: 0; }
+.gantt-axis-track { height: 20px; }
+.gantt-tick { position: absolute; transform: translateX(-50%); color: var(--muted); font-size: 10px; white-space: nowrap; }
+.gantt-tick:first-child { transform: none; }
+.gantt-tick:last-child { transform: translateX(-100%); }
+.gantt-row { min-height: 66px; padding: 9px 16px; border-bottom: 1px solid #edf2f4; }
+.gantt-row:last-child { border-bottom: 0; }
+.gantt-task-label { min-width: 0; padding: 3px 0; border: 0; color: var(--ink); background: transparent; text-align: left; cursor: pointer; }
+.gantt-task-label strong, .gantt-task-label span { display: block; overflow-wrap: anywhere; }
+.gantt-task-label strong { font-size: 12px; font-weight: 650; }
+.gantt-task-label span { margin-top: 4px; color: var(--muted); font-size: 11px; }
+.gantt-track { height: 32px; border-radius: 7px; background: repeating-linear-gradient(90deg, #f6f9fa 0, #f6f9fa calc(12.5% - 1px), #eaf0f2 calc(12.5% - 1px), #eaf0f2 12.5%); }
+.gantt-bar { position: absolute; top: 5px; display: flex; min-width: 38px; height: 22px; align-items: center; justify-content: center; overflow: hidden; padding: 0 7px; border-radius: 7px; color: #163d50; background: #c8eaf4; font-size: 10px; font-weight: 650; white-space: nowrap; }
+.gantt-milestone { width: 22px !important; min-width: 22px; color: #fff; background: var(--blue); }
+.gantt-undated { display: grid; gap: 9px; }
 .knowledge-steps { display: grid; gap: 10px; margin: 0; padding-left: 24px; color: var(--ink); }
 .knowledge-steps li { padding-left: 4px; line-height: 1.6; }
 .utility-note { margin: 0; padding: 14px 16px; border: 1px solid #d8e8ee; border-radius: 12px; color: #405963; background: #f2f8fa; font-size: 13px; line-height: 1.6; }
@@ -367,6 +387,13 @@ h1 { margin: 9px 0 5px; font: 700 25px var(--font-body); letter-spacing: -.8px; 
 .workspace-empty { padding: 30px 18px; border: 1px dashed #cbd9de; border-radius: 12px; color: var(--muted); text-align: center; }
 .workspace-empty strong { display: block; margin-bottom: 5px; color: var(--ink); }
 .workspace-empty p { margin: 0; font-size: 13px; }
+@media (max-width: 600px) {
+  .gantt-timeline { overflow-x: auto; }
+  .gantt-axis, .gantt-row { width: 620px; grid-template-columns: 190px 400px; gap: 12px; }
+  .gantt-axis { padding-inline: 12px; }
+  .gantt-row { min-height: 64px; padding-inline: 12px; }
+  .calendar-section-title { font-size: 14px; }
+}
 .filter-strip { flex-wrap: wrap; }
 .filter-chip { padding: 5px 9px; border: 1px solid #d8e8ee; border-radius: 100px; color: var(--blue); background: #f2f8fa; font: inherit; font-size: 11px; cursor: pointer; }
 .clear-filters { padding: 5px; border: 0; color: var(--blue); background: transparent; font: inherit; font-size: 11px; cursor: pointer; }

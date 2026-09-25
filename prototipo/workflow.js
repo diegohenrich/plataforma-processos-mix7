@@ -186,7 +186,10 @@
           throw new Error("A origem da tarefa deve ser um comentário válido do cliente nesta rodada de ajustes.");
         }
         const estimateHours = Number(payload.estimateHours) > 0 ? Number(payload.estimateHours) : null;
-        const task = { id: `${next.id}-task-${round}-${next.tasks.filter(task => task.round === round).length + 1}`, title, assignee, estimateHours, due: String(payload.due || ""), round, status: "pending", dependencyTaskIds, blockedReason: "", sourceCommentId: sourceComment?.id || null };
+        const plannedStart = String(payload.plannedStart || "");
+        const due = String(payload.due || "");
+        if (plannedStart && due && due < plannedStart) throw new Error("O prazo não pode ser anterior ao início planejado.");
+        const task = { id: `${next.id}-task-${round}-${next.tasks.filter(task => task.round === round).length + 1}`, title, assignee, estimateHours, plannedStart, due, round, status: "pending", dependencyTaskIds, blockedReason: "", sourceCommentId: sourceComment?.id || null };
         next.tasks.push(task);
         payload = { ...payload, taskId: task.id, taskTitle: task.title, dependencyTaskIds, sourceCommentId: task.sourceCommentId, sourceVersionNumber: sourceComment ? next.versions.find(item => item.id === sourceComment.versionId)?.number : null };
         break;
@@ -370,6 +373,9 @@
         eventDetails.dependencyTaskIds = payload.dependencyTaskIds;
         eventDetails.sourceCommentId = payload.sourceCommentId;
         eventDetails.sourceVersionNumber = payload.sourceVersionNumber;
+        eventDetails.plannedStart = payload.plannedStart || "";
+        eventDetails.due = payload.due || "";
+        eventDetails.estimateHours = payload.estimateHours || null;
       }
       if (action === "toggle_task") eventDetails.status = payload.status;
       if (action === "set_task_blocker") {

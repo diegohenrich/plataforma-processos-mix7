@@ -359,6 +359,21 @@ test("revisão interna exige motivo ao devolver e não compartilha material", ()
   assert.equal(item.history.at(-1).details.versionNumber, 1);
 });
 
+test("cronograma aceita início e prazo e bloqueia prazo anterior ao início", () => {
+  let item = transition(demand(), "briefing_ready");
+  assert.throws(() => transition(item, "add_task", {
+    title: "Criar peça", assignee: "Designer", plannedStart: "2026-10-10", due: "2026-10-09",
+  }), /prazo não pode ser anterior/);
+  assert.equal(item.tasks.length, 0);
+  item = transition(item, "add_task", {
+    title: "Criar peça", assignee: "Designer", plannedStart: "2026-10-10", due: "2026-10-12",
+  });
+  assert.equal(item.tasks[0].plannedStart, "2026-10-10");
+  assert.equal(item.tasks[0].due, "2026-10-12");
+  assert.equal(item.history.at(-1).details.plannedStart, "2026-10-10");
+  assert.equal(item.history.at(-1).details.due, "2026-10-12");
+});
+
 test("nova versão continua a numeração informada mesmo com histórico parcial", () => {
   let item = demand();
   item.stage = "adjustments";

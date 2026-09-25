@@ -460,15 +460,78 @@ function renderWorkspacePanel(panel, requests) {
     return;
   }
   if (activePage === "calendar") {
-    panel.append(panelHeading("Prazos registrados", "Apenas datas preenchidas aparecem aqui; o protótipo não envia lembretes."));
+    panel.append(panelHeading("Cronograma e prazos", "O Gantt usa início e prazo informados nas tarefas; sem datas, não há previsão calculada nem disponibilidade estimada."));
+    const currentTasks = [];
+    const undatedTasks = [];
     const events = [];
     for (const request of requests) {
       if (request.due) events.push({ date: request.due, title: request.title, detail: `${request.client} · Demanda`, request });
       const round = Number(request.versions?.at(-1)?.number) || 1;
-      for (const task of request.tasks || []) if (task.due && (Number(task.round) || round) === round) events.push({ date: task.due, title: task.title, detail: `${task.assignee || "Sem responsável"} · ${request.client}`, request });
+      for (const task of request.tasks || []) {
+        if ((Number(task.round) || round) !== round) continue;
+        const entry = { task, request, start: task.plannedStart || task.due || "", end: task.due || task.plannedStart || "" };
+        if (entry.start) currentTasks.push(entry);
+        else undatedTasks.push(entry);
+        if (task.due) events.push({ date: task.due, title: task.title, detail: `${task.assignee || "Sem responsável"} · ${request.client}`, request });
+      }
     }
+    if (currentTasks.length) {
+      panel.append(node("h3", "calendar-section-title", "Cronograma de tarefas"));
+      const dates = currentTasks.flatMap(entry => [entry.start, entry.end]).sort();
+      const first = new Date(`${dates[0]}T12:00:00`);
+      const last = new Date(`${dates.at(-1)}T12:00:00`);
+      const days = Math.max(1, Math.round((last - first) / 86400000) + 1);
+      const timeline = node("section", "gantt-timeline");
+      timeline.setAttribute("aria-label", `Cronograma Gantt de ${formatDue(dates[0])} a ${formatDue(dates.at(-1))}`);
+      const axis = node("div", "gantt-axis");
+      const axisLabel = node("span", "", "Tarefa · responsável");
+      const axisTrack = node("div", "gantt-axis-track");
+      const tickCount = Math.min(8, days);
+      for (let index = 0; index < tickCount; index++) {
+        const offset = Math.round((days - 1) * index / Math.max(1, tickCount - 1));
+        const date = new Date(first.getTime() + offset * 86400000);
+        const tick = node("time", "gantt-tick", new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short" }).format(date).replace(".", ""));
+        tick.style.left = `${days === 1 ? 0 : offset / (days - 1) * 100}%`;
+        tick.dateTime = localDateStamp(date);
+        axisTrack.append(tick);
+      }
+      axis.append(axisLabel, axisTrack);
+      timeline.append(axis);
+      const rows = node("div", "gantt-rows");
+      for (const entry of currentTasks) {
+        const row = node("div", "gantt-row");
+        const label = makeOpenRequestButton(entry.request);
+        label.classList.add("gantt-task-label");
+        label.replaceChildren(node("strong", "", entry.task.title), node("span", "", `${entry.task.assignee || "Sem responsável"} · ${entry.request.client}`));
+        const track = node("div", "gantt-track");
+        const start = new Date(`${entry.start}T12:00:00`);
+        const end = new Date(`${entry.end}T12:00:00`);
+        const startOffset = Math.round((start - first) / 86400000);
+        const endOffset = Math.round((end - first) / 86400000);
+        const bar = node("span", `gantt-bar${entry.start === entry.end ? " gantt-milestone" : ""}`, entry.start === entry.end ? "◆" : `${formatDue(entry.start)}–${formatDue(entry.end)}`);
+        bar.style.left = `${days === 1 ? 0 : startOffset / days * 100}%`;
+        bar.style.width = `${entry.start === entry.end ? "16px" : `${Math.max(1, (endOffset - startOffset + 1) / days * 100)}%`}`;
+        bar.title = entry.start === entry.end ? `Marco em ${formatDue(entry.start)}` : `${formatDue(entry.start)} a ${formatDue(entry.end)}`;
+        track.append(bar);
+        row.append(label, track);
+        rows.append(row);
+      }
+      timeline.append(rows);
+      panel.append(timeline);
+    } else {
+      panel.append(emptyPanel("Sem tarefas com datas", "Informe início planejado ou prazo nas tarefas para montar o cronograma."));
+    }
+    if (undatedTasks.length) {
+      const section = node("section", "gantt-undated");
+      section.append(node("h3", "calendar-section-title", `Tarefas sem data (${undatedTasks.length})`));
+      const list = node("div", "workspace-list");
+      for (const entry of undatedTasks) list.append(makeOpenRequestButton(entry.request, `${entry.task.assignee || "Sem responsável"} · ${entry.request.client} · V${String(entry.task.round).padStart(2, "0")}`));
+      section.append(list);
+      panel.append(section);
+    }
+    panel.append(panelHeading("Prazos registrados", "Demandas e tarefas com prazo final informado. O protótipo não envia lembretes."));
     events.sort((a, b) => a.date.localeCompare(b.date));
-    if (!events.length) return panel.append(emptyPanel("Nenhum prazo registrado", "Adicione uma data ao briefing ou a uma tarefa para vê-la aqui."));
+    if (!events.length) return panel.append(emptyPanel("Nenhum prazo final registrado", "Adicione um prazo desejado à demanda ou um prazo final à tarefa para vê-lo aqui."));
     const list = node("div", "workspace-list");
     for (const event of events) {
       const row = makeOpenRequestButton(event.request, event.detail);
@@ -590,6 +653,7 @@ function renderTasks(request) {
   const dependencySelect = form.elements.namedItem("taskDependencies");
   const sourceHint = document.querySelector("#taskSourceHint");
   const sourceCommentField = form.elements.namedItem("taskSourceCommentId");
+  form.elements.namedItem("taskDue").min = form.elements.namedItem("taskPlannedStart").value || "";
   if (request.stage !== "adjustments" && sourceCommentField.value) {
     sourceCommentField.value = "";
     sourceHint.hidden = true;
@@ -1533,7 +1597,7 @@ document.querySelector("#sendComment").addEventListener("click", () => {
 document.querySelector("#taskForm").addEventListener("submit", event => {
   event.preventDefault();
   const data = new FormData(event.currentTarget);
-  const saved = updateRequest("add_task", { title: data.get("taskTitle"), assignee: data.get("taskAssignee"), estimateHours: data.get("taskEstimateHours"), due: data.get("taskDue"), dependencyTaskIds: data.getAll("taskDependencies").filter(Boolean), sourceCommentId: data.get("taskSourceCommentId") }, "Tarefa adicionada ao plano.");
+  const saved = updateRequest("add_task", { title: data.get("taskTitle"), assignee: data.get("taskAssignee"), estimateHours: data.get("taskEstimateHours"), plannedStart: data.get("taskPlannedStart"), due: data.get("taskDue"), dependencyTaskIds: data.getAll("taskDependencies").filter(Boolean), sourceCommentId: data.get("taskSourceCommentId") }, "Tarefa adicionada ao plano.");
   if (saved) {
     event.currentTarget.reset();
     const sourceHint = document.querySelector("#taskSourceHint");
