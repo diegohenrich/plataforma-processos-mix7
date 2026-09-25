@@ -13,6 +13,11 @@
 - git diff --check passou; CI do push e do PR #9 para o commit 73b28d58995a651b98f9487b319bd505340fcc68 passou nas execuções [36117997596](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36117997596) e [36118002250](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36118002250).
 # Estado em 2026-09-25
 
+## CSV aberto no LibreOffice Calc — 2026-09-25
+
+- O cartão 29 estava em Em revisão, aguardando inspeção da planilha. Confirmei por renderização do LibreOffice Calc que as sete colunas foram importadas separadamente, acentos permaneceram legíveis e as oito demandas foram apresentadas. Na impressão A4 em retrato, o Calc distribuiu as colunas em duas páginas e cortou visualmente títulos longos na largura padrão; os dados permanecem separados em suas células, mas autoajuste de largura/orientação paisagem melhora impressão. As capturas estão em `docs/evidencias/visual/exportacao-csv-libreoffice-pagina-1.png` e `...pagina-2.png`.
+- Foi usada uma cópia temporária do CSV sintético já existente em Downloads; o original foi preservado. Critério visual registrado no cartão 29; decidir se a impressão otimizada será requisito adicional antes de fechar a tarefa. Ainda pendem testes, commit/push, CI e sincronização final no Trello.
+
 ## Aprovação direta e conclusão na interface — 2026-09-25
 
 - Em Chromium isolado `127.0.0.1:4214`, aprovei uma demanda fictícia V03 na página Aprovações. Ela saiu da fila de decisão e avançou para Entrega e publicação sem concluir automaticamente. O formulário bloqueou evidência vazia/só com espaços; ao escolher “Publicação agendada” e informar URL demonstrativa, registrou o resultado, concluiu a demanda e preservou aprovação e evidência no histórico. Capturei e inspecionei a tela final em 1280 × 720. A origem de uso `127.0.0.1:4173` não foi tocada.
