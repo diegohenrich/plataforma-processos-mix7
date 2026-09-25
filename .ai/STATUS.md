@@ -1,5 +1,11 @@
 # Estado em 2026-09-24
 
+## Nova execução do CRM para referência visual — 2026-09-25
+
+- Iniciado `CRM-MIX7-RENEW` via Laravel em `127.0.0.1:8198`; Chromium renderizou o login em 1270 × 713. A página mostra uma composição dividida entre painel escuro de apresentação e formulário claro. Esse visual pertence ao login e não confirma como o dashboard deve ser reproduzido.
+- `php artisan route:list` e a navegação confirmaram que `/administrador/dashboard` é protegido por `auth`, `status` e `is.admin` e redireciona para `/login` sem sessão. A aba fica aberta para o usuário autenticar manualmente; nenhuma senha foi lida/inserida, nem arquivo do CRM foi alterado.
+- A inspeção estática identificou a view `resources/views/dashboard/index.blade.php` e a inclusão `dashboard/overview.blade.php`, úteis para entender os componentes, porém insuficientes para afirmar a composição renderizada. Próximo passo visual: comparar o dashboard autenticado e então corrigir a plataforma com base nessa evidência. Detalhes em `docs/REFERENCIA-VISUAL.md`.
+
 ## Ajuste de escala visual com referência do CRM — 2026-09-25
 
 - Executados lado a lado o CRM local e o protótipo. A rota administrativa do CRM segue redirecionando para login; nenhuma senha foi inserida. A tela de login e o CSS confirmado sustentam os tamanhos de corpo, títulos, navegação e cartões; a composição do dashboard autenticado continua sem evidência visual.
