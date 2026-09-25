@@ -21,8 +21,10 @@ Referências oficiais consultadas em 25/09/2026: [banco de dados na Hostinger](h
 - Tela de entrada sem cadastro público, sessão regenerada no login, saída protegida por CSRF e limite de tentativas.
 - Contas possuem organização, estado ativo e um dos quatro papéis citados: direção da agência, gerência de marketing, profissional ou cliente. Isso registra a identidade; a matriz detalhada de acesso a cada recurso ainda precisa ser construída antes de dados reais.
 - Comando inicial `php artisan mix7:owner:create` solicita nome, e-mail e senha sem gravar credenciais no repositório. A senha requer pelo menos 12 caracteres. O comando cria a organização Mix7 se ainda não existir e recusa uma segunda conta de direção.
-- API `GET /api/v1/me` protegida por token Laravel Sanctum, como início do contrato que o cliente Windows poderá usar. Não há ainda tela ou procedimento operacional de emissão/revogação de tokens para equipe.
-- Migrações Laravel registram organizações, papéis e tokens pessoais. MariaDB é o destino; desenvolvimento local pode usar SQLite.
+- API `GET /api/v1/me` e leitura `GET /api/v1/demands`, `GET /api/v1/demands/{demand}` protegidas por Sanctum. A API filtra demandas e tarefas por organização e restringe profissionais aos próprios trabalhos.
+- Migrações Laravel registram organizações, papéis, tokens, demandas, tarefas e eventos de histórico. MariaDB é o destino; desenvolvimento local e testes usam SQLite.
+- Demandas/tarefas têm telas, transições de estado com validação, autoria de ações e atribuição. A direção pode cadastrar contas profissionais vinculadas à organização, com senha armazenada por hash e sem cadastro público. Essa autorização é provisória até a matriz dos quatro papéis ser confirmada.
+- O profissional vê tarefas atribuídas a ele; o histórico também esconde eventos de tarefas de colegas. A revisão da demanda e briefing continuam visíveis para quem trabalha nela, necessários ao contexto da execução.
 
 ## Desenvolvimento local
 
@@ -50,8 +52,8 @@ Nenhum deploy foi feito e não foram acessados painel, domínio, banco ou creden
 
 ## Contrato futuro do executável Windows
 
-O desktop será um cliente da API HTTPS do mesmo sistema. Endpoints serão versionados (`/api/v1`); autenticação de cliente desktop usará tokens pessoais com escopo mínimo, expiração e revogação. O desktop não terá acesso direto ao MariaDB, não guardará senha de banco e não duplicará regras de negócio. O contrato atual expõe apenas a identidade autenticada; criar demandas, tarefas, cronômetros, aprovações, anexos e demais módulos ainda é trabalho futuro.
+O desktop será um cliente da API HTTPS do mesmo sistema. Endpoints serão versionados (`/api/v1`); autenticação de cliente desktop usará tokens pessoais com escopo mínimo, expiração e revogação. O desktop não terá acesso direto ao MariaDB, não guardará senha de banco e não duplicará regras de negócio. Hoje há leitura autenticada de identidade e demandas; escrita de demandas/tarefas pela API, cronômetros compartilhados, aprovações, anexos e outros módulos ainda são trabalho futuro.
 
 ## Não pronto para uso com dados reais
 
-As permissões por papel e isolamento por cliente ainda não estão completas; o MVP não deve receber material real ou links de cliente. Também faltam provisionamento e recuperação de contas, trilha de auditoria, política segura para links externos, armazenamento privado de anexos, cópias de segurança e restauração exercitada, emissão/revogação de tokens e operação da Hostinger confirmada. A fundação habilita o trabalho; não representa a plataforma completa.
+As permissões por papel e isolamento por cliente ainda não estão completos; o MVP não deve receber material real ou links de cliente. Também faltam fluxo seguro de provisionamento e recuperação de contas, trilha de auditoria completa, política para links externos, armazenamento privado de anexos, cópias de segurança e restauração exercitada, gestão operacional de tokens e confirmação do plano Hostinger. A fundação e as primeiras telas de trabalho habilitam desenvolvimento; não representam a plataforma completa.

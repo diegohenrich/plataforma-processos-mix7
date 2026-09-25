@@ -1,0 +1,82 @@
+<?php
+
+namespace App\Http\Controllers\Api\V1;
+
+use App\Enums\UserRole;
+use App\Http\Controllers\Controller;
+use App\Models\Demand;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+
+class DemandController extends Controller
+{
+    public function index(Request $request): JsonResponse
+    {
+        $this->authorize('viewAny', Demand::class);
+        $user = $request->user();
+        $demands = Demand::query()
+            ->where('organization_id', $user->organization_id)
+            ->when($user->role === UserRole::Professional, function (Builder $query) use ($user): void {
+                $query->where(function (Builder $visible) use ($user): void {
+                    $visible->where('created_by', $user->id)
+                        ->orWhereHas('tasks', fn (Builder $tasks) => $tasks->where('assigned_to', $user->id));
+                });
+            })
+            ->with([
+                'creator:id,name',
+                'tasks' => fn ($tasks) => $tasks
+                    ->with('assignee:id,name')
+                    ->when($user->role === UserRole::Professional, fn (Builder $query) => $query->where('assigned_to', $user->id)),
+            ])
+            ->latest()
+            ->limit(100)
+            ->get();
+
+        return response()->json([
+            'data' => $demands->map(fn (Demand $demand) => [
+                'id' => $demand->id,
+                'title' => $demand->title,
+                'brief' => $demand->brief,
+                'status' => ['value' => $demand->status->value, 'label' => $demand->status->label()],
+                'created_at' => $demand->created_at?->toISOString(),
+                'created_by' => ['id' => $demand->creator->id, 'name' => $demand->creator->name],
+                'tasks' => $demand->tasks
+                    ->map(fn ($task) => [
+                        'id' => $task->id,
+                        'title' => $task->title,
+                        'status' => ['value' => $task->status->value, 'label' => $task->status->label()],
+                        'estimate_minutes' => $task->estimate_minutes,
+                        'assignee' => ['id' => $task->assignee->id, 'name' => $task->assignee->name],
+                    ]),
+            ]),
+            'meta' => ['limit' => 100],
+        ]);
+    }
+
+    public function show(Request $request, Demand $demand): JsonResponse
+    {
+        $this->authorize('view', $demand);
+        $user = $request->user();
+        $tasks = $demand->tasks()
+            ->with('assignee:id,name')
+            ->when($user->role === UserRole::Professional, fn (Builder $query) => $query->where('assigned_to', $user->id))
+            ->get();
+
+        return response()->json([
+            'data' => [
+                'id' => $demand->id,
+                'title' => $demand->title,
+                'brief' => $demand->brief,
+                'status' => ['value' => $demand->status->value, 'label' => $demand->status->label()],
+                'tasks' => $tasks->map(fn ($task) => [
+                    'id' => $task->id,
+                    'title' => $task->title,
+                    'status' => ['value' => $task->status->value, 'label' => $task->status->label()],
+                    'estimate_minutes' => $task->estimate_minutes,
+                    'assignee' => ['id' => $task->assignee->id, 'name' => $task->assignee->name],
+                ]),
+            ],
+        ]);
+    }
+}

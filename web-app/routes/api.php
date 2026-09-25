@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\DemandController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -17,4 +18,6 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active'])->group(function (): 
             ],
         ]);
     });
+    Route::get('/demands', [DemandController::class, 'index']);
+    Route::get('/demands/{demand}', [DemandController::class, 'show']);
 });
