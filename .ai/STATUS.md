@@ -1,3 +1,9 @@
+## CRM aberto para referência visual — 2026-09-25
+
+- Confirmei a execução local do CRM em `http://127.0.0.1:8198`. A aba Chromium atualmente mostra a tela `Entrar | CRM Mix7`; sem sessão, a rota do dashboard administrativo redireciona para login. Não li nem inseri credenciais.
+- Inspecionei, apenas para localizar as fontes, `resources/views/dashboard/index.blade.php`, `resources/views/layouts/template.blade.php` e `public/css/dashboard-light.css` dentro de `CRM-MIX7-RENEW`. O dashboard inclui essa folha e a view ativa o redesenho; isso é evidência de implementação, não validação da composição renderizada. Nenhum arquivo do CRM foi alterado.
+- Não ajustei a interface da plataforma nesta execução: ainda falta observar o dashboard autenticado para comparar proporções, hierarquia, navegação e cartões sem suposições. A aba do login está preservada para o usuário abrir manualmente o painel; depois da abertura, retomar a comparação no cartão 25 do Trello.
+- Repositório da plataforma estava limpo e no commit `ad7bacfb31856d7f71edd95eb909abbead511c9d`, igual ao remoto antes deste registro.
 # Estado em 2026-09-25
 
 ## Auditoria de navegação e criação de demanda — 2026-09-25
