@@ -287,16 +287,6 @@ h1 { margin: 9px 0 5px; font: 700 25px var(--font-body); letter-spacing: -.8px; 
 .assignee-scope[hidden] { display: none; }
 .request-dialog { max-height: min(86dvh, 780px); overflow-y: auto; }
 @media (max-width: 600px) { .briefing-detail { grid-template-columns: 82px minmax(0, 1fr); } .request-dialog { max-height: 90dvh; } }
-@media (max-width: 600px) {
-  #listViewHeader { display: none !important; }
-  .kanban-board.list-view { grid-template-columns: minmax(0, 1fr); max-width: 100%; overflow-x: visible; }
-  .list-view .task-card { min-width: 0; grid-template-columns: minmax(0, 1fr) auto; min-height: 66px; gap: 4px 8px; }
-  .list-view .card-label-row { grid-column: 1; grid-row: 1; }
-  .list-view .task-card::after { grid-column: 2; grid-row: 1; align-self: center; text-align: right; }
-  .list-view .task-card h3 { grid-column: 1 / -1; grid-row: 2; white-space: normal; }
-  .list-view .card-footer { display: flex; grid-column: 1 / -1; grid-row: 3; justify-content: space-between; }
-}
-
 /* CRM-MIX7-RENEW palette applied to the existing Mix7 workspace. */
 .sidebar {
   background: linear-gradient(160deg, #243943, #10252f 80%);
@@ -858,4 +848,23 @@ h1 { margin: 8px 0 10px; font-size: clamp(32px, 2.7vw, 42px); font-weight: 600; 
   .breadcrumbs b { color: #99a8af; }
   .breadcrumbs strong { color: var(--ink); font-weight: 500; }
   .page-content { padding-top: 0; padding-right: 38px; padding-left: 38px; }
+}
+
+@media (max-width: 1125px) {
+  .board-heading { align-items: flex-start; gap: 12px; flex-direction: column; }
+  .board-tools { width: 100%; flex-wrap: wrap; }
+  .search-field { flex: 1 1 190px; min-width: 0; }
+  #listViewHeader { display: none !important; }
+  .kanban-board.list-view {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    grid-template-columns: minmax(0, 1fr);
+    overflow-x: visible;
+  }
+  .list-view .task-card { min-width: 0; grid-template-columns: minmax(0, 1fr) auto; min-height: 66px; gap: 4px 8px; }
+  .list-view .card-label-row { grid-column: 1; grid-row: 1; }
+  .list-view .task-card::after { grid-column: 2; grid-row: 1; align-self: center; text-align: right; }
+  .list-view .task-card h3 { grid-column: 1 / -1; grid-row: 2; white-space: normal; }
+  .list-view .card-footer { display: flex; grid-column: 1 / -1; grid-row: 3; justify-content: space-between; }
 }
