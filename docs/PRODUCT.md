@@ -1,5 +1,9 @@
 # Produto
 
+## Escopo da primeira entrega operacional
+
+A primeira versão em uso abrange toda a plataforma descrita nos três áudios: gestão de equipe e demandas, aprovações expansíveis, tempo e capacidade, IA com revisão humana, avaliação, conhecimento, onboarding, acessos seguros e operação auditável. Entregas por etapas e protótipos são meios de construir e validar o produto; não adiam áreas do escopo completo para uma versão posterior. Consulte o [roteiro](ROADMAP.md) para a sequência e os critérios.
+
 ## Objetivo
 
 Reduzir a dependência de conhecimento informal no dia a dia da Mix7, mantendo demandas, responsáveis, instruções, versões, feedbacks e decisões em um processo recuperável.

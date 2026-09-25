@@ -22,7 +22,9 @@ Fonte: transcrição dos três áudios fornecidos em 24/09/2026 e decisões expl
 
 Os áudios distinguem a pessoa da Mix7 que declara peso 2, um gerente que avalia com peso 1, profissionais que precisam ver trabalho destinado a eles e clientes que aprovam/comentam versões. O áudio não estabelece o cargo formal da pessoa que declara peso 2, nem confirma o gerente como distribuidor de tarefas ou administrador técnico. Veja [Identidade e acessos](IDENTIDADE-E-ACESSOS.md) para a matriz preliminar de capacidades e decisões pendentes, opções de autenticação e testes de isolamento. As contas reais dependem de uma lista de pessoas e e-mails fornecida pela Mix7, de uma matriz aprovada e da escolha da arquitetura; ainda não foram criadas.
 
-## Decisões confirmadas para o primeiro recorte
+## Decisões confirmadas e escopo da primeira entrega
+
+A primeira entrega operacional abrange todas as áreas confirmadas na tabela acima. A sequência do [roteiro](ROADMAP.md) e uma fatia integrada menor organizam implementação e validação, sem reduzir o produto necessário para a entrada em uso.
 
 - Público: equipe e clientes da Mix7.
 - Fluxo pretendido: demanda → planejamento revisado → execução → aprovação do cliente → ajustes → conclusão.

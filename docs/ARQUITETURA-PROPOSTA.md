@@ -78,9 +78,11 @@ erDiagram
 
 O diagrama expressa relações conceituais e pode mudar após mapear pedidos recorrentes, múltiplas marcas/clientes, participantes externos, guarda de mídia e as regras reais de revisão.
 
-## Limites para a primeira entrega
+## Escopo da primeira entrega operacional
 
-O primeiro recorte deve comprovar uma demanda social do início ao registro final. Avaliação de desempenho, treinamento, matriz de acesso a serviços, automações amplas e publicação automática não bloqueiam o protótipo desse fluxo. Eles permanecem no mapa do produto e avançam depois de especificados. Não guardar senhas de redes sociais no primeiro recorte; qualquer gestão de credenciais exige análise de segurança própria.
+A primeira entrega operacional deve abranger a plataforma completa descrita nos três áudios: gestão compartilhada de demandas e equipe; aprovações expansíveis além de criativos sociais; tempo, disponibilidade e Gantt; IA sujeita à revisão humana; avaliação com regras transparentes; conhecimento, treinamento e onboarding; acessos seguros; histórico e operação confiável. As etapas do roteiro organizam dependências e ordem de implementação; não reduzem o que deve estar incluído quando o sistema entrar em uso real.
+
+Uma demanda social ponta a ponta continua sendo uma fatia de validação técnica e de experiência, não o limite da primeira versão operacional. Os protótipos e ensaios podem ser menores, mas não justificam adiar as áreas acima para depois do lançamento. Tipos concretos de aprovação além de redes sociais, regras de capacidade, identidade/permissões e integrações Windows ainda dependem das confirmações de operação indicadas em `REQUIREMENTS.md`; não preenchê-las por suposição. Não guardar senhas de redes sociais; qualquer gestão de credenciais exige análise de segurança própria.
 
 ## Decisões técnicas ainda pendentes
 

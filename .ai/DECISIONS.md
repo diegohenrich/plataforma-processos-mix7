@@ -1,5 +1,7 @@
 # Decisões vigentes
 
+- 2026-09-25 — A primeira versão operacional deve cobrir a plataforma completa descrita nos três áudios. Fases e protótipos organizam construção e validação, mas não adiam áreas do escopo completo para versões posteriores. Revisar somente mediante nova decisão explícita do usuário; ver `docs/PRODUCT.md` e `docs/ROADMAP.md`.
+
 - 2026-09-24 — Usar o quadro Trello existente **Desenvolvimento de Projetos - Mix7** para organizar o projeto. Listas representam andamento; etiquetas coloridas representam áreas. Revisar se o quadro passar a reunir outros projetos da agência.
 - 2026-09-24 — Identificar etiquetas por nome e finalidade no próprio Trello: azul = Gestão de equipe; verde = Aprovações; roxo = IA e automações; amarelo = Conhecimento e acessos; laranja = Pesquisa de soluções; vermelho = Bloqueio, para impedimento real que exige ação ou decisão. A cor ajuda na leitura, mas o nome deve ser visível nos cartões e filtros. Revisar quando novas áreas forem acrescentadas.
 - 2026-09-24 — Guardar a plataforma em repositório GitHub privado separado do `crm-mix7`, sob `diegohenrich/plataforma-processos-mix7`. Trello segue como fonte de andamento; GitHub guarda documentação, código e revisão de mudanças. Revisar a visibilidade ou titularidade apenas por decisão explícita.

@@ -1,6 +1,6 @@
 # Contexto vigente — Plataforma de Processos Mix7
 
-- Objetivo: planejar uma plataforma integrada de gestão de equipe e aprovações para a operação da Mix7. Aprovações começam por criativos de redes sociais e podem se expandir para outras áreas.
+- Objetivo: entregar a primeira versão operacional da plataforma completa descrita nos três áudios, com gestão de equipe e aprovações expansíveis além de criativos de redes sociais. As etapas do roteiro são sequência de implementação e validação, não redução do escopo da primeira entrega real.
 - Público inicial: equipe e clientes da Mix7. Direção aprovada: demanda/briefing → planejamento revisado → execução → revisão interna → decisão do cliente por versão → ajustes e nova versão → registro de publicação/entrega → conclusão conferida. Isto é comportamento-alvo, não confirmação da operação atual.
 - A IA deve sugerir tarefas, responsáveis e estimativas; uma pessoa confirma antes de aplicar.
 - Referência visual única: `C:\Users\anony\ProjetosPessoais\Projetos de Sistemas\CRM-MIX7-RENEW`, conforme instrução mais recente. Não usar o site público nem outros projetos como referência de layout. A tela de login foi renderizada, mas a composição do dashboard autenticado ainda depende de sessão do usuário; verifique o dashboard antes de ajustar a plataforma.

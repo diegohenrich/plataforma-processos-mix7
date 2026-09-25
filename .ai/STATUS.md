@@ -1,5 +1,11 @@
 # Estado em 2026-09-25
 
+## Escopo da primeira versão operacional
+
+- Alinhados contexto, decisão, produto, requisitos, roteiro e proposta de arquitetura à decisão explícita do usuário: a primeira versão em uso inclui o projeto completo descrito nos três áudios. Fases e protótipos menores ordenam a construção/validação e não adiam áreas para depois do lançamento.
+- A revisão preserva dependências e regras ainda não confirmadas pela Mix7, incluindo tipos de aprovação, capacidade, identidade/permissões e integrações Windows. Nenhuma solução ou tecnologia foi escolhida.
+- Validação documental: `git diff --check` passou; revisão do diff confirmou seis arquivos Markdown e somente alinhamento de escopo/memória. Testes de produto não se aplicam. Commit/push e conferência do GitHub ainda pendentes; a atualização do Trello depende da confirmação de publicação do comentário na interface.
+
 ## Matriz preliminar de identidade e acesso — 2026-09-25
 
 - `docs/IDENTIDADE-E-ACESSOS.md` recebeu uma matriz para validação com a Mix7. Ela separa capacidades ditas nos áudios, funções exigidas pelo fluxo aprovado, proposta de segurança e decisões ainda abertas; não concede permissões nem cria contas.
