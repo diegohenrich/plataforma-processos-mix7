@@ -16,7 +16,7 @@
 ## CSV aberto no LibreOffice Calc — 2026-09-25
 
 - O cartão 29 estava em Em revisão, aguardando inspeção da planilha. Confirmei por renderização do LibreOffice Calc que as sete colunas foram importadas separadamente, acentos permaneceram legíveis e as oito demandas foram apresentadas. Na impressão A4 em retrato, o Calc distribuiu as colunas em duas páginas e cortou visualmente títulos longos na largura padrão; os dados permanecem separados em suas células, mas autoajuste de largura/orientação paisagem melhora impressão. As capturas estão em `docs/evidencias/visual/exportacao-csv-libreoffice-pagina-1.png` e `...pagina-2.png`.
-- Foi usada uma cópia temporária do CSV sintético já existente em Downloads; o original foi preservado. Critério visual registrado no cartão 29; decidir se a impressão otimizada será requisito adicional antes de fechar a tarefa. Ainda pendem testes, commit/push, CI e sincronização final no Trello.
+- Foi usada uma cópia temporária do CSV sintético já existente em Downloads; o original foi preservado. Capturas e resultado registrados no cartão 29; checklist agora 3/3. `node --test tests/workflow.test.js` passou 25/25; `node --check prototipo/workflow.js`, `node --check prototipo/app.js` e `git diff --check` passaram. Evidências/documentação no commit `30fbf8e2ebfce98d26e67f03063b1c0fae62f9bd`, publicado com SHA local/remoto igual. CI push [36127659579](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36127659579) e PR #9 [36127664286](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36127664286) passaram. O registro final de sincronização com Trello segue nesta rodada.
 
 ## Aprovação direta e conclusão na interface — 2026-09-25
 
