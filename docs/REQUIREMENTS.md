@@ -19,6 +19,8 @@ Fonte: transcrição dos três áudios fornecidos em 24/09/2026 e decisões expl
 | Arquivos e ambiente de trabalho | Soltar imagens/arquivos em uma demanda e mantê-los associados a ela; integração com Windows foi pedida, mas ainda sem comportamento definido. |
 | Construção | Comparar soluções existentes e opções open source antes de decidir o que desenvolver. Avaliar licenças, manutenção e segurança. |
 
+O comportamento de tempo confirmado, a proposta de capacidade e os critérios de aceite estão em [Tempo, disponibilidade e capacidade](TEMPO-E-CAPACIDADE.md). A proposta não fecha as regras de jornada que a Mix7 ainda precisa definir.
+
 ## Decisões confirmadas e escopo da primeira entrega operacional
 
 A primeira versão em uso cobre todas as áreas listadas acima: gestão, aprovações expansíveis, tempo e capacidade, IA revisada por pessoa, avaliação, conhecimento, onboarding, acessos e integração necessária com o ambiente de trabalho. As regras ainda sem resposta continuam como requisitos a validar; não são motivo para retirar essas áreas do escopo. A ordem de construção e as evidências de conclusão estão em [ROADMAP.md](ROADMAP.md).
@@ -52,7 +54,7 @@ Antes de criar contas operacionais, ainda é necessário decidir autenticação,
 2. Que autenticação e administração serão usadas? Quem pode ver, editar, aprovar, publicar e reabrir cada item? A visão individual é um filtro ou uma restrição de acesso? Como associar clientes e aprovadores, convidar usuários e revogar acesso?
 3. Quem aprova em nome do cliente? Há aprovação parcial, limite de rodadas, prazo de resposta ou alteração após aprovação?
 4. Como manter comentários ligados à versão correta? Comentários em imagem exigem marcação espacial? Como exibir feedback temporal em novas versões do vídeo?
-5. Como medir disponibilidade, pausas, tarefas simultâneas, atrasos externos e alterações de estimativa?
+5. Como medir disponibilidade, pausas, tarefas simultâneas, atrasos externos e alterações de estimativa? Consulte a proposta e os critérios em [Tempo, disponibilidade e capacidade](TEMPO-E-CAPACIDADE.md).
 6. Qual escala e fórmula de avaliação serão usadas? Como tratar tarefas bloqueadas ou alteradas por terceiros? Qual política de uso dos resultados?
 7. Quais serviços exigem acesso, e quais permitem autenticação sem compartilhar senha? Como conceder e revogar acessos?
 8. Quais integrações com ChatGPT, Codex, Claude e Windows são realmente necessárias na primeira versão? Que dados podem ser enviados a cada serviço?

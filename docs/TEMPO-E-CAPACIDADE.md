@@ -1,0 +1,41 @@
+# Tempo, disponibilidade e capacidade
+
+Este documento separa três informações que atendem a perguntas diferentes. O cronômetro responde **quanto tempo foi trabalhado**; a estimativa responde **quanto trabalho se prevê para uma tarefa**; a disponibilidade responde **quanto tempo a pessoa pode dedicar no período**. A capacidade ajuda a perceber se as estimativas cabem no tempo disponível.
+
+## Comportamento confirmado para o profissional
+
+- A pessoa escolhe uma tarefa liberada e inicia ou pausa o cronômetro pela demanda minimizada.
+- O tempo é registrado na tarefa selecionada. Uma tarefa em pausa pode ser retomada; não se inicia outra sessão simultânea para a mesma pessoa.
+- Enquanto o sistema está aberto, só o intervalo iniciado pelo cronômetro conta como tempo realizado. Uma pausa encerra esse intervalo.
+- Ao fechar normalmente a aplicação, o intervalo ativo é encerrado e salvo; reabrir não acrescenta tempo offline. A plataforma operacional precisa preservar o histórico centralmente, mesmo quando a sessão ou o dispositivo falhar. O protótipo local ainda não garante esse último caso.
+- A estimativa é um dado de planejamento separado do tempo realizado. O sistema não deve substituir a estimativa pelo cronômetro nem alterar estimativas automaticamente.
+
+## Capacidade como proposta para validação
+
+Para planejamento, a proposta é calcular a disponibilidade no período a partir da jornada configurada da pessoa, descontando ausências e períodos não trabalhados que a Mix7 confirmar. A carga planejada agrega o esforço restante estimado das tarefas que ocupam o mesmo período. O painel pode comparar carga e disponibilidade, destacar excesso ou falta de estimativa e mostrar as tarefas que compõem o total.
+
+Essa regra é uma proposta, não uma política aprovada. Horários, pausas, feriados, ausências, reuniões, tarefas sem estimativa, distribuição de tarefas longas entre dias, bloqueios externos e tratamento de tarefas paralelas precisam de exemplos reais. O sistema não deve escolher ou redistribuir responsáveis por conta própria; qualquer sugestão da IA exige revisão humana.
+
+## Relação com calendário e Gantt
+
+O Gantt deve mostrar prazos, duração planejada e dependências registradas. O tempo medido pode apoiar análise posterior, mas não muda datas, capacidade, estimativas ou responsáveis sem uma ação revisada e registrada. Alterar uma estimativa ou período deve preservar o valor anterior, autor e motivo quando a regra for definida.
+
+## Critérios de aceite
+
+1. Iniciar e pausar uma tarefa registra intervalos associados à tarefa e à pessoa autenticada; a soma corresponde somente aos intervalos ativos.
+2. Reabrir a demanda minimizada mantém o mesmo cronômetro e o histórico; iniciar outra tarefa enquanto houver sessão ativa é bloqueado ou exige a ação de pausa definida pela Mix7.
+3. Fechar normalmente e reabrir não conta tempo offline. A plataforma compartilhada recupera intervalos confirmados e registra falha ou encerramento incompleto de forma auditável.
+4. Estimativa, tempo realizado e disponibilidade permanecem campos/medidas distintos; corrigir um não reescreve os outros.
+5. Após a Mix7 aprovar a regra de jornada e ausência, a capacidade por período mostra entradas, tarefas incluídas e cálculo reproduzível; sobrecarga e tarefas sem estimativa ficam visíveis.
+6. O Gantt respeita prazos e dependências salvos; dados do cronômetro não deslocam o cronograma automaticamente.
+
+## Perguntas que ainda precisam de resposta
+
+- Qual jornada semanal vale para cada pessoa e como são tratadas pausas, feriados e dias parciais?
+- Quem informa e aprova férias, ausências, reuniões e bloqueios de disponibilidade?
+- Como distribuir uma estimativa que atravessa vários dias? Como representar tarefas sem estimativa ou com duração incerta?
+- Uma pessoa pode trabalhar em mais de uma demanda ao mesmo tempo? O cronômetro continua exclusivo ou haverá apontamento dividido?
+- O que acontece quando uma tarefa fica bloqueada ou muda de escopo? Quem altera estimativa, prazo e capacidade?
+- Quem pode ver tempos individuais e relatórios, por quanto tempo, e qual uso é permitido para avaliação?
+
+Até essas respostas serem validadas, os relatórios de capacidade são protótipo de planejamento, não medição oficial de produtividade nem base automática para avaliação.
