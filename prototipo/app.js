@@ -3,6 +3,8 @@ const STORAGE_KEY = "mix7.workflow.v1";
 const MINIMIZED_KEY = "mix7.workflow.minimized.v1";
 const MAX_FILE_BYTES = 15 * 1024 * 1024;
 const drawer = document.querySelector("#detailDrawer");
+const appShell = document.querySelector(".app-shell");
+const minimizedRequests = document.querySelector("#minimizedRequests");
 const scrim = document.querySelector("#scrim");
 const dialog = document.querySelector("#requestDialog");
 const briefingFileInput = document.querySelector("#briefingFileInput");
@@ -18,6 +20,7 @@ let activeMediaObserver = null;
 let activeCommentAnchor = null;
 let imageAnchorMode = false;
 let viewedVersionId = null;
+let drawerReturnFocus = null;
 let activePage = "requests";
 let activeStageFilter = "";
 let activeClientFilter = "";
@@ -1321,6 +1324,9 @@ function renderBriefing(request) {
 }
 
 function openDrawer(id) {
+  if (document.activeElement !== document.body && !drawer.contains(document.activeElement) && !minimizedRequests.contains(document.activeElement)) {
+    drawerReturnFocus = document.activeElement;
+  }
   minimizedRequestIds = minimizedRequestIds.filter(item => item !== id);
   saveMinimizedIds();
   renderMinimizedRequests();
@@ -1331,6 +1337,8 @@ function openDrawer(id) {
   imageAnchorMode = false;
   renderDrawer();
   drawer.inert = false;
+  appShell.inert = true;
+  minimizedRequests.inert = true;
   drawer.classList.add("open");
   drawer.setAttribute("aria-hidden", "false");
   scrim.hidden = false;
@@ -1339,9 +1347,12 @@ function openDrawer(id) {
 }
 
 function closeDrawer() {
+  const closedRequestId = activeRequestId;
   drawer.classList.remove("open");
   drawer.setAttribute("aria-hidden", "true");
   drawer.inert = true;
+  appShell.inert = false;
+  minimizedRequests.inert = false;
   scrim.hidden = true;
   document.body.style.overflow = "";
   activeRequestId = null;
@@ -1350,6 +1361,13 @@ function closeDrawer() {
   activePreviewUrl = null;
   activeMediaObserver?.disconnect();
   activeMediaObserver = null;
+  if (closedRequestId) {
+    const isUsableFocusTarget = element => element?.isConnected && element.getClientRects().length > 0 && !element.closest("[hidden], [inert], dialog:not([open])");
+    const requestCard = [...document.querySelectorAll(".task-card[data-request-id]")].find(element => element.dataset.requestId === closedRequestId && isUsableFocusTarget(element));
+    const focusTarget = isUsableFocusTarget(drawerReturnFocus) ? drawerReturnFocus : requestCard || document.querySelector("#newRequestButton");
+    focusTarget?.focus();
+  }
+  drawerReturnFocus = null;
 }
 
 function minimizeDrawer() {
@@ -1358,6 +1376,7 @@ function minimizeDrawer() {
   saveMinimizedIds();
   closeDrawer();
   renderMinimizedRequests();
+  minimizedRequests.querySelector(".minimized-item:last-child .minimized-request")?.focus();
 }
 
 function setPage(page) {
@@ -1430,6 +1449,24 @@ function displayCurrentDate() {
 
 document.querySelector("#closeDrawer").addEventListener("click", closeDrawer);
 document.querySelector("#minimizeDrawer").addEventListener("click", minimizeDrawer);
+document.addEventListener("keydown", event => {
+  if (event.key !== "Tab" || drawer.inert) return;
+  const focusable = [...drawer.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])')]
+    .filter(element => !element.closest("[hidden]") && element.getClientRects().length > 0);
+  if (!focusable.length) {
+    event.preventDefault();
+    return;
+  }
+  const first = focusable[0];
+  const last = focusable.at(-1);
+  if (event.shiftKey && (document.activeElement === first || !drawer.contains(document.activeElement))) {
+    event.preventDefault();
+    last.focus();
+  } else if (!event.shiftKey && (document.activeElement === last || !drawer.contains(document.activeElement))) {
+    event.preventDefault();
+    first.focus();
+  }
+});
 document.querySelector("#copyRequestId").addEventListener("click", async () => {
   const id = currentRequest()?.id;
   if (!id) return;

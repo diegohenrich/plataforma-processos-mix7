@@ -7,9 +7,9 @@
 
 # Painel de demanda fora da navegação por teclado — 2026-09-25
 
-- Reprodução: com o painel fechado e apenas deslocado por CSS, um teste de 100 teclas Tab focou 20 controles que estavam fora da tela. `prototipo/index.html` inicia o painel com `inert`; `openDrawer` o reativa e `closeDrawer` o inativa. A demanda minimizada continua reabrindo pela bandeja.
-- Chromium isolado em `127.0.0.1:4228`: zero controles do painel focados após 100 Tabs quando fechado; ao abrir, foco em Fechar; após minimizar, `inert=true`; após reabrir, `inert=false`. Sem erros JavaScript ou overflow horizontal. Capturas desktop 1440×900 e móvel 390×844 renderizadas e inspecionadas em `docs/evidencias/visual/demanda-drawer-inert-*.png`.
-- `node --test tests/workflow.test.js`: 26/26 passaram; `node --check prototipo/workflow.js`, `node --check prototipo/app.js` e `git diff --check` passaram. Capturas desktop e móvel inspecionadas; revisão do diff e commit/push/checks do PR ficam para a sequência desta alteração. O comentário de resultado no cartão 23 ainda depende da confirmação pontual já solicitada.
+- Reprodução: com o painel fechado e apenas deslocado por CSS, um teste de 100 teclas Tab focou 20 controles fora da tela; aberto, Tab escapava para a página escurecida. O painel agora tem semântica modal, fica `inert` quando fechado, e a página/bandeja ficam inertes quando aberto. Um listener de teclado mantém Tab e Shift+Tab dentro do painel; fechar devolve foco ao acionador e minimizar o leva ao atalho da bandeja.
+- Chromium isolado em `127.0.0.1:4228`, desktop 1440×900 e móvel 390×844: zero controles focados após 100 Tabs quando fechado; 100 Tabs e 100 Shift+Tabs no drawer permaneceram nele; foco inicial em Fechar, foco restaurado ao fechar, foco no atalho ao minimizar e reabertura funcional. Sem erros JavaScript ou overflow horizontal. Capturas renderizadas e inspecionadas em `docs/evidencias/visual/demanda-drawer-inert-*.png`.
+- `node --test tests/workflow.test.js`: 26/26 passaram; `node --check prototipo/workflow.js`, `node --check prototipo/app.js` e `git diff --check` passaram. A primeira correção `2920268` foi publicada com CI aprovado; a extensão do foco modal está pronta para commit/push e checks. O comentário de resultado no cartão 23 ainda depende da confirmação pontual já solicitada.
 
 # Menus de etapa do Kanban — 2026-09-25
 
