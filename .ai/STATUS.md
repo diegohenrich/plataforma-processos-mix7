@@ -5,6 +5,7 @@
 - Iniciado `CRM-MIX7-RENEW` via Laravel em `127.0.0.1:8198`; Chromium renderizou o login em 1270 × 713. A página mostra uma composição dividida entre painel escuro de apresentação e formulário claro. Esse visual pertence ao login e não confirma como o dashboard deve ser reproduzido.
 - `php artisan route:list` e a navegação confirmaram que `/administrador/dashboard` é protegido por `auth`, `status` e `is.admin` e redireciona para `/login` sem sessão. A aba fica aberta para o usuário autenticar manualmente; nenhuma senha foi lida/inserida, nem arquivo do CRM foi alterado.
 - A inspeção estática identificou a view `resources/views/dashboard/index.blade.php` e a inclusão `dashboard/overview.blade.php`, úteis para entender os componentes, porém insuficientes para afirmar a composição renderizada. Próximo passo visual: comparar o dashboard autenticado e então corrigir a plataforma com base nessa evidência. Detalhes em `docs/REFERENCIA-VISUAL.md`.
+- `git diff --check` passou; documentação publicada no commit `42b904d3abb414cfddbf6c0c3bedd7a0150dbf5d`, com SHA local/remoto coincidente. Os checks do push passaram nas execuções [36096930370](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36096930370) e [36096926610](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36096926610).
 
 ## Ajuste de escala visual com referência do CRM — 2026-09-25
 
