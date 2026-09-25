@@ -20,11 +20,17 @@ Não há autenticação, separação de clientes, portal externo, API, servidor,
    Durante a rodada de ajustes, use “Planejar tarefa deste feedback” em um comentário do cliente. Confira que o título preenchido continua editável, indique um responsável e adicione a tarefa; lista e histórico devem manter a referência ao comentário e à versão de origem.
 9. Aprovar a versão 2, selecionar se o resultado foi entrega, agendamento ou publicação e conferir que a demanda continua aberta até registrar evidência.
 10. Conferir histórico com versão, arquivo anterior/atualização, motivo do pedido e resultado pós-aprovação; recarregar para confirmar persistência local. Testar quadro/lista, busca e filtro em desktop e celular.
+11. Usar a navegação: Aprovações filtra itens aguardando cliente; Equipe reúne tarefas abertas; Clientes agrupa demandas; Calendário lista prazos registrados; Conhecimento explica o fluxo; Acessos esclarece os limites de login e permissão desta demonstração.
+12. Abrir os filtros e combinar etapa, cliente e prazo. Use os três pontos do título de uma coluna para filtrar por aquela etapa. Limpar filtros deve devolver o quadro inteiro.
+13. Abrir Mais opções e conferir que JSON inclui dados textuais/histórico e CSV resume demandas; arquivos binários não entram nas exportações.
+14. Abrir uma demanda, minimizá-la e confirmar que um atalho permanece fixo na tela. Clique no atalho para reabrir; recarregue a página para confirmar que o atalho continua. Remover o atalho não remove a demanda.
 
 Os testes de regra de negócio usam `node --test tests/workflow.test.js` na raiz do repositório.
 
 ## Estado do fluxo
 
 Esta fatia materializa regras do fluxo-alvo aceito: revisão interna, decisão do cliente vinculada à versão, nova rodada de ajustes e evidência antes de concluir. Os papéis concretos, exceções e evidência por tipo de serviço seguem sujeitos à validação com um caso real da Mix7. É uma avaliação local sem controles de produção.
+
+A referência visual vigente é `C:\Users\anony\ProjetosPessoais\Projetos de Sistemas\CRM-MIX7-RENEW`. Os tokens de cor e a tipografia do CRM foram inspecionados; o protótipo usa fundo claro, cartões brancos, azul-petróleo e azul-claro. Fontes externas foram removidas. A função de minimizar mantém um atalho reabrível em uma bandeja fixa; só esse comportamento funcional foi pedido para ser reaproveitado, sem copiar visuais de outro projeto.
 
 O briefing inicial captura origem, canal/peça e critérios de aceite; sem eles, a demanda não avança ao planejamento. Referências e prazo aparecem no histórico, mas são opcionais nesta demonstração. Essa regra mínima é uma hipótese de protótipo para testar completude; campos obrigatórios específicos por tipo de serviço devem ser confirmados com um caso real.

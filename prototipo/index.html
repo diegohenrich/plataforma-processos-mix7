@@ -3,11 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#f6f9fd" />
+    <meta name="theme-color" content="#f5f6f5" />
     <title>Mix7 · Central de processos</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -17,33 +14,33 @@
           <span class="brand-symbol"><i></i><i></i><i></i></span>
           <span class="brand-word">mix<span>7</span></span>
         </a>
-        <div class="workspace-switcher">
+        <button class="workspace-switcher" id="workspaceButton" type="button" aria-label="Informações do espaço Mix7">
           <span class="workspace-mark">M</span>
           <span class="workspace-copy"><strong>Mix7 Agência</strong><small>Espaço de trabalho</small></span>
           <span class="chevron">⌄</span>
-        </div>
+        </button>
         <span class="nav-caption">ESPAÇO DE TRABALHO</span>
         <nav class="main-nav">
-          <a class="nav-item" href="#visao"><span class="nav-icon">▦</span> Visão geral</a>
-          <a class="nav-item active" href="#demandas"><span class="nav-icon">▤</span> Demandas <span class="nav-count" id="navDemandCount">12</span></a>
-          <a class="nav-item" href="#aprovacoes"><span class="nav-icon">◉</span> Aprovações <span class="nav-dot"></span></a>
-          <a class="nav-item" href="#equipe"><span class="nav-icon">♙</span> Equipe</a>
-          <a class="nav-item" href="#clientes"><span class="nav-icon">◇</span> Clientes</a>
+          <a class="nav-item" data-page="overview" href="#visao"><span class="nav-icon">▦</span> Visão geral</a>
+          <a class="nav-item active" data-page="requests" href="#demandas" aria-current="page"><span class="nav-icon">▤</span> Demandas <span class="nav-count" id="navDemandCount">12</span></a>
+          <a class="nav-item" data-page="approvals" href="#aprovacoes"><span class="nav-icon">◉</span> Aprovações <span class="nav-dot"></span></a>
+          <a class="nav-item" data-page="team" href="#equipe"><span class="nav-icon">♙</span> Equipe</a>
+          <a class="nav-item" data-page="clients" href="#clientes"><span class="nav-icon">◇</span> Clientes</a>
         </nav>
         <span class="nav-caption section-caption">GESTÃO</span>
         <nav class="main-nav">
-          <a class="nav-item" href="#calendario"><span class="nav-icon">▦</span> Calendário</a>
-          <a class="nav-item" href="#conhecimento"><span class="nav-icon">▧</span> Conhecimento</a>
-          <a class="nav-item" href="#acessos"><span class="nav-icon">▣</span> Acessos</a>
+          <a class="nav-item" data-page="calendar" href="#calendario"><span class="nav-icon">▦</span> Calendário</a>
+          <a class="nav-item" data-page="knowledge" href="#conhecimento"><span class="nav-icon">▧</span> Conhecimento</a>
+          <a class="nav-item" data-page="accesses" href="#acessos"><span class="nav-icon">▣</span> Acessos</a>
         </nav>
         <div class="sidebar-bottom">
           <div class="help-card">
             <span class="help-spark">✳</span>
             <strong>Primeiros passos</strong>
             <p>Conheça o espaço e organize o próximo projeto.</p>
-            <a href="#ajuda">Ver guia <span>↗</span></a>
+            <a href="#ajuda" data-page="knowledge">Ver guia <span>↗</span></a>
           </div>
-          <button class="profile-button" type="button">
+          <button class="profile-button" id="profileButton" type="button" aria-label="Abrir informações do perfil demonstrativo">
             <span class="avatar avatar-self">LM</span>
             <span class="profile-copy"><strong>Laura Martins</strong><small>Gestora de projetos</small></span>
             <span class="chevron">···</span>
@@ -53,10 +50,10 @@
 
       <main class="main-content" id="demandas">
         <header class="topbar">
-          <div class="breadcrumbs"><span>Mix7 Agência</span><b>/</b><strong>Demandas</strong></div>
+          <div class="breadcrumbs"><span>Mix7 Agência</span><b>/</b><strong id="pageBreadcrumb">Demandas</strong></div>
           <div class="top-actions">
-            <button class="icon-button" aria-label="Buscar" title="Buscar">⌕</button>
-            <button class="icon-button notification-button" aria-label="Notificações" title="Notificações">♧<i></i></button>
+            <button class="icon-button" id="focusSearchButton" type="button" aria-label="Buscar" title="Buscar">⌕</button>
+            <button class="icon-button notification-button" id="notificationsButton" type="button" aria-label="Ver pendências" title="Pendências">♧<i></i></button>
             <span class="avatar avatar-self top-avatar">LM</span>
           </div>
         </header>
@@ -64,9 +61,9 @@
         <section class="page-content">
           <div class="page-heading">
             <div>
-              <div class="eyebrow"><span class="eyebrow-line"></span> QUINTA-FEIRA, 24 DE SETEMBRO</div>
-              <h1>Central de processos</h1>
-              <p class="subtitle">Acompanhe demandas, equipe e aprovações em um só lugar.</p>
+              <div class="eyebrow"><span class="eyebrow-line"></span> <span id="currentDateLabel"></span></div>
+              <h1 id="pageTitle">Demandas</h1>
+              <p class="subtitle" id="pageSubtitle">Organize o trabalho do briefing à conclusão.</p>
             </div>
             <button class="primary-button" id="newRequestButton"><span>＋</span> Nova demanda</button>
           </div>
@@ -99,9 +96,9 @@
             </div>
             <div class="board-tools">
               <label class="search-field"><span>⌕</span><input id="searchInput" type="search" placeholder="Buscar demanda" aria-label="Buscar demanda" /></label>
-              <button class="filter-button" id="filterButton" type="button" disabled title="Filtros avançados ainda não fazem parte desta fatia"><span>☷</span> Filtros</button>
+              <button class="filter-button" id="filterButton" type="button"><span>☷</span> Filtros</button>
               <label class="people-filter-label"><span class="visually-hidden">Filtrar por profissional</span><select class="people-filter" id="assigneeFilter" aria-label="Filtrar por profissional"><option value="">Equipe toda</option></select></label>
-              <button class="more-button" type="button" aria-label="Mais opções" disabled>···</button>
+              <button class="more-button" id="moreOptionsButton" type="button" aria-label="Mais opções" title="Exportar dados">···</button>
             </div>
           </div>
 
@@ -109,13 +106,12 @@
 
           <div class="list-view-header" id="listViewHeader" hidden><span>CLIENTE</span><span>DEMANDA</span><span>ETAPA</span><span>PRAZO</span><span></span></div>
 
-          <div class="filter-strip" id="filterStrip" hidden>
-            <span>Filtrando por:</span><button class="filter-chip">Social <b>×</b></button><button class="filter-chip">Esta semana <b>×</b></button><button id="clearFilters">Limpar filtros</button>
-          </div>
+          <div class="filter-strip" id="filterStrip" hidden></div>
+          <section class="workspace-view" id="workspaceView" aria-live="polite" hidden></section>
 
           <section class="kanban-board" aria-label="Quadro de demandas">
             <div class="kanban-column" data-stage="briefing">
-              <div class="column-heading"><span class="stage-dot dot-slate"></span><h2>Novas demandas</h2><span class="column-count">3</span><button class="column-menu">···</button></div>
+              <div class="column-heading"><span class="stage-dot dot-slate"></span><h2>Novas demandas</h2><span class="column-count">3</span><button class="column-menu" data-column-menu="briefing" type="button" aria-label="Filtrar novas demandas">···</button></div>
               <div class="card-stack">
                 <article class="task-card" data-title="Campanha de primavera — conceito visual" data-client="Casa Aurora" data-stage-name="Briefing">
                   <div class="card-label-row"><span class="client-label label-blue">Casa Aurora</span><span class="card-menu">···</span></div>
@@ -136,7 +132,7 @@
             </div>
 
             <div class="kanban-column" data-stage="planning">
-              <div class="column-heading"><span class="stage-dot dot-blue"></span><h2>Planejamento</h2><span class="column-count">2</span><button class="column-menu">···</button></div>
+              <div class="column-heading"><span class="stage-dot dot-blue"></span><h2>Planejamento</h2><span class="column-count">2</span><button class="column-menu" data-column-menu="planning" type="button" aria-label="Filtrar planejamento">···</button></div>
               <div class="card-stack">
                 <article class="task-card" data-title="Calendário editorial — outubro" data-client="Nativa Saúde" data-stage-name="Planejamento">
                   <div class="card-label-row"><span class="client-label label-green">Nativa Saúde</span><span class="card-menu">···</span></div>
@@ -150,7 +146,7 @@
             </div>
 
             <div class="kanban-column" data-stage="doing">
-              <div class="column-heading"><span class="stage-dot dot-violet"></span><h2>Em produção</h2><span class="column-count">4</span><button class="column-menu">···</button></div>
+              <div class="column-heading"><span class="stage-dot dot-violet"></span><h2>Em produção</h2><span class="column-count">4</span><button class="column-menu" data-column-menu="doing" type="button" aria-label="Filtrar demandas em produção">···</button></div>
               <div class="card-stack">
                 <article class="task-card" data-title="Carrossel — 5 mitos sobre protetor solar" data-client="Nativa Saúde" data-stage-name="Em produção">
                   <div class="card-label-row"><span class="client-label label-green">Nativa Saúde</span><span class="card-menu">···</span></div>
@@ -171,12 +167,12 @@
             </div>
 
             <div class="kanban-column" data-stage="internalReview">
-              <div class="column-heading"><span class="stage-dot dot-amber"></span><h2>Revisão interna</h2><span class="column-count">0</span></div>
+              <div class="column-heading"><span class="stage-dot dot-amber"></span><h2>Revisão interna</h2><span class="column-count">0</span><button class="column-menu" data-column-menu="internalReview" type="button" aria-label="Filtrar revisão interna">···</button></div>
               <div class="card-stack"><button class="add-card" data-add="internalReview">＋ Adicionar demanda</button></div>
             </div>
 
             <div class="kanban-column column-review" data-stage="clientReview">
-              <div class="column-heading"><span class="stage-dot dot-amber"></span><h2>Aguardando cliente</h2><span class="column-count">2</span><button class="column-menu">···</button></div>
+              <div class="column-heading"><span class="stage-dot dot-amber"></span><h2>Aguardando cliente</h2><span class="column-count">2</span><button class="column-menu" data-column-menu="clientReview" type="button" aria-label="Filtrar aguardando cliente">···</button></div>
               <div class="card-stack">
                 <article class="task-card card-featured" data-title="Post de lançamento — linha Botânica" data-client="Casa Aurora" data-stage-name="Aguardando cliente">
                   <div class="card-label-row"><span class="client-label label-blue">Casa Aurora</span><span class="status-pill status-waiting">● Aguardando</span></div>
@@ -193,7 +189,7 @@
             </div>
 
             <div class="kanban-column" data-stage="adjustments">
-              <div class="column-heading"><span class="stage-dot dot-rose"></span><h2>Ajustes</h2><span class="column-count">1</span><button class="column-menu">···</button></div>
+              <div class="column-heading"><span class="stage-dot dot-rose"></span><h2>Ajustes</h2><span class="column-count">1</span><button class="column-menu" data-column-menu="adjustments" type="button" aria-label="Filtrar ajustes">···</button></div>
               <div class="card-stack">
                 <article class="task-card" data-title="Stories — semana do consumidor" data-client="Café Aroeira" data-stage-name="Ajustes">
                   <div class="card-label-row"><span class="client-label label-amber">Café Aroeira</span><span class="status-pill status-changes">↺ Ajustes</span></div>
@@ -206,7 +202,7 @@
             </div>
 
             <div class="kanban-column column-publish" data-stage="delivery">
-              <div class="column-heading"><span class="stage-dot dot-green"></span><h2>Entrega e publicação</h2><span class="column-count">2</span><button class="column-menu">···</button></div>
+              <div class="column-heading"><span class="stage-dot dot-green"></span><h2>Entrega e publicação</h2><span class="column-count">2</span><button class="column-menu" data-column-menu="delivery" type="button" aria-label="Filtrar entrega e publicação">···</button></div>
               <div class="card-stack">
                 <article class="task-card" data-title="Reel — receita de café gelado" data-client="Café Aroeira" data-stage-name="Entrega e publicação">
                   <div class="card-label-row"><span class="client-label label-amber">Café Aroeira</span><span class="status-pill status-approved">✓ Aprovado</span></div>
@@ -218,7 +214,7 @@
             </div>
 
             <div class="kanban-column" data-stage="completed">
-              <div class="column-heading"><span class="stage-dot dot-green"></span><h2>Concluídas</h2><span class="column-count">0</span></div>
+              <div class="column-heading"><span class="stage-dot dot-green"></span><h2>Concluídas</h2><span class="column-count">0</span><button class="column-menu" data-column-menu="completed" type="button" aria-label="Filtrar demandas concluídas">···</button></div>
               <div class="card-stack"></div>
             </div>
           </section>
@@ -229,9 +225,9 @@
 
     <div class="scrim" id="scrim" hidden></div>
     <aside class="detail-drawer" id="detailDrawer" aria-label="Detalhes da demanda" aria-hidden="true">
-      <div class="drawer-topline"><span class="drawer-breadcrumb">DEMANDA <b>/</b> <span id="drawerStage">AGUARDANDO CLIENTE</span></span><button class="close-button" id="closeDrawer" aria-label="Fechar detalhes">×</button></div>
+      <div class="drawer-topline"><span class="drawer-breadcrumb">DEMANDA <b>/</b> <span id="drawerStage">AGUARDANDO CLIENTE</span></span><span class="drawer-window-actions"><button class="minimize-button" id="minimizeDrawer" type="button" aria-label="Minimizar demanda" title="Minimizar demanda">—</button><button class="close-button" id="closeDrawer" aria-label="Fechar detalhes">×</button></span></div>
       <div class="drawer-content">
-        <div class="drawer-client"><span class="client-label label-blue" id="drawerClient">Casa Aurora</span><button class="subtle-button">···</button></div>
+        <div class="drawer-client"><span class="client-label label-blue" id="drawerClient">Casa Aurora</span><button class="subtle-button" id="copyRequestId" type="button" aria-label="Copiar código da demanda" title="Copiar código da demanda">ID</button></div>
         <h2 id="drawerTitle">Post de lançamento — linha Botânica</h2>
         <div class="drawer-meta"><span class="due-date" id="drawerDue">Prazo não definido</span><span class="meta-divider"></span><span>Registro local de demonstração</span></div>
 
@@ -257,7 +253,7 @@
         </section>
 
         <section class="flow-section">
-          <div class="section-title-row"><h3>Etapas da demanda</h3><button class="text-action">Ver histórico</button></div>
+          <div class="section-title-row"><h3>Etapas da demanda</h3><button class="text-action" id="sectionHistoryButton" type="button">Ver histórico</button></div>
           <div class="flow-track">
             <div class="flow-step complete"><span>✓</span><small>Pedido</small></div><i class="flow-line complete-line"></i>
             <div class="flow-step complete"><span>✓</span><small>Planejado</small></div><i class="flow-line complete-line"></i>
@@ -312,6 +308,22 @@
       </div>
       <div class="drawer-footer" id="workflowActions"></div>
     </aside>
+
+    <div class="minimized-requests" id="minimizedRequests" role="region" aria-live="polite" aria-label="Demandas minimizadas" hidden></div>
+
+    <dialog class="utility-dialog" id="filterDialog" aria-labelledby="filterDialogTitle">
+      <form method="dialog" id="filterForm">
+        <div class="dialog-heading"><div><span class="dialog-kicker">ENCONTRE UMA DEMANDA</span><h2 id="filterDialogTitle">Filtros</h2><p>Escolha os critérios e aplique ao quadro.</p></div><button class="close-button" value="cancel" aria-label="Fechar filtros">×</button></div>
+        <label class="form-label">Etapa<select name="stage"><option value="">Todas as etapas</option></select></label>
+        <label class="form-label">Cliente<select name="client"><option value="">Todos os clientes</option></select></label>
+        <label class="form-label">Prazo<select name="due"><option value="">Qualquer prazo</option><option value="overdue">Atrasadas</option><option value="today">Vencem hoje</option><option value="week">Próximos 7 dias</option><option value="none">Sem prazo</option></select></label>
+        <div class="dialog-footer"><button class="secondary-button" id="resetFilters" type="button">Limpar</button><button class="primary-button" type="submit" value="apply">Aplicar filtros</button></div>
+      </form>
+    </dialog>
+    <dialog class="utility-dialog" id="notificationsDialog" aria-labelledby="notificationsTitle"><div class="dialog-heading"><div><span class="dialog-kicker">ACOMPANHAMENTO LOCAL</span><h2 id="notificationsTitle">Pendências</h2><p>Itens que pedem atenção na demonstração atual.</p></div><button class="close-button" type="button" data-close-dialog="notificationsDialog" aria-label="Fechar pendências">×</button></div><div id="notificationList" class="utility-list"></div></dialog>
+    <dialog class="utility-dialog" id="profileDialog" aria-labelledby="profileTitle"><div class="dialog-heading"><div><span class="dialog-kicker">PERFIL DE DEMONSTRAÇÃO</span><h2 id="profileTitle">Laura Martins</h2><p>Gestora de projetos · identidade ilustrativa.</p></div><button class="close-button" type="button" data-close-dialog="profileDialog" aria-label="Fechar perfil">×</button></div><div class="utility-note"><strong>Dados neste navegador</strong><p>Demandas e histórico ficam neste perfil de navegador. Não há contas, permissões, sincronização ou backup central nesta versão.</p></div><button class="secondary-button" id="exportProfileData" type="button">Baixar cópia dos dados locais</button></dialog>
+    <dialog class="utility-dialog" id="optionsDialog" aria-labelledby="optionsTitle"><div class="dialog-heading"><div><span class="dialog-kicker">SEUS DADOS</span><h2 id="optionsTitle">Exportar quadro</h2><p>Baixe uma cópia das demandas e do histórico.</p></div><button class="close-button" type="button" data-close-dialog="optionsDialog" aria-label="Fechar opções">×</button></div><div class="utility-actions"><button class="secondary-button" id="exportJson" type="button">Baixar dados JSON</button><button class="secondary-button" id="exportCsv" type="button">Baixar lista CSV</button></div><p class="utility-footnote">Os arquivos de mídia ficam no armazenamento local e não são incluídos nos arquivos de exportação.</p></dialog>
+    <dialog class="utility-dialog" id="columnDialog" aria-labelledby="columnDialogTitle"><div class="dialog-heading"><div><span class="dialog-kicker">QUADRO DE DEMANDAS</span><h2 id="columnDialogTitle">Etapa</h2><p>Mostre somente as demandas desta etapa.</p></div><button class="close-button" type="button" data-close-dialog="columnDialog" aria-label="Fechar menu da etapa">×</button></div><button class="secondary-button" id="filterThisStage" type="button">Ver esta etapa</button></dialog>
 
     <dialog class="request-dialog" id="requestDialog">
       <form method="dialog" id="requestForm">

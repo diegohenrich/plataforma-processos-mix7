@@ -1,5 +1,6 @@
 const { stages, transition, listAssignees, filterRequestsByAssignee, taskBlockers, validateLocalFiles } = window.Mix7Workflow;
 const STORAGE_KEY = "mix7.workflow.v1";
+const MINIMIZED_KEY = "mix7.workflow.minimized.v1";
 const MAX_FILE_BYTES = 15 * 1024 * 1024;
 const drawer = document.querySelector("#detailDrawer");
 const scrim = document.querySelector("#scrim");
@@ -14,7 +15,26 @@ let activeMediaObserver = null;
 let activeCommentAnchor = null;
 let imageAnchorMode = false;
 let viewedVersionId = null;
+let activePage = "requests";
+let activeStageFilter = "";
+let activeClientFilter = "";
+let activeDueFilter = "";
+let columnActionStage = "";
+let minimizedRequestIds = loadMinimizedIds();
 let state = loadState();
+
+function loadMinimizedIds() {
+  try {
+    const value = JSON.parse(localStorage.getItem(MINIMIZED_KEY) || "[]");
+    return Array.isArray(value) ? value.filter(item => typeof item === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveMinimizedIds() {
+  try { localStorage.setItem(MINIMIZED_KEY, JSON.stringify(minimizedRequestIds)); } catch { /* Minimizar continua disponível até fechar esta página. */ }
+}
 
 function makeId() {
   return crypto.randomUUID ? crypto.randomUUID() : `d-${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -34,6 +54,10 @@ function loadState() {
       const parsed = JSON.parse(saved);
       if (parsed.schemaVersion === 1 && Array.isArray(parsed.requests)) {
         for (const request of parsed.requests) {
+          if (request.demo && !request.due) {
+            const card = [...document.querySelectorAll(".task-card")].find(item => item.dataset.title === request.title);
+            request.due = demoDueFromCard(card);
+          }
           if (!Array.isArray(request.tasks)) request.tasks = [];
           for (const task of request.tasks) {
             if (!Array.isArray(task.dependencyTaskIds)) task.dependencyTaskIds = task.dependencyTaskId ? [task.dependencyTaskId] : [];
@@ -75,7 +99,7 @@ function loadState() {
       client: card.dataset.client,
       brief: card.querySelector(".card-description")?.textContent || card.querySelector(".creative-thumb strong")?.textContent.replace(/\s+/g, " ") || "Demanda demonstrativa.",
       type: "Peça de redes sociais",
-      due: "",
+      due: demoDueFromCard(card),
       stage,
       demo: true,
       briefingRevisions: [],
@@ -159,9 +183,12 @@ function formatTimestamp(value) {
 
 function makeCard(request) {
   const card = node("article", "task-card");
+  card.dataset.requestId = request.id;
   card.dataset.title = request.title;
   card.dataset.client = request.client;
   card.dataset.stageName = stages[request.stage];
+  card.dataset.stage = request.stage;
+  card.dataset.due = request.due || "";
   card.tabIndex = 0;
   card.setAttribute("role", "button");
   card.setAttribute("aria-label", `${request.title}, ${stages[request.stage]}`);
@@ -219,7 +246,264 @@ function renderBoard() {
   document.querySelector("#activeDemandCount").textContent = String(active);
   document.querySelector("#pendingApprovalCount").textContent = String(approvals);
   document.querySelector("#navDemandCount").textContent = String(active);
-  applySearch(document.querySelector("#searchInput").value);
+  renderMinimizedRequests();
+  renderWorkspacePage();
+}
+
+function demoDueFromCard(card) {
+  if (!card) return "";
+  const text = card.querySelector(".due-date")?.textContent.trim().replace(/^◷\s*/, "").toLocaleLowerCase("pt-BR") || "";
+  if (text.startsWith("hoje")) return localDateStamp();
+  const match = text.match(/^(\d{1,2})\s+(jan|fev|mar|abr|mai|jun|jul|ago|set|out|nov|dez)/);
+  if (!match) return "";
+  const months = { jan: "01", fev: "02", mar: "03", abr: "04", mai: "05", jun: "06", jul: "07", ago: "08", set: "09", out: "10", nov: "11", dez: "12" };
+  const day = match[1].padStart(2, "0");
+  let year = new Date().getFullYear();
+  const month = months[match[2]];
+  const todayMonth = String(new Date().getMonth() + 1).padStart(2, "0");
+  if (month < todayMonth) year += 1;
+  return `${year}-${month}-${day}`;
+}
+
+function localDateStamp(date = new Date()) {
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
+  return local.toISOString().slice(0, 10);
+}
+
+function renderMinimizedRequests() {
+  const tray = document.querySelector("#minimizedRequests");
+  const requests = minimizedRequestIds.map(id => state.requests.find(request => request.id === id)).filter(Boolean);
+  minimizedRequestIds = requests.map(request => request.id);
+  saveMinimizedIds();
+  tray.replaceChildren();
+  tray.hidden = requests.length === 0;
+  if (!requests.length) return;
+  tray.append(node("span", "minimized-label", "Demandas minimizadas"));
+  for (const request of requests) {
+    const item = node("div", "minimized-item");
+    const chip = node("button", "minimized-request", "");
+    chip.type = "button";
+    chip.setAttribute("aria-label", `Reabrir ${request.title}`);
+    chip.append(node("strong", "", request.title), node("small", "", `${request.client} · ${stages[request.stage]}`));
+    chip.addEventListener("click", () => openDrawer(request.id));
+    const dismiss = node("button", "minimized-dismiss", "×");
+    dismiss.type = "button";
+    dismiss.setAttribute("aria-label", `Remover atalho minimizado de ${request.title}`);
+    dismiss.addEventListener("click", event => {
+      event.stopPropagation();
+      minimizedRequestIds = minimizedRequestIds.filter(id => id !== request.id);
+      saveMinimizedIds();
+      renderMinimizedRequests();
+    });
+    item.append(chip, dismiss);
+    tray.append(item);
+  }
+}
+
+function matchesDueFilter(request, filter) {
+  if (!filter) return true;
+  if (filter === "none") return !request.due;
+  if (!request.due) return false;
+  const due = new Date(`${request.due}T23:59:59`);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  if (filter === "overdue") return due < today;
+  if (filter === "today") return request.due === localDateStamp(today);
+  if (filter === "week") {
+    const end = new Date(today);
+    end.setDate(end.getDate() + 7);
+    end.setHours(23, 59, 59, 999);
+    return due >= today && due <= end;
+  }
+  return true;
+}
+
+function selectedRequests() {
+  const query = document.querySelector("#searchInput").value.trim().toLocaleLowerCase("pt-BR");
+  const selectedAssignee = document.querySelector("#assigneeFilter").value;
+  return filterRequestsByAssignee(state.requests, selectedAssignee).filter(request => {
+    const pageStage = activePage === "approvals" ? "clientReview" : "";
+    const stage = activeStageFilter || pageStage;
+    return (!stage || request.stage === stage)
+      && (!activeClientFilter || request.client === activeClientFilter)
+      && matchesDueFilter(request, activeDueFilter)
+      && (!query || `${request.title} ${request.client} ${request.brief}`.toLocaleLowerCase("pt-BR").includes(query));
+  });
+}
+
+function renderWorkspacePage() {
+  const panel = document.querySelector("#workspaceView");
+  const boardPage = ["overview", "requests", "approvals"].includes(activePage);
+  panel.hidden = boardPage;
+  document.querySelector(".kanban-board").hidden = !boardPage;
+  document.querySelector("#listViewHeader").hidden = !boardPage || !document.querySelector(".kanban-board").classList.contains("list-view");
+  document.querySelector(".summary-grid").hidden = !["overview", "requests"].includes(activePage);
+  document.querySelector(".board-heading").hidden = !boardPage;
+  document.querySelector(".board-footnote").hidden = !boardPage;
+  const titles = {
+    overview: ["Visão geral", "Acompanhe o fluxo e os pontos que pedem atenção."],
+    requests: ["Demandas", "Organize o trabalho do briefing à conclusão."],
+    approvals: ["Aprovações", "Demandas aguardando decisão do cliente."],
+    team: ["Equipe", "Tarefas atribuídas e andamento nesta demonstração local."],
+    clients: ["Clientes", "Clientes vinculados às demandas registradas."],
+    calendar: ["Calendário", "Prazos informados em demandas e tarefas."],
+    knowledge: ["Conhecimento", "Guia rápido para usar o fluxo da Mix7."],
+    accesses: ["Acessos", "O que esta versão local registra sobre acesso e privacidade."],
+  };
+  document.querySelector("#pageTitle").textContent = titles[activePage][0];
+  document.querySelector("#pageSubtitle").textContent = titles[activePage][1];
+  document.querySelector("#pageBreadcrumb").textContent = titles[activePage][0];
+  if (boardPage) {
+    const requests = selectedRequests();
+    document.querySelectorAll(".task-card").forEach(card => {
+      card.hidden = !requests.some(request => request.id === card.dataset.requestId);
+    });
+    document.querySelectorAll(".kanban-column").forEach(column => {
+      const stage = activeStageFilter || (activePage === "approvals" ? "clientReview" : "");
+      column.hidden = Boolean(stage) && column.dataset.stage !== stage;
+      const count = column.querySelector(".column-count");
+      if (count) count.textContent = String(requests.filter(request => request.stage === column.dataset.stage).length);
+    });
+    renderActiveFilters();
+    if (activePage === "approvals" && !requests.length) {
+      // Empty stage remains visible so that the user understands there is nothing awaiting a client.
+    }
+    return;
+  }
+  renderActiveFilters();
+  renderWorkspacePanel(panel, selectedRequests());
+}
+
+function panelHeading(title, text) {
+  const heading = node("div", "workspace-panel-heading");
+  heading.append(node("h2", "", title), node("p", "", text));
+  return heading;
+}
+
+function makeOpenRequestButton(request, detail = "") {
+  const button = node("button", "workspace-request", "");
+  button.type = "button";
+  button.append(node("strong", "", request.title), node("span", "", `${request.client} · ${stages[request.stage]}`));
+  if (detail) button.append(node("small", "", detail));
+  button.addEventListener("click", () => openDrawer(request.id));
+  return button;
+}
+
+function renderWorkspacePanel(panel, requests) {
+  panel.replaceChildren();
+  if (activePage === "team") {
+    panel.append(panelHeading("Fila de tarefas", "A lista usa os responsáveis digitados no plano; não cria contas nem permissões."));
+    const rows = [];
+    for (const request of requests) {
+      const round = Number(request.versions?.at(-1)?.number) || 1;
+      for (const task of request.tasks || []) {
+        if ((Number(task.round) || round) !== round || task.status === "completed") continue;
+        rows.push({ request, task, blockers: taskBlockers(request, task) });
+      }
+    }
+    rows.sort((a, b) => (a.task.due || "9999").localeCompare(b.task.due || "9999"));
+    if (!rows.length) return panel.append(emptyPanel("Nenhuma tarefa pendente", "Crie ou atribua tarefas dentro de uma demanda para vê-las aqui."));
+    const list = node("div", "workspace-list");
+    for (const { request, task, blockers } of rows) {
+      const row = node("article", "workspace-task");
+      row.append(node("div", "workspace-task-copy", ""));
+      const copy = row.firstChild;
+      copy.append(node("strong", "", task.title), node("span", "", `${task.assignee || "Sem responsável"} · ${request.client}`));
+      if (blockers.length) copy.append(node("small", "workspace-warning", blockers.join(" · ")));
+      const open = node("button", "secondary-button", "Abrir demanda");
+      open.type = "button";
+      open.addEventListener("click", () => openDrawer(request.id));
+      row.append(open);
+      list.append(row);
+    }
+    panel.append(list);
+    return;
+  }
+  if (activePage === "clients") {
+    panel.append(panelHeading("Clientes deste quadro", "Cada cliente reúne as demandas que têm esse nome."));
+    const clients = new Map();
+    for (const request of requests) clients.set(request.client, [...(clients.get(request.client) || []), request]);
+    if (!clients.size) return panel.append(emptyPanel("Nenhum cliente encontrado", "Ajuste a busca ou os filtros para ver clientes."));
+    const list = node("div", "workspace-list workspace-client-list");
+    for (const [client, items] of [...clients].sort(([a], [b]) => a.localeCompare(b, "pt-BR"))) {
+      const group = node("section", "workspace-client");
+      group.append(node("h3", "", `${client} · ${items.length} demanda${items.length === 1 ? "" : "s"}`));
+      items.forEach(item => group.append(makeOpenRequestButton(item)));
+      list.append(group);
+    }
+    panel.append(list);
+    return;
+  }
+  if (activePage === "calendar") {
+    panel.append(panelHeading("Prazos registrados", "Apenas datas preenchidas aparecem aqui; o protótipo não envia lembretes."));
+    const events = [];
+    for (const request of requests) {
+      if (request.due) events.push({ date: request.due, title: request.title, detail: `${request.client} · Demanda`, request });
+      const round = Number(request.versions?.at(-1)?.number) || 1;
+      for (const task of request.tasks || []) if (task.due && (Number(task.round) || round) === round) events.push({ date: task.due, title: task.title, detail: `${task.assignee || "Sem responsável"} · ${request.client}`, request });
+    }
+    events.sort((a, b) => a.date.localeCompare(b.date));
+    if (!events.length) return panel.append(emptyPanel("Nenhum prazo registrado", "Adicione uma data ao briefing ou a uma tarefa para vê-la aqui."));
+    const list = node("div", "workspace-list");
+    for (const event of events) {
+      const row = makeOpenRequestButton(event.request, event.detail);
+      row.classList.add("calendar-event");
+      row.prepend(node("time", "calendar-date", formatDue(event.date)));
+      list.append(row);
+    }
+    panel.append(list);
+    return;
+  }
+  if (activePage === "knowledge") {
+    panel.append(panelHeading("Guia do fluxo", "Uma demanda só avança quando a etapa anterior está completa."));
+    const list = node("ol", "knowledge-steps");
+    ["Briefing: registre origem, canal/peça e critério de aceite.", "Planejamento: crie tarefas e informe quem fará cada uma.", "Execução: conclua as tarefas; dependências e impedimentos controlam a ordem.", "Revisão interna: confira o arquivo antes de compartilhar com o cliente.", "Aprovação: decisão ou pedido de ajuste fica ligado à versão analisada.", "Conclusão: registre entrega, agendamento ou publicação e sua evidência."].forEach(text => list.append(node("li", "", text)));
+    panel.append(list);
+    const note = node("p", "utility-note", "Este guia descreve o fluxo-alvo aprovado e exercitado no protótipo. A rotina e os papéis reais da Mix7 ainda precisam de validação com um caso anonimizado.");
+    panel.append(note);
+    return;
+  }
+  panel.append(panelHeading("Acesso e privacidade", "Esta versão não tem login, contas ou permissões reais."));
+  panel.append(node("p", "utility-note", "Os nomes de responsáveis são texto livre. O filtro por profissional só organiza a tela; qualquer pessoa com acesso ao mesmo perfil de navegador pode ver os dados locais."));
+  panel.append(node("p", "utility-note", "A matriz de papéis e acessos depende de validação da operação da Mix7 e de uma futura versão com servidor. Não use dados reais de clientes nesta demonstração."));
+}
+
+function emptyPanel(title, detail) {
+  const box = node("div", "workspace-empty");
+  box.append(node("strong", "", title), node("p", "", detail));
+  return box;
+}
+
+function renderActiveFilters() {
+  const strip = document.querySelector("#filterStrip");
+  const filters = [];
+  if (activeStageFilter) filters.push([stages[activeStageFilter], () => { activeStageFilter = ""; }]);
+  if (activeClientFilter) filters.push([activeClientFilter, () => { activeClientFilter = ""; }]);
+  if (activeDueFilter) filters.push([{ overdue: "Atrasadas", today: "Vencem hoje", week: "Próximos 7 dias", none: "Sem prazo" }[activeDueFilter], () => { activeDueFilter = ""; }]);
+  strip.replaceChildren();
+  strip.hidden = filters.length === 0;
+  if (!filters.length) return;
+  strip.append(node("span", "", "Filtrando por:"));
+  for (const [label, clear] of filters) {
+    const chip = node("button", "filter-chip", "");
+    chip.type = "button";
+    chip.append(document.createTextNode(label), node("b", "", " ×"));
+    chip.addEventListener("click", () => { clear(); renderBoard(); });
+    strip.append(chip);
+  }
+  const clear = node("button", "clear-filters", "Limpar filtros");
+  clear.type = "button";
+  clear.addEventListener("click", resetFilters);
+  strip.append(clear);
+}
+
+function resetFilters() {
+  activeStageFilter = "";
+  activeClientFilter = "";
+  activeDueFilter = "";
+  document.querySelector("#assigneeFilter").value = "";
+  document.querySelector("#searchInput").value = "";
+  renderBoard();
 }
 
 function currentRequest() {
@@ -884,6 +1168,9 @@ function renderBriefing(request) {
 }
 
 function openDrawer(id) {
+  minimizedRequestIds = minimizedRequestIds.filter(item => item !== id);
+  saveMinimizedIds();
+  renderMinimizedRequests();
   activeRequestId = id;
   const request = state.requests.find(item => item.id === id);
   viewedVersionId = request?.versions.at(-1)?.id || null;
@@ -910,18 +1197,142 @@ function closeDrawer() {
   activeMediaObserver = null;
 }
 
-function applySearch(value) {
-  const query = value.trim().toLocaleLowerCase("pt-BR");
-  document.querySelectorAll(".task-card").forEach(card => {
-    card.hidden = Boolean(query) && !`${card.dataset.title} ${card.dataset.client}`.toLocaleLowerCase("pt-BR").includes(query);
+function minimizeDrawer() {
+  if (!activeRequestId) return;
+  if (!minimizedRequestIds.includes(activeRequestId)) minimizedRequestIds.push(activeRequestId);
+  saveMinimizedIds();
+  closeDrawer();
+  renderMinimizedRequests();
+}
+
+function setPage(page) {
+  const pages = new Set(["overview", "requests", "approvals", "team", "clients", "calendar", "knowledge", "accesses"]);
+  if (!pages.has(page)) return;
+  if (page === "approvals") activeStageFilter = "";
+  activePage = page;
+  document.querySelectorAll("[data-page]").forEach(link => {
+    const active = link.dataset.page === page;
+    link.classList.toggle("active", active);
+    if (active) link.setAttribute("aria-current", "page");
+    else link.removeAttribute("aria-current");
   });
+  renderBoard();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function populateFilterDialog() {
+  const form = document.querySelector("#filterForm");
+  const stageSelect = form.elements.namedItem("stage");
+  const clientSelect = form.elements.namedItem("client");
+  for (const [key, label] of Object.entries(stages)) stageSelect.add(new Option(label, key));
+  [...new Set(state.requests.map(request => request.client).filter(Boolean))].sort((a, b) => a.localeCompare(b, "pt-BR")).forEach(client => clientSelect.add(new Option(client, client)));
+  stageSelect.value = activeStageFilter;
+  clientSelect.value = activeClientFilter;
+  form.elements.namedItem("due").value = activeDueFilter;
+}
+
+function renderNotifications() {
+  const list = document.querySelector("#notificationList");
+  list.replaceChildren();
+  const attention = [];
+  for (const request of state.requests) {
+    if (request.stage === "clientReview") attention.push([request, "Aguardando decisão do cliente"]);
+    if (request.stage === "briefing" && (!request.origin || !request.channel || !request.acceptanceCriteria)) attention.push([request, "Briefing precisa ser completado"]);
+    const round = Number(request.versions?.at(-1)?.number) || 1;
+    if ((request.tasks || []).some(task => (Number(task.round) || round) === round && task.blockedReason)) attention.push([request, "Há uma tarefa com impedimento"]);
+  }
+  if (!attention.length) return list.append(emptyPanel("Nenhuma pendência encontrada", "O quadro não tem itens que atendam aos avisos desta demonstração."));
+  for (const [request, label] of attention) list.append(makeOpenRequestButton(request, label));
+}
+
+function downloadData(filename, content, type) {
+  const url = URL.createObjectURL(new Blob([content], { type }));
+  const anchor = node("a");
+  anchor.href = url;
+  anchor.download = filename;
+  anchor.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function exportRequests(format) {
+  const date = new Date().toISOString().slice(0, 10);
+  if (format === "json") {
+    const data = { schemaVersion: state.schemaVersion, exportedAt: new Date().toISOString(), scope: "Dados de texto; arquivos de mídia não incluídos.", requests: state.requests };
+    downloadData(`mix7-demandas-${date}.json`, JSON.stringify(data, null, 2), "application/json;charset=utf-8");
+    showToast("Cópia JSON das demandas baixada. Os arquivos de mídia não estão incluídos.");
+    return;
+  }
+  const quote = value => `"${String(value ?? "").replaceAll('"', '""')}"`;
+  const lines = [["Demanda", "Cliente", "Etapa", "Prazo", "Responsáveis", "Tarefas", "Decisão atual"]];
+  for (const request of state.requests) {
+    const version = request.versions?.at(-1);
+    const assignees = [...new Set((request.tasks || []).map(task => task.assignee).filter(Boolean))].join(", ");
+    lines.push([request.title, request.client, stages[request.stage], request.due, assignees, request.tasks?.length || 0, version?.decision?.result || ""]);
+  }
+  downloadData(`mix7-demandas-${date}.csv`, `\uFEFF${lines.map(row => row.map(quote).join(",")).join("\r\n")}`, "text/csv;charset=utf-8");
+  showToast("Lista CSV das demandas baixada.");
+}
+
+function displayCurrentDate() {
+  document.querySelector("#currentDateLabel").textContent = new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "2-digit", month: "long", year: "numeric" }).format(new Date()).toLocaleUpperCase("pt-BR");
 }
 
 document.querySelector("#closeDrawer").addEventListener("click", closeDrawer);
+document.querySelector("#minimizeDrawer").addEventListener("click", minimizeDrawer);
+document.querySelector("#copyRequestId").addEventListener("click", async () => {
+  const id = currentRequest()?.id;
+  if (!id) return;
+  try {
+    await navigator.clipboard.writeText(id);
+    showToast("Código da demanda copiado.");
+  } catch {
+    showToast(`Código da demanda: ${id}`);
+  }
+});
 scrim.addEventListener("click", closeDrawer);
 document.addEventListener("keydown", event => { if (event.key === "Escape") { closeDrawer(); if (dialog.open) dialog.close(); } });
 document.querySelector("#newRequestButton").addEventListener("click", () => dialog.showModal());
-document.querySelectorAll(".add-card").forEach(button => button.addEventListener("click", () => dialog.showModal()));
+document.querySelectorAll(".add-card").forEach(button => {
+  button.textContent = "＋ Nova demanda";
+  button.title = "Toda demanda nova começa no briefing";
+  button.setAttribute("aria-label", "Criar demanda; começa no briefing");
+  button.addEventListener("click", () => { dialog.showModal(); dialog.querySelector('[name="title"]').focus(); });
+});
+
+document.querySelectorAll("[data-page]").forEach(link => link.addEventListener("click", event => { event.preventDefault(); setPage(link.dataset.page); }));
+document.querySelector(".brand").addEventListener("click", event => { event.preventDefault(); setPage("overview"); });
+document.querySelector("#focusSearchButton").addEventListener("click", () => { setPage("requests"); document.querySelector("#searchInput").focus(); });
+document.querySelector("#workspaceButton").addEventListener("click", () => document.querySelector("#profileDialog").showModal());
+document.querySelector("#profileButton").addEventListener("click", () => document.querySelector("#profileDialog").showModal());
+document.querySelector("#exportProfileData").addEventListener("click", () => exportRequests("json"));
+document.querySelector("#notificationsButton").addEventListener("click", () => { renderNotifications(); document.querySelector("#notificationsDialog").showModal(); });
+document.querySelector("#filterButton").addEventListener("click", () => { populateFilterDialog(); document.querySelector("#filterDialog").showModal(); });
+document.querySelector("#moreOptionsButton").addEventListener("click", () => document.querySelector("#optionsDialog").showModal());
+document.querySelector("#exportJson").addEventListener("click", () => exportRequests("json"));
+document.querySelector("#exportCsv").addEventListener("click", () => exportRequests("csv"));
+document.querySelectorAll("[data-close-dialog]").forEach(button => button.addEventListener("click", () => document.querySelector(`#${button.dataset.closeDialog}`).close()));
+document.querySelector("#filterForm").addEventListener("submit", event => {
+  event.preventDefault();
+  const data = new FormData(event.currentTarget);
+  activeStageFilter = String(data.get("stage") || "");
+  activeClientFilter = String(data.get("client") || "");
+  activeDueFilter = String(data.get("due") || "");
+  document.querySelector("#filterDialog").close();
+  setPage("requests");
+});
+document.querySelector("#resetFilters").addEventListener("click", () => { resetFilters(); populateFilterDialog(); });
+document.querySelectorAll("[data-column-menu]").forEach(button => button.addEventListener("click", () => {
+  columnActionStage = button.dataset.columnMenu;
+  document.querySelector("#columnDialogTitle").textContent = stages[columnActionStage];
+  document.querySelector("#filterThisStage").textContent = activeStageFilter === columnActionStage ? "Remover filtro desta etapa" : "Ver esta etapa";
+  document.querySelector("#columnDialog").showModal();
+}));
+document.querySelector("#filterThisStage").addEventListener("click", () => {
+  activeStageFilter = activeStageFilter === columnActionStage ? "" : columnActionStage;
+  document.querySelector("#columnDialog").close();
+  setPage("requests");
+});
+document.querySelector("#sectionHistoryButton").addEventListener("click", () => document.querySelector("#historyList").scrollIntoView({ behavior: "smooth", block: "center" }));
 
 document.querySelector("#briefingRevisionForm").addEventListener("submit", event => {
   event.preventDefault();
@@ -974,9 +1385,14 @@ async function createRequestFromForm(form, data, selectedFiles, submitButton) {
   request.versions[0].id = `${request.id}-v1`;
   state.requests.unshift(request);
   const saved = saveState();
-  renderBoard();
   form.reset();
   dialog.close();
+  activeStageFilter = "";
+  activeClientFilter = "";
+  activeDueFilter = "";
+  document.querySelector("#assigneeFilter").value = "";
+  document.querySelector("#searchInput").value = "";
+  setPage("requests");
   showToast(saved ? `Demanda salva no navegador como briefing para revisão${briefingFiles.length ? ` com ${briefingFiles.length} arquivo(s) de referência` : ""}.` : "Demanda criada nesta sessão; o navegador não confirmou o salvamento.");
   submitButton.disabled = false;
 }
@@ -1016,7 +1432,7 @@ fileInput.addEventListener("change", async () => {
   }
 });
 
-document.querySelector("#searchInput").addEventListener("input", event => applySearch(event.target.value));
+document.querySelector("#searchInput").addEventListener("input", renderBoard);
 document.querySelector("#assigneeFilter").addEventListener("change", renderBoard);
 
 document.querySelectorAll(".view-tab").forEach(tab => tab.addEventListener("click", () => {
@@ -1026,6 +1442,8 @@ document.querySelectorAll(".view-tab").forEach(tab => tab.addEventListener("clic
   const listMode = tab.textContent.includes("Lista");
   document.querySelector(".kanban-board").classList.toggle("list-view", listMode);
   document.querySelector("#listViewHeader").hidden = !listMode;
+  renderBoard();
 }));
 
+displayCurrentDate();
 renderBoard();
