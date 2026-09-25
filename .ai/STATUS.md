@@ -12,7 +12,7 @@
 
 ## Aprovações expansíveis — 2026-09-25
 - Formalizada a decisão de que aprovação não se limita a criativos sociais. `docs/MODULOS-DE-APROVACAO.md` descreve núcleo e contratos de expansão; tipos concretos além de redes sociais continuam pergunta operacional, sem preencher lacuna por suposição.
-- `git diff --check` passou; os cinco documentos locais citados e o caminho para a arquitetura conceitual em PR #10 foram conferidos. Revisão confirmou que o primeiro módulo é o único tipo específico registrado, enquanto expansão e critérios comuns têm requisitos explícitos. Alteração documental; testes de produto não se aplicam. Commit, CI e anotação Trello ainda pendentes.
+- `git diff --check` passou; os cinco documentos locais citados e o caminho para a arquitetura conceitual em PR #10 foram conferidos. Revisão confirmou que o primeiro módulo é o único tipo específico registrado, enquanto expansão e critérios comuns têm requisitos explícitos. Alteração documental; testes de produto não se aplicam. Commit `376a460c1101f7ac2623b58c9cd8a55cf180097c` publicado na branch de implementação com SHA remoto idêntico; checks de push e PR passaram ([push](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36166826142), [PR](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36166832099)). Registro Trello ainda requer confirmação pontual para comentários na interface.
 
 ## Objetivo
 Concluir a plataforma de processos inteira conforme os três áudios. O protótipo local é apenas uma etapa; o critério de projeto completo inclui gestão compartilhada, aprovações expansíveis, IA revisada por pessoa, conhecimento, acessos, avaliação, segurança e operação. O roteiro vigente está em `docs/ROADMAP.md`.
