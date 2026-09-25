@@ -2,11 +2,11 @@
 
 ## Fonte conferida
 
-O CRM-MIX7-RENEW foi executado em ambiente local. Em 24/09/2026, Chromium renderizou a tela `/login` em 1270 × 713. A rota `/administrador/dashboard` redirecionou para o login, portanto o dashboard autenticado ainda não foi inspecionado renderizado; nenhuma credencial foi tentada. A decisão visual abaixo usa a tela que foi renderizada e os estilos do dashboard existentes em `public/css/dashboard-light.css`.
+O CRM-MIX7-RENEW foi executado em ambiente local. Chromium renderizou a tela `/login`; a rota `/administrador/dashboard` redireciona para o login sem sessão, portanto ainda falta inspecionar o dashboard autenticado renderizado. Nenhuma credencial foi tentada. O layout base abaixo vem de `public/css/dashboard-light.css`, que é carregado pelo template do dashboard. A tela de entrada serve para confirmar apenas a identidade visual do login, não sua composição interna.
 
 O CSS define corpo de 16 px, títulos de 32–46 px, navegação de 15 px, lateral de 252 px (230 px até 1399 px), recuos de conteúdo de 38 px (28 px até 1399 px), cartões de raio 24 px e botões com altura mínima de 44 px. Define também a lateral em degradê `#243943` → `#10252f`, item ativo `#e8f3f8` e as cores `#202e35` (texto), `#204b61` (azul-petróleo), `#8ecde2` (azul-claro), `#f5f6f5` (fundo) e branco (superfícies).
 
-Após o pedido recente do usuário para aproximar mais a plataforma do CRM, sua navegação agora usa o degradê escuro, textos claros, item ativo azul-claro e as larguras confirmadas de 252/230 px. O conteúdo segue em superfícies brancas e fundo claro, com os azuis do CRM nas ações e destaques. Os cartões de resumo e de demandas foram ajustados para raios maiores. Nenhum arquivo ou asset do CRM foi copiado.
+Após o pedido recente do usuário para aproximar mais a plataforma do CRM, sua navegação usa o degradê escuro, textos claros, item ativo azul-claro e as larguras confirmadas de 252/230 px. O conteúdo segue em superfícies brancas e fundo claro, com os azuis do CRM nas ações e destaques. Os cartões de resumo e de demandas foram ajustados para raios maiores. Nenhum arquivo ou asset do CRM foi copiado.
 
 ## Inspeção renderizada
 
@@ -49,3 +49,11 @@ A plataforma tem uma sessão local de demonstração aberta em outra aba com um 
 - Reaberta a rota `/administrador/dashboard` em Chromium no CRM local. O servidor respondeu e redirecionou para `/login`; a tela visível apresenta painel escuro de apresentação à esquerda e formulário claro à direita. Essa observação é específica do login e não define a composição do dashboard.
 - A aba local “Entrar | CRM Mix7” foi deixada aberta para o usuário autenticar. Nenhuma credencial foi inserida nem lida. A comparação renderizada do dashboard segue pendente; enquanto isso, não aplicar à plataforma elementos de composição inferidos da tela de login.
 - A inspeção móvel da plataforma permanece concluída em 390 × 844, incluindo quadro, briefing, drawer e ações de aprovação, com capturas inspecionadas e sem overflow horizontal. Esta validação não depende da sessão autenticada do CRM.
+
+## Cabeçalho e resumo comparados com o CRM — 25/09/2026
+
+- O servidor local do CRM respondeu em `127.0.0.1:8198`. Chromium renderizou a tela de entrada em 1440 × 900 e 390 × 844. No desktop, o painel de marca ocupa 778 px dos 1440 px e o formulário tem 470 px; no celular, a marca ocupa 165 px de altura e a página de login rola até 872 px. Essas medidas descrevem o login, não foram aplicadas à plataforma.
+- Conferi que `resources/views/dashboard/index.blade.php` escolhe a apresentação redesenhada e `resources/views/layouts/template.blade.php` carrega `dashboard-light.css`. A view inclui breadcrumb e perfil na barra superior; a lateral começa com o perfil e depois o menu. O CSS do próprio dashboard define barra transparente com margens 24 px em cima e 40 px abaixo, área útil com recuos de 38 px, primeiro indicador com degradê escuro `#294b5c` → `#112833`, superfícies brancas e cantos de 24 px. O dashboard autenticado ainda não pôde ser renderizado.
+- A plataforma foi ajustada em `prototipo/styles.css`: removi a faixa branca separada do cabeçalho desktop e apliquei a posição/tamanho confirmados da barra do CRM; o primeiro resumo agora usa o tratamento escuro do cartão de destaque do CRM. O quadro e a navegação próprios da plataforma foram preservados; não repliquei o painel dividido do login.
+- Capturas renderizadas do protótipo e inspecionadas: [desktop, 1440 × 900](evidencias/visual/plataforma-crm-alinhado-1440.png) e [celular, 390 × 844](evidencias/visual/plataforma-crm-alinhado-390.png). Chromium/Playwright confirmou, no desktop, menu de 252 px, cabeçalho x=290/y=24 com 1112 × 44 px e fundo transparente, primeiro indicador com o degradê e título a y=108. No celular, o documento permaneceu com 390 px e a barra compacta original foi mantida.
+- `node --test tests/workflow.test.js` passou 22/22; `node --check prototipo/workflow.js`, `node --check prototipo/app.js` e `git diff --check` passaram. Limite restante: para comparar perfil, cabeçalho e cartões contra o painel renderizado real, a sessão do CRM precisa estar autenticada manualmente.

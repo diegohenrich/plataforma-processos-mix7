@@ -755,3 +755,30 @@ h1 { margin: 8px 0 10px; font-size: clamp(32px, 2.7vw, 42px); font-weight: 600; 
   .dialog-heading p { font-size: 15px; }
   .drawer-content > h2 { font-size: 28px; }
 }
+
+/* CRM-MIX7-RENEW dashboard-light reference: integrated header and featured KPI. */
+.summary-card:first-child {
+  background: linear-gradient(135deg, #294b5c, #112833);
+  border-color: #24414f;
+  box-shadow: 0 14px 28px #12334224;
+}
+.summary-card:first-child .summary-top { color: #e7f3f8; }
+.summary-card:first-child .metric-icon { color: #acdded; background: #ffffff12; }
+.summary-card:first-child .metric-row strong { color: #fff; }
+.summary-card:first-child .metric-note { color: #d2e8ef; background: #ffffff18; }
+.summary-card:first-child > small,
+.summary-card:first-child .summary-bottom { color: #b7d2de; }
+
+@media (min-width: 901px) {
+  .topbar {
+    height: 44px;
+    margin: 24px 38px 40px;
+    padding: 0;
+    background: transparent;
+    border: 0;
+  }
+  .breadcrumbs { color: var(--muted); font-size: 14px; }
+  .breadcrumbs b { color: #99a8af; }
+  .breadcrumbs strong { color: var(--ink); font-weight: 500; }
+  .page-content { padding-top: 0; padding-right: 38px; padding-left: 38px; }
+}

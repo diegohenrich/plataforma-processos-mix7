@@ -1,4 +1,11 @@
-# Estado em 2026-09-24
+# Estado em 2026-09-25
+
+## Ajuste visual validado contra o CRM — 2026-09-25
+
+- O CRM local respondeu em `127.0.0.1:8198`; Chromium renderizou a tela de login em 1440 × 900 e 390 × 844. Sem sessão, o dashboard administrativo redireciona a `/login`; nenhuma credencial foi usada e nenhum arquivo do CRM mudou.
+- Confirmei no `layouts/template.blade.php` que o dashboard carrega `dashboard-light.css` e na view que escolhe a apresentação redesenhada. A folha define topo transparente com margens de 24/40 px, recuos de 38 px, indicador principal em degradê azul-petróleo e cartões de 24 px. A composição renderizada do dashboard autenticado continua pendente.
+- `prototipo/styles.css` agora alinha o topo desktop ao CSS do CRM e usa o degradê do cartão em destaque no primeiro resumo. Capturas desktop e móvel foram inspecionadas e guardadas em `docs/evidencias/visual/`; no desktop a barra ficou em x=290/y=24, 1112 × 44 px, e no celular o documento permaneceu com 390 px.
+- Validação: `node --test tests/workflow.test.js` passou 22/22; `node --check prototipo/workflow.js`, `node --check prototipo/app.js` e `git diff --check` passaram. A fidelidade ao painel real permanece parcialmente verificada até o usuário abrir uma sessão autenticada do CRM. Ver `docs/REFERENCIA-VISUAL.md`.
 
 ## Smoke test dos controles principais — 2026-09-25
 
