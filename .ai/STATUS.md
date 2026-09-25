@@ -110,3 +110,10 @@
 - A fatia de implementação foi atualizada separadamente na branch `implementation/primeira-jornada-local`, commit de código `74700857f5c3be0e47c17b4ce051c7c9d4a8e464`, com estado em `2579a4efefb1d8dde0a736a6b62677663d3b57c0`; o cartão 18 foi atualizado. PRs #9 e #10 continuam rascunhos.
 - Cartões 14 (comparativo) e 16 (arquitetura) atualizados e relidos pela integração do Trello; ambos apontam para os documentos e o commit `26aab18c490626199f1050d7f20789cf82c62b81`. O PR #10 segue rascunho.
 - Próximo passo: comparar critérios P0 da especificação com o protótipo e implementar a próxima lacuna fechável com dados fictícios. A prova de produto continua condicionada a um caso real anonimizado, responsável da Mix7 e conta/ambiente de teste autorizados.
+
+## Atualização desta continuação — 2026-09-25
+
+- A comparação e o roteiro agora registram que o MinIO Community foi arquivado, que o Plane documenta armazenamento externo S3 e que nenhum provedor foi escolhido/testado. As referências visuais do CRM aguardam os prints prometidos; essa pendência não impede pesquisa e documentação independente.
+- Resolvidos os conflitos do PR #10 preservando evidências dos dois branches. A branch `research/atualizar-comparativo-e-arquitetura` foi publicada no commit `300679a6a193e51df8ad7e17ac5f8c5e91c9cd46`, SHA local/remoto igual. PR #10 segue rascunho, estado `CLEAN`; `gh run list` não reportou checks automáticos.
+- `git diff --check` passou e links locais verificados. Nenhum teste de produto ou instalação foi realizado. Cartão 14 no Trello permanece Em revisão, checklist 2/3; atualização final desta continuação registrada no cartão.
+- Fontes primárias: https://github.com/minio/minio e https://developers.plane.so/self-hosting/govern/database-and-storage. Sem decisão de adoção, provedor, compra ou stack.
