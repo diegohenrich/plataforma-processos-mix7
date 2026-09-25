@@ -1,5 +1,11 @@
 # Estado em 2026-09-25
 
+## Referências OCI da prova documental — 2026-09-25
+
+- Atualizados `docs/PESQUISA-SOLUCOES.md` e `docs/PROVA-DE-CONCEITO.md`: Wekan v12.01 e 11 metadados de índices OCI para Wekan, Plane, OpenProject e dependências fixadas do Compose do Plane. A dependência `minio/minio:latest` não retornou metadados anônimos (401); runtime indisponível. Nenhuma imagem foi baixada ou executada, e nenhum fornecedor foi escolhido.
+- `git diff --check` e links relativos dos documentos passaram. Commit `ed3e4ba01d6317bae038d331ffedb0d0348d7c82` publicado e SHA local/remoto idêntico. PR #10 permanece aberto como rascunho, sem checks automáticos reportados; descrição atualizada. Cartão 14 registra o resultado; comentário da sincronização deste commit pendente.
+- Próximo passo: resolver runtime e MinIO, validar o conjunto exato de imagens e avisos de segurança e, só então, conduzir prova com dados sintéticos. Caso operacional real da Mix7 também segue pendente.
+
 ## Pré-verificação da prova auto-hospedada — 2026-09-25
 
 - Consultei `docker`, `podman` e `nerdctl`; nenhum comando está disponível no `PATH`. Verifiquei também os caminhos comuns de instalação do Docker Desktop e Podman no Windows; os executáveis não foram encontrados.
