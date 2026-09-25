@@ -6,6 +6,10 @@
 
 Em Chromium/Playwright, com demanda e perfil descartáveis na origem `127.0.0.1:4232`, confirmei o briefing, criei uma tarefa atribuída e iniciei a execução. Enviar a revisão sem os campos obrigatórios não alterou a etapa. Com novo contexto e motivo, a demanda voltou a Planejamento; o painel exibiu o motivo e o texto anterior, e o histórico registrou a alteração. A interface só retomou Em produção após “Confirmar revisão do plano”. Não ocorreram erros JavaScript. Renderizei e inspecionei o estado em 1440 × 1000; os dados eram fictícios e nenhuma conta ou colaboração multiusuário foi testada.
 
+### Dados estruturados do briefing e comentário interno — 2026-09-25
+
+Em contexto descartável no Chromium (`127.0.0.1:4233`), editei origem, canal/peça, critérios de aceite e referência de uma demanda sintética. Os valores atualizados apareceram no painel e o histórico registrou `briefing_details_updated`. Depois avancei até Em produção: enviar comentário interno vazio mostrou “Escreva um comentário antes de enviar.” e não acrescentou comentário ou evento; texto válido apareceu na conversa e no histórico, ligado à V01. Sem erros JavaScript. Esta é persistência local de demonstração, sem teste de visibilidade por papel ou sincronização multiusuário.
+
 ## O que já executa
 
 ### Revisão interna pela interface — 2026-09-25
