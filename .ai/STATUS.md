@@ -4,7 +4,7 @@
 Levar a plataforma integrada de gestão de equipe e processos de aprovação até uma primeira versão segura e utilizável no dia a dia. A meta permanece maior que a demonstração local atual.
 
 ## Estado do produto e do repositório
-- Branch `implementation/primeira-jornada-local` está sincronizada com `origin` no commit `fd977ce64320d2bb0554f7a9e4a0d32c8ebbc279`; a PR #9 segue aberta em rascunho. Branch `research/atualizar-comparativo-e-arquitetura` está sincronizada no commit `b8a0527bc030617c8e710e7e465541212e14f0b1`; a PR #10 segue aberta em rascunho.
+- Branches `implementation/primeira-jornada-local` e `research/atualizar-comparativo-e-arquitetura` estão sincronizadas com `origin`; PR #9 e PR #10 permanecem abertas em rascunho.
 - PR #9 (implementação), PR #8 (requisitos priorizados) e PR #10 (pesquisa e arquitetura conceitual) estão abertos em rascunho. PR #10 não seleciona stack de produção.
 - O protótipo `prototipo/` é local e persiste por perfil de navegador. A biblioteca Conhecimento já cadastra, edita, filtra e arquiva/restaura referências, treinamentos, contatos e onboarding com passos. Ainda não há autenticação, contas reais, matriz de permissões, servidor, armazenamento central, colaboração multiusuário nem implantação de produção.
 
