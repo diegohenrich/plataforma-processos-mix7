@@ -13,6 +13,12 @@
 - git diff --check passou; CI do push e do PR #9 para o commit 73b28d58995a651b98f9487b319bd505340fcc68 passou nas execuções [36117997596](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36117997596) e [36118002250](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36118002250).
 # Estado em 2026-09-25
 
+## Justificativa obrigatória para ajustes do cliente — 2026-09-25
+
+- O botão “Solicitar ajustes” fica desabilitado enquanto o texto estiver vazio ou contiver apenas espaços; uma justificativa preenchida habilita a ação. A regra de domínio preserva etapa, decisão e comentários quando a justificativa é inválida. “Solicitar ajustes” significa devolver para correção; rejeição final sem reenvio segue não confirmada.
+- Testes: `node --test tests/workflow.test.js` passou 25/25; `node --check prototipo/workflow.js`, `node --check prototipo/app.js` e `git diff --check` passaram. Validação interativa/renderizada em Chromium ainda pendente por limitação na automação do navegador nesta rodada.
+- Documentação atualizada em `docs/PRIMEIRA-IMPLEMENTACAO.md`. Vincular ao cartão 18 do Trello; commit/CI serão registrados após sincronização.
+
 ## Exportação JSON e CSV — 2026-09-25
 
 - Separei a serialização de JSON e CSV em funções puras de `workflow.js`, chamadas pela interface de exportação. Testes cobrem schema, timestamp, histórico completo, colunas/linhas, BOM UTF-8, CRLF e neutralização de fórmulas.

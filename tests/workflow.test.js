@@ -305,6 +305,20 @@ test("pedido de alteração é comentário ancorado e decisão imutáveis da ver
   assert.deepEqual(item.tasks.map(task => [task.round, task.status]), [[1, "completed"], [2, "completed"]]);
 });
 
+test("pedido de ajustes vazio ou só com espaços não altera a decisão do cliente", () => {
+  let item = planRoundOne(demand());
+  item = completeCurrentTasks(item);
+  item = transition(item, "submit_internal_review");
+  item = transition(item, "internal_approved");
+
+  for (const comment of ["", "   "]) {
+    assert.throws(() => transition(item, "client_changes", { versionId: "d-1-v1", comment }), /Descreva as alterações solicitadas/);
+    assert.equal(item.stage, "clientReview");
+    assert.equal(item.versions[0].decision, null);
+    assert.deepEqual(item.comments, []);
+  }
+});
+
 test("comentário de vídeo preserva o instante e a versão e valida a âncora", () => {
   const item = transition(demand(), "add_comment", {
     comment: "Rever esta fala",

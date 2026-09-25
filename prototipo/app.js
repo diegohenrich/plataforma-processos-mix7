@@ -965,7 +965,10 @@ function renderActions(request) {
     const reason = makeTextarea("Escreva os ajustes solicitados. Obrigatório para devolver.");
     reason.id = "clientDecisionReason";
     container.insertBefore(reason, buttons);
-    appendAction(buttons, "Solicitar ajustes", () => updateRequest("client_changes", { versionId: request.versions.at(-1).id, comment: reason.value }, "Pedido de ajustes registrado nesta versão."));
+    const requestChanges = appendAction(buttons, "Solicitar ajustes", () => updateRequest("client_changes", { versionId: request.versions.at(-1).id, comment: reason.value }, "Pedido de ajustes registrado nesta versão."));
+    const updateClientDecisionReady = () => { requestChanges.disabled = !reason.value.trim(); };
+    reason.addEventListener("input", updateClientDecisionReady);
+    updateClientDecisionReady();
     appendAction(buttons, "Aprovar versão", () => updateRequest("client_approved", { versionId: request.versions.at(-1).id }, "Versão aprovada. Falta registrar entrega/publicação."), "approve-button");
   } else if (request.stage === "adjustments") {
     container.append(node("small", "workflow-hint", "A nova versão preserva o pedido de ajuste e passa novamente pela revisão interna."));
