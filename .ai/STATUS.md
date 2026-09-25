@@ -24,6 +24,6 @@ Levar a plataforma integrada de gestão de equipe e processos de aprovação at�
 - Atualizar a checklist do cartão 18 no Trello ainda aguarda a confirmação pontual já solicitada para aquele item.
 
 ## Próximo passo
-Publicar os comentários de sincronização nos cartões Trello #23 e #5 após confirmação pontual; a documentação e os commits já estão no GitHub. Depois, continuar a auditoria funcional das lacunas P0/P1 com evidência, sem bloquear o trabalho pela sessão CRM prometida. Próximos limites verificáveis: validar arraste físico do Explorador para o navegador quando disponível e obter caso real anonimizado para campos, papéis e exceções. Manter dados sintéticos até existir ambiente com identidade, permissões e armazenamento adequados.
+Publicar os comentários de sincronização nos cartões Trello #23, #5 e #29 após confirmação pontual para cada publicação; a documentação e os commits já estão no GitHub. Depois, continuar a auditoria funcional das lacunas P0/P1 com evidência, sem bloquear o trabalho pela sessão CRM prometida. Próximos limites verificáveis: validar arraste físico do Explorador para o navegador quando disponível e obter caso real anonimizado para campos, papéis e exceções. Manter dados sintéticos até existir ambiente com identidade, permissões e armazenamento adequados.
 
 Histórico operacional anterior preservado em [docs/VALIDACOES-HISTORICAS.md](../docs/VALIDACOES-HISTORICAS.md); este arquivo é a fonte vigente de status.
