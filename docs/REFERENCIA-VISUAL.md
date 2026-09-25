@@ -19,3 +19,10 @@ A plataforma tem uma sessão local de demonstração aberta em outra aba com um 
 - Abrir o dashboard autenticado do CRM em sessão de demonstração para comparar sua composição, cabeçalho e cartões reais. O usuário precisa entrar manualmente na aba local `Entrar | CRM Mix7`, pois `/administrador/dashboard` redireciona para autenticação.
 - Conferir a alteração em viewport móvel e ajustar caso a lateral compacta ou o quadro apresente problema.
 - Reavaliar este documento quando houver evidência nova do dashboard renderizado. Nenhum arquivo do CRM foi alterado.
+
+## Reinspeção solicitada — 25/09/2026
+
+- O servidor do CRM-MIX7-RENEW foi iniciado novamente em `http://127.0.0.1:8198`. A tela de login foi renderizada em Chromium. A rota `/administrador/dashboard` voltou a redirecionar para `/login`; o painel autenticado não foi visto e nenhuma credencial foi inserida.
+- Foi comparada a tela atual de demandas da plataforma com os estilos fonte do CRM. Há uma diferença de escala ainda visível no CSS da plataforma: em larguras até 1399 px, o menu usa 14 px, os títulos de coluna 13 px, os títulos de cartão 14 px e suas descrições 12 px; o tema do CRM declara corpo 16 px, navegação 15 px e títulos de dashboard entre 32 e 46 px. O CRM também define cartões de 24 px de raio e área útil com recuo de 38 px, reduzido a 28 px nessa faixa.
+- Essa comparação confirma uma diferença nos valores tipográficos, mas não determina por si só como reproduzir a composição do dashboard na plataforma. Não houve alteração visual nesta reinspeção; o painel renderizado é necessário para validar cabeçalho, hierarquia, proporções e distribuição dos componentes.
+- Próximo passo: o usuário autentica manualmente no CRM local e deixa o dashboard aberto. Depois, comparar a composição renderizada em tamanhos equivalentes, ajustar o protótipo e verificar desktop e celular. Nenhum arquivo do CRM foi modificado.

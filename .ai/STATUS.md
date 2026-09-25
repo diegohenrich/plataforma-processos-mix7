@@ -253,3 +253,9 @@
 - A matriz de requisitos agora separa quatro tipos citados nas fontes (direção, gestor/gerente, profissional da equipe, aprovador do cliente) das funções atribuídas em cada demanda (briefing/conta, gestão, execução, revisão interna, entrega/publicação). A pessoa da direção exerce avaliação peso 2 e o gestor peso 1; cargo e permissões não estão definidos. Nenhuma lista de nomes/e-mails foi fornecida.
 - Cartão 5 do Trello atualizado com a distinção, perguntas de autenticação e acesso, dependência do caso real #4 e checklist (1/5: a distinção conta/função foi documentada; matriz, fronteira de cliente, administração/login e validação permanecem pendentes).
 - Contas reais e permissões ainda não foram implementadas. Próximo passo: resolver decisões de identidade/isolamento na pesquisa e arquitetura, validar matriz com caso anonimizado e obter dados de provisionamento antes de criar contas operacionais. Nenhuma decisão de fornecedor foi inferida.
+
+## Reinspeção visual do CRM — 25/09/2026
+
+- Iniciado novamente o servidor local do `CRM-MIX7-RENEW` em `127.0.0.1:8198` e conferida a tela de login renderizada. A rota `/administrador/dashboard` ainda redireciona para `/login`; nenhuma senha foi inserida e não houve acesso autenticado.
+- Comparação de código confirmou uma diferença de escala na plataforma em larguras até 1399 px (navegação 14 px, títulos de coluna 13 px, títulos de cartão 14 px, descrição 12 px) ante o CRM (corpo 16 px, navegação 15 px, títulos do painel 32–46 px e cartões com raio de 24 px). Isso é evidência para revisar a escala, mas não basta para inferir a composição final do dashboard.
+- Nenhum CSS de produto foi alterado nesta rodada. A comparação completa de cabeçalho, composição e cartões depende do dashboard aberto pelo usuário; após a sessão, aplicar os ajustes comprovados e validar desktop/móvel. Evidência e limites registrados em `docs/REFERENCIA-VISUAL.md`.
