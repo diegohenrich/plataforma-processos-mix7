@@ -1,5 +1,11 @@
 # Estado em 2026-09-25
 
+## Atualização de manutenção do armazenamento do Plane — 2026-09-25
+
+- Reabri o cartão 14 da pesquisa. A consulta direta ao Compose oficial do Plane v1.4.2 confirmou `minio/minio:latest`; a API Registry desafiou com Bearer e o token anônimo não concedeu escopo de leitura. Fonte oficial do [repositório MinIO](https://github.com/minio/minio): arquivado em 25/04/2026, read-only e não mantido. A documentação oficial do [Plane aceita armazenamento S3 externo](https://developers.plane.so/self-hosting/govern/database-and-storage), com `USE_MINIO=0`.
+- Atualizei pesquisa e roteiro para tratar o ciclo de manutenção como risco; fixar digest não resolve arquivamento. Um provedor S3 compatível fica como opção a comparar — região, acesso privado, CORS, backup/restauração, custo e exportação ainda sem verificação. Nenhum serviço ou imagem foi iniciado, nenhuma conta ou arquivo foi enviado, e nenhuma alternativa foi escolhida.
+- Validação: confirmei diretamente o Compose tag `v1.4.2` do Plane, `git diff --check` passou e os links Markdown locais nos dois documentos resolvem. Revisão documental preserva como desconhecidos provedor, custo e configuração; não se aplicam testes de produto. Runtime de containers continua ausente conforme a pré-verificação anterior. Alteração vinculada ao cartão 14 e PR #10; commit, checks do commit e comentário final no Trello ainda pendentes.
+
 ## Referências OCI da prova documental — 2026-09-25
 
 - Atualizados `docs/PESQUISA-SOLUCOES.md` e `docs/PROVA-DE-CONCEITO.md`: Wekan v12.01 e 11 metadados de índices OCI para Wekan, Plane, OpenProject e dependências fixadas do Compose do Plane. A dependência `minio/minio:latest` não retornou metadados anônimos (401); runtime indisponível. Nenhuma imagem foi baixada ou executada, e nenhum fornecedor foi escolhido.
