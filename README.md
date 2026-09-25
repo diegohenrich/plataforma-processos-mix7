@@ -2,7 +2,7 @@
 
 Projeto da Mix7 para reunir gestão de equipe e aprovações em um fluxo documentado, rastreável e integrado. O primeiro módulo de aprovação tratará criativos de redes sociais; o modelo deverá comportar outras áreas da agência.
 
-**Estado:** requisitos priorizados, pesquisa comparativa, arquitetura de produto, protótipo visual e primeira fatia local estão preparados em pull requests encadeados e ainda aguardam revisão. A fatia local é demonstrativa, não é ferramenta operacional. Não há stack ou arquitetura técnica escolhidas.
+**Estado:** levantamento de requisitos, comparação documental, arquitetura de produto, protótipo visual e primeira fatia local estão preparados em pull requests encadeados e ainda aguardam revisão. A proposta P0/P1 da matriz ainda precisa de validação item a item. A fatia local é demonstrativa, não é ferramenta operacional. Não há stack ou arquitetura técnica escolhidas.
 
 ## Primeira entrega pretendida
 
@@ -13,6 +13,7 @@ Demanda/briefing → planejamento confirmado → execução → revisão interna
 - [Requisitos e dúvidas abertas](docs/REQUIREMENTS.md)
 - [Fluxo proposto para uma demanda de criativo](docs/FLUXO-PROPOSTO.md)
 - [Pesquisa inicial de soluções](docs/PESQUISA-SOLUCOES.md)
+- [Matriz de cobertura por requisito Mix7](docs/MATRIZ-ADEQUACAO-MIX7.md)
 - [Roteiro da prova de conceito](docs/PROVA-DE-CONCEITO.md)
 - [Proposta inicial de arquitetura de produto](docs/ARQUITETURA-PROPOSTA.md)
 - [Identidade, papéis e acessos](docs/IDENTIDADE-E-ACESSOS.md)

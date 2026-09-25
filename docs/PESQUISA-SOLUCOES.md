@@ -7,6 +7,8 @@
 
 A Mix7 precisa de gestão de demandas, equipe, prazos e capacidade junto de aprovações rastreáveis. A aprovação começa por conteúdo de redes sociais e deve poder ser usada por outras áreas. Para criativos, comentários precisam permanecer ligados à versão do arquivo e, em vídeo, ao ponto certo da reprodução. A comparação separa ferramentas de gestão de trabalho das ferramentas especializadas em revisão de conteúdo, pois nenhum produto consultado foi confirmado como cobrindo sozinho todos os requisitos.
 
+A cobertura documental requisito a requisito, com prioridades P0/P1 propostas e lacunas explícitas, está em [MATRIZ-ADEQUACAO-MIX7.md](MATRIZ-ADEQUACAO-MIX7.md). Essas prioridades ainda precisam de validação da Mix7.
+
 ## Comparação
 
 | Solução | Onde parece forte | Limites ou riscos para a Mix7 | Licença / modelo verificado |

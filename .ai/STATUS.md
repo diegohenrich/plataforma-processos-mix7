@@ -1,5 +1,11 @@
 # Estado em 2026-09-25
 
+## Matriz de cobertura documental — 2026-09-25
+
+- Criada `docs/MATRIZ-ADEQUACAO-MIX7.md` com requisitos dos áudios e da especificação, cobertura documental por candidato, evidência ausente e ensaios necessários. A classificação P0/P1 é explicitamente proposta com base na primeira jornada aprovada; não foi encontrada priorização item a item aprovada pela Mix7.
+- A matriz distingue ferramenta de gestão, aprovação social e revisão de mídia. Segurança de cliente, histórico por versão, timecode, integração e recuperação seguem como testes obrigatórios; funções descritas por fornecedores não são tratadas como observadas.
+- README, contexto e comparativo apontam para a matriz; o README descreve corretamente as prioridades como proposta ainda não validada. A matriz separa quatro categorias de participantes dos áudios de contas reais, que não podem ser provisionadas sem nomes/e-mails e permissões fornecidos pela Mix7. `git diff --check` passou e 20 links Markdown locais nos três documentos tocados resolvem. Revisão manual confirmou que estados documentados não são apresentados como testes. Não se aplicam testes de produto à comparação documental. Commit e publicação GitHub concluídos; a atualização do cartão 14 ainda depende de confirmação para publicar o comentário na interface.
+
 ## Complemento documental Plane e próximo entregável — 2026-09-25
 
 - Fonte oficial atual confirma Community sob AGPL-3.0 e suporte a armazenamento S3 externo (`USE_MINIO=0`). Registrei que isso torna a substituição configurável, sem validar fornecedor, custo, região, backup/restauração ou operação. A síntese mantém Plane como candidato, não como produto escolhido, e separa avaliação de gestão de trabalho de revisão especializada.
