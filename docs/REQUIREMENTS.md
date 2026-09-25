@@ -19,7 +19,9 @@ Fonte: transcrição dos três áudios fornecidos em 24/09/2026 e decisões expl
 | Arquivos e ambiente de trabalho | Soltar imagens/arquivos em uma demanda e mantê-los associados a ela; integração com Windows foi pedida, mas ainda sem comportamento definido. |
 | Construção | Comparar soluções existentes e opções open source antes de decidir o que desenvolver. Avaliar licenças, manutenção e segurança. |
 
-## Decisões confirmadas para o primeiro recorte
+## Decisões confirmadas e escopo da primeira entrega operacional
+
+A primeira versão em uso cobre todas as áreas listadas acima: gestão, aprovações expansíveis, tempo e capacidade, IA revisada por pessoa, avaliação, conhecimento, onboarding, acessos e integração necessária com o ambiente de trabalho. As regras ainda sem resposta continuam como requisitos a validar; não são motivo para retirar essas áreas do escopo. A ordem de construção e as evidências de conclusão estão em [ROADMAP.md](ROADMAP.md).
 
 - Público: equipe e clientes da Mix7.
 - Fluxo-alvo aprovado: demanda/briefing → planejamento revisado → execução → revisão interna → aprovação do cliente → ajustes e nova versão quando pedidos → entrega/agendamento/publicação com evidência → conclusão conferida. Validar no caso real da Mix7 quem exerce cada papel, as exceções e as evidências exigidas por serviço; não reabrir o fluxo-alvo sem nova evidência ou decisão explícita.
