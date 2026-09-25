@@ -16,8 +16,8 @@
 ## Justificativa obrigatória para ajustes do cliente — 2026-09-25
 
 - O botão “Solicitar ajustes” fica desabilitado enquanto o texto estiver vazio ou contiver apenas espaços; uma justificativa preenchida habilita a ação. A regra de domínio preserva etapa, decisão e comentários quando a justificativa é inválida. “Solicitar ajustes” significa devolver para correção; rejeição final sem reenvio segue não confirmada.
-- Testes: `node --test tests/workflow.test.js` passou 25/25; `node --check prototipo/workflow.js`, `node --check prototipo/app.js` e `git diff --check` passaram. Validação interativa/renderizada em Chromium ainda pendente por limitação na automação do navegador nesta rodada.
-- Documentação atualizada em `docs/PRIMEIRA-IMPLEMENTACAO.md`. Vincular ao cartão 18 do Trello; commit/CI serão registrados após sincronização.
+- Testes: `node --test tests/workflow.test.js` passou 25/25; `node --check prototipo/workflow.js`, `node --check prototipo/app.js` e `git diff --check` passaram. Página de aprovações carregada em Chromium isolado `127.0.0.1:4213`; o controlador de navegador não permitiu acionar os controles, portanto o estado habilitado/desabilitado não foi observado visualmente.
+- Documentação atualizada em `docs/PRIMEIRA-IMPLEMENTACAO.md`. Cartão 18 do Trello atualizado com resultado e pendência visual. Commit `2a48a82fc2a1be75a8ece3edad6f845663f5f229` publicado na branch `implementation/primeira-jornada-local`; SHA local/remoto igual. CI push [36125987648](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36125987648) e PR #9 [36125990610](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36125990610) passaram.
 
 ## Exportação JSON e CSV — 2026-09-25
 
