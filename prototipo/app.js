@@ -1,10 +1,12 @@
 const { stages, participantTypes, transition, listAssignees, filterRequestsByAssignee, taskBlockers, findActiveTaskTimer, stopAllActiveTaskTimers, getRunnableTasks, validateLocalFiles, mergeLocalFiles, serializeRequestsJson, serializeRequestsCsv } = window.Mix7Workflow;
 const { assigneeKey, weekStartFromIso, isoWeekFromDate, summarizeWeeklyCapacity } = window.Mix7Capacity;
 const { knowledgeTypes, saveKnowledgeItem, setKnowledgeItemArchived, filterKnowledgeItems } = window.Mix7Knowledge;
+const { createAssignment, setStepCompleted } = window.Mix7Onboarding;
 const STORAGE_KEY = "mix7.workflow.v1";
 const MINIMIZED_KEY = "mix7.workflow.minimized.v1";
 const KNOWLEDGE_STORAGE_KEY = "mix7.knowledge.v1";
 const CAPACITY_STORAGE_KEY = "mix7.capacity-preview.v1";
+const ONBOARDING_STORAGE_KEY = "mix7.onboarding-assignments.v1";
 const MAX_FILE_BYTES = 15 * 1024 * 1024;
 const drawer = document.querySelector("#detailDrawer");
 const appShell = document.querySelector(".app-shell");
@@ -35,6 +37,7 @@ let minimizedRequestIds = loadMinimizedIds();
 const minimizedTimerTaskSelections = new Map();
 let state = loadState();
 let knowledgeRecords = loadKnowledgeRecords();
+let onboardingAssignments = loadOnboardingAssignments();
 let capacityData = loadCapacityData();
 let selectedCapacityAssignee = "";
 let selectedCapacityWeek = isoWeekFromDate(new Date());
@@ -636,6 +639,130 @@ function renderKnowledgeResults(container) {
   }
 }
 
+function formatOnboardingDate(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short", year: "numeric" }).format(date);
+}
+
+function renderOnboardingAssignments(container) {
+  const section = node("section", "onboarding-assignments");
+  section.append(panelHeading("Trilhas atribuídas", "Acompanhe os passos registrados para cada pessoa nesta demonstração local."));
+  const templates = knowledgeRecords.filter(item => item.type === "onboarding" && !item.archived && item.steps?.length);
+  const form = node("form", "onboarding-assign-form");
+  form.id = "onboardingAssignForm";
+  const templateSelect = document.createElement("select");
+  templateSelect.name = "templateId";
+  templateSelect.required = true;
+  templateSelect.add(new Option(templates.length ? "Escolha uma trilha" : "Cadastre uma trilha ativa primeiro", ""));
+  templates.forEach(item => templateSelect.add(new Option(item.title, item.id)));
+  templateSelect.disabled = !templates.length;
+  const templateLabel = node("label", "capacity-field", "Modelo de trilha");
+  templateLabel.append(templateSelect);
+  const personInput = document.createElement("input");
+  personInput.name = "assignee";
+  personInput.required = true;
+  personInput.maxLength = 100;
+  personInput.placeholder = "Ex.: Pessoa fictícia";
+  const personLabel = node("label", "capacity-field", "Pessoa fictícia");
+  personLabel.append(personInput);
+  const submit = node("button", "primary-button", "Atribuir trilha");
+  submit.type = "submit";
+  submit.disabled = !templates.length;
+  form.append(templateLabel, personLabel, submit);
+  section.append(form);
+  if (!templates.length) section.append(node("p", "capacity-muted", "Crie um item do tipo Onboarding com passos e deixe-o ativo para poder atribuí-lo."));
+
+  if (!onboardingAssignments.length) {
+    section.append(emptyPanel("Nenhuma trilha atribuída", "Quando um modelo estiver pronto, atribua seus passos a uma pessoa fictícia para acompanhar o progresso."));
+  } else {
+    const list = node("div", "onboarding-assignment-list");
+    for (const assignment of [...onboardingAssignments].reverse()) {
+      const card = node("article", "onboarding-assignment-card");
+      card.dataset.onboardingCard = assignment.id;
+      const heading = node("div", "onboarding-assignment-heading");
+      const title = node("div", "");
+      title.append(node("h3", "", assignment.templateTitle), node("p", "", `${assignment.assignee} · atribuída em ${formatOnboardingDate(assignment.assignedAt)}`));
+      const status = node("span", "onboarding-status", assignment.completedAt ? "Concluída" : "Em andamento");
+      status.dataset.onboardingStatus = "";
+      heading.append(title, status);
+      card.append(heading);
+      const doneCount = assignment.steps.filter(step => step.completed).length;
+      const progress = node("div", "onboarding-progress-summary");
+      const progressText = node("span", "", `${doneCount} de ${assignment.steps.length} passos`);
+      progressText.dataset.onboardingProgressText = "";
+      const progressPercent = assignment.steps.length ? Math.round(doneCount / assignment.steps.length * 100) : 0;
+      const meter = node("div", "capacity-meter onboarding-meter");
+      meter.setAttribute("role", "progressbar");
+      meter.setAttribute("aria-label", `Progresso de ${assignment.templateTitle} para ${assignment.assignee}`);
+      meter.setAttribute("aria-valuemin", "0");
+      meter.setAttribute("aria-valuemax", "100");
+      meter.setAttribute("aria-valuenow", String(progressPercent));
+      const fill = node("i", "");
+      fill.style.width = `${progressPercent}%`;
+      meter.append(fill);
+      progress.append(progressText, meter);
+      card.append(progress);
+      const steps = node("ol", "onboarding-assignment-steps");
+      for (const step of assignment.steps) {
+        const item = node("li", step.completed ? "is-complete" : "");
+        const label = node("label", "onboarding-step-label");
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.checked = Boolean(step.completed);
+        checkbox.dataset.onboardingId = assignment.id;
+        checkbox.dataset.onboardingStep = step.id;
+        const text = node("span", "", step.text);
+        label.append(checkbox, text);
+        item.append(label);
+        if (step.completedAt) item.append(node("small", "onboarding-step-date", `Concluído em ${formatOnboardingDate(step.completedAt)}`));
+        steps.append(item);
+      }
+      card.append(steps);
+      if (assignment.completedAt) card.append(node("p", "onboarding-completion-note", `Todos os passos foram marcados em ${formatOnboardingDate(assignment.completedAt)}. Registro demonstrativo, sem validação de identidade.`));
+      list.append(card);
+    }
+    section.append(list);
+  }
+  container.append(section);
+  form.addEventListener("submit", event => {
+    event.preventDefault();
+    const data = new FormData(form);
+    const template = templates.find(item => item.id === data.get("templateId"));
+    try {
+      const next = createAssignment(onboardingAssignments, template, data.get("assignee"), { id: makeId(), now: new Date().toISOString() });
+      if (persistOnboardingAssignments(next)) {
+        showToast("Trilha atribuída neste navegador.");
+        renderWorkspacePage();
+      }
+    } catch (error) { showToast(error.message || "Revise a trilha e a pessoa informadas."); }
+  });
+  section.addEventListener("change", event => {
+    const checkbox = event.target.closest("input[data-onboarding-id][data-onboarding-step]");
+    if (!checkbox) return;
+    try {
+      const next = setStepCompleted(onboardingAssignments, checkbox.dataset.onboardingId, checkbox.dataset.onboardingStep, checkbox.checked, new Date().toISOString());
+      if (!persistOnboardingAssignments(next)) {
+        checkbox.checked = !checkbox.checked;
+        return;
+      }
+      const assignment = onboardingAssignments.find(item => item.id === checkbox.dataset.onboardingId);
+      const card = checkbox.closest("[data-onboarding-card]");
+      const done = assignment.steps.filter(step => step.completed).length;
+      const percent = assignment.steps.length ? Math.round(done / assignment.steps.length * 100) : 0;
+      card.querySelector("[data-onboarding-progress-text]").textContent = `${done} de ${assignment.steps.length} passos`;
+      card.querySelector('[role="progressbar"]').setAttribute("aria-valuenow", String(percent));
+      card.querySelector(".onboarding-meter i").style.width = `${percent}%`;
+      card.querySelector("[data-onboarding-status]").textContent = assignment.completedAt ? "Concluída" : "Em andamento";
+      checkbox.closest("li").classList.toggle("is-complete", checkbox.checked);
+      showToast(checkbox.checked ? "Passo registrado como concluído." : "Passo reaberto; o histórico foi preservado.");
+      renderWorkspacePage();
+      document.querySelector(`[data-onboarding-card="${CSS.escape(assignment.id)}"] input[data-onboarding-step="${CSS.escape(checkbox.dataset.onboardingStep)}"]`)?.focus();
+    } catch (error) { showToast(error.message || "Não foi possível atualizar este passo."); }
+  });
+}
+
 function renderKnowledgeEditor(container, record = null) {
   container.replaceChildren();
   container.hidden = false;
@@ -783,6 +910,7 @@ function renderKnowledgePage(panel) {
   ].forEach(text => processSteps.append(node("li", "", text)));
   processGuide.append(processSummary, processSteps);
   panel.append(processGuide);
+  renderOnboardingAssignments(panel);
 
   const toolbar = node("div", "knowledge-toolbar");
   const searchLabel = node("label", "knowledge-search-label", "Buscar na biblioteca");
@@ -1210,6 +1338,27 @@ function persistKnowledgeRecords(nextRecords) {
     return true;
   } catch {
     showToast("Não foi possível salvar a biblioteca neste navegador. Libere espaço ou verifique as configurações de privacidade.");
+    return false;
+  }
+}
+
+function loadOnboardingAssignments() {
+  try {
+    const value = JSON.parse(localStorage.getItem(ONBOARDING_STORAGE_KEY) || "[]");
+    return Array.isArray(value) ? value.filter(item => item && typeof item.id === "string" && typeof item.assignee === "string" && Array.isArray(item.steps) && Array.isArray(item.history)) : [];
+  } catch {
+    showToast("As trilhas atribuídas não puderam ser lidas neste navegador.");
+    return [];
+  }
+}
+
+function persistOnboardingAssignments(nextAssignments) {
+  try {
+    localStorage.setItem(ONBOARDING_STORAGE_KEY, JSON.stringify(nextAssignments));
+    onboardingAssignments = nextAssignments;
+    return true;
+  } catch {
+    showToast("Não foi possível salvar o progresso das trilhas neste navegador.");
     return false;
   }
 }

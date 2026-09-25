@@ -22,9 +22,9 @@ O fluxo local de demandas já construído é uma demonstração para validar com
 
 ## Estado comprovado hoje
 
-- **Demonstrado localmente:** fluxo de demanda; tarefas, estimativas, dependências e cronômetro; Gantt baseado em datas informadas; revisão e aprovação por versão; comentários em imagem/vídeo; entrega com evidência; visualizações de quadro/lista; conhecimento local.
-- **Parcial, sem uso compartilhado:** persistência em perfil do navegador, arquivos, autoria e histórico; filtro de trabalho individual; aprovações simuladas pela equipe e pelo cliente na mesma sessão; gestão de conhecimento e contatos.
-- **Ainda não construído para operação:** autenticação e contas reais, permissões e isolamento entre clientes, servidor e armazenamento central, cópias de segurança, onboarding por pessoa, gestão de acesso a serviços, disponibilidade/capacidade calculada, integração de IA, avaliação, automações operacionais e implantação.
+- **Demonstrado localmente:** fluxo de demanda; tarefas, estimativas, dependências e cronômetro; Gantt baseado em datas informadas; prévia de capacidade semanal sem regra aprovada; revisão e aprovação por versão; comentários em imagem/vídeo; entrega com evidência; visualizações de quadro/lista; biblioteca local e progresso de trilhas de onboarding por nome fictício.
+- **Parcial, sem uso compartilhado:** persistência em perfil do navegador, arquivos, autoria e histórico; filtro de trabalho individual; aprovações simuladas pela equipe e pelo cliente na mesma sessão; modelos de conhecimento, progresso demonstrativo de onboarding e contatos fictícios.
+- **Ainda não construído para operação:** autenticação e contas reais, permissões e isolamento entre clientes, servidor e armazenamento central, cópias de segurança, onboarding comprovado por identidade e compartilhado, gestão de acesso a serviços, disponibilidade/capacidade conforme regras aprovadas, integração de IA, avaliação, automações operacionais e implantação.
 - **Ainda depende de confirmação:** caso real anonimizado, papéis e exceções da Mix7, regras de jornada e disponibilidade, governança e fórmula de avaliação, serviços e integrações, além da inspeção autenticada do dashboard CRM prometida pelo usuário.
 - **Em revisão no GitHub:** PR #8 de requisitos, PR #9 da demonstração e PR #10 de pesquisa/arquitetura. Propostas em rascunho não equivalem a decisões integradas ou stack aprovada.
 

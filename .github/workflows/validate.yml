@@ -36,11 +36,13 @@ jobs:
         with:
           node-version: 22
 
-      - name: Executar testes do fluxo e da biblioteca de conhecimento
+      - name: Executar testes do fluxo, conhecimento, capacidade e onboarding
         run: node --test tests/*.test.js
 
       - name: Verificar sintaxe JavaScript
         run: |
           node --check prototipo/workflow.js
           node --check prototipo/knowledge.js
+          node --check prototipo/capacity.js
+          node --check prototipo/onboarding.js
           node --check prototipo/app.js
