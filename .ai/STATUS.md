@@ -4,7 +4,7 @@
 
 - Conferi `renderWorkspacePanel()` em `prototipo/app.js`: a página Equipe lista tarefas incompletas da rodada atual, ordena por prazo, exibe responsável/cliente e bloqueios e permite abrir a demanda associada. Assim, a lacuna “não mostra fila própria” na matriz P0 estava desatualizada; a funcionalidade já existia.
 - Atualizei `docs/PRIMEIRA-IMPLEMENTACAO.md` para refletir essa cobertura e manter explícitos os limites: responsável como texto livre, filtragem local e ausência de autenticação/permissões. Nenhuma alteração de código ou regra foi feita.
-- Validação: conferi a descrição contra a implementação; `git diff --check`, `node --check prototipo/workflow.js`, `node --check prototipo/app.js` e `node --test tests/workflow.test.js` passaram (22/22). Sincronização com GitHub e cartão 15 do Trello será registrada após o commit.
+- Validação: conferi a descrição contra a implementação; `git diff --check`, `node --check prototipo/workflow.js`, `node --check prototipo/app.js` e `node --test tests/workflow.test.js` passaram (22/22). Commit `697f5e33f5b31ad96908beae09ad5f40061df4eb` publicado e SHA local/remoto idêntico; CI passou nas execuções `36112559240` e `36112553060`. O cartão 8 do Trello teve a descrição corrigida e recebeu este resultado; continua em **Requisitos a validar**, pois faltam confirmação da equipe e regras de capacidade.
 
 ## Reinspeção solicitada do CRM — 2026-09-25
 
