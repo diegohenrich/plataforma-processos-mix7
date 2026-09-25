@@ -504,4 +504,4 @@
 ## Dados estruturados do briefing e comentário interno — 2026-09-25
 
 - Chromium/Playwright em origem descartável `127.0.0.1:4233`: atualizei origem, canal, critérios e referência no formulário de briefing; a tela mostrou os valores e o histórico registrou `briefing_details_updated`. Depois de iniciar a produção, comentário vazio exibiu validação e não criou comentário nem evento; comentário preenchido apareceu na conversa e no histórico ligado à V01. Sem erros JavaScript.
-- Nenhuma mudança de código; os dados ficaram no perfil sintético. Atualização do registro operacional e do cartão 18 estão sujeitas à autorização de publicação no Trello; teste automatizado, sintaxe e diff serão conferidos antes do commit.
+- Nenhuma mudança de código; os dados ficaram no perfil sintético. `node --test tests/workflow.test.js` passou 26/26; `node --check prototipo/workflow.js`, `node --check prototipo/app.js` e `git diff --check` passaram. Registro publicado em `77e5ed06d5775d984fdbd89b7d0e7808988fc892`, SHA local/remoto igual. Atualização da checklist do cartão 18 segue aguardando confirmação para publicar o item de teste.
