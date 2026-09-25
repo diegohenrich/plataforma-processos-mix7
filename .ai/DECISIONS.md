@@ -1,5 +1,6 @@
 # Decisões vigentes
 
+- 2026-09-25 — A primeira versão operacional deve abranger o projeto completo descrito nos três áudios. Fases e protótipos organizam construção e validação, mas não reduzem o escopo nem adiam áreas para versões posteriores. Ver `docs/PRODUCT.md` e `docs/ROADMAP.md`.
 - 2026-09-24 — Usar o quadro Trello existente **Desenvolvimento de Projetos - Mix7** para organizar o projeto. Listas representam andamento; etiquetas coloridas representam áreas. Revisar se o quadro passar a reunir outros projetos da agência.
 - 2026-09-25 — Objetivo do projeto é concluir a plataforma inteira descrita nos três áudios; o fluxo integrado local é somente uma etapa de validação. A conclusão exige gestão, aprovações expansíveis, IA revisada por pessoa, conhecimento, acessos, avaliação, segurança e operação compartilhada, com critérios de `docs/ROADMAP.md`. Não tratar a demonstração local como entrega final.
 - 2026-09-24 — Identificar etiquetas por nome e finalidade no próprio Trello: azul = Gestão de equipe; verde = Aprovações; roxo = IA e automações; amarelo = Conhecimento e acessos; laranja = Pesquisa de soluções; vermelho = Bloqueio, para impedimento real que exige ação ou decisão. A cor ajuda na leitura, mas o nome deve ser visível nos cartões e filtros. Revisar quando novas áreas forem acrescentadas.

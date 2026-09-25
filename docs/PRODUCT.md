@@ -1,5 +1,9 @@
 # Produto
 
+## Escopo da primeira entrega operacional
+
+A primeira versão em uso inclui todas as áreas da plataforma descritas nos três áudios. As etapas de construção e protótipos menores servem para ordenar e validar o trabalho, sem deixar áreas do projeto para uma versão posterior. Veja o [roteiro e os critérios](ROADMAP.md).
+
 ## Objetivo
 
 Concluir uma plataforma de processos para a Mix7 que reduza a dependência de cobranças informais e conhecimento individual, mantendo demandas, tarefas, responsáveis, instruções, versões, feedbacks e decisões em um sistema compartilhado e recuperável. O escopo inclui gestão da equipe, módulos de aprovação expansíveis, tempo e capacidade, IA sujeita à revisão humana, avaliação, conhecimento, onboarding e acessos seguros. A jornada local atual é uma demonstração para validar interações, não o produto completo.

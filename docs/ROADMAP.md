@@ -1,6 +1,10 @@
 # Roteiro para concluir a plataforma Mix7
 
-O objetivo é entregar uma plataforma de processos utilizável pela equipe e pelos clientes da Mix7. O fluxo local de demandas já construído é uma demonstração para validar comportamento; não representa a conclusão do projeto. O Trello acompanha cada entrega e este roteiro define a ordem, as dependências e as condições para considerar o projeto completo.
+## Escopo da primeira entrega operacional
+
+A primeira versão em uso deve incluir a plataforma completa descrita nos três áudios: gestão de equipe e demandas; aprovações expansíveis; tempo, disponibilidade e Gantt; IA com revisão humana; avaliação; conhecimento, treinamento e onboarding; acessos seguros; histórico, segurança e operação. As etapas abaixo ordenam construção e validação; protótipos menores são ensaios e não adiam áreas do projeto para depois do lançamento.
+
+O fluxo local de demandas já construído é uma demonstração para validar comportamento, não representa a conclusão do projeto. O Trello acompanha cada entrega e este roteiro define ordem, dependências e condições para considerar o projeto completo.
 
 ## Etapas e condições de conclusão
 

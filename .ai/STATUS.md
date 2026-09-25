@@ -1,5 +1,9 @@
 # Estado atual — Plataforma Mix7 — 2026-09-25
 
+## Escopo da primeira versão operacional — 2026-09-25
+- Registrada a decisão do usuário: a primeira versão em uso inclui a plataforma completa dos três áudios; protótipos e fases menores validam a construção sem cortar áreas do lançamento. Alinhados `docs/PRODUCT.md`, `docs/ROADMAP.md`, `.ai/CONTEXT.md` e `.ai/DECISIONS.md`; proposta de arquitetura e requisitos correspondentes estão sendo alinhados na branch de pesquisa/PR #10.
+- Validação desta alteração documental e sincronização: pendentes até concluir diff, commit e CI. O Trello continua pendente de confirmação pontual para publicar o comentário de escopo no cartão de roadmap correspondente.
+
 ## Objetivo
 Concluir a plataforma de processos inteira conforme os três áudios. O protótipo local é apenas uma etapa; o critério de projeto completo inclui gestão compartilhada, aprovações expansíveis, IA revisada por pessoa, conhecimento, acessos, avaliação, segurança e operação. O roteiro vigente está em `docs/ROADMAP.md`.
 
