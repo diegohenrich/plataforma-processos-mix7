@@ -2,7 +2,7 @@
 
 Projeto da Mix7 para reunir gestão de equipe e aprovações em um fluxo documentado, rastreável e integrado. O primeiro módulo de aprovação tratará criativos de redes sociais; o modelo deverá comportar outras áreas da agência.
 
-**Estado:** engenharia de requisitos e primeira fatia funcional local em `prototipo/`. Esta fatia valida o fluxo no navegador; ainda não há arquitetura/stack de produção, servidor, login ou armazenamento compartilhado.
+**Estado:** engenharia de requisitos, protótipo local em `prototipo/` e fundação web Laravel em `web-app/`. O protótipo valida o fluxo no navegador; a nova aplicação inicia autenticação e integração com banco/API, mas ainda não está implantada nem pronta para dados reais.
 
 ## Fluxo integrado já definido
 
@@ -17,6 +17,7 @@ Demanda/briefing → planejamento revisado → execução → revisão interna �
 - [Ficha para validar um caso real da Mix7](docs/VALIDACAO-CASO-REAL.md)
 - [Produto e público](docs/PRODUCT.md)
 - [Fases e critérios de avanço](docs/ROADMAP.md)
+- [Arquitetura web Laravel e Hostinger](docs/ARQUITETURA-HOSTINGER-LARAVEL.md)
 - [Primeira implementação e seus limites](docs/PRIMEIRA-IMPLEMENTACAO.md)
 - [Conhecimento e onboarding: escopo e pendências](docs/CONHECIMENTO-ONBOARDING.md)
 - [Histórico de validações anteriores](docs/VALIDACOES-HISTORICAS.md)
@@ -29,4 +30,4 @@ O Trello é a fonte canônica para cartões e andamento. Este repositório guard
 
 **Regra de continuidade:** cada alteração ou tarefa concluída deve resultar em commit enviado e verificado no GitHub e atualização do cartão correspondente no Trello, com o resultado e o link. Consulte [AGENTS.md](AGENTS.md) e [Como contribuir](CONTRIBUTING.md). A organização inicial está preservada na tag `marco-2026-09-24-organizacao-inicial`.
 
-Para executar a demonstração local, siga [prototipo/README.md](prototipo/README.md). Não use dados reais: o armazenamento fica só neste navegador e pode ser removido ao limpar os dados locais. As pastas `Sistema de gestão de equipe` e `Sistema de aprovação de criativos das redes sociais` representam as duas frentes iniciais; a arquitetura técnica final permanece em aberto.
+Para executar a demonstração local, siga [prototipo/README.md](prototipo/README.md). Para a nova aplicação web, consulte [a configuração Laravel](docs/ARQUITETURA-HOSTINGER-LARAVEL.md). Não use dados reais: o protótipo guarda dados só neste navegador e a aplicação Laravel ainda não tem permissões completas, operação de produção nem implantação. As pastas `Sistema de gestão de equipe` e `Sistema de aprovação de criativos das redes sociais` representam as duas frentes iniciais.

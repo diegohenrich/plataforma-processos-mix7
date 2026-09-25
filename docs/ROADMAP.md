@@ -27,6 +27,7 @@ O fluxo local de demandas já construído é uma demonstração para validar com
 - **Ainda não construído para operação:** autenticação e contas reais, permissões e isolamento entre clientes, servidor e armazenamento central, cópias de segurança, onboarding comprovado por identidade e compartilhado, gestão de acesso a serviços, disponibilidade/capacidade conforme regras aprovadas, integração de IA, avaliação, automações operacionais e implantação.
 - **Ainda depende de confirmação:** caso real anonimizado, papéis e exceções da Mix7, regras de jornada e disponibilidade, governança e fórmula de avaliação, serviços e integrações, além da inspeção autenticada do dashboard CRM prometida pelo usuário.
 - **Em revisão no GitHub:** PR #8 de requisitos, PR #9 da demonstração e PR #10 de pesquisa/arquitetura. Propostas em rascunho não equivalem a decisões integradas ou stack aprovada.
+- **Fundação web em construção:** aplicação Laravel 12 em `web-app/`, destinada a PHP 8.2+ e MariaDB do plano Hostinger existente, com phpMyAdmin para administração do banco. A decisão, limites do plano, preparação local e pendências de segurança/implantação estão em [ARQUITETURA-HOSTINGER-LARAVEL.md](ARQUITETURA-HOSTINGER-LARAVEL.md). Não há deploy nem autorização para inserir dados reais.
 
 ## Critério de projeto completo
 
