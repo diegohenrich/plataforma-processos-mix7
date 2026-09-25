@@ -8,6 +8,7 @@
 ## Tempo, disponibilidade e capacidade — 2026-09-25
 - Registrados separadamente o tempo medido, a estimativa de tarefa e a capacidade planejada. `docs/TEMPO-E-CAPACIDADE.md` documenta o comportamento confirmado do cronômetro, a fórmula de capacidade como proposta e seis perguntas de operação ainda abertas.
 - `git diff --check` passou; arquivos e link local `docs/REQUIREMENTS.md` → `TEMPO-E-CAPACIDADE.md` conferidos. A alteração é documental, então testes de produto não se aplicam. Commit e CI desta atualização ainda pendentes. Atualizar o cartão Trello de gestão de tempo com a decisão, critérios e link continua pendente de confirmação para publicar na interface.
+- Commit `d74556fc338fb45d47f0bd46a790cd67971ca3b3` publicado em `implementation/primeira-jornada-local`, SHA remoto idêntico. Os checks do push e da PR #9 passaram ([push](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36166443795), [PR](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36166450042)). O cartão #8 precisa receber a decisão e o link depois da confirmação pontual para comentar no Trello.
 
 ## Objetivo
 Concluir a plataforma de processos inteira conforme os três áudios. O protótipo local é apenas uma etapa; o critério de projeto completo inclui gestão compartilhada, aprovações expansíveis, IA revisada por pessoa, conhecimento, acessos, avaliação, segurança e operação. O roteiro vigente está em `docs/ROADMAP.md`.
