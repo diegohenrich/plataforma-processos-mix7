@@ -1,5 +1,11 @@
 # Estado em 2026-09-24
 
+## Smoke test dos controles principais — 2026-09-25
+
+- Em Chromium/Playwright 1.63, perfil limpo na origem isolada `127.0.0.1:4205`, confirmei a navegação pelas oito páginas, alternância Quadro/Lista, abertura e fechamento dos filtros e da janela de exportação, e abertura/cancelamento do formulário de nova demanda. Cancelar o briefing vazio não salvou dados; nenhum erro JavaScript ocorreu.
+- A página não ganhou rolagem horizontal: o quadro tem overflow próprio (1.468 px de conteúdo dentro de 1.112 px em desktop; 1.837 px dentro de 310 px em celular). A rolagem horizontal fica no Kanban, sem expandir o documento. A inspeção cobre controles principais, não todos os campos ou regras de negócio.
+- Captura desktop em `%LOCALAPPDATA%/Temp/mix7-audit-1440.png` inspecionada. `node --test tests/workflow.test.js` passou 22/22. A referência renderizada do dashboard do CRM continua pendente de autenticação manual pelo usuário; não houve ajuste visual nesta tarefa.
+
 ## Evidência dos tipos de usuário nos áudios — 2026-09-25
 
 - `docs/REQUIREMENTS.md` agora separa, com intervalos citados, as capacidades que os áudios atribuem ao responsável que fala como dono/representante da Mix7, gerente, profissional e cliente/aprovador, das permissões ainda desconhecidas. Cargo formal, administração técnica, criação de contas e matriz de acesso não são tratados como fatos.
