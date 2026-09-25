@@ -109,3 +109,7 @@ Uma checagem de interface em Chromium/Playwright 1.62.1, com perfil e dados desc
 No mesmo perfil descartável, passaram: navegação nas oito páginas; alternância quadro/lista; busca por “Botânica”; filtros de etapa; abrir/fechar perfil, pendências e opções; downloads JSON e CSV; cancelar briefing vazio sem criar demanda; e abrir, minimizar e reabrir uma demanda. Nenhum erro JavaScript ocorreu. A janela do filtro foi renderizada e inspecionada após a correção. A origem de uso `4173` não foi aberta nem alterada.
 
 Este smoke test cobre esses controles e não equivale a teste de produção nem à auditoria de cada campo e transição. Autenticação, contas e permissões permanecem ausentes no protótipo local.
+
+### Abrir demanda a partir de pendências — 2026-09-25
+
+Uma verificação isolada encontrou que clicar numa pendência abria sua demanda atrás do diálogo modal, deixando-a inacessível. O botão agora fecha o diálogo antes de abrir o drawer. Chromium no perfil sintético `127.0.0.1:4203` confirmou que clicar em “Briefing precisa ser completado” fecha a janela de pendências e deixa a demanda correta aberta; o botão Fechar do drawer retorna ao quadro. A sessão foi isolada das abas de uso em `127.0.0.1:4173`.

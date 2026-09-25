@@ -402,12 +402,15 @@ function panelHeading(title, text) {
   return heading;
 }
 
-function makeOpenRequestButton(request, detail = "") {
+function makeOpenRequestButton(request, detail = "", beforeOpen = null) {
   const button = node("button", "workspace-request", "");
   button.type = "button";
   button.append(node("strong", "", request.title), node("span", "", `${request.client} · ${stages[request.stage]}`));
   if (detail) button.append(node("small", "", detail));
-  button.addEventListener("click", () => openDrawer(request.id));
+  button.addEventListener("click", () => {
+    beforeOpen?.();
+    openDrawer(request.id);
+  });
   return button;
 }
 
@@ -1301,7 +1304,9 @@ function renderNotifications() {
     if ((request.tasks || []).some(task => (Number(task.round) || round) === round && task.blockedReason)) attention.push([request, "Há uma tarefa com impedimento"]);
   }
   if (!attention.length) return list.append(emptyPanel("Nenhuma pendência encontrada", "O quadro não tem itens que atendam aos avisos desta demonstração."));
-  for (const [request, label] of attention) list.append(makeOpenRequestButton(request, label));
+  for (const [request, label] of attention) {
+    list.append(makeOpenRequestButton(request, label, () => document.querySelector("#notificationsDialog").close()));
+  }
 }
 
 function downloadData(filename, content, type) {

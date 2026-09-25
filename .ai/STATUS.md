@@ -347,3 +347,9 @@
 - Reproduzido no Chromium/Playwright 1.62.1 em `127.0.0.1:4201`: o diálogo de filtros acumulava opções de etapa/cliente em cada abertura (9/4, depois 17/7 e 25/10). `prototipo/app.js` agora recria as opções antes de inserir as atuais.
 - Smoke test passou: oito destinos de navegação, quadro/lista, busca, três aberturas consistentes do filtro, filtro de etapa e limpeza, perfil, pendências, downloads JSON/CSV, cancelamento do briefing vazio e reabertura de demanda minimizada. Nenhum `pageerror`. Janela do filtro renderizada e inspecionada; dados isolados, sem acessar a origem `4173`.
 - Documentado em `docs/PRIMEIRA-IMPLEMENTACAO.md`. `node --test tests/workflow.test.js` passou 21/21; `node --check prototipo/workflow.js`, `node --check prototipo/app.js` e `git diff --check` passaram. Correção no commit `0cb7ccaca6cb69f1ec8c6ed8faf5b8571f38fa6a`, SHA local/remoto coincidente; CI push [36099980458](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36099980458) e PR [36099983764](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36099983764) passaram. Evidência detalhada adicionada ao cartão 18 do Trello.
+
+## Navegação de pendências para demanda — 2026-09-25
+
+- O teste em `127.0.0.1:4203` revelou que os botões de pendência abriam o drawer por trás do diálogo modal, impedindo acesso visual à demanda. Ajustei o evento para fechar o diálogo antes de abrir o drawer.
+- A validação Chromium no perfil sintético confirmou o estado aberto da demanda certa, janela modal fechada e retorno ao quadro ao fechar o drawer. A captura do drawer visível foi inspecionada; as abas de dados em `127.0.0.1:4173` não foram tocadas.
+- `node --test tests/workflow.test.js` passou 21/21; `node --check prototipo/workflow.js`, `node --check prototipo/app.js` e `git diff --check` passaram. CI e sincronização Trello/GitHub serão registrados após o commit.
