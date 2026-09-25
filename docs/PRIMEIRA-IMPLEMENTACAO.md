@@ -83,3 +83,11 @@ Antes de usar dados reais, fechar o caso real da Mix7 e sua matriz de papéis; e
 ### E2E adicional de briefing e tarefas — 25/09/2026
 
 Em Chromium numa origem isolada, uma demanda sintética avançou do formulário para planejamento, recebeu tarefa com responsável e estimativa, foi confirmada e chegou à execução. A página Equipe mostrou a atribuição e abriu a demanda. Ao concluir a tarefa, o evento entrou no histórico e a fila pendente ficou vazia. O seletor de arquivo nativo não é exposto pelo harness CUA; por isso, esta execução não percorreu anexo, revisão, aprovação do cliente ou conclusão completa. Essa limitação não substitui nem invalida testes anteriores de seleção de arquivo sintético, mas o E2E integrado dessas etapas segue aberto.
+
+### Jornada completa de aprovação em Chromium — 2026-09-25
+
+Com Playwright 1.63 e Chromium local, sem adicionar dependências ao projeto, foi executado um contexto novo e isolado em `127.0.0.1:4199`. O roteiro criou briefing sintético; confirmou plano com profissional/estimativa; concluiu V1; anexou PNG sintético por `filechooser`; submeteu à revisão interna; compartilhou; registrou pedido de ajuste do cliente ligado à V1; criou/concluiu tarefa de ajuste; anexou a nova V2; repetiu revisão interna; aprovou V2; registrou publicação e evidência; e conferiu estado final Concluídas. O histórico exibiu a sequência e o comentário antigo permaneceu visível; `pageerror` não registrou erros.
+
+A segunda execução capturou e inspecionou a tela final em 1440×1000: drawer, V02, feedback em V01, etapa Concluídas, resultado e toast de sucesso aparecem juntos, sem corte horizontal. A imagem de um pixel é apenas arquivo sintético para validar o percurso, não uma amostra visual de criativo.
+
+Limite: a mesma sessão local representou os cliques de cliente e equipe; portanto, isto valida estados e transições, não portal remoto, identidade, permissões ou isolamento real entre usuários. O navegador foi descartável, sem dados de cliente.
