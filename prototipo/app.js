@@ -335,7 +335,6 @@ function renderMinimizedRequests() {
       taskSelect.value = activeTaskForRequest?.id || (availableTasks.some(task => task.id === previousSelection) ? previousSelection : availableTasks.length === 1 ? availableTasks[0].id : "");
       taskSelect.disabled = Boolean(activeTaskForRequest);
 
-      const timeEntries = activeTaskForRequest || runnableTasks;
       const selectedTask = availableTasks.find(task => task.id === taskSelect.value);
       const totalSeconds = task => (task.timeEntries || []).reduce((sum, entry) => sum + (Number(entry.durationSeconds) || 0), 0);
       const elapsed = node("small", "minimized-timer-total", selectedTask
@@ -352,6 +351,7 @@ function renderMinimizedRequests() {
         minimizedTimerTaskSelections.set(request.id, taskSelect.value);
         const task = availableTasks.find(candidate => candidate.id === taskSelect.value);
         elapsed.textContent = task ? `Registrado: ${formatDuration(totalSeconds(task))}` : "Selecione uma tarefa para ver o tempo registrado.";
+        timerButton.disabled = !activeTaskForRequest && (Boolean(activeTimer) || !task);
       });
 
       const timerButton = node("button", "minimized-timer-button", activeTaskForRequest ? "Pausar" : "Iniciar");
