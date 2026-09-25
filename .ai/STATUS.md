@@ -1,3 +1,9 @@
+## Auditoria funcional isolada: filtros e demanda minimizada — 2026-09-25
+
+- Em Chromium, no perfil descartável `127.0.0.1:4208`, apliquei o filtro de cliente Café Aroeira e confirmei três demandas distribuídas entre as etapas. O formulário vazio recusou o envio com mensagem de campo obrigatório; cancelei sem criar item e a contagem permaneceu em oito.
+- Abri um briefing incompleto, confirmei que o avanço a planejamento ficou desativado, minimizei e reabri a mesma demanda. Título, cliente, briefing e histórico permaneceram visíveis. A captura final foi inspecionada: o painel rola internamente e mantém as ações no rodapé.
+- Dados de demonstração sintéticos em origem separada; nenhuma aba de uso foi modificada. `node --test tests/workflow.test.js` passou 22/22; `node --check` nos dois arquivos JavaScript e `git diff --check` passaram. Nenhum código mudou nesta auditoria.
+
 ## CRM aberto para referência visual — 2026-09-25
 
 - Confirmei a execução local do CRM em `http://127.0.0.1:8198`. A aba Chromium atualmente mostra a tela `Entrar | CRM Mix7`; sem sessão, a rota do dashboard administrativo redireciona para login. Não li nem inseri credenciais.
