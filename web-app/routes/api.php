@@ -28,5 +28,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active'])->group(function (): 
     Route::patch('/tasks/{task}/status', [DemandTaskController::class, 'updateStatus']);
     Route::post('/tasks/{task}/timer/start', [DemandTaskController::class, 'startTimer']);
     Route::post('/tasks/{task}/timer/pause', [DemandTaskController::class, 'pauseTimer']);
+    Route::patch('/tasks/{task}/schedule', [DemandTaskController::class, 'updateSchedule']);
+    Route::patch('/tasks/{task}/assignee', [DemandTaskController::class, 'updateAssignee']);
     Route::post('/tasks/timer/recover', [DemandTaskController::class, 'recoverTimer']);
 });

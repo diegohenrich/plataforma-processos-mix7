@@ -20,6 +20,8 @@ A API pertence à aplicação Laravel e usa o mesmo banco, políticas e históri
 | `PATCH /tasks/{task}/status` | `{"status":"in_progress"}` | Aplica somente a próxima transição permitida. Concluir fecha o timer aberto e registra autoria e data de conclusão. |
 | `POST /tasks/{task}/timer/start` | Vazio | Profissional inicia timer da própria tarefa. Recusa tarefa concluída, predecessoras abertas ou outro timer ativo. |
 | `POST /tasks/{task}/timer/pause` | Vazio | Profissional pausa timer da própria tarefa e recebe o intervalo salvo. |
+| `PATCH /tasks/{task}/schedule` | `{"planned_start_on":"2026-10-02","planned_due_on":"2026-10-07"}` | Direção/gerência salva ou limpa datas opcionais da tarefa na própria organização. Prazo anterior ao início é recusado. |
+| `PATCH /tasks/{task}/assignee` | `{"assignee_id":17}` | Direção/gerência transfere trabalho aberto para profissional ativo da própria organização. Se houver timer ativo, ele é encerrado e tarefa em execução fica pausada, com autoria no histórico. |
 | `POST /tasks/timer/recover` | Vazio | Profissional encerra sua sessão ativa e pausa a tarefa. Se o processo ficou fechado, o período desde o início pode incluir tempo offline e deve ser revisado. |
 
 Profissionais só alteram tarefa atribuída a si; direção/gerência podem mudar o estado de tarefas da própria organização; clientes não operam tarefas. Iniciar/pausar/reconhecer timers é exclusivo do profissional responsável. Os mesmos eventos de autoria usados pelo site são gravados pela API.
@@ -48,4 +50,4 @@ Erros de validação e transição de tarefa não permitida usam HTTP `422`; con
 
 ## Limites atuais
 
-A escrita cobre criação de demanda e tarefas, transições de etapa/tarefa e cronômetro, reutilizando regras já aplicadas pelo site. Transferir responsável, editar cronograma, gerir conhecimento/equipe, aprovação, anexos e configuração de tokens ainda não têm endpoints de escrita nesta versão. Não existe aplicação Windows nesta entrega; o contrato fica documentado para esse cliente futuro. A matriz de perfis e a operação compartilhada ainda precisam de validação da Mix7 antes do uso com dados reais.
+A escrita cobre criação de demanda e tarefas, transições de etapa/tarefa, cronograma, transferência de responsável e cronômetro, reutilizando regras já aplicadas pelo site. Gerir conhecimento/equipe, aprovação, anexos e configuração de tokens ainda não têm endpoints de escrita nesta versão. Não existe aplicação Windows nesta entrega; o contrato fica documentado para esse cliente futuro. A matriz de perfis e a operação compartilhada ainda precisam de validação da Mix7 antes do uso com dados reais.

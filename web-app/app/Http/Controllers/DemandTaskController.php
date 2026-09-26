@@ -317,7 +317,7 @@ class DemandTaskController extends Controller
         return $this->actionSuccess($request, $task->fresh(), 'Status da tarefa atualizado.');
     }
 
-    public function updateSchedule(Request $request, DemandTask $task): RedirectResponse
+    public function updateSchedule(Request $request, DemandTask $task): RedirectResponse|JsonResponse
     {
         $this->authorize('updateSchedule', $task);
         $data = $request->validate([
@@ -328,13 +328,17 @@ class DemandTaskController extends Controller
         $start = $data['planned_start_on'] ?? null;
         $due = $data['planned_due_on'] ?? null;
         if ($start && $due && $due < $start) {
+            if ($request->expectsJson()) {
+                return $this->actionFailure($request, 'planned_due_on', 'O prazo precisa ser igual ou posterior ao início.');
+            }
+
             return back()->withErrors(['planned_due_on' => 'O prazo precisa ser igual ou posterior ao início.'])->withInput();
         }
         $oldStart = $task->planned_start_on?->format('Y-m-d');
         $oldDue = $task->planned_due_on?->format('Y-m-d');
 
         if ($oldStart === $start && $oldDue === $due) {
-            return back()->with('success', 'O cronograma já estava atualizado.');
+            return $this->actionSuccess($request, $task, 'O cronograma já estava atualizado.');
         }
 
         DB::transaction(function () use ($task, $request, $start, $due): void {
@@ -350,10 +354,12 @@ class DemandTaskController extends Controller
             ]);
         });
 
-        return back()->with('success', 'Datas planejadas salvas no cronograma.');
+        $task->refresh();
+
+        return $this->actionSuccess($request, $task, 'Datas planejadas salvas no cronograma.');
     }
 
-    public function updateAssignee(Request $request, DemandTask $task): RedirectResponse
+    public function updateAssignee(Request $request, DemandTask $task): RedirectResponse|JsonResponse
     {
         $this->authorize('updateAssignee', $task);
         $organizationId = $request->user()->organization_id;
@@ -441,9 +447,11 @@ class DemandTaskController extends Controller
             return null;
         });
 
-        return $result
-            ? back()->withErrors(['assignee_id' => $result])
-            : back()->with('success', 'Responsável atualizado. O histórico mantém quem executou cada etapa.');
+        if ($result) {
+            return $this->actionFailure($request, 'assignee_id', $result, 409);
+        }
+
+        return $this->actionSuccess($request, $task->fresh(), 'Responsável atualizado. O histórico mantém quem executou cada etapa.');
     }
 
     private function actionSuccess(Request $request, DemandTask $task, string $message, ?TaskTimeEntry $entry = null): RedirectResponse|JsonResponse
@@ -452,6 +460,8 @@ class DemandTaskController extends Controller
             return back()->with('success', $message);
         }
 
+        $task->loadMissing('assignee:id,name');
+
         return response()->json([
             'message' => $message,
             'data' => [
@@ -459,6 +469,9 @@ class DemandTaskController extends Controller
                 'status' => $task->status->value,
                 'status_label' => $task->status->label(),
                 'completed_at' => $task->completed_at?->toISOString(),
+                'assignee' => ['id' => $task->assignee->id, 'name' => $task->assignee->name],
+                'planned_start_on' => $task->planned_start_on?->format('Y-m-d'),
+                'planned_due_on' => $task->planned_due_on?->format('Y-m-d'),
                 'timer' => $entry ? [
                     'id' => $entry->id,
                     'started_at' => $entry->started_at?->toISOString(),
