@@ -13,11 +13,11 @@ class DemandTask extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['organization_id', 'demand_id', 'created_by', 'assigned_to', 'title', 'description', 'status', 'estimate_minutes', 'completed_at'];
+    protected $fillable = ['organization_id', 'demand_id', 'created_by', 'assigned_to', 'title', 'description', 'status', 'estimate_minutes', 'planned_start_on', 'planned_due_on', 'completed_at'];
 
     protected function casts(): array
     {
-        return ['status' => TaskStatus::class, 'completed_at' => 'immutable_datetime'];
+        return ['status' => TaskStatus::class, 'completed_at' => 'immutable_datetime', 'planned_start_on' => 'immutable_date', 'planned_due_on' => 'immutable_date'];
     }
 
     public function demand(): BelongsTo

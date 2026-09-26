@@ -163,6 +163,8 @@ class DemandController extends Controller
             'currentUser' => $user,
             'demand' => $demand->load(['creator:id,name', 'organization:id,name', 'client:id,name,email']),
             'tasks' => $tasks,
+            'scheduledTasks' => $tasks->filter(fn ($task) => $task->planned_start_on || $task->planned_due_on)->values(),
+            'unscheduledTaskCount' => $tasks->filter(fn ($task) => ! $task->planned_start_on && ! $task->planned_due_on)->count(),
             'events' => $demand->events()
                 ->with('actor:id,name')
                 ->when($user->role === UserRole::Professional, fn (Builder $query) => $query->where(fn (Builder $visible) => $visible

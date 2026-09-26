@@ -205,4 +205,39 @@ class DemandTaskController extends Controller
 
         return back()->with('success', 'Status da tarefa atualizado.');
     }
+
+    public function updateSchedule(Request $request, DemandTask $task): RedirectResponse
+    {
+        $this->authorize('updateSchedule', $task);
+        $data = $request->validate([
+            'planned_start_on' => ['nullable', 'date_format:Y-m-d'],
+            'planned_due_on' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:planned_start_on'],
+        ], [
+            'planned_due_on.after_or_equal' => 'O prazo precisa ser igual ou posterior ao início.',
+        ]);
+
+        $start = $data['planned_start_on'] ?? null;
+        $due = $data['planned_due_on'] ?? null;
+        $oldStart = $task->planned_start_on?->format('Y-m-d');
+        $oldDue = $task->planned_due_on?->format('Y-m-d');
+
+        if ($oldStart === $start && $oldDue === $due) {
+            return back()->with('success', 'O cronograma já estava atualizado.');
+        }
+
+        DB::transaction(function () use ($task, $request, $start, $due): void {
+            $task->update(['planned_start_on' => $start, 'planned_due_on' => $due]);
+            $format = fn (?string $date): string => $date ? CarbonImmutable::parse($date)->format('d/m/Y') : 'sem data';
+            DemandEvent::create([
+                'organization_id' => $task->organization_id,
+                'demand_id' => $task->demand_id,
+                'task_id' => $task->id,
+                'actor_id' => $request->user()->id,
+                'event_type' => 'task_schedule_updated',
+                'summary' => $request->user()->name.' atualizou as datas de "'.$task->title.'": '.$format($start).' a '.$format($due),
+            ]);
+        });
+
+        return back()->with('success', 'Datas planejadas salvas no cronograma.');
+    }
 }

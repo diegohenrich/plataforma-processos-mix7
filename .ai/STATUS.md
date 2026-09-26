@@ -1,5 +1,10 @@
 # Estado atual — Plataforma Mix7 — 2026-09-26
 
+## Cronograma Gantt factual no Laravel — 2026-09-26
+- Adicionei início e prazo opcionais por tarefa, formulário de edição limitado a direção/gerência, registro de autoria no histórico e cronograma com períodos, marcos de uma data e tarefas sem datas. Datas são colunas `DATE`; nenhuma jornada, capacidade ou disponibilidade é inferida. Profissionais só recebem suas próprias tarefas e eventos associados.
+- Validação: `php artisan test --compact` passou 64 testes/506 assertions; Pint, `npm run build`, `composer validate --no-check-publish` e `git diff --check` passaram. Migração rodou em SQLite descartável; a tela autenticada renderizada em desktop mostrou o período, o marco, os nomes e as datas esperadas com dados sintéticos. Captura visual em pixels e inspeção em celular seguem pendentes; não usei o banco ou credenciais reais.
+- Cartão Trello #41 [Exibir cronograma Gantt no Laravel](https://trello.com/c/o2YFOIFL/41-exibir-cronograma-gantt-no-laravel) foi criado em Em andamento. PR #11 e sincronização da branch ainda serão atualizados com esta entrega; manter o cartão Em andamento até validação visual.
+
 ## Rabisco livre em comentários da revisão externa — 2026-09-26
 - Cliente agora pode desenhar na prévia de site e vincular até 256 pontos normalizados ao comentário e à versão. Laravel valida JSON e limites, e apresenta o SVG salvo ao cliente e à equipe; os testes cobrem persistência, renderização, JSON inválido e coordenadas fora do intervalo.
 - Validação: `php artisan test --compact` passou 61 testes/483 assertions; Pint focado, `npm run build`, `composer validate --no-check-publish` e `git diff --check` passaram. No navegador isolado, desenhei 9 pontos, enviei a anotação e recarreguei o link; comentário, bounding box e rabisco SVG permaneceram no histórico. O endereço fictício do iframe não resolve DNS, mas a ferramenta sobre a prévia continuou funcional. Não usei conteúdo real. Inspeção em 390 px continua pendente.

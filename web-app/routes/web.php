@@ -37,6 +37,7 @@ Route::middleware(['auth', 'active'])->group(function (): void {
     Route::post('/tarefas/{task}/cronometro/iniciar', [DemandTaskController::class, 'startTimer'])->name('demand-tasks.timer.start');
     Route::post('/tarefas/{task}/cronometro/pausar', [DemandTaskController::class, 'pauseTimer'])->name('demand-tasks.timer.pause');
     Route::patch('/tarefas/{task}/status', [DemandTaskController::class, 'updateStatus'])->name('demand-tasks.status');
+    Route::patch('/tarefas/{task}/cronograma', [DemandTaskController::class, 'updateSchedule'])->name('demand-tasks.schedule');
     Route::get('/conhecimento', [KnowledgeController::class, 'index'])->name('knowledge.index');
     Route::post('/conhecimento', [KnowledgeController::class, 'store'])->name('knowledge.store');
     Route::get('/conhecimento/arquivados', [KnowledgeController::class, 'archived'])->name('knowledge.archived');

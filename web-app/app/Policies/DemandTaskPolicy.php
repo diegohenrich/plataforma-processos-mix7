@@ -26,4 +26,11 @@ class DemandTaskPolicy
             || $user->role === UserRole::MarketingManager
             || ($user->role === UserRole::Professional && $task->assigned_to === $user->id);
     }
+
+    public function updateSchedule(User $user, DemandTask $task): bool
+    {
+        return $user->is_active
+            && $user->organization_id === $task->organization_id
+            && in_array($user->role, [UserRole::AgencyOwner, UserRole::MarketingManager], true);
+    }
 }

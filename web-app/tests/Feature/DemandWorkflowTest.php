@@ -61,6 +61,75 @@ class DemandWorkflowTest extends TestCase
         $this->assertSame(2, User::where('organization_id', $organization->id)->where('role', UserRole::Professional->value)->count());
     }
 
+    public function test_manager_can_set_and_clear_task_schedule_and_history_records_actor(): void
+    {
+        [$organization, $manager, $professional] = $this->team();
+        $demand = $this->demand($organization, $manager);
+        $task = $this->task($demand, $professional, $manager, 'Produzir páginas');
+
+        $this->actingAs($manager)->patch(route('demand-tasks.schedule', $task), [
+            'planned_start_on' => '2026-10-02',
+            'planned_due_on' => '2026-10-07',
+        ])->assertRedirect()->assertSessionHasNoErrors();
+
+        $this->assertSame('2026-10-02', $task->fresh()->planned_start_on->format('Y-m-d'));
+        $this->assertSame('2026-10-07', $task->fresh()->planned_due_on->format('Y-m-d'));
+        $this->get(route('demands.show', $demand))
+            ->assertOk()
+            ->assertSee('Cronograma')
+            ->assertSee('Período')
+            ->assertSee('02/10/2026')
+            ->assertSee('07/10/2026');
+        $this->assertDatabaseHas('demand_events', [
+            'task_id' => $task->id,
+            'actor_id' => $manager->id,
+            'event_type' => 'task_schedule_updated',
+            'summary' => $manager->name.' atualizou as datas de "Produzir páginas": 02/10/2026 a 07/10/2026',
+        ]);
+
+        $this->patch(route('demand-tasks.schedule', $task), [
+            'planned_start_on' => '',
+            'planned_due_on' => '',
+        ])->assertRedirect()->assertSessionHasNoErrors();
+        $this->assertNull($task->fresh()->planned_start_on);
+        $this->assertNull($task->fresh()->planned_due_on);
+    }
+
+    public function test_invalid_schedule_and_professional_schedule_edits_are_rejected(): void
+    {
+        [$organization, $manager, $professional] = $this->team();
+        $demand = $this->demand($organization, $manager);
+        $task = $this->task($demand, $professional, $manager, 'Editar conteúdo');
+
+        $this->actingAs($manager)->patch(route('demand-tasks.schedule', $task), [
+            'planned_start_on' => '2026-10-08',
+            'planned_due_on' => '2026-10-07',
+        ])->assertSessionHasErrors('planned_due_on');
+        $this->assertNull($task->fresh()->planned_start_on);
+
+        $this->actingAs($professional)->patch(route('demand-tasks.schedule', $task), [
+            'planned_start_on' => '2026-10-02',
+            'planned_due_on' => '2026-10-07',
+        ])->assertForbidden();
+        $this->assertNull($task->fresh()->planned_start_on);
+    }
+
+    public function test_demand_cronograma_only_contains_the_professionals_own_tasks(): void
+    {
+        [$organization, $manager, $professional, $colleague] = $this->team();
+        $demand = $this->demand($organization, $manager);
+        $ownTask = $this->task($demand, $professional, $manager, 'Minha página');
+        $privateTask = $this->task($demand, $colleague, $manager, 'Página privada da colega');
+        $ownTask->update(['planned_start_on' => '2026-10-02']);
+        $privateTask->update(['planned_start_on' => '2026-10-03']);
+
+        $this->actingAs($professional)->get(route('demands.show', $demand))
+            ->assertOk()
+            ->assertSee('Minha página')
+            ->assertDontSee('Página privada da colega')
+            ->assertDontSee('task_schedule_updated');
+    }
+
     public function test_professional_only_sees_demands_and_tasks_assigned_to_them(): void
     {
         [$organization, $manager, $professional, $colleague] = $this->team();
