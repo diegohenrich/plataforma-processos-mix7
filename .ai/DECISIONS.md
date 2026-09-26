@@ -1,5 +1,7 @@
 # Decisões vigentes
 
+- 2026-09-26 — A primeira ampliação de ferramentas do assistente interno fora da demanda é uma consulta somente leitura a métricas factuais da própria organização, disponível à direção/gerência: estados e estimativas de tarefas, conclusões e tempo registrado em 30 dias. Não expõe títulos de tarefas, não cruza organizações e não calcula capacidade, nota ou ranking. Rever quando a matriz de acesso e as políticas de IA forem validadas pela Mix7.
+
 - 2026-09-26 — Evitar tarifa recorrente por token é requisito de direção para IA Mix7. O Laravel aceita provedor OpenAI-compatible; um modelo local é a opção para inferência sem tarifa do provedor, condicionada a máquina/rede/worker disponíveis. Isso ainda não seleciona a topologia do modelo, não autoriza expor endpoint na internet nem enviar briefing real; validar segurança, retenção e operação primeiro. Ver `docs/ARQUITETURA-HOSTINGER-LARAVEL.md`.
 
 - 2026-09-25 — A aplicação compartilhada será um site Laravel 12 em PHP 8.2+, com MariaDB no plano Hostinger já contratado e phpMyAdmin para administrar o banco. Sem serviço pago adicional. A API Laravel versionada servirá também a um futuro executável Windows; ele nunca se conectará diretamente ao banco. O plano, domínio, método de implantação e recursos disponíveis devem ser confirmados no hPanel antes de publicar. Ver `docs/ARQUITETURA-HOSTINGER-LARAVEL.md`.

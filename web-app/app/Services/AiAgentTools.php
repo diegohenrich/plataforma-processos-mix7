@@ -2,9 +2,14 @@
 
 namespace App\Services;
 
+use App\Enums\TaskStatus;
+use App\Enums\UserRole;
 use App\Models\Demand;
+use App\Models\DemandTask;
 use App\Models\KnowledgeItem;
+use App\Models\TaskTimeEntry;
 use App\Models\User;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
@@ -30,6 +35,12 @@ class AiAgentTools
             ]);
         }
 
+        if (in_array($user->role, [UserRole::AgencyOwner, UserRole::MarketingManager], true)) {
+            $tools[] = $this->tool('summarize_team_activity', 'Lê contagens factuais da equipe desta organização: tarefas abertas por estado, estimativas, conclusões e tempo registrado nos últimos 30 dias. Não calcula capacidade nem pontua pessoas.', [
+                'type' => 'object', 'properties' => new \stdClass, 'required' => [], 'additionalProperties' => false,
+            ]);
+        }
+
         return $tools;
     }
 
@@ -42,8 +53,72 @@ class AiAgentTools
             'read_demand_context' => $this->readDemandContext($user, $demand),
             'search_knowledge' => $this->searchKnowledge($arguments, $user),
             'list_client_feedback' => $this->listClientFeedback($user, $demand),
+            'summarize_team_activity' => $this->summarizeTeamActivity($user),
             default => throw ValidationException::withMessages(['ai' => 'A ferramenta solicitada não está autorizada.']),
         };
+    }
+
+    /** @return array{result: array<string, mixed>, receipt: array<string, mixed>} */
+    private function summarizeTeamActivity(User $user): array
+    {
+        abort_unless(in_array($user->role, [UserRole::AgencyOwner, UserRole::MarketingManager], true), 403);
+        $since = CarbonImmutable::now()->subDays(30);
+        $now = CarbonImmutable::now();
+
+        $professionals = User::query()
+            ->where('organization_id', $user->organization_id)
+            ->where('role', UserRole::Professional->value)
+            ->orderBy('name')
+            ->get(['id', 'name', 'is_active']);
+        $professionalIds = $professionals->modelKeys();
+
+        $taskGroups = DemandTask::query()
+            ->selectRaw('assigned_to, status, COUNT(*) as task_count, SUM(CASE WHEN status != ? THEN COALESCE(estimate_minutes, 0) ELSE 0 END) as open_estimate_minutes', [TaskStatus::Completed->value])
+            ->where('organization_id', $user->organization_id)
+            ->whereIn('assigned_to', $professionalIds)
+            ->groupBy('assigned_to', 'status')
+            ->get()
+            ->groupBy('assigned_to');
+        $completedCounts = DemandTask::query()
+            ->selectRaw('assigned_to, COUNT(*) as task_count')
+            ->where('organization_id', $user->organization_id)
+            ->whereIn('assigned_to', $professionalIds)
+            ->where('status', TaskStatus::Completed->value)
+            ->where('completed_at', '>=', $since)
+            ->groupBy('assigned_to')
+            ->pluck('task_count', 'assigned_to');
+        $recordedSeconds = array_fill_keys($professionalIds, 0);
+        TaskTimeEntry::query()
+            ->where('organization_id', $user->organization_id)
+            ->whereIn('user_id', $professionalIds)
+            ->where('started_at', '>=', $since)
+            ->orderBy('id')
+            ->cursor()
+            ->each(function (TaskTimeEntry $entry) use (&$recordedSeconds, $now): void {
+                $recordedSeconds[$entry->user_id] += (int) $entry->started_at->diffInSeconds($entry->ended_at ?? $now);
+            });
+
+        $rows = $professionals->map(function (User $professional) use ($taskGroups, $completedCounts, $recordedSeconds): array {
+            $byStatus = $taskGroups->get($professional->id, collect())->keyBy('status');
+            $counts = [];
+            foreach ([TaskStatus::Todo, TaskStatus::InProgress, TaskStatus::Paused, TaskStatus::Blocked] as $status) {
+                $counts[$status->value] = (int) ($byStatus->get($status->value)->task_count ?? 0);
+            }
+
+            return [
+                'professional' => $professional->name,
+                'active' => $professional->is_active,
+                'open_tasks_by_status' => $counts,
+                'open_estimate_minutes' => (int) $byStatus->sum('open_estimate_minutes'),
+                'completed_tasks_last_30_days' => (int) ($completedCounts[$professional->id] ?? 0),
+                'recorded_seconds_last_30_days' => $recordedSeconds[$professional->id] ?? 0,
+            ];
+        })->all();
+
+        return [
+            'result' => ['period_days' => 30, 'professionals' => $rows, 'interpretation' => 'São registros operacionais, não avaliação, ranking ou cálculo de disponibilidade/capacidade.'],
+            'receipt' => ['tool' => 'summarize_team_activity', 'source' => 'Atividade da equipe da organização', 'items' => count($rows)],
+        ];
     }
 
     /** @return array{result: array<string, mixed>, receipt: array<string, mixed>} */

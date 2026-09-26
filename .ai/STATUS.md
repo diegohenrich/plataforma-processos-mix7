@@ -1,5 +1,10 @@
 # Estado atual — Plataforma Mix7 — 2026-09-26
 
+## Ferramenta factual de atividade da equipe para o assistente — 2026-09-26
+- Adicionei ao assistente em demanda uma ferramenta de leitura da equipe para direção/gerência. Ela retorna, por profissional da mesma organização, tarefas abertas por estado, estimativa aberta, conclusões e segundos registrados nos últimos 30 dias; não retorna títulos de tarefas, outras organizações nem interpreta os dados como capacidade/nota/ranking. Profissionais não recebem a ferramenta.
+- Validação local: suíte completa passou (95 testes/752 assertions), Pint, `composer validate --no-check-publish`, `npm run build` e `git diff --check` passaram. Testes cobrem perfil, escopo da organização, estimativas, conclusões e tempo. Não houve chamada a provedor real.
+- GitHub/Trello pendentes até esta alteração ser publicada. O editor de comentário do cartão Trello #39 não ficou disponível; texto digitado atingiu a busca de membros, que foi limpa sem alteração de membros. Manter o cartão em Próximas entregas.
+
 ## Recuperar cronômetro após fechamento abrupto — 2026-09-26
 - A tela “Meu trabalho” agora oferece recuperação manual do cronômetro para o profissional autenticado. A ação encerra o intervalo no momento da recuperação, pausa a tarefa e grava evento auditável; deixa claro que o tempo desde a falha pode incluir período offline e exige revisão manual. Gerência/direção não encerram o timer alheio por esse caminho.
 - Validação automatizada: suíte Laravel passou (93 testes/742 assertions), Pint focalizado passou após ordenar imports, Composer validou, `npm run build` passou e `git diff --check` passou. O teste cobre autorização, encerramento do intervalo, pausa da tarefa e evento de auditoria.

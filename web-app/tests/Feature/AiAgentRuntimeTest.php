@@ -11,8 +11,10 @@ use App\Models\Demand;
 use App\Models\DemandTask;
 use App\Models\KnowledgeItem;
 use App\Models\Organization;
+use App\Models\TaskTimeEntry;
 use App\Models\User;
 use App\Services\AiAgentRuntime;
+use App\Services\AiAgentTools;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Crypt;
@@ -76,6 +78,45 @@ class AiAgentRuntimeTest extends TestCase
         $messages = collect(Http::recorded())->flatMap(fn ($record) => $record[0]['messages'] ?? [])->pluck('content')->implode(' ');
         $this->assertStringContainsString('Montar estrutura', $messages);
         $this->assertStringContainsString('Padrão de site', $messages);
+    }
+
+    public function test_manager_agent_can_read_factual_team_activity_without_cross_organization_data(): void
+    {
+        [$organization, $manager, $professional, $demand] = $this->workspace();
+        $colleague = User::factory()->create(['organization_id' => $organization->id, 'role' => UserRole::Professional, 'is_active' => true, 'name' => 'Colega Mix7']);
+        $task = $demand->tasks()->create(['organization_id' => $organization->id, 'created_by' => $manager->id, 'assigned_to' => $professional->id, 'title' => 'Montar a página', 'status' => TaskStatus::Todo, 'estimate_minutes' => 90]);
+        $complete = $demand->tasks()->create(['organization_id' => $organization->id, 'created_by' => $manager->id, 'assigned_to' => $professional->id, 'title' => 'Finalizar texto', 'status' => TaskStatus::Completed, 'estimate_minutes' => 30, 'completed_at' => now()->subDays(2)]);
+        TaskTimeEntry::create(['organization_id' => $organization->id, 'task_id' => $complete->id, 'user_id' => $professional->id, 'started_at' => now()->subMinutes(50), 'ended_at' => now()->subMinutes(20)]);
+        $otherOrganization = Organization::create(['name' => 'Outra agência', 'slug' => 'outra-agencia']);
+        $otherManager = User::factory()->create(['organization_id' => $otherOrganization->id, 'role' => UserRole::AgencyOwner, 'is_active' => true]);
+        $otherProfessional = User::factory()->create(['organization_id' => $otherOrganization->id, 'role' => UserRole::Professional, 'is_active' => true, 'name' => 'Pessoa de outra agência']);
+        $otherDemand = Demand::create(['organization_id' => $otherOrganization->id, 'created_by' => $otherManager->id, 'title' => 'Outro cliente', 'brief' => 'Privado', 'status' => DemandStatus::InProgress]);
+        $otherDemand->tasks()->create(['organization_id' => $otherOrganization->id, 'created_by' => $otherManager->id, 'assigned_to' => $otherProfessional->id, 'title' => 'Tarefa externa', 'status' => TaskStatus::Todo]);
+
+        $definitions = collect(app(AiAgentTools::class)->definitions($manager, $demand));
+        $this->assertTrue($definitions->contains(fn ($tool) => $tool['function']['name'] === 'summarize_team_activity'));
+        $result = app(AiAgentTools::class)->execute('summarize_team_activity', [], $manager, $demand);
+        $person = collect($result['result']['professionals'])->firstWhere('professional', $professional->name);
+
+        $this->assertSame(1, $person['open_tasks_by_status'][TaskStatus::Todo->value]);
+        $this->assertSame(90, $person['open_estimate_minutes']);
+        $this->assertSame(1, $person['completed_tasks_last_30_days']);
+        $this->assertSame(1800, $person['recorded_seconds_last_30_days']);
+        $this->assertSame(0, collect($result['result']['professionals'])->where('professional', 'Pessoa de outra agência')->count());
+        $this->assertSame('São registros operacionais, não avaliação, ranking ou cálculo de disponibilidade/capacidade.', $result['result']['interpretation']);
+        $this->assertDatabaseHas('demand_tasks', ['id' => $task->id, 'status' => TaskStatus::Todo->value]);
+    }
+
+    public function test_professional_agent_definitions_do_not_include_team_activity_tool(): void
+    {
+        [, $manager, $professional, $demand] = $this->workspace();
+        $demand->tasks()->create(['organization_id' => $demand->organization_id, 'created_by' => $manager->id, 'assigned_to' => $professional->id, 'title' => 'Tarefa individual', 'status' => TaskStatus::Todo]);
+
+        $definitions = collect(app(AiAgentTools::class)->definitions($professional, $demand));
+
+        $this->assertFalse($definitions->contains(fn ($tool) => $tool['function']['name'] === 'summarize_team_activity'));
+        $this->expectException(HttpException::class);
+        app(AiAgentTools::class)->execute('summarize_team_activity', [], $professional, $demand);
     }
 
     public function test_professional_cannot_run_assistant_and_cost_is_unknown_if_not_reported(): void
