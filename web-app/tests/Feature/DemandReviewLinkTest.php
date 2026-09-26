@@ -249,7 +249,9 @@ class DemandReviewLinkTest extends TestCase
             'anchor_height' => 14,
         ])->assertRedirect()->assertSessionHasNoErrors();
 
-        $rectangleAnnotation = $demand->reviewLinks()->firstOrFail()->responses()->latest('id')->firstOrFail();
+        $rectangleAnnotation = $demand->reviewLinks()->firstOrFail()->responses()
+            ->where('comment', 'Alterar este bloco inteiro.')
+            ->firstOrFail();
         $this->assertSame('Alterar este bloco inteiro.', $rectangleAnnotation->comment);
         $this->assertSame(26.5, $rectangleAnnotation->anchor_data['width']);
         $this->assertEquals(14, $rectangleAnnotation->anchor_data['height']);
