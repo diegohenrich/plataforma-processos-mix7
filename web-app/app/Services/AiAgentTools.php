@@ -16,28 +16,33 @@ use Illuminate\Validation\ValidationException;
 class AiAgentTools
 {
     /** @return list<array<string, mixed>> */
-    public function definitions(User $user, Demand $demand): array
+    public function definitions(User $user, ?Demand $demand): array
     {
-        $tools = [
-            $this->tool('read_demand_context', 'Lê o resumo autorizado desta demanda e as tarefas atribuídas à pessoa que perguntou.', [
+        $tools = [];
+        if ($demand) {
+            $tools[] = $this->tool('read_demand_context', 'Lê o resumo autorizado desta demanda e as tarefas atribuídas à pessoa que perguntou.', [
                 'type' => 'object', 'properties' => new \stdClass, 'required' => [], 'additionalProperties' => false,
-            ]),
+            ]);
+        }
+        $tools[] =
             $this->tool('search_knowledge', 'Busca referências e instruções internas ativas desta organização por palavras-chave.', [
                 'type' => 'object',
                 'properties' => ['query' => ['type' => 'string', 'minLength' => 2, 'maxLength' => 180]],
                 'required' => ['query'], 'additionalProperties' => false,
-            ]),
-        ];
+            ]);
 
-        if ($user->can('manage', $demand)) {
+        $canManage = $demand ? $user->can('manage', $demand) : in_array($user->role, [UserRole::AgencyOwner, UserRole::MarketingManager], true);
+        if ($canManage) {
             $tools[] = $this->tool('search_organization_demands', 'Busca até cinco demandas da própria organização por parte do título e retorna somente etapa, data de atualização e quantidade de tarefas; não retorna briefing nem dados de clientes.', [
                 'type' => 'object',
                 'properties' => ['query' => ['type' => 'string', 'minLength' => 2, 'maxLength' => 180]],
                 'required' => ['query'], 'additionalProperties' => false,
             ]);
-            $tools[] = $this->tool('list_client_feedback', 'Lê comentários e decisões do cliente desta demanda, sem revelar token ou arquivo privado.', [
-                'type' => 'object', 'properties' => new \stdClass, 'required' => [], 'additionalProperties' => false,
-            ]);
+            if ($demand) {
+                $tools[] = $this->tool('list_client_feedback', 'Lê comentários e decisões do cliente desta demanda, sem revelar token ou arquivo privado.', [
+                    'type' => 'object', 'properties' => new \stdClass, 'required' => [], 'additionalProperties' => false,
+                ]);
+            }
         }
 
         if (in_array($user->role, [UserRole::AgencyOwner, UserRole::MarketingManager], true)) {
@@ -50,14 +55,14 @@ class AiAgentTools
     }
 
     /** @return array{result: array<string, mixed>, receipt: array<string, mixed>} */
-    public function execute(string $name, mixed $arguments, User $user, Demand $demand): array
+    public function execute(string $name, mixed $arguments, User $user, ?Demand $demand): array
     {
         $arguments = is_array($arguments) ? $arguments : [];
 
         return match ($name) {
-            'read_demand_context' => $this->readDemandContext($user, $demand),
+            'read_demand_context' => $demand ? $this->readDemandContext($user, $demand) : throw ValidationException::withMessages(['ai' => 'Não há demanda ativa nesta consulta.']),
             'search_knowledge' => $this->searchKnowledge($arguments, $user),
-            'list_client_feedback' => $this->listClientFeedback($user, $demand),
+            'list_client_feedback' => $demand ? $this->listClientFeedback($user, $demand) : throw ValidationException::withMessages(['ai' => 'Não há demanda ativa nesta consulta.']),
             'summarize_team_activity' => $this->summarizeTeamActivity($user),
             'search_organization_demands' => $this->searchOrganizationDemands($arguments, $user),
             default => throw ValidationException::withMessages(['ai' => 'A ferramenta solicitada não está autorizada.']),

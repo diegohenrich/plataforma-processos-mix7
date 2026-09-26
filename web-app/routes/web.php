@@ -42,6 +42,9 @@ Route::middleware(['auth', 'active'])->group(function (): void {
     Route::delete('/demandas/{demand}/planejamento-ia/{run}', [AiPlanningController::class, 'discard'])->name('ai-planning.discard');
     Route::post('/demandas/{demand}/assistente', [AiAgentController::class, 'ask'])->middleware('throttle:3,1')->name('ai-agent.ask');
     Route::get('/demandas/{demand}/assistente/{run}/status', [AiAgentController::class, 'status'])->name('ai-agent.status');
+    Route::get('/assistente-agencia', [AiAgentController::class, 'organizationIndex'])->name('organization-assistant.index');
+    Route::post('/assistente-agencia', [AiAgentController::class, 'askOrganization'])->middleware('throttle:3,1')->name('organization-assistant.ask');
+    Route::get('/assistente-agencia/{run}/status', [AiAgentController::class, 'organizationStatus'])->name('organization-assistant.status');
     Route::post('/demandas/{demand}/links-revisao', [DemandReviewController::class, 'store'])->name('demand-reviews.store');
     Route::delete('/demandas/{demand}/links-revisao/{reviewLink}', [DemandReviewController::class, 'revoke'])->name('demand-reviews.revoke');
     Route::get('/demandas/{demand}/links-revisao/{reviewLink}/material', [DemandReviewController::class, 'teamMaterial'])->name('demand-reviews.team-material');

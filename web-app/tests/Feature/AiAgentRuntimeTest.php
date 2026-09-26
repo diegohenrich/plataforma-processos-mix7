@@ -56,6 +56,91 @@ class AiAgentRuntimeTest extends TestCase
         Http::assertNothingSent();
     }
 
+    public function test_organization_assistant_queues_audited_question_without_demand_or_raw_prompt(): void
+    {
+        [, $manager] = $this->workspace();
+        Bus::fake();
+        Http::fake();
+
+        $this->actingAs($manager)->get(route('organization-assistant.index'))
+            ->assertOk()->assertSee('Assistente da agência')->assertSee('sem briefing ou dados de clientes');
+        $this->post(route('organization-assistant.ask'), ['question' => 'Quais demandas estão em aprovação?'])
+            ->assertRedirect(route('organization-assistant.index'))->assertSessionHasNoErrors();
+
+        $run = AiAgentRun::where('agent', 'organization_assistant')->firstOrFail();
+        $this->assertNull($run->demand_id);
+        $this->assertSame(hash('sha256', 'Quais demandas estão em aprovação?'), $run->input_hash);
+        $this->assertDatabaseMissing('ai_agent_runs', ['answer' => 'Quais demandas estão em aprovação?']);
+        Bus::assertDispatched(ProcessAiAgentRun::class);
+        Http::assertNothingSent();
+    }
+
+    public function test_organization_assistant_exposes_only_organization_tools_and_searches_scoped_summaries(): void
+    {
+        [$organization, $manager, $professional, $currentDemand] = $this->workspace();
+        $currentDemand->update(['brief' => 'Briefing confidencial que não deve ser enviado.']);
+        $otherOrganization = Organization::create(['name' => 'Outra agência', 'slug' => 'agencia-externa']);
+        $otherOwner = User::factory()->create(['organization_id' => $otherOrganization->id, 'role' => UserRole::AgencyOwner, 'is_active' => true]);
+        Demand::create(['organization_id' => $otherOrganization->id, 'created_by' => $otherOwner->id, 'title' => 'Site de outro cliente', 'brief' => 'Segredo externo.', 'status' => DemandStatus::InProgress]);
+        KnowledgeItem::create(['organization_id' => $organization->id, 'created_by' => $manager->id, 'updated_by' => $manager->id, 'type' => 'reference', 'title' => 'Padrão Mix7', 'content' => 'Usar estrutura legível.']);
+        $currentDemand->tasks()->create(['organization_id' => $organization->id, 'created_by' => $manager->id, 'assigned_to' => $professional->id, 'title' => 'Montar página', 'status' => TaskStatus::Todo, 'estimate_minutes' => 45]);
+
+        $definitions = collect(app(AiAgentTools::class)->definitions($manager, null));
+        $toolNames = $definitions->pluck('function.name');
+        $this->assertTrue($toolNames->contains('search_organization_demands'));
+        $this->assertTrue($toolNames->contains('search_knowledge'));
+        $this->assertTrue($toolNames->contains('summarize_team_activity'));
+        $this->assertFalse($toolNames->contains('read_demand_context'));
+        $this->assertFalse($toolNames->contains('list_client_feedback'));
+
+        Http::fakeSequence()->push($this->toolResponse([
+            ['id' => 'org-demands', 'function' => ['name' => 'search_organization_demands', 'arguments' => '{"query":"Site"}']],
+            ['id' => 'org-knowledge', 'function' => ['name' => 'search_knowledge', 'arguments' => '{"query":"Padrão Mix7"}']],
+        ]), 200)->push($this->answerResponse('Encontrei demandas da Mix7 e uma referência interna.'), 200);
+        $result = app(AiAgentRuntime::class)->run(null, $manager, 'Quais sites estão ativos e que padrão interno usamos?');
+
+        $this->assertSame('Encontrei demandas da Mix7 e uma referência interna.', $result['answer']);
+        $this->assertSame(['search_organization_demands', 'search_knowledge'], collect($result['tool_trace'])->pluck('tool')->all());
+        $messages = collect(Http::recorded())->flatMap(fn ($record) => $record[0]['messages'] ?? [])->pluck('content')->implode(' ');
+        $this->assertStringNotContainsString('Briefing confidencial', $messages);
+        $this->assertStringNotContainsString('Segredo externo', $messages);
+        $this->assertStringNotContainsString('Site de outro cliente', $messages);
+        $this->assertStringContainsString('Padrão Mix7', $messages);
+    }
+
+    public function test_organization_assistant_is_limited_to_management_and_run_owner(): void
+    {
+        [, $manager, $professional] = $this->workspace();
+        $client = User::factory()->create(['organization_id' => $manager->organization_id, 'role' => UserRole::Client, 'is_active' => true]);
+        Bus::fake();
+        Http::fake();
+
+        $this->actingAs($professional)->get(route('organization-assistant.index'))->assertForbidden();
+        $this->actingAs($client)->get(route('organization-assistant.index'))->assertForbidden();
+        $this->actingAs($professional)->post(route('organization-assistant.ask'), ['question' => 'Consulta não autorizada?'])->assertForbidden();
+        $run = AiAgentRun::create(['organization_id' => $manager->organization_id, 'demand_id' => null, 'requested_by' => $manager->id, 'agent' => 'organization_assistant', 'provider' => 'vercel-ai-gateway', 'model' => 'test-provider/test-model', 'input_hash' => hash('sha256', 'question'), 'input_characters' => 8, 'status' => 'queued']);
+        $this->actingAs($professional)->getJson(route('organization-assistant.status', $run))->assertNotFound();
+        $this->actingAs($manager)->getJson(route('organization-assistant.status', $run))->assertOk()->assertJson(['status' => 'queued']);
+        Http::assertNothingSent();
+    }
+
+    public function test_organization_assistant_job_records_answer_and_provider_usage(): void
+    {
+        [, $manager] = $this->workspace();
+        Http::fake(['https://ai-gateway.vercel.sh/v1/chat/completions' => Http::response($this->answerResponse('Há uma referência vigente e três demandas abertas.'), 200)]);
+        $run = AiAgentRun::create(['organization_id' => $manager->organization_id, 'demand_id' => null, 'requested_by' => $manager->id, 'agent' => 'organization_assistant', 'provider' => 'vercel-ai-gateway', 'model' => 'test-provider/test-model', 'input_hash' => hash('sha256', 'question'), 'input_characters' => 8, 'status' => 'queued']);
+
+        (new ProcessAiAgentRun($run->id, Crypt::encryptString('Resuma a atividade da agência.')))->handle(app(AiAgentRuntime::class));
+
+        $this->assertSame('completed', $run->fresh()->status);
+        $this->assertSame('Há uma referência vigente e três demandas abertas.', $run->fresh()->answer);
+        $this->assertSame(12, $run->fresh()->input_tokens);
+        $this->assertSame(7, $run->fresh()->output_tokens);
+        $this->assertNull($run->fresh()->provider_cost);
+        $this->assertNull($run->fresh()->demand_id);
+        $this->assertSame([], $run->fresh()->tool_trace);
+    }
+
     public function test_runtime_reads_organization_context_and_knowledge_without_writing_tasks(): void
     {
         [$organization, $manager, , $demand] = $this->workspace();
