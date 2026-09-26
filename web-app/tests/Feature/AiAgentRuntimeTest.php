@@ -82,7 +82,9 @@ class AiAgentRuntimeTest extends TestCase
 
         $this->assertSame('O comentário da versão 1 pede ajuste.', $result['answer']);
         $this->assertSame(['list_client_feedback'], collect($result['tool_trace'])->pluck('tool')->all());
-        Http::assertSent(fn ($request) => collect($request['tools'])->pluck('function.name')->all() === ['read_demand_context', 'list_client_feedback']);
+        Http::assertSent(fn ($request) => collect($request['tools'])->pluck('function.name')->all() === ['read_demand_context', 'list_client_feedback']
+            && str_contains($request['messages'][0]['content'], 'proponha rascunhos de tarefas')
+            && str_contains($request['messages'][0]['content'], 'não crie tarefas'));
     }
 
     public function test_organization_assistant_queues_audited_question_without_demand_or_raw_prompt(): void
