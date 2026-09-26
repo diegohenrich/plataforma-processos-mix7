@@ -95,6 +95,11 @@ Concluir a plataforma de processos inteira conforme os três áudios. O protóti
 - `node --test tests/*.test.js`: 31/31 passaram; `node --check` de `workflow.js`, `knowledge.js` e `app.js`, além de `git diff --check`, passaram após a conferência visual; a jornada Playwright desktop/móvel confirmou os quatro tipos, validação de onboarding, edição, busca, filtro, arquivamento, restauração e persistência após recarga. Implementação no commit `bb41353`, remoto igual ao local; CI push e PR passaram nos runs [36147487882](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36147487882) e [36147492969](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36147492969).
 - O cartão Trello #30 [Criar biblioteca local de conhecimento e onboarding](https://trello.com/c/9CC2wSxA/30-criar-biblioteca-local-de-conhecimento-e-onboarding) está Em andamento com os cinco itens de entrega marcados e comentário com escopo, evidências, PR e commit. Permanece nessa lista até validação das regras reais pela Mix7.
 
+## Atalho de Conhecimento no painel — 2026-09-25
+- O painel autenticado agora abre diretamente a biblioteca de Conhecimento e informa que demandas e conhecimento estão disponíveis nesta etapa, removendo o rótulo incorreto “Em construção”.
+- Inspeção renderizada no navegador local confirmou o cartão clicável, o destino `/conhecimento` e a biblioteca carregada. `php artisan test --testdox`: 42 testes/322 assertions passaram; `npm run build` passou; `composer validate --no-check-publish` e `git diff --check` passaram. Dados usados na inspeção são sintéticos, em SQLite local ignorado pelo Git.
+- O cartão Trello #30 permanece Em andamento; registrar a entrega do atalho e commit nesta tarefa. Inspeção visual móvel desta pequena alteração ainda não foi refeita; a biblioteca já tem inspeção móvel registrada anteriormente.
+
 ## Pendências que impedem declarar lançamento
 - O caso operacional real da Mix7, atores, exceções, permissões e evidências finais por serviço ainda precisam de validação.
 - Contas reais não podem ser provisionadas sem nomes/e-mails confirmados, autorização e matriz aprovada. Conteúdo e contatos reais, responsáveis, públicos, revisão e conclusão pessoal de onboarding aguardam validação; IA, cálculo de disponibilidade/capacidade e integrações não estão implementados.

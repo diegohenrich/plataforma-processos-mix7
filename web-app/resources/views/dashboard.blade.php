@@ -22,11 +22,11 @@
                 @else
                     <article class="module pending"><span class="icon" aria-hidden="true">♧</span><h3>Equipe</h3><p>Atividades, tempo registrado e acompanhamento.</p><span class="module-state">Em construção</span></article>
                 @endcan
-                <article class="module pending"><span class="icon" aria-hidden="true">▤</span><h3>Conhecimento</h3><p>Referências, treinamentos e integração de pessoas.</p><span class="module-state">Em construção</span></article>
+                <a class="module module-link" href="{{ route('knowledge.index') }}"><span class="icon" aria-hidden="true">▤</span><h3>Conhecimento</h3><p>Referências, treinamentos e integração de pessoas.</p><span class="module-action">Abrir conhecimento →</span></a>
                 <article class="module pending"><span class="icon" aria-hidden="true">✧</span><h3>Automação e sugestões</h3><p>Recursos entram após regras e revisão humana definidas.</p></article>
                 <article class="module pending"><span class="icon" aria-hidden="true">⌁</span><h3>Indicadores de gestão</h3><p>Fórmulas e critérios aguardam definição antes de pontuar.</p></article>
             </section>
-            <p class="footnote">Os módulos em construção ainda não têm ações disponíveis. As demandas já podem ser registradas nesta versão.</p>
+            <p class="footnote">Conhecimento e demandas já estão disponíveis nesta etapa. Outros módulos ainda estão sendo construídos.</p>
         </div>
     </main>
 </div>
