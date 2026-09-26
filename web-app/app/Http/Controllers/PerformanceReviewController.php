@@ -8,6 +8,7 @@ use App\Models\DemandTask;
 use App\Models\PerformanceReview;
 use App\Models\PerformanceReviewResponse;
 use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -37,7 +38,7 @@ class PerformanceReviewController extends Controller
         return view('team.performance-reviews', compact('reviews', 'completedTasks', 'management'));
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request): RedirectResponse|JsonResponse
     {
         $reviewer = $request->user();
         abort_unless(in_array($reviewer->role, [UserRole::AgencyOwner, UserRole::MarketingManager], true), 403);
@@ -54,7 +55,7 @@ class PerformanceReviewController extends Controller
         abort_unless($task->assignee?->role === UserRole::Professional && $task->assignee->organization_id === $reviewer->organization_id, 422);
 
         try {
-            PerformanceReview::create([
+            $review = PerformanceReview::create([
                 'organization_id' => $reviewer->organization_id,
                 'task_id' => $task->id,
                 'professional_id' => $task->assigned_to,
@@ -67,22 +68,60 @@ class PerformanceReviewController extends Controller
                 'external_factors' => $data['external_factors'] ?? null,
             ]);
         } catch (UniqueConstraintViolationException) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Você já registrou uma avaliação desta tarefa.',
+                    'errors' => ['task_id' => ['Você já registrou uma avaliação desta tarefa.']],
+                ], 409);
+            }
+
             return back()->withErrors(['task_id' => 'Você já registrou uma avaliação desta tarefa.'])->withInput();
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Avaliação registrada e disponível para resposta do profissional.',
+                'data' => [
+                    'id' => $review->id,
+                    'task_id' => $review->task_id,
+                    'professional_id' => $review->professional_id,
+                    'reviewer_id' => $review->reviewer_id,
+                    'reviewer_role' => $review->reviewer_role,
+                    'reviewer_weight' => $review->reviewer_weight,
+                    'deadline_assessment' => $review->deadline_assessment,
+                    'quality_assessment' => $review->quality_assessment,
+                    'evidence' => $review->evidence,
+                    'external_factors' => $review->external_factors,
+                ],
+            ], 201);
         }
 
         return to_route('performance-reviews.index')->with('success', 'Avaliação registrada e disponível para resposta do profissional.');
     }
 
-    public function respond(Request $request, PerformanceReview $review): RedirectResponse
+    public function respond(Request $request, PerformanceReview $review): RedirectResponse|JsonResponse
     {
         $user = $request->user();
         abort_unless($user->is_active && $review->organization_id === $user->organization_id && $review->professional_id === $user->id && $user->role === UserRole::Professional, 403);
         $data = $request->validate(['response' => ['required', 'string', 'min:3', 'max:5000']]);
-        DB::transaction(fn () => PerformanceReviewResponse::create([
+        $reviewResponse = DB::transaction(fn (): PerformanceReviewResponse => PerformanceReviewResponse::create([
             'performance_review_id' => $review->id,
             'user_id' => $user->id,
             'response' => $data['response'],
         ]));
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Sua resposta foi registrada no histórico da avaliação.',
+                'data' => [
+                    'id' => $reviewResponse->id,
+                    'performance_review_id' => $reviewResponse->performance_review_id,
+                    'user_id' => $reviewResponse->user_id,
+                    'response' => $reviewResponse->response,
+                    'created_at' => $reviewResponse->created_at?->toISOString(),
+                ],
+            ], 201);
+        }
 
         return to_route('performance-reviews.index')->with('success', 'Sua resposta foi registrada no histórico da avaliação.');
     }

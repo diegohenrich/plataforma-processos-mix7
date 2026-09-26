@@ -17,6 +17,8 @@ A API pertence à aplicação Laravel e usa o mesmo banco, políticas e históri
 | `DELETE /demands/{demand}/review-links/{reviewLink}` | Vazio | Direção/gerência da mesma organização; revoga o link imediatamente |
 | `POST /team/invitations` | `name`, `email`, `role` (`professional` ou `client`) | Somente direção; cria link de ativação por 72 horas sem enviar e-mail; retorna URL secreta uma vez |
 | `DELETE /team/invitations/{invitation}` | Vazio | Somente direção da mesma organização; cancela o link pendente |
+| `POST /team/performance-reviews` | `task_id`, `deadline_assessment`, `quality_assessment`, `evidence?`, `external_factors?` | Direção/gerência registra avaliação de tarefa concluída da organização; o sistema aplica peso 2/1 e impede duplicata do mesmo avaliador (HTTP `409`) |
+| `POST /team/performance-reviews/{review}/responses` | `response` | Só a pessoa profissional avaliada, enquanto ativa e na mesma organização, pode registrar resposta ligada ao histórico |
 
 ## Aprovação externa por link
 
@@ -68,4 +70,4 @@ Erros de validação e transição de tarefa não permitida usam HTTP `422`; con
 
 ## Limites atuais
 
-A escrita cobre criação de demanda e tarefas, transições de etapa/tarefa, cronograma, transferência de responsável, cronômetro, registro de evidência pós-aprovação, ciclo de links de revisão e convite/cancelamento de profissionais e clientes. Gestão de acesso de contas, conhecimento e provisionamento de tokens Sanctum ainda não têm endpoints de API nesta versão. Não existe aplicação Windows nesta entrega; o contrato fica documentado para esse cliente futuro. A matriz de perfis e a operação compartilhada ainda precisam de validação da Mix7 antes do uso com dados reais.
+A escrita cobre criação de demanda e tarefas, transições de etapa/tarefa, cronograma, transferência de responsável, cronômetro, evidência pós-aprovação, ciclo de links de revisão, convite/cancelamento de profissionais e clientes, e avaliação/resposta. A API não calcula pontuação ou ranking. Gestão de acesso de contas, conhecimento e provisionamento de tokens Sanctum ainda não têm endpoints nesta versão. Não existe aplicação Windows nesta entrega; o contrato fica documentado para esse cliente futuro. A matriz de perfis e a operação compartilhada ainda precisam de validação da Mix7 antes do uso com dados reais.

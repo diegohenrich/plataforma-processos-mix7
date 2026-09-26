@@ -105,6 +105,51 @@ class TeamActivityTest extends TestCase
         $this->assertSame(1, PerformanceReviewResponse::count());
     }
 
+    public function test_management_can_review_by_api_and_only_the_assigned_professional_can_respond(): void
+    {
+        [$organization, $owner, $manager, $professional, $colleague, $client] = $this->workspace();
+        $demand = $this->demand($organization, $owner);
+        $task = $this->task($demand, $professional, 'Concluir campanha', TaskStatus::Completed);
+        $payload = [
+            'task_id' => $task->id,
+            'deadline_assessment' => 'O prazo foi acompanhado com contexto e evidência suficientes.',
+            'quality_assessment' => 'A entrega foi revisada conforme os critérios definidos para a campanha.',
+            'evidence' => 'Checklist da campanha conferido.',
+            'external_factors' => 'Aprovação do texto chegou após o prazo inicial.',
+        ];
+
+        $managerReviewResponse = $this->actingAs($manager)->postJson('/api/v1/team/performance-reviews', $payload)
+            ->assertCreated()
+            ->assertJsonPath('data.reviewer_id', $manager->id)
+            ->assertJsonPath('data.professional_id', $professional->id)
+            ->assertJsonPath('data.reviewer_weight', 1);
+        $managerReview = PerformanceReview::findOrFail($managerReviewResponse->json('data.id'));
+
+        $this->actingAs($owner)->postJson('/api/v1/team/performance-reviews', $payload)
+            ->assertCreated()
+            ->assertJsonPath('data.reviewer_weight', 2);
+        $this->actingAs($manager)->postJson('/api/v1/team/performance-reviews', $payload)
+            ->assertStatus(409);
+
+        $this->actingAs($colleague)->postJson('/api/v1/team/performance-reviews/'.$managerReview->id.'/responses', [
+            'response' => 'Não sou a pessoa avaliada nesta tarefa.',
+        ])->assertForbidden();
+        $this->actingAs($client)->postJson('/api/v1/team/performance-reviews/'.$managerReview->id.'/responses', [
+            'response' => 'O cliente não pode responder à avaliação interna.',
+        ])->assertForbidden();
+
+        $this->actingAs($professional)->postJson('/api/v1/team/performance-reviews/'.$managerReview->id.'/responses', [
+            'response' => 'Considero a evidência correta e contextualizo o prazo da campanha.',
+        ])->assertCreated()
+            ->assertJsonPath('data.performance_review_id', $managerReview->id)
+            ->assertJsonPath('data.user_id', $professional->id);
+        $this->assertDatabaseHas('performance_review_responses', [
+            'performance_review_id' => $managerReview->id,
+            'user_id' => $professional->id,
+            'response' => 'Considero a evidência correta e contextualizo o prazo da campanha.',
+        ]);
+    }
+
     public function test_owner_weight_is_two_and_duplicate_or_unrelated_reviews_are_rejected(): void
     {
         [$organization, $owner, , $professional] = $this->workspace();
