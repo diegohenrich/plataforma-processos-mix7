@@ -7,9 +7,12 @@ use App\Enums\TaskStatus;
 use App\Enums\UserRole;
 use App\Models\Demand;
 use App\Models\Organization;
+use App\Models\TeamInvitation;
 use App\Models\User;
+use App\Notifications\TeamInvitationNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 class ClientAccountAccessTest extends TestCase
@@ -18,17 +21,39 @@ class ClientAccountAccessTest extends TestCase
 
     public function test_owner_creates_client_account_and_assigns_a_demand_with_audited_author(): void
     {
+        Notification::fake();
         [$organization, $owner] = $this->workspace();
-        $this->actingAs($owner)->post(route('team.clients.store'), [
-            'client_name' => 'Cliente Exemplo',
-            'client_email' => 'CLIENTE@EXEMPLO.COM',
-            'client_password' => 'senha-cliente-segura',
+        $this->actingAs($owner)->post(route('team-invitations.store'), [
+            'name' => 'Cliente Exemplo',
+            'email' => 'CLIENTE@EXEMPLO.COM',
+            'role' => UserRole::Client->value,
         ])->assertRedirect(route('team.index'))->assertSessionHasNoErrors();
+
+        $invitation = TeamInvitation::query()->where('email', 'cliente@exemplo.com')->firstOrFail();
+        $token = null;
+        Notification::assertSentOnDemand(TeamInvitationNotification::class, function (TeamInvitationNotification $notification) use (&$token): bool {
+            $token = $notification->token;
+
+            return true;
+        });
+        $this->assertNotNull($token);
+        $this->assertNotSame($token, $invitation->token_hash);
+        $this->assertDatabaseMissing('users', ['email' => 'cliente@exemplo.com']);
+        $this->get(route('team-invitations.show', $token))->assertOk()->assertSee('Ative sua conta');
+        $this->post(route('team-invitations.accept', $token), [
+            'password' => 'senha-cliente-segura',
+            'password_confirmation' => 'senha-cliente-segura',
+        ])->assertRedirect(route('dashboard'));
 
         $client = User::query()->where('email', 'cliente@exemplo.com')->firstOrFail();
         $this->assertSame($organization->id, $client->organization_id);
         $this->assertSame(UserRole::Client, $client->role);
         $this->assertTrue(Hash::check('senha-cliente-segura', $client->password));
+        $this->assertNotNull($invitation->fresh()->accepted_at);
+        $this->post(route('team-invitations.accept', $token), [
+            'password' => 'senha-cliente-segura',
+            'password_confirmation' => 'senha-cliente-segura',
+        ])->assertSessionHasErrors('invitation');
 
         $demand = $this->demand($organization, $owner, ['client_user_id' => $client->id]);
         $this->actingAs($client)->get(route('demands.index'))->assertOk()->assertSee('Site institucional');

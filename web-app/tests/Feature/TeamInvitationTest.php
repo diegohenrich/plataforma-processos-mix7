@@ -1,0 +1,125 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Enums\UserRole;
+use App\Models\Organization;
+use App\Models\TeamInvitation;
+use App\Models\User;
+use App\Notifications\TeamInvitationNotification;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Notifications\AnonymousNotifiable;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Str;
+use Tests\TestCase;
+
+class TeamInvitationTest extends TestCase
+{
+    use RefreshDatabase;
+
+    public function test_only_owner_can_create_invitation_for_supported_roles(): void
+    {
+        Notification::fake();
+        [$organization, $owner] = $this->workspace();
+
+        $this->actingAs($owner)->post(route('team-invitations.store'), [
+            'name' => 'Nova Profissional', 'email' => ' NOVA@EXEMPLO.COM ', 'role' => UserRole::Professional->value,
+        ])->assertRedirect(route('team.index'))->assertSessionHasNoErrors();
+
+        $invite = TeamInvitation::query()->firstOrFail();
+        $this->assertSame($organization->id, $invite->organization_id);
+        $this->assertSame($owner->id, $invite->invited_by);
+        $this->assertSame('nova@exemplo.com', $invite->email);
+        $this->assertDatabaseMissing('users', ['email' => $invite->email]);
+        Notification::assertSentOnDemand(TeamInvitationNotification::class);
+
+        $manager = User::factory()->create(['organization_id' => $organization->id, 'role' => UserRole::MarketingManager, 'is_active' => true]);
+        $this->actingAs($manager)->post(route('team-invitations.store'), [
+            'name' => 'Negado', 'email' => 'negado@example.test', 'role' => UserRole::Client->value,
+        ])->assertForbidden();
+
+        $this->actingAs($owner)->post(route('team-invitations.store'), [
+            'name' => 'Papel inválido', 'email' => 'bad-role@example.test', 'role' => UserRole::AgencyOwner->value,
+        ])->assertSessionHasErrors('role');
+    }
+
+    public function test_invitation_link_expires_after_seventy_two_hours(): void
+    {
+        Notification::fake();
+        [$organization, $owner] = $this->workspace();
+        $this->actingAs($owner)->post(route('team-invitations.store'), [
+            'name' => 'Cliente', 'email' => 'client@example.test', 'role' => UserRole::Client->value,
+        ])->assertRedirect();
+
+        $invite = TeamInvitation::query()->firstOrFail();
+        $this->assertTrue($invite->expires_at->between(now()->addHours(71)->addMinutes(59), now()->addHours(72)->addSeconds(1)));
+        $token = Notification::sent(new AnonymousNotifiable, TeamInvitationNotification::class)->first()->token;
+        $invite->forceFill(['expires_at' => now()->subSecond()])->save();
+        $this->get(route('team-invitations.show', $token))->assertOk()->assertSee('Este convite não está disponível');
+        $this->post(route('team-invitations.accept', $token), [
+            'password' => 'senha-cliente-segura', 'password_confirmation' => 'senha-cliente-segura',
+        ])->assertSessionHasErrors('invitation');
+        $this->assertDatabaseMissing('users', ['email' => 'client@example.test']);
+    }
+
+    public function test_owner_can_revoke_pending_invitation_but_cannot_revoke_another_organization_invite(): void
+    {
+        Notification::fake();
+        [$organization, $owner] = $this->workspace();
+        [$otherOrganization, $otherOwner] = $this->workspace('outside');
+        $invite = $this->invitation($organization, $owner, 'client@example.test');
+
+        $this->actingAs($otherOwner)->delete(route('team-invitations.revoke', $invite))->assertNotFound();
+        $this->actingAs($owner)->delete(route('team-invitations.revoke', $invite))->assertRedirect(route('team.index'));
+        $this->assertNotNull($invite->fresh()->revoked_at);
+        $this->get(route('team-invitations.show', 'irrelevant'))->assertOk()->assertSee('Este convite não está disponível');
+
+        $manager = User::factory()->create(['organization_id' => $organization->id, 'role' => UserRole::MarketingManager, 'is_active' => true]);
+        $another = $this->invitation($organization, $owner, 'another@example.test');
+        $this->actingAs($manager)->delete(route('team-invitations.revoke', $another))->assertForbidden();
+    }
+
+    public function test_creating_new_invitation_for_same_email_revokes_previous_token(): void
+    {
+        Notification::fake();
+        [$organization, $owner] = $this->workspace();
+        $this->actingAs($owner)->post(route('team-invitations.store'), ['name' => 'One', 'email' => 'same@example.test', 'role' => UserRole::Professional->value]);
+        $old = TeamInvitation::query()->firstOrFail();
+        $oldToken = Notification::sent(new AnonymousNotifiable, TeamInvitationNotification::class)->first()->token;
+        $this->post(route('team-invitations.store'), ['name' => 'Two', 'email' => 'SAME@example.test', 'role' => UserRole::Client->value]);
+
+        $this->assertNotNull($old->fresh()->revoked_at);
+        $this->get(route('team-invitations.show', $oldToken))->assertOk()->assertSee('Este convite não está disponível');
+        $this->assertSame(2, TeamInvitation::query()->where('organization_id', $organization->id)->count());
+    }
+
+    public function test_password_validation_and_invalid_token_never_create_account(): void
+    {
+        $this->get(route('team-invitations.show', Str::random(64)))->assertOk()->assertSee('Este convite não está disponível');
+        $this->post(route('team-invitations.accept', Str::random(64)), [
+            'password' => 'short', 'password_confirmation' => 'different',
+        ])->assertSessionHasErrors('password');
+        $this->assertDatabaseCount('users', 0);
+    }
+
+    private function workspace(string $slug = 'mix7'): array
+    {
+        $organization = Organization::create(['name' => ucfirst($slug), 'slug' => $slug]);
+        $owner = User::factory()->create(['organization_id' => $organization->id, 'role' => UserRole::AgencyOwner, 'is_active' => true]);
+
+        return [$organization, $owner];
+    }
+
+    private function invitation(Organization $organization, User $owner, string $email): TeamInvitation
+    {
+        return TeamInvitation::create([
+            'organization_id' => $organization->id,
+            'invited_by' => $owner->id,
+            'name' => 'Pessoa convidada',
+            'email' => $email,
+            'role' => UserRole::Client,
+            'token_hash' => hash('sha256', Str::random(64)),
+            'expires_at' => now()->addHours(72),
+        ]);
+    }
+}

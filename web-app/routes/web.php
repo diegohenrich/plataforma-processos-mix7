@@ -9,6 +9,7 @@ use App\Http\Controllers\DemandReviewController;
 use App\Http\Controllers\DemandTaskController;
 use App\Http\Controllers\KnowledgeController;
 use App\Http\Controllers\TeamActivityController;
+use App\Http\Controllers\TeamInvitationController;
 use App\Http\Controllers\TeamMemberController;
 use Illuminate\Support\Facades\Route;
 
@@ -16,6 +17,8 @@ Route::redirect('/', '/painel');
 Route::get('/revisao/{token}', [DemandReviewController::class, 'show'])->middleware('throttle:30,1')->name('client-reviews.show');
 Route::get('/revisao/{token}/material', [DemandReviewController::class, 'material'])->middleware('throttle:60,1')->name('client-reviews.material');
 Route::post('/revisao/{token}/respostas', [DemandReviewController::class, 'respond'])->middleware('throttle:10,1')->name('client-reviews.respond');
+Route::get('/convite/{token}', [TeamInvitationController::class, 'show'])->middleware('throttle:30,1')->name('team-invitations.show');
+Route::post('/convite/{token}', [TeamInvitationController::class, 'accept'])->middleware('throttle:5,1')->name('team-invitations.accept');
 Route::middleware('guest')->group(function (): void {
     Route::get('/entrar', [SessionController::class, 'create'])->name('login');
     Route::post('/entrar', [SessionController::class, 'store'])->middleware('throttle:5,1');
@@ -53,7 +56,7 @@ Route::middleware(['auth', 'active'])->group(function (): void {
     Route::patch('/onboarding/{assignment}/etapas/{step}', [KnowledgeController::class, 'toggleStep'])->name('knowledge.assignment-step');
     Route::get('/equipe', [TeamMemberController::class, 'index'])->name('team.index');
     Route::get('/equipe/producao', [TeamActivityController::class, 'index'])->name('team.activity');
-    Route::post('/equipe', [TeamMemberController::class, 'store'])->name('team.store');
-    Route::post('/equipe/clientes', [TeamMemberController::class, 'storeClient'])->name('team.clients.store');
+    Route::post('/equipe/convites', [TeamInvitationController::class, 'store'])->middleware('throttle:10,1')->name('team-invitations.store');
+    Route::delete('/equipe/convites/{invitation}', [TeamInvitationController::class, 'revoke'])->name('team-invitations.revoke');
     Route::post('/sair', [SessionController::class, 'destroy'])->name('logout');
 });

@@ -9,9 +9,12 @@ use App\Models\Demand;
 use App\Models\DemandTask;
 use App\Models\Organization;
 use App\Models\TaskTimeEntry;
+use App\Models\TeamInvitation;
 use App\Models\User;
+use App\Notifications\TeamInvitationNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 class DemandWorkflowTest extends TestCase
@@ -184,12 +187,26 @@ class DemandWorkflowTest extends TestCase
     {
         [$organization, $owner] = $this->team();
 
-        $this->actingAs($owner)->post(route('team.store'), [
+        Notification::fake();
+        $this->actingAs($owner)->post(route('team-invitations.store'), [
             'name' => 'Nova Profissional',
             'email' => 'NOVA@EXEMPLO.COM',
-            'password' => 'senha-segura-123',
+            'role' => UserRole::Professional->value,
         ])->assertRedirect(route('team.index'));
 
+        $invitation = TeamInvitation::where('email', 'nova@exemplo.com')->firstOrFail();
+        $this->assertNotSame('senha-segura-123', $invitation->token_hash);
+        $this->assertDatabaseMissing('users', ['email' => 'nova@exemplo.com']);
+        $token = null;
+        Notification::assertSentOnDemand(TeamInvitationNotification::class, function (TeamInvitationNotification $notification) use (&$token): bool {
+            $token = $notification->token;
+
+            return true;
+        });
+        $this->post(route('team-invitations.accept', $token), [
+            'password' => 'senha-segura-123',
+            'password_confirmation' => 'senha-segura-123',
+        ])->assertRedirect(route('dashboard'));
         $professional = User::where('email', 'nova@exemplo.com')->firstOrFail();
         $this->assertSame($organization->id, $professional->organization_id);
         $this->assertSame(UserRole::Professional, $professional->role);
@@ -203,10 +220,10 @@ class DemandWorkflowTest extends TestCase
             'is_active' => true,
         ]);
         $this->actingAs($manager)->get(route('team.index'))->assertForbidden();
-        $this->post(route('team.store'), [
+        $this->post(route('team-invitations.store'), [
             'name' => 'Conta bloqueada',
             'email' => 'bloqueada@example.test',
-            'password' => 'senha-segura-123',
+            'role' => UserRole::Professional->value,
         ])->assertForbidden();
     }
 

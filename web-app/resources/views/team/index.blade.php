@@ -10,27 +10,35 @@
         <div class="content narrow-content">
             <p class="eyebrow">Acesso da agência</p>
             <h1 class="heading">Equipe e clientes</h1>
-            <p class="subheading">Crie contas e mantenha cada pessoa dentro do seu espaço de acesso.</p>
+            <p class="subheading">Envie um convite; cada pessoa cria a própria senha para acessar seu espaço.</p>
             @include('partials.flash')
+            @error('invitation')<p class="error" role="alert">{{ $message }}</p>@enderror
 
             <section class="panel team-panel">
                 <div class="section-heading"><div><h2>Adicionar profissional</h2><p>A conta será vinculada à Mix7 e poderá receber tarefas.</p></div></div>
-                <form method="post" action="{{ route('team.store') }}" class="team-form">@csrf
+                <form method="post" action="{{ route('team-invitations.store') }}" class="team-form">@csrf<input type="hidden" name="role" value="professional">
                     <label class="field">Nome<input name="name" value="{{ old('name') }}" maxlength="160" required autocomplete="name">@error('name')<span class="error">{{ $message }}</span>@enderror</label>
                     <label class="field">E-mail de acesso<input name="email" type="email" value="{{ old('email') }}" maxlength="255" required autocomplete="email">@error('email')<span class="error">{{ $message }}</span>@enderror</label>
-                    <label class="field">Senha inicial<input name="password" type="password" minlength="12" maxlength="200" required autocomplete="new-password"><span class="field-help">Use pelo menos 12 caracteres e entregue a senha diretamente à pessoa.</span>@error('password')<span class="error">{{ $message }}</span>@enderror</label>
-                    <div class="form-actions"><button class="primary-button" type="submit">Criar conta profissional</button></div>
+                    <p class="field-help">A pessoa receberá um link temporário e criará a própria senha.</p>
+                    <div class="form-actions"><button class="primary-button" type="submit">Enviar convite profissional</button></div>
                 </form>
             </section>
 
             <section class="panel team-panel">
                 <div class="section-heading"><div><h2>Adicionar cliente</h2><p>O cliente acompanhará apenas as demandas que a equipe vincular a esta conta.</p></div></div>
-                <form method="post" action="{{ route('team.clients.store') }}" class="team-form">@csrf
-                    <label class="field">Nome<input name="client_name" value="{{ old('client_name') }}" maxlength="160" required autocomplete="name">@error('client_name')<span class="error">{{ $message }}</span>@enderror</label>
-                    <label class="field">E-mail de acesso<input name="client_email" type="email" value="{{ old('client_email') }}" maxlength="255" required autocomplete="email">@error('client_email')<span class="error">{{ $message }}</span>@enderror</label>
-                    <label class="field">Senha inicial<input name="client_password" type="password" minlength="12" maxlength="200" required autocomplete="new-password"><span class="field-help">Defina uma senha forte e entregue por canal seguro. A aprovação dos materiais continua acessível por link sem login.</span>@error('client_password')<span class="error">{{ $message }}</span>@enderror</label>
-                    <div class="form-actions"><button class="primary-button" type="submit">Criar conta de cliente</button></div>
+                <form method="post" action="{{ route('team-invitations.store') }}" class="team-form">@csrf<input type="hidden" name="role" value="client">
+                    <label class="field">Nome<input name="name" value="{{ old('name') }}" maxlength="160" required autocomplete="name">@error('name')<span class="error">{{ $message }}</span>@enderror</label>
+                    <label class="field">E-mail de acesso<input name="email" type="email" value="{{ old('email') }}" maxlength="255" required autocomplete="email">@error('email')<span class="error">{{ $message }}</span>@enderror</label>
+                    <p class="field-help">A pessoa receberá um link temporário e criará a própria senha. A aprovação de materiais continua acessível por link sem login.</p>
+                    <div class="form-actions"><button class="primary-button" type="submit">Enviar convite ao cliente</button></div>
                 </form>
+            </section>
+
+            <section class="panel team-panel">
+                <div class="section-heading"><div><h2>Convites aguardando ativação <span class="count-badge">{{ $invitations->count() }}</span></h2><p>Links válidos por 72 horas; convites ainda não usados podem ser cancelados.</p></div></div>
+                @forelse ($invitations as $invitation)
+                    <article class="team-row"><span class="avatar" aria-hidden="true">{{ mb_strtoupper(mb_substr($invitation->name, 0, 1)) }}</span><div><strong>{{ $invitation->name }} · {{ $invitation->role->label() }}</strong><span>{{ $invitation->email }} · expira {{ $invitation->expires_at->format('d/m/Y H:i') }}</span></div><form method="post" action="{{ route('team-invitations.revoke', $invitation) }}">@csrf @method('DELETE')<button class="secondary-button" type="submit">Cancelar convite</button></form></article>
+                @empty<p class="empty-inline">Nenhum convite aguardando ativação.</p>@endforelse
             </section>
 
             <section class="panel team-panel">
@@ -49,7 +57,7 @@
                 <div class="pagination-wrap">{{ $clients->links() }}</div>
             </section>
 
-            <p class="footnote">Nesta etapa, somente a direção da agência cria contas. Vínculos de cliente são limitados à mesma organização; revisão e aprovação do material continuam disponíveis por link sem exigir conta.</p>
+            <p class="footnote">Nesta etapa, somente a direção da agência pode convidar pessoas. Vínculos de cliente são limitados à mesma organização; revisão e aprovação do material continuam disponíveis por link sem exigir conta.</p>
         </div>
     </main>
 </div>
