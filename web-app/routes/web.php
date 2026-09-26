@@ -55,6 +55,7 @@ Route::middleware(['auth', 'active'])->group(function (): void {
     Route::post('/conhecimento/{item}/atribuir', [KnowledgeController::class, 'assign'])->name('knowledge.assign');
     Route::patch('/onboarding/{assignment}/etapas/{step}', [KnowledgeController::class, 'toggleStep'])->name('knowledge.assignment-step');
     Route::get('/equipe', [TeamMemberController::class, 'index'])->name('team.index');
+    Route::patch('/equipe/{member}/acesso', [TeamMemberController::class, 'updateAccess'])->name('team.members.access');
     Route::get('/equipe/producao', [TeamActivityController::class, 'index'])->name('team.activity');
     Route::post('/equipe/convites', [TeamInvitationController::class, 'store'])->middleware('throttle:10,1')->name('team-invitations.store');
     Route::delete('/equipe/convites/{invitation}', [TeamInvitationController::class, 'revoke'])->name('team-invitations.revoke');

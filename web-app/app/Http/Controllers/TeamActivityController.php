@@ -25,10 +25,10 @@ class TeamActivityController extends Controller
         $professionals = User::query()
             ->where('organization_id', $viewer->organization_id)
             ->where('role', UserRole::Professional->value)
-            ->where('is_active', true)
             ->when($personal, fn ($query) => $query->whereKey($viewer->id))
+            ->orderByDesc('is_active')
             ->orderBy('name')
-            ->get(['id', 'name']);
+            ->get(['id', 'name', 'is_active']);
         $professionalIds = $professionals->modelKeys();
 
         $taskGroups = DemandTask::query()
@@ -67,6 +67,7 @@ class TeamActivityController extends Controller
 
             return [
                 'user' => $professional,
+                'is_active' => $professional->is_active,
                 'todo' => $count(TaskStatus::Todo),
                 'in_progress' => $count(TaskStatus::InProgress),
                 'paused' => $count(TaskStatus::Paused),

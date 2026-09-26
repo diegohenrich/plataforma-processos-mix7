@@ -44,7 +44,7 @@
             <section class="panel team-panel">
                 <div class="section-heading"><div><h2>Profissionais cadastrados <span class="count-badge">{{ $professionals->total() }}</span></h2><p>Contas da equipe desta organização.</p></div></div>
                 @forelse ($professionals as $professional)
-                    <article class="team-row"><span class="avatar" aria-hidden="true">{{ mb_strtoupper(mb_substr($professional->name, 0, 1)) }}</span><div><strong>{{ $professional->name }}</strong><span>{{ $professional->email }}</span></div><span class="pill {{ $professional->is_active ? 'pill-completed' : 'pill-blocked' }}">{{ $professional->is_active ? 'Ativo' : 'Desativado' }}</span></article>
+                    <article class="team-row"><span class="avatar" aria-hidden="true">{{ mb_strtoupper(mb_substr($professional->name, 0, 1)) }}</span><div><strong>{{ $professional->name }}</strong><span>{{ $professional->email }}</span></div><span class="pill {{ $professional->is_active ? 'pill-completed' : 'pill-blocked' }}">{{ $professional->is_active ? 'Ativo' : 'Desativado' }}</span><form method="post" action="{{ route('team.members.access', $professional) }}">@csrf @method('PATCH')<button class="secondary-button" type="submit">{{ $professional->is_active ? 'Desativar acesso' : 'Restaurar acesso' }}</button></form></article>
                 @empty<p class="empty-inline">Nenhum profissional cadastrado ainda.</p>@endforelse
                 <div class="pagination-wrap">{{ $professionals->links() }}</div>
             </section>
@@ -52,12 +52,19 @@
             <section class="panel team-panel">
                 <div class="section-heading"><div><h2>Clientes cadastrados <span class="count-badge">{{ $clients->total() }}</span></h2><p>Vincule cada demanda à conta correta para liberar o acompanhamento mínimo.</p></div></div>
                 @forelse ($clients as $client)
-                    <article class="team-row"><span class="avatar" aria-hidden="true">{{ mb_strtoupper(mb_substr($client->name, 0, 1)) }}</span><div><strong>{{ $client->name }}</strong><span>{{ $client->email }}</span></div><span class="pill {{ $client->is_active ? 'pill-completed' : 'pill-blocked' }}">{{ $client->is_active ? 'Ativo' : 'Desativado' }}</span></article>
+                    <article class="team-row"><span class="avatar" aria-hidden="true">{{ mb_strtoupper(mb_substr($client->name, 0, 1)) }}</span><div><strong>{{ $client->name }}</strong><span>{{ $client->email }}</span></div><span class="pill {{ $client->is_active ? 'pill-completed' : 'pill-blocked' }}">{{ $client->is_active ? 'Ativo' : 'Desativado' }}</span><form method="post" action="{{ route('team.members.access', $client) }}">@csrf @method('PATCH')<button class="secondary-button" type="submit">{{ $client->is_active ? 'Desativar acesso' : 'Restaurar acesso' }}</button></form></article>
                 @empty<p class="empty-inline">Nenhuma conta de cliente cadastrada ainda.</p>@endforelse
                 <div class="pagination-wrap">{{ $clients->links() }}</div>
             </section>
 
-            <p class="footnote">Nesta etapa, somente a direção da agência pode convidar pessoas. Vínculos de cliente são limitados à mesma organização; revisão e aprovação do material continuam disponíveis por link sem exigir conta.</p>
+            <section class="panel team-panel">
+                <div class="section-heading"><div><h2>Histórico de acesso <span class="count-badge">{{ $accessEvents->count() }}</span></h2><p>As 50 alterações mais recentes, com a pessoa que fez cada mudança.</p></div></div>
+                @forelse ($accessEvents as $event)
+                    <article class="team-row"><span class="avatar" aria-hidden="true">{{ $event->event_type === 'access_revoked' ? '−' : '+' }}</span><div><strong>{{ $event->event_type === 'access_revoked' ? 'Acesso desativado' : 'Acesso restaurado' }} · {{ $event->member->name }}</strong><span>Por {{ $event->actor->name }} · {{ $event->created_at->format('d/m/Y H:i') }}</span></div></article>
+                @empty<p class="empty-inline">Nenhuma alteração de acesso registrada.</p>@endforelse
+            </section>
+
+            <p class="footnote">Somente a direção pode convidar, desativar e restaurar profissionais e clientes desta organização. Tarefas abertas permanecem atribuídas quando o acesso é desativado; revise e transfira o trabalho antes do desligamento definitivo. Aprovações continuam por link, sem exigir conta.</p>
         </div>
     </main>
 </div>

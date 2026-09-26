@@ -26,13 +26,13 @@
 
             <div class="activity-grid" aria-label="Indicadores objetivos">
                 @if ($rows->isEmpty())
-                    <div class="empty-state"><h2>Nenhum profissional ativo cadastrado</h2><p>Quando a equipe tiver profissionais ativos, a atividade deles aparecerá aqui.</p></div>
+                    <div class="empty-state"><h2>Nenhum profissional cadastrado</h2><p>Quando houver profissionais na equipe, a atividade deles aparecerá aqui.</p></div>
                 @else
                 @foreach ($rows as $row)
                     @php($hours = number_format($row['recorded_seconds_30d'] / 3600, 1, ',', '.'))
                     @php($estimateHours = number_format($row['estimate_minutes'] / 60, 1, ',', '.'))
                     <article class="activity-card">
-                        <div class="activity-person"><span class="avatar" aria-hidden="true">{{ mb_strtoupper(mb_substr($row['user']->name, 0, 1)) }}</span><div><h2>{{ $personal ? 'Sua atividade' : $row['user']->name }}</h2><span>{{ $row['open'] }} {{ $row['open'] === 1 ? 'tarefa aberta' : 'tarefas abertas' }}</span></div></div>
+                        <div class="activity-person"><span class="avatar" aria-hidden="true">{{ mb_strtoupper(mb_substr($row['user']->name, 0, 1)) }}</span><div><h2>{{ $personal ? 'Sua atividade' : $row['user']->name }} @unless ($row['is_active'])<span class="pill pill-blocked">Acesso desativado</span>@endunless</h2><span>{{ $row['open'] }} {{ $row['open'] === 1 ? 'tarefa aberta' : 'tarefas abertas' }}</span></div></div>
                         <div class="activity-statuses" aria-label="Tarefas abertas por etapa">
                             <span><strong>{{ $row['todo'] }}</strong> A fazer</span><span><strong>{{ $row['in_progress'] }}</strong> Em andamento</span><span><strong>{{ $row['paused'] }}</strong> Pausadas</span><span><strong>{{ $row['blocked'] }}</strong> Impedidas</span>
                         </div>

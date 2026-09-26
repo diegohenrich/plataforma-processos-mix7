@@ -17,6 +17,14 @@ class TeamMemberPolicy
         return $this->viewAny($user);
     }
 
+    public function updateAccess(User $user, User $member): bool
+    {
+        return $this->viewAny($user)
+            && $user->id !== $member->id
+            && $user->organization_id === $member->organization_id
+            && in_array($member->role, [UserRole::Professional, UserRole::Client], true);
+    }
+
     public function viewActivity(User $user): bool
     {
         return $user->is_active
