@@ -2,22 +2,19 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
-    /**
-     * Seed the application's database.
-     */
     public function run(): void
     {
-        // User::factory(10)->create();
+        $connection = config('database.default');
+        $connectionConfig = config('database.connections.'.$connection, []);
+        $configuredDatabase = $connectionConfig['database'] ?? null;
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        if (app()->environment('local') && ($connectionConfig['driver'] ?? null) === 'sqlite'
+            && is_string($configuredDatabase) && basename(str_replace('\\', '/', $configuredDatabase)) === 'mix7-demo.sqlite') {
+            $this->call(DemoWorkspaceSeeder::class);
+        }
     }
 }
