@@ -187,7 +187,10 @@ class DemandTaskController extends Controller
                     ->whereNull('ended_at')
                     ->update(['ended_at' => CarbonImmutable::now()]);
             }
-            $task->update(['status' => $to]);
+            $task->update([
+                'status' => $to,
+                'completed_at' => $to === TaskStatus::Completed ? CarbonImmutable::now() : null,
+            ]);
             DemandEvent::create([
                 'organization_id' => $task->organization_id,
                 'demand_id' => $task->demand_id,

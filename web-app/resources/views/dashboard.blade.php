@@ -24,12 +24,16 @@
                 <article class="module pending"><span class="icon" aria-hidden="true">✓</span><h3>Aprovações</h3><p>Revisões internas e do cliente, versões e comentários.</p><span class="module-state">Em construção</span></article>
                 @can('viewAny', App\Models\User::class)
                     <a class="module module-link" href="{{ route('team.index') }}"><span class="icon" aria-hidden="true">♧</span><h3>Equipe</h3><p>Cadastre profissionais para distribuir tarefas.</p><span class="module-action">Abrir equipe →</span></a>
+                @elseif (auth()->user()->role === App\Enums\UserRole::Professional)
+                    <a class="module module-link" href="{{ route('team.activity') }}"><span class="icon" aria-hidden="true">◷</span><h3>Meu trabalho</h3><p>Veja suas tarefas, acompanhe o tempo e acione o cronômetro.</p><span class="module-action">Abrir minhas tarefas →</span></a>
+                @elseif (auth()->user()->role === App\Enums\UserRole::MarketingManager)
+                    <a class="module module-link" href="{{ route('team.activity') }}"><span class="icon" aria-hidden="true">◷</span><h3>Produção da equipe</h3><p>Acompanhe estados, estimativas e tempo registrados por profissional.</p><span class="module-action">Abrir produção →</span></a>
                 @else
                     <article class="module pending"><span class="icon" aria-hidden="true">♧</span><h3>Equipe</h3><p>Atividades, tempo registrado e acompanhamento.</p><span class="module-state">Em construção</span></article>
                 @endcan
                 <a class="module module-link" href="{{ route('knowledge.index') }}"><span class="icon" aria-hidden="true">▤</span><h3>Conhecimento</h3><p>Referências, treinamentos e integração de pessoas.</p><span class="module-action">Abrir conhecimento →</span></a>
                 <article class="module pending"><span class="icon" aria-hidden="true">✧</span><h3>Automação e sugestões</h3><p>Recursos entram após regras e revisão humana definidas.</p></article>
-                <article class="module pending"><span class="icon" aria-hidden="true">⌁</span><h3>Indicadores de gestão</h3><p>Fórmulas e critérios aguardam definição antes de pontuar.</p></article>
+                <article class="module pending"><span class="icon" aria-hidden="true">⌁</span><h3>Avaliações da equipe</h3><p>Notas e critérios aguardam definição pela Mix7.</p><span class="module-state">Em construção</span></article>
             </section>
             <p class="footnote">Conhecimento e demandas já estão disponíveis nesta etapa. Outros módulos ainda estão sendo construídos.</p>
             @endif

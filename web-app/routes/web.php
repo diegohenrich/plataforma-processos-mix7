@@ -7,6 +7,7 @@ use App\Http\Controllers\DemandController;
 use App\Http\Controllers\DemandReviewController;
 use App\Http\Controllers\DemandTaskController;
 use App\Http\Controllers\KnowledgeController;
+use App\Http\Controllers\TeamActivityController;
 use App\Http\Controllers\TeamMemberController;
 use Illuminate\Support\Facades\Route;
 
@@ -45,6 +46,7 @@ Route::middleware(['auth', 'active'])->group(function (): void {
     Route::post('/conhecimento/{item}/atribuir', [KnowledgeController::class, 'assign'])->name('knowledge.assign');
     Route::patch('/onboarding/{assignment}/etapas/{step}', [KnowledgeController::class, 'toggleStep'])->name('knowledge.assignment-step');
     Route::get('/equipe', [TeamMemberController::class, 'index'])->name('team.index');
+    Route::get('/equipe/producao', [TeamActivityController::class, 'index'])->name('team.activity');
     Route::post('/equipe', [TeamMemberController::class, 'store'])->name('team.store');
     Route::post('/equipe/clientes', [TeamMemberController::class, 'storeClient'])->name('team.clients.store');
     Route::post('/sair', [SessionController::class, 'destroy'])->name('logout');

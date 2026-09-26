@@ -45,6 +45,10 @@ Estes pontos complementam os três áudios e decisões anteriores, com base na i
 7. Cada função tem uma matriz verificável de leitura e ação. A tela de cada função é testada com sessões separadas antes do piloto.
 8. Indicadores de produção e evolução são rastreáveis às tarefas e avaliações, distinguem bloqueios e mudanças de escopo e não aplicam consequência automática de pessoal.
 
+### Painel factual de trabalho no Laravel — implementação parcial
+
+A direção e a gerência veem, por profissional ativo da mesma organização, a quantidade atual de tarefas a fazer, em andamento, pausadas e impedidas; as estimativas das tarefas abertas; tarefas concluídas nos últimos 30 dias; e tempo de sessões iniciadas nesse período. O painel explica o intervalo e as fontes. O profissional vê somente as próprias tarefas abertas e pode iniciar ou pausar o cronômetro nessa tela. Clientes não acessam a rota. O painel não emite nota, ranking, juízo de produtividade ou avaliação automática. Isso melhora o acompanhamento operacional, mas não conclui avaliação: critérios, escala, pesos, contestação e finalidade permanecem no requisito acima e no cartão #9 do Trello.
+
 O sistema de aprovações deve ser reutilizável em áreas diferentes da agência. Criativos de redes sociais são o primeiro módulo conhecido; a Mix7 ainda precisa indicar os demais tipos concretos. Requisitos e critérios estão em [Aprovações por módulos](MODULOS-DE-APROVACAO.md).
 
 O comportamento de tempo confirmado, a proposta de capacidade e os critérios de aceite estão em [Tempo, disponibilidade e capacidade](TEMPO-E-CAPACIDADE.md). A proposta não fecha as regras de jornada que a Mix7 ainda precisa definir.

@@ -205,6 +205,7 @@ class DemandWorkflowTest extends TestCase
 
         $this->assertNotNull(TaskTimeEntry::query()->firstOrFail()->ended_at);
         $this->assertSame(TaskStatus::Completed, $task->fresh()->status);
+        $this->assertNotNull($task->fresh()->completed_at);
     }
 
     /** @return array{Organization, User, User, User} */

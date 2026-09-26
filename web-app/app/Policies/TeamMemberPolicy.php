@@ -16,4 +16,11 @@ class TeamMemberPolicy
     {
         return $this->viewAny($user);
     }
+
+    public function viewActivity(User $user): bool
+    {
+        return $user->is_active
+            && $user->organization_id !== null
+            && in_array($user->role, [UserRole::AgencyOwner, UserRole::MarketingManager, UserRole::Professional], true);
+    }
 }
