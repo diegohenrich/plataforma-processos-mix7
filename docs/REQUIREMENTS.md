@@ -49,7 +49,13 @@ Estes pontos complementam os três áudios e decisões anteriores, com base na i
 
 ### Painel factual de trabalho no Laravel — implementação parcial
 
-A direção e a gerência veem, por profissional ativo da mesma organização, a quantidade atual de tarefas a fazer, em andamento, pausadas e impedidas; as estimativas das tarefas abertas; tarefas concluídas nos últimos 30 dias; e tempo de sessões iniciadas nesse período. O painel explica o intervalo e as fontes. O profissional vê somente as próprias tarefas abertas e pode iniciar ou pausar o cronômetro nessa tela. Clientes não acessam a rota. O painel não emite nota, ranking, juízo de produtividade ou avaliação automática. Isso melhora o acompanhamento operacional, mas não conclui avaliação: critérios, escala, pesos, contestação e finalidade permanecem no requisito acima e no cartão #9 do Trello.
+A direção e a gerência veem, por profissional ativo da mesma organização, a quantidade atual de tarefas a fazer, em andamento, pausadas e impedidas; as estimativas das tarefas abertas; tarefas concluídas nos últimos 30 dias; e tempo de sessões iniciadas nesse período. O painel explica o intervalo e as fontes. O profissional vê somente as próprias tarefas abertas e pode iniciar ou pausar o cronômetro nessa tela. Clientes não acessam a rota. O painel não emite nota, ranking, juízo de produtividade ou avaliação automática. O registro de avaliação humana por tarefa está descrito abaixo; critérios de pontuação e finalidade ainda não estão definidos.
+
+### Registro de avaliação humana por tarefa
+
+Direção e gerência podem registrar uma avaliação para tarefa concluída atribuída a um profissional da mesma organização, cobrindo prazo e qualidade, com campos opcionais de evidências e fatores externos. Cada profissional pode registrar uma avaliação por tarefa; direção e gerência podem ter registros próprios. A direção recebe peso 2 e a gerência peso 1, valores explicitados nos áudios; o sistema registra o papel e o peso do avaliador na época do registro. O profissional avaliado vê seus próprios registros e pode acrescentar respostas, preservadas em sequência; direção e gerência veem os registros da organização. Clientes não têm acesso.
+
+Essa entrega documenta avaliações qualitativas, mas não calcula pontos ou nota. A escala, a fórmula, a combinação dos pesos, período, contestação e finalidade dos resultados permanecem pendentes de decisão da Mix7; até lá não há ranking ou consequência automática de pessoal.
 
 O sistema de aprovações deve ser reutilizável em áreas diferentes da agência. Criativos de redes sociais são o primeiro módulo conhecido; a Mix7 ainda precisa indicar os demais tipos concretos. Requisitos e critérios estão em [Aprovações por módulos](MODULOS-DE-APROVACAO.md).
 

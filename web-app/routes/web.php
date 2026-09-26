@@ -9,6 +9,7 @@ use App\Http\Controllers\DemandController;
 use App\Http\Controllers\DemandReviewController;
 use App\Http\Controllers\DemandTaskController;
 use App\Http\Controllers\KnowledgeController;
+use App\Http\Controllers\PerformanceReviewController;
 use App\Http\Controllers\TeamActivityController;
 use App\Http\Controllers\TeamInvitationController;
 use App\Http\Controllers\TeamMemberController;
@@ -62,6 +63,9 @@ Route::middleware(['auth', 'active'])->group(function (): void {
     Route::get('/equipe', [TeamMemberController::class, 'index'])->name('team.index');
     Route::patch('/equipe/{member}/acesso', [TeamMemberController::class, 'updateAccess'])->name('team.members.access');
     Route::get('/equipe/producao', [TeamActivityController::class, 'index'])->name('team.activity');
+    Route::get('/equipe/avaliacoes', [PerformanceReviewController::class, 'index'])->name('performance-reviews.index');
+    Route::post('/equipe/avaliacoes', [PerformanceReviewController::class, 'store'])->name('performance-reviews.store');
+    Route::post('/equipe/avaliacoes/{review}/respostas', [PerformanceReviewController::class, 'respond'])->name('performance-reviews.respond');
     Route::post('/equipe/convites', [TeamInvitationController::class, 'store'])->middleware('throttle:10,1')->name('team-invitations.store');
     Route::delete('/equipe/convites/{invitation}', [TeamInvitationController::class, 'revoke'])->name('team-invitations.revoke');
     Route::post('/sair', [SessionController::class, 'destroy'])->name('logout');

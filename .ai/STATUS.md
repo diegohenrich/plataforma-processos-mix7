@@ -1,3 +1,8 @@
+## Avaliações humanas por tarefa — 2026-09-26
+- Direção/gerência podem registrar prazo e qualidade de tarefas concluídas, evidências e fatores externos; direção registra peso 2 e gerência peso 1 conforme os áudios. Profissional vê e responde somente às próprias avaliações; respostas são preservadas no histórico. Clientes não acessam o módulo. Uma pessoa avaliadora tem um registro por tarefa.
+- Não há pontuação calculada, ranking ou consequência automática: escala, fórmula, combinação de pesos, período, contestação e finalidade ainda dependem de decisão da Mix7.
+- Validação local: `php artisan test --compact` passou 100 testes/795 assertions; Pint nos arquivos PHP alterados, `composer validate --no-check-publish`, `npm run build` e `git diff --check` passaram. Testes cobrem perfis, pesos 2/1, respostas, duplicidade e isolamento de organização.
+- Limitação: inspeção visual renderizada não foi possível porque a tentativa anterior no navegador local foi bloqueada por política; nenhum caminho alternativo foi usado. Trello ainda não sincronizado; preparar o cartão #9, mas a publicação de comentário precisa ser confirmada na interface.
 # Estado atual — Plataforma Mix7 — 2026-09-26
 
 ## Busca de demandas relacionadas pelo assistente — 2026-09-26

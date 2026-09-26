@@ -8,6 +8,8 @@ use App\Enums\UserRole;
 use App\Models\Demand;
 use App\Models\DemandTask;
 use App\Models\Organization;
+use App\Models\PerformanceReview;
+use App\Models\PerformanceReviewResponse;
 use App\Models\TaskTimeEntry;
 use App\Models\User;
 use Carbon\CarbonImmutable;
@@ -67,6 +69,98 @@ class TeamActivityTest extends TestCase
         [$organization, , , , , $client] = $this->workspace();
 
         $this->actingAs($client)->get(route('team.activity'))->assertForbidden();
+    }
+
+    public function test_management_can_record_task_review_and_professional_can_respond_with_history(): void
+    {
+        [$organization, $owner, $manager, $professional] = $this->workspace();
+        $demand = $this->demand($organization, $owner);
+        $task = $this->task($demand, $professional, 'Finalizar site', TaskStatus::Completed);
+
+        $this->actingAs($manager)->get(route('performance-reviews.index'))
+            ->assertOk()->assertSee('Registrar avaliação de tarefa concluída')->assertSee('gerência peso 1');
+        $this->post(route('performance-reviews.store'), [
+            'task_id' => $task->id,
+            'deadline_assessment' => 'Prazo combinado cumprido após revisão do escopo.',
+            'quality_assessment' => 'Entrega conferida com critérios do briefing e sem erros visíveis.',
+            'evidence' => 'Checklist de aceite conferido pela gerência.',
+            'external_factors' => 'O cliente enviou os textos dois dias depois do previsto.',
+        ])->assertRedirect(route('performance-reviews.index'));
+
+        $review = PerformanceReview::firstOrFail();
+        $this->assertSame($professional->id, $review->professional_id);
+        $this->assertSame($manager->id, $review->reviewer_id);
+        $this->assertSame(1, $review->reviewer_weight);
+
+        $this->actingAs($professional)->get(route('performance-reviews.index'))
+            ->assertOk()->assertSee('Prazo combinado cumprido')->assertSee('Bloqueios ou mudanças externas')
+            ->assertSee('Adicionar ao histórico')->assertDontSee('Registrar avaliação de tarefa concluída');
+        $this->post(route('performance-reviews.respond', $review), ['response' => 'Concordo com os critérios e acrescento este contexto.'])
+            ->assertRedirect(route('performance-reviews.index'));
+        $this->assertDatabaseHas('performance_review_responses', [
+            'performance_review_id' => $review->id,
+            'user_id' => $professional->id,
+            'response' => 'Concordo com os critérios e acrescento este contexto.',
+        ]);
+        $this->assertSame(1, PerformanceReviewResponse::count());
+    }
+
+    public function test_owner_weight_is_two_and_duplicate_or_unrelated_reviews_are_rejected(): void
+    {
+        [$organization, $owner, , $professional] = $this->workspace();
+        $demand = $this->demand($organization, $owner);
+        $task = $this->task($demand, $professional, 'Publicar site', TaskStatus::Completed);
+        $payload = [
+            'task_id' => $task->id,
+            'deadline_assessment' => 'O prazo previsto foi cumprido conforme combinado.',
+            'quality_assessment' => 'A qualidade atende os critérios registrados para a entrega.',
+        ];
+
+        $this->actingAs($owner)->post(route('performance-reviews.store'), $payload)->assertRedirect(route('performance-reviews.index'));
+        $this->assertDatabaseHas('performance_reviews', ['task_id' => $task->id, 'reviewer_weight' => 2]);
+        $this->post(route('performance-reviews.store'), $payload)->assertSessionHasErrors('task_id');
+
+        [$otherOrganization, $otherOwner, , $otherProfessional] = $this->workspace('outside-review');
+        $otherDemand = $this->demand($otherOrganization, $otherOwner);
+        $otherTask = $this->task($otherDemand, $otherProfessional, 'Outra entrega', TaskStatus::Completed);
+        $this->post(route('performance-reviews.store'), [...$payload, 'task_id' => $otherTask->id])->assertSessionHasErrors('task_id');
+    }
+
+    public function test_professional_cannot_review_or_respond_to_another_professionals_review(): void
+    {
+        [$organization, $owner, , $professional, $colleague] = $this->workspace();
+        $demand = $this->demand($organization, $owner);
+        $colleagueTask = $this->task($demand, $colleague, 'Tarefa da colega', TaskStatus::Completed);
+        $this->actingAs($professional)->post(route('performance-reviews.store'), [
+            'task_id' => $colleagueTask->id,
+            'deadline_assessment' => 'Descrição suficiente para passar na validação.',
+            'quality_assessment' => 'Descrição suficiente para passar na validação.',
+        ])->assertForbidden();
+
+        $this->actingAs($owner)->post(route('performance-reviews.store'), [
+            'task_id' => $colleagueTask->id,
+            'deadline_assessment' => 'O prazo foi acompanhado e está descrito com evidência.',
+            'quality_assessment' => 'A qualidade foi conferida com os critérios de aceite.',
+        ])->assertRedirect(route('performance-reviews.index'));
+        $review = PerformanceReview::firstOrFail();
+        $this->actingAs($professional)->post(route('performance-reviews.respond', $review), ['response' => 'Tentativa de resposta fora do perfil.'])->assertForbidden();
+        $this->actingAs($colleague)->post(route('performance-reviews.respond', $review), ['response' => 'Registro meu contexto nesta tarefa.'])->assertRedirect(route('performance-reviews.index'));
+        $this->actingAs($owner)->get(route('performance-reviews.index'))->assertOk()->assertSee('Registro meu contexto nesta tarefa.');
+    }
+
+    public function test_manager_and_owner_can_view_reviews_but_client_cannot(): void
+    {
+        [$organization, $owner, $manager, $professional, , $client] = $this->workspace();
+        $demand = $this->demand($organization, $owner);
+        $task = $this->task($demand, $professional, 'Ajustar campanha', TaskStatus::Completed);
+        $this->actingAs($owner)->post(route('performance-reviews.store'), [
+            'task_id' => $task->id,
+            'deadline_assessment' => 'O prazo final respeitou a mudança aprovada.',
+            'quality_assessment' => 'A qualidade corresponde ao material validado.',
+        ])->assertRedirect(route('performance-reviews.index'));
+
+        $this->actingAs($manager)->get(route('performance-reviews.index'))->assertOk()->assertSee('Ajustar campanha');
+        $this->actingAs($client)->get(route('performance-reviews.index'))->assertForbidden();
     }
 
     private function workspace(string $slug = 'mix7'): array
