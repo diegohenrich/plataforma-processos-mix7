@@ -110,11 +110,26 @@ class AiPlanningTest extends TestCase
     {
         [, $manager, $professional, $demand] = $this->workspace();
         config(['services.ai_gateway.key' => '']);
+        config(['services.ai_gateway.oidc_token' => '']);
         $this->actingAs($manager)->from(route('demands.show', $demand))
             ->post(route('ai-planning.propose', $demand))->assertSessionHasErrors('ai');
         config(['services.ai_gateway.key' => 'test-key']);
+        config(['services.ai_gateway.oidc_token' => '']);
         $this->actingAs($professional)->post(route('ai-planning.propose', $demand))->assertForbidden();
         $this->assertSame(0, AiPlanningRun::count());
+        $this->assertSame(0, DemandTask::count());
+    }
+
+    public function test_runtime_oidc_token_authenticates_gateway_when_api_key_is_not_set(): void
+    {
+        [, $manager, , $demand] = $this->workspace();
+        config(['services.ai_gateway.key' => '', 'services.ai_gateway.oidc_token' => 'short-lived-vercel-token']);
+        Http::fake(['https://ai-gateway.vercel.sh/v1/chat/completions' => Http::response($this->providerResponse(), 200)]);
+
+        $this->actingAs($manager)->post(route('ai-planning.propose', $demand))->assertRedirect();
+
+        Http::assertSent(fn ($request) => $request->hasHeader('Authorization', 'Bearer short-lived-vercel-token'));
+        $this->assertSame('pending', AiPlanningRun::firstOrFail()->status);
         $this->assertSame(0, DemandTask::count());
     }
 

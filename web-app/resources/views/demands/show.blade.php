@@ -52,10 +52,10 @@
                         <section class="panel ai-planning-panel">
                             <div class="section-heading"><div><h2>Planejamento com IA</h2><p>A IA prepara uma proposta. Nenhuma tarefa é criada sem sua revisão e aprovação.</p></div></div>
                             @if ($demand->status === App\Enums\DemandStatus::Planning)
-                                @if (config('services.ai_gateway.key') && config('services.ai_gateway.model'))
+                                @if ((config('services.ai_gateway.key') || config('services.ai_gateway.oidc_token')) && config('services.ai_gateway.model'))
                                     <form method="post" action="{{ route('ai-planning.propose', $demand) }}">@csrf<button class="secondary-button" type="submit">Gerar proposta a partir do briefing</button><span class="field-help">O título, briefing e nomes das tarefas existentes serão enviados ao provedor de IA configurado.</span></form>
                                 @else
-                                    <div class="notice notice-info">Agente opcional indisponível: configure AI_GATEWAY_API_KEY e AI_PLANNING_MODEL no ambiente para habilitar propostas.</div>
+                                    <div class="notice notice-info">Agente opcional indisponível: configure um modelo e uma credencial do AI Gateway. Na Vercel, o token OIDC da plataforma pode autenticar a chamada sem uma chave longa; em outro host, use AI_GATEWAY_API_KEY.</div>
                                 @endif
                             @else
                                 <p class="empty-inline">Disponível quando a demanda estiver na etapa Planejamento.</p>

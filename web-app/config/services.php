@@ -37,6 +37,7 @@ return [
 
     'ai_gateway' => [
         'key' => env('AI_GATEWAY_API_KEY'),
+        'oidc_token' => $_SERVER['VERCEL_OIDC_TOKEN'] ?? $_ENV['VERCEL_OIDC_TOKEN'] ?? null,
         'base_url' => 'https://ai-gateway.vercel.sh/v1',
         'model' => env('AI_PLANNING_MODEL'),
     ],

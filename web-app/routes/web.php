@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\SessionController;
 use App\Http\Controllers\DemandController;
 use App\Http\Controllers\DemandReviewController;
 use App\Http\Controllers\DemandTaskController;
+use App\Http\Controllers\KnowledgeController;
 use App\Http\Controllers\TeamMemberController;
 use Illuminate\Support\Facades\Route;
 
@@ -31,6 +32,14 @@ Route::middleware(['auth', 'active'])->group(function (): void {
     Route::post('/tarefas/{task}/cronometro/iniciar', [DemandTaskController::class, 'startTimer'])->name('demand-tasks.timer.start');
     Route::post('/tarefas/{task}/cronometro/pausar', [DemandTaskController::class, 'pauseTimer'])->name('demand-tasks.timer.pause');
     Route::patch('/tarefas/{task}/status', [DemandTaskController::class, 'updateStatus'])->name('demand-tasks.status');
+    Route::get('/conhecimento', [KnowledgeController::class, 'index'])->name('knowledge.index');
+    Route::post('/conhecimento', [KnowledgeController::class, 'store'])->name('knowledge.store');
+    Route::get('/conhecimento/arquivados', [KnowledgeController::class, 'archived'])->name('knowledge.archived');
+    Route::put('/conhecimento/{item}', [KnowledgeController::class, 'update'])->name('knowledge.update');
+    Route::delete('/conhecimento/{item}', [KnowledgeController::class, 'archive'])->name('knowledge.archive');
+    Route::post('/conhecimento/{item}/restaurar', [KnowledgeController::class, 'restore'])->name('knowledge.restore');
+    Route::post('/conhecimento/{item}/atribuir', [KnowledgeController::class, 'assign'])->name('knowledge.assign');
+    Route::patch('/onboarding/{assignment}/etapas/{step}', [KnowledgeController::class, 'toggleStep'])->name('knowledge.assignment-step');
     Route::get('/equipe', [TeamMemberController::class, 'index'])->name('team.index');
     Route::post('/equipe', [TeamMemberController::class, 'store'])->name('team.store');
     Route::post('/sair', [SessionController::class, 'destroy'])->name('logout');

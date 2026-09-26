@@ -1,0 +1,5 @@
+@extends('layouts.app')
+@section('title', 'Conteúdos arquivados · Plataforma Mix7')
+@section('body')
+<div class="shell">@include('layouts.navigation', ['active' => 'knowledge'])<main class="main">@include('layouts.topbar')<div class="content narrow-content"><p class="eyebrow">Biblioteca da equipe</p><h1 class="heading">Conteúdos arquivados</h1><p class="subheading">Itens arquivados podem ser restaurados pela gerência.</p>@include('partials.flash')<p><a href="{{ route('knowledge.index') }}">← Voltar à biblioteca</a></p>@forelse ($items as $item)<article class="panel knowledge-card"><div><span class="knowledge-type">{{ ['reference' => 'Referência', 'training' => 'Treinamento', 'contact' => 'Contato', 'onboarding' => 'Onboarding'][$item->type] }}</span><h2>{{ $item->title }}</h2><p>{{ $item->content }}</p><small>Arquivado {{ $item->archived_at->format('d/m/Y H:i') }}</small></div><form method="post" action="{{ route('knowledge.restore', $item) }}">@csrf<button class="secondary-button">Restaurar</button></form></article>@empty<p class="empty-inline">Nenhum conteúdo arquivado.</p>@endforelse{{ $items->links() }}</div></main></div>
+@endsection

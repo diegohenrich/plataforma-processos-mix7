@@ -1,0 +1,41 @@
+@extends('layouts.app')
+@section('title', 'Conhecimento · Plataforma Mix7')
+@section('body')
+<div class="shell">
+@include('layouts.navigation', ['active' => 'knowledge'])
+<main class="main">@include('layouts.topbar')<div class="content narrow-content">
+<p class="eyebrow">Biblioteca compartilhada da equipe</p><h1 class="heading">Conhecimento</h1><p class="subheading">Referências, treinamentos, contatos e trilhas vinculados à organização.</p>@include('partials.flash')
+<form method="get" class="knowledge-filter"><label class="field">Buscar<input name="q" value="{{ request('q') }}" placeholder="Título ou conteúdo"></label><label class="field">Tipo<select name="type"><option value="">Todos</option>@foreach (['reference' => 'Referência', 'training' => 'Treinamento', 'contact' => 'Contato', 'onboarding' => 'Onboarding'] as $value => $label)<option value="{{ $value }}" @selected(request('type') === $value)>{{ $label }}</option>@endforeach</select></label><button class="secondary-button">Filtrar</button></form>
+@if ($canManage)
+<p><a class="secondary-button" href="{{ route('knowledge.archived') }}">Arquivados ({{ $archivedCount }})</a></p>
+<section class="panel knowledge-panel"><h2>Adicionar à biblioteca</h2><p class="field-help">Registre informações internas autorizadas. Não salve senhas ou credenciais.</p>
+<form method="post" action="{{ route('knowledge.store') }}" class="knowledge-form">@csrf
+<label class="field">Tipo<select name="type" required>@foreach (['reference' => 'Referência', 'training' => 'Treinamento', 'contact' => 'Contato', 'onboarding' => 'Onboarding'] as $value => $label)<option value="{{ $value }}">{{ $label }}</option>@endforeach</select></label>
+<label class="field">Título<input name="title" required maxlength="180"></label><label class="field">Instrução ou detalhes<textarea name="content" rows="4" required maxlength="12000"></textarea></label>
+<div class="knowledge-grid"><label class="field">Responsável pelo conteúdo<input name="owner_name" maxlength="160"></label><label class="field">Público autorizado<input name="audience" maxlength="160"></label><label class="field">Revisar em<input type="date" name="review_due_at"></label><label class="field">Link interno (opcional)<input type="url" name="url" maxlength="2048" placeholder="https://..."></label></div>
+<label class="field">Etapas de treinamento/onboarding <span class="field-help">Uma etapa por linha. Trilha de onboarding exige ao menos uma.</span><textarea name="steps_text" data-step-input rows="4" placeholder="Conhecer o fluxo de demandas&#10;Ler o guia de marca"></textarea></label><div data-step-fields></div><button type="button" class="secondary-button" data-add-step>Adicionar etapa</button><button class="primary-button">Salvar conteúdo</button></form></section>
+@endif
+<section class="knowledge-list"><h2>Biblioteca <span class="count-badge">{{ $items->total() }}</span></h2>
+@forelse ($items as $item)
+<article class="panel knowledge-card"><div><span class="knowledge-type">{{ ['reference' => 'Referência', 'training' => 'Treinamento', 'contact' => 'Contato', 'onboarding' => 'Onboarding'][$item->type] }}</span><h3>{{ $item->title }}</h3><p>{{ $item->content }}</p>@if ($item->url)<p><a href="{{ $item->url }}" target="_blank" rel="noopener noreferrer">Abrir material</a></p>@endif<div class="knowledge-meta">@if ($item->owner_name)<span>Responsável: {{ $item->owner_name }}</span>@endif @if ($item->audience)<span>Público: {{ $item->audience }}</span>@endif @if ($item->review_due_at)<span>Revisar em {{ $item->review_due_at->format('d/m/Y') }}</span>@endif<span>Criado por {{ $item->creator->name }}@if ($item->updater) · atualizado por {{ $item->updater->name }}@endif</span></div></div>
+@if (is_array($item->steps) && count($item->steps))<ol class="knowledge-steps">@foreach ($item->steps as $step)<li>{{ $step }}</li>@endforeach</ol>@endif
+@if ($canManage)<details class="knowledge-edit"><summary>Editar conteúdo ou arquivar</summary><form method="post" action="{{ route('knowledge.update', $item) }}" class="knowledge-form">@csrf @method('PUT')<label class="field">Tipo<select name="type">@foreach (['reference' => 'Referência', 'training' => 'Treinamento', 'contact' => 'Contato', 'onboarding' => 'Onboarding'] as $value => $label)<option value="{{ $value }}" @selected($item->type === $value)>{{ $label }}</option>@endforeach</select></label><label class="field">Título<input name="title" required maxlength="180" value="{{ $item->title }}"></label><label class="field">Instrução ou detalhes<textarea name="content" rows="4" required maxlength="12000">{{ $item->content }}</textarea></label><div class="knowledge-grid"><label class="field">Responsável pelo conteúdo<input name="owner_name" maxlength="160" value="{{ $item->owner_name }}"></label><label class="field">Público autorizado<input name="audience" maxlength="160" value="{{ $item->audience }}"></label><label class="field">Revisar em<input type="date" name="review_due_at" value="{{ $item->review_due_at?->format('Y-m-d') }}"></label><label class="field">Link interno<input type="url" name="url" maxlength="2048" value="{{ $item->url }}"></label></div><label class="field">Etapas em ordem<textarea name="steps_text" data-step-input rows="4">{{ is_array($item->steps) ? implode("\n", $item->steps) : '' }}</textarea></label><div data-step-fields></div><button type="button" class="secondary-button" data-add-step>Adicionar etapa</button><button class="primary-button">Salvar revisão</button></form><form method="post" action="{{ route('knowledge.archive', $item) }}">@csrf @method('DELETE')<button class="secondary-button">Arquivar</button></form></details>@endif
+@if ($item->type === 'onboarding' && $canManage && $members->isNotEmpty())<details class="knowledge-edit"><summary>Atribuir trilha e ver progresso</summary><form method="post" action="{{ route('knowledge.assign', $item) }}">@csrf<label class="field">Profissional<select name="user_id" required>@foreach ($members as $member)<option value="{{ $member->id }}">{{ $member->name }}</option>@endforeach</select></label><button class="secondary-button">Atribuir trilha</button></form>@foreach ($item->assignments as $assignment)<div class="onboarding-assignment"><strong>{{ $assignment->assignee->name }}</strong><small> · Atribuída por {{ $assignment->assigner->name }}</small><ol>@foreach ($assignment->steps as $step)<li><form method="post" action="{{ route('knowledge.assignment-step', [$assignment, $step]) }}">@csrf @method('PATCH')<button class="step-toggle {{ $step->completed_at ? 'is-done' : '' }}">{{ $step->completed_at ? '✓' : '○' }}</button><span>{{ $step->title }}</span><small>{{ $step->completed_at ? 'Concluída por '.$step->completer?->name.' · '.$step->completed_at->format('d/m/Y H:i') : 'Pendente' }}</small></form></li>@endforeach</ol></div>@endforeach</details>
+@elseif ($item->type === 'onboarding')
+@foreach ($item->assignments->where('assigned_to', auth()->id()) as $assignment)
+<div class="onboarding-assignment"><strong>Sua trilha: {{ $assignment->title }}</strong><ol>
+@foreach ($assignment->steps()->get() as $step)
+<li><form method="post" action="{{ route('knowledge.assignment-step', [$assignment, $loop->index + 1]) }}">@csrf @method('PATCH')<button class="step-toggle {{ $step->completed_at ? 'is-done' : '' }}">{{ $step->completed_at ? '✓' : '○' }}</button><span>{{ $step->title }}</span><small>{{ $step->completed_at ? 'Concluída em '.$step->completed_at->format('d/m/Y H:i') : 'Pendente' }}</small></form></li>
+@endforeach
+</ol></div>
+@endforeach
+@endif
+@empty<p class="empty-inline">Nenhum conteúdo encontrado nesta biblioteca.</p>@endforelse{{ $items->links() }}</section>
+</div></main></div>
+<script>
+document.querySelectorAll('[data-step-input]').forEach((source) => { const form=source.closest('form'); const holder=form.querySelector('[data-step-fields]'); const sync=()=>{holder.replaceChildren(...source.value.split('\n').map(x=>x.trim()).filter(Boolean).map((title,i)=>{const input=document.createElement('input');input.type='hidden';input.name=`steps[${i}]`;input.value=title;return input;}));}; source.addEventListener('input',sync); sync(); form.querySelector('[data-add-step]')?.addEventListener('click',()=>{source.value+=(source.value?'\n':'')+'Nova etapa';source.dispatchEvent(new Event('input'));}); });
+</script>
+@endsection
+
+
+

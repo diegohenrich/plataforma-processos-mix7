@@ -6,8 +6,8 @@
         <a class="nav-item {{ $active === 'demands' ? 'active' : '' }}" href="{{ route('demands.index') }}"><span aria-hidden="true">◷</span> Demandas</a>
         <span class="nav-item" aria-disabled="true" title="Em construção"><span aria-hidden="true">✓</span> Aprovações <span class="nav-state">Em breve</span></span>
         @can('viewAny', App\Models\User::class)<a class="nav-item {{ $active === 'team' ? 'active' : '' }}" href="{{ route('team.index') }}"><span aria-hidden="true">♧</span> Equipe</a>@else<span class="nav-item" aria-disabled="true" title="Em construção"><span aria-hidden="true">♧</span> Equipe <span class="nav-state">Em breve</span></span>@endcan
-        <span class="nav-item" aria-disabled="true" title="Em construção"><span aria-hidden="true">▤</span> Conhecimento <span class="nav-state">Em breve</span></span>
+        <a class="nav-item {{ $active === 'knowledge' ? 'active' : '' }}" href="{{ route('knowledge.index') }}"><span aria-hidden="true">▤</span> Conhecimento</a>
     </div>
     <div class="sidebar-note">A plataforma reúne o trabalho da agência e mantém cada etapa registrada.</div>
 </aside>
-<nav class="mobile-nav" aria-label="Navegação para celular"><div class="brand"><span class="brand-mark" aria-hidden="true">M</span><span>Mix7 | Processos</span></div><div class="mobile-nav-actions"><a href="{{ route('dashboard') }}">Início</a><a href="{{ route('demands.index') }}">Demandas</a>@can('viewAny', App\Models\User::class)<a href="{{ route('team.index') }}">Equipe</a>@endcan</div></nav>
+<nav class="mobile-nav" aria-label="Navegação para celular"><div class="brand"><span class="brand-mark" aria-hidden="true">M</span><span>Mix7 | Processos</span></div><div class="mobile-nav-actions"><a href="{{ route('dashboard') }}">Início</a><a href="{{ route('demands.index') }}">Demandas</a>@can('viewAny', App\Models\User::class)<a href="{{ route('team.index') }}">Equipe</a>@endcan<a href="{{ route('knowledge.index') }}">Conhecimento</a></div></nav>
