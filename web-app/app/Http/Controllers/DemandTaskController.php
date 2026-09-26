@@ -143,6 +143,46 @@ class DemandTaskController extends Controller
             : back()->with('success', 'Cronômetro pausado e tempo salvo.');
     }
 
+    public function recoverTimer(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+        abort_unless($user->role === UserRole::Professional, 403);
+
+        $result = DB::transaction(function () use ($user): ?string {
+            User::query()->whereKey($user->id)->lockForUpdate()->firstOrFail();
+            $entry = TaskTimeEntry::query()
+                ->where('user_id', $user->id)
+                ->whereNull('ended_at')
+                ->lockForUpdate()
+                ->with('task:id,organization_id,demand_id,title,status')
+                ->first();
+
+            if (! $entry) {
+                return 'Não há cronômetro ativo para recuperar.';
+            }
+
+            $task = $entry->task;
+            $entry->update(['ended_at' => CarbonImmutable::now()]);
+            if ($task->status === TaskStatus::InProgress) {
+                $task->update(['status' => TaskStatus::Paused]);
+            }
+            DemandEvent::create([
+                'organization_id' => $entry->organization_id,
+                'demand_id' => $task->demand_id,
+                'task_id' => $task->id,
+                'actor_id' => $user->id,
+                'event_type' => 'timer_recovered',
+                'summary' => $user->name.' recuperou e encerrou o cronômetro de "'.$task->title.'". O período offline não foi removido do intervalo já registrado.',
+            ]);
+
+            return null;
+        });
+
+        return $result
+            ? back()->withErrors(['timer' => $result])
+            : back()->with('success', 'Cronômetro encerrado agora e tarefa pausada. O intervalo anterior permanece registrado; revise o tempo se o fechamento foi abrupto.');
+    }
+
     public function store(Request $request, Demand $demand): RedirectResponse
     {
         $this->authorize('manage', $demand);

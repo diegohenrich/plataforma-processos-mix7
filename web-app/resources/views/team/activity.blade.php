@@ -14,8 +14,8 @@
 
             @if ($personal && $activeEntry)
                 <section class="activity-timer" aria-live="polite">
-                    <div><span class="eyebrow">Cronômetro em andamento</span><strong>{{ $activeEntry->task->title }}</strong><span>O tempo continua sendo registrado nesta tarefa.</span></div>
-                    <form method="post" action="{{ route('demand-tasks.timer.pause', $activeEntry->task) }}">@csrf<button class="secondary-button" type="submit">Pausar cronômetro</button></form>
+                    <div><span class="eyebrow">Cronômetro em andamento</span><strong>{{ $activeEntry->task->title }}</strong><span>O tempo continua sendo registrado nesta tarefa.</span><span>Se o navegador fechou sem pausar, encerre agora para não continuar contando. O tempo anterior permanece no registro e pode precisar de revisão.</span></div>
+                    <div class="timer-recovery-actions"><form method="post" action="{{ route('demand-tasks.timer.pause', $activeEntry->task) }}">@csrf<button class="secondary-button" type="submit">Pausar normalmente</button></form><form method="post" action="{{ route('demand-tasks.timer.recover') }}">@csrf<button class="secondary-button" type="submit">Recuperar e encerrar agora</button></form></div>
                 </section>
             @endif
 

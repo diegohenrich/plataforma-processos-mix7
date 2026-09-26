@@ -13,7 +13,9 @@ use App\Models\TaskTimeEntry;
 use App\Models\TeamInvitation;
 use App\Models\User;
 use App\Notifications\TeamInvitationNotification;
+use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
@@ -490,6 +492,48 @@ class DemandWorkflowTest extends TestCase
         $this->post(route('demand-tasks.timer.start', $otherTask))->assertSessionHasErrors('timer');
         $this->post(route('demand-tasks.timer.start', $colleagueTask))->assertForbidden();
         $this->assertDatabaseCount('task_time_entries', 1);
+    }
+
+    public function test_professional_can_recover_abandoned_timer_and_task_is_paused(): void
+    {
+        Date::setTestNow(CarbonImmutable::parse('2026-09-26 12:00:00'));
+        [$organization, $manager, $professional] = $this->team();
+        $demand = $this->demand($organization, $manager);
+        $task = $this->task($demand, $professional, $manager, 'Retomar timer interrompido');
+        $task->update(['status' => TaskStatus::InProgress]);
+        $entry = TaskTimeEntry::create([
+            'organization_id' => $organization->id,
+            'task_id' => $task->id,
+            'user_id' => $professional->id,
+            'started_at' => CarbonImmutable::now()->subHours(9),
+        ]);
+
+        $this->actingAs($professional)->post(route('demand-tasks.timer.recover'))
+            ->assertRedirect()->assertSessionHas('success');
+
+        $this->assertDatabaseHas('task_time_entries', [
+            'id' => $entry->id,
+            'ended_at' => CarbonImmutable::now()->toDateTimeString(),
+        ]);
+        $this->assertDatabaseHas('demand_tasks', ['id' => $task->id, 'status' => TaskStatus::Paused->value]);
+        $this->assertDatabaseHas('demand_events', [
+            'demand_id' => $demand->id,
+            'task_id' => $task->id,
+            'actor_id' => $professional->id,
+            'event_type' => 'timer_recovered',
+        ]);
+
+        $this->get(route('team.activity'))->assertOk()->assertDontSee('Cronômetro em andamento');
+        Date::setTestNow();
+    }
+
+    public function test_non_professional_cannot_recover_another_persons_timer(): void
+    {
+        [, $owner, $professional] = $this->team();
+
+        $this->actingAs($owner)->post(route('demand-tasks.timer.recover'))->assertForbidden();
+        $this->actingAs($professional)->post(route('demand-tasks.timer.recover'))->assertSessionHasErrors('timer');
+        Date::setTestNow();
     }
 
     public function test_completing_task_closes_its_active_time_interval(): void

@@ -1,5 +1,10 @@
 # Estado atual — Plataforma Mix7 — 2026-09-26
 
+## Recuperar cronômetro após fechamento abrupto — 2026-09-26
+- A tela “Meu trabalho” agora oferece recuperação manual do cronômetro para o profissional autenticado. A ação encerra o intervalo no momento da recuperação, pausa a tarefa e grava evento auditável; deixa claro que o tempo desde a falha pode incluir período offline e exige revisão manual. Gerência/direção não encerram o timer alheio por esse caminho.
+- Validação automatizada: suíte Laravel passou (93 testes/742 assertions), Pint focalizado passou após ordenar imports, Composer validou, `npm run build` passou e `git diff --check` passou. O teste cobre autorização, encerramento do intervalo, pausa da tarefa e evento de auditoria.
+- Bloqueio de entrega: o navegador do Codex rejeitou abrir `127.0.0.1:4291` por política de segurança e proíbe contornar por outra aba, cliente ou acesso indireto. Não houve inspeção visual; o código permanece apenas no working tree e não foi sincronizado no GitHub/Trello. O servidor e o banco sintético desta tentativa foram encerrados/removidos. Retomar quando houver um caminho de visualização autorizado.
+
 ## Fila interna de aprovações — 2026-09-26
 - A navegação agora leva a uma fila autenticada de revisões: demanda, versão, quem enviou, validade, estado e as três respostas mais recentes. Direção/gerência veem sua organização; profissional só vê demandas criadas por ele ou ligadas às suas tarefas; cliente não acessa a fila interna. Criar/revogar links e abrir materiais permanecem nas telas já existentes.
 - Validação: suíte Laravel passou com 91 testes/732 assertions, incluindo escopo por perfil, estados de link e comentários recentes; Pint focalizado, Composer, build Vite e `git diff --check` passaram. A fila foi renderizada em dados sintéticos no desktop e em 390×844; corpo e viewport permaneceram com 390 px, sem overflow horizontal.

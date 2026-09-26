@@ -7,7 +7,7 @@ Este documento separa três informações que atendem a perguntas diferentes. O 
 - A pessoa escolhe uma tarefa liberada e inicia ou pausa o cronômetro pela demanda minimizada.
 - O tempo é registrado na tarefa selecionada. Uma tarefa em pausa pode ser retomada; não se inicia outra sessão simultânea para a mesma pessoa.
 - Enquanto o sistema está aberto, só o intervalo iniciado pelo cronômetro conta como tempo realizado. Uma pausa encerra esse intervalo.
-- Ao fechar normalmente a aplicação, o intervalo ativo é encerrado e salvo; reabrir não acrescenta tempo offline. A plataforma operacional precisa preservar o histórico centralmente, mesmo quando a sessão ou o dispositivo falhar. O protótipo local ainda não garante esse último caso.
+- Ao fechar normalmente a aplicação, o intervalo ativo é encerrado e salvo; reabrir não acrescenta tempo offline. Se a sessão ou o dispositivo falhar durante um intervalo, a pessoa pode recuperar o cronômetro na tela “Meu trabalho”: o sistema encerra no horário da recuperação, pausa a tarefa e registra a ação; o tempo desde a falha até a recuperação continua dentro do intervalo e precisa ser revisado quando incorreto. A recuperação não tenta adivinhar quando o dispositivo parou nem altera a duração retroativamente.
 - A estimativa é um dado de planejamento separado do tempo realizado. O sistema não deve substituir a estimativa pelo cronômetro nem alterar estimativas automaticamente.
 
 ## Capacidade como proposta para validação
@@ -28,7 +28,7 @@ O Gantt deve mostrar prazos, duração planejada e dependências registradas. O 
 
 1. Iniciar e pausar uma tarefa registra intervalos associados à tarefa e à pessoa autenticada; a soma corresponde somente aos intervalos ativos.
 2. Reabrir a demanda minimizada mantém o mesmo cronômetro e o histórico; iniciar outra tarefa enquanto houver sessão ativa é bloqueado ou exige a ação de pausa definida pela Mix7.
-3. Fechar normalmente e reabrir não conta tempo offline. A plataforma compartilhada recupera intervalos confirmados e registra falha ou encerramento incompleto de forma auditável.
+3. Fechar normalmente e reabrir não conta tempo offline. Após falha abrupta, a pessoa pode encerrar o intervalo atual; o sistema registra a recuperação e a tarefa fica pausada. O período desconhecido requer revisão manual e não deve ser tratado como medida precisa.
 4. Estimativa, tempo realizado e disponibilidade permanecem campos/medidas distintos; corrigir um não reescreve os outros.
 5. A prévia local compara horas semanais inseridas manualmente, ausências registradas e estimativas das tarefas com prazo no período; sobrecarga e tarefas sem estimativa ficam visíveis. A regra operacional só se conclui após a Mix7 aprovar jornada, ausências e alocação.
 6. O Gantt respeita prazos e dependências salvos; dados do cronômetro não deslocam o cronograma automaticamente.
