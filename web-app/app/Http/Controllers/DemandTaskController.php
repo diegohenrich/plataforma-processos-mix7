@@ -11,6 +11,7 @@ use App\Models\DemandTask;
 use App\Models\TaskTimeEntry;
 use App\Models\User;
 use Carbon\CarbonImmutable;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -40,7 +41,7 @@ class DemandTaskController extends Controller
         ]);
     }
 
-    public function startTimer(Request $request, DemandTask $task): RedirectResponse
+    public function startTimer(Request $request, DemandTask $task): RedirectResponse|JsonResponse
     {
         $this->authorize('trackTime', $task);
         $user = $request->user();
@@ -99,12 +100,20 @@ class DemandTaskController extends Controller
             return null;
         });
 
-        return $result
-            ? back()->withErrors(['timer' => $result])
-            : back()->with('success', 'Cronômetro iniciado. O tempo será salvo nesta tarefa.');
+        if ($result) {
+            return $this->actionFailure($request, 'timer', $result, 409);
+        }
+
+        $entry = TaskTimeEntry::query()
+            ->where('user_id', $user->id)
+            ->where('task_id', $task->id)
+            ->whereNull('ended_at')
+            ->first();
+
+        return $this->actionSuccess($request, $task->fresh(), 'Cronômetro iniciado. O tempo será salvo nesta tarefa.', $entry);
     }
 
-    public function pauseTimer(Request $request, DemandTask $task): RedirectResponse
+    public function pauseTimer(Request $request, DemandTask $task): RedirectResponse|JsonResponse
     {
         $this->authorize('trackTime', $task);
         $user = $request->user();
@@ -138,12 +147,20 @@ class DemandTaskController extends Controller
             return null;
         });
 
-        return $result
-            ? back()->withErrors(['timer' => $result])
-            : back()->with('success', 'Cronômetro pausado e tempo salvo.');
+        if ($result) {
+            return $this->actionFailure($request, 'timer', $result, 409);
+        }
+
+        $entry = TaskTimeEntry::query()
+            ->where('user_id', $user->id)
+            ->where('task_id', $task->id)
+            ->latest('started_at')
+            ->first();
+
+        return $this->actionSuccess($request, $task->fresh(), 'Cronômetro pausado e tempo salvo.', $entry);
     }
 
-    public function recoverTimer(Request $request): RedirectResponse
+    public function recoverTimer(Request $request): RedirectResponse|JsonResponse
     {
         $user = $request->user();
         abort_unless($user->role === UserRole::Professional, 403);
@@ -178,9 +195,16 @@ class DemandTaskController extends Controller
             return null;
         });
 
-        return $result
-            ? back()->withErrors(['timer' => $result])
-            : back()->with('success', 'Cronômetro encerrado agora e tarefa pausada. O intervalo anterior permanece registrado; revise o tempo se o fechamento foi abrupto.');
+        if ($result) {
+            return $this->actionFailure($request, 'timer', $result, 409);
+        }
+
+        $entry = TaskTimeEntry::query()
+            ->where('user_id', $user->id)
+            ->latest('started_at')
+            ->first();
+
+        return $this->actionSuccess($request, $entry->task, 'Cronômetro encerrado agora e tarefa pausada. O intervalo anterior permanece registrado; revise o tempo se o fechamento foi abrupto.', $entry);
     }
 
     public function store(Request $request, Demand $demand): RedirectResponse
@@ -225,7 +249,7 @@ class DemandTaskController extends Controller
         return back()->with('success', 'Tarefa adicionada à demanda.');
     }
 
-    public function updateStatus(Request $request, DemandTask $task): RedirectResponse
+    public function updateStatus(Request $request, DemandTask $task): RedirectResponse|JsonResponse
     {
         $this->authorize('updateStatus', $task);
         $data = $request->validate(['status' => ['required', Rule::enum(TaskStatus::class)]]);
@@ -233,11 +257,11 @@ class DemandTaskController extends Controller
         $to = TaskStatus::from($data['status']);
 
         if (! in_array($to, $from->next(), true)) {
-            return back()->withErrors(['status' => 'Essa mudança de status não é permitida.']);
+            return $this->actionFailure($request, 'status', 'Essa mudança de status não é permitida.');
         }
 
         if ($to === TaskStatus::InProgress && $task->dependencies()->where('status', '!=', TaskStatus::Completed->value)->exists()) {
-            return back()->withErrors(['status' => 'Conclua as tarefas anteriores antes de iniciar esta tarefa.']);
+            return $this->actionFailure($request, 'status', 'Conclua as tarefas anteriores antes de iniciar esta tarefa.');
         }
 
         DB::transaction(function () use ($task, $from, $to, $request): void {
@@ -265,7 +289,7 @@ class DemandTaskController extends Controller
             ]);
         });
 
-        return back()->with('success', 'Status da tarefa atualizado.');
+        return $this->actionSuccess($request, $task->fresh(), 'Status da tarefa atualizado.');
     }
 
     public function updateSchedule(Request $request, DemandTask $task): RedirectResponse
@@ -395,5 +419,42 @@ class DemandTaskController extends Controller
         return $result
             ? back()->withErrors(['assignee_id' => $result])
             : back()->with('success', 'Responsável atualizado. O histórico mantém quem executou cada etapa.');
+    }
+
+    private function actionSuccess(Request $request, DemandTask $task, string $message, ?TaskTimeEntry $entry = null): RedirectResponse|JsonResponse
+    {
+        if (! $request->expectsJson()) {
+            return back()->with('success', $message);
+        }
+
+        return response()->json([
+            'message' => $message,
+            'data' => [
+                'task_id' => $task->id,
+                'status' => $task->status->value,
+                'status_label' => $task->status->label(),
+                'completed_at' => $task->completed_at?->toISOString(),
+                'timer' => $entry ? [
+                    'id' => $entry->id,
+                    'started_at' => $entry->started_at?->toISOString(),
+                    'ended_at' => $entry->ended_at?->toISOString(),
+                    'duration_seconds' => $entry->ended_at
+                        ? max(0, $entry->started_at->diffInSeconds($entry->ended_at, false))
+                        : null,
+                ] : null,
+            ],
+        ]);
+    }
+
+    private function actionFailure(Request $request, string $field, string $message, int $status = 422): RedirectResponse|JsonResponse
+    {
+        if (! $request->expectsJson()) {
+            return back()->withErrors([$field => $message]);
+        }
+
+        return response()->json([
+            'message' => $message,
+            'errors' => [$field => [$message]],
+        ], $status);
     }
 }

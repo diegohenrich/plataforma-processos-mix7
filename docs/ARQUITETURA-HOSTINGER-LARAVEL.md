@@ -21,7 +21,7 @@ Referências oficiais consultadas em 25/09/2026: [banco de dados na Hostinger](h
 - Tela de entrada sem cadastro público, sessão regenerada no login, saída protegida por CSRF e limite de tentativas.
 - Contas possuem organização, estado ativo e um dos quatro papéis citados: direção da agência, gerência de marketing, profissional ou cliente. A matriz completa ainda está em construção; não receber dados reais antes de validar as regras e o fluxo de recuperação de contas.
 - Comando inicial `php artisan mix7:owner:create` solicita nome, e-mail e senha sem gravar credenciais no repositório. A senha requer pelo menos 12 caracteres. O comando cria a organização Mix7 se ainda não existir e recusa uma segunda conta de direção.
-- API `GET /api/v1/me` e leitura `GET /api/v1/demands`, `GET /api/v1/demands/{demand}` protegidas por Sanctum. A API filtra demandas e tarefas por organização e restringe profissionais aos próprios trabalhos.
+- API `/api/v1` protegida por Sanctum: identidade e leitura de demandas, além de transições de estado e comandos de iniciar, pausar e recuperar o cronômetro de tarefas. As mutações reutilizam as policies, regras de dependência, autoria e encerramento de timer do site; profissionais operam apenas tarefas atribuídas a si, direção/gerência mudam status na organização e clientes não alteram tarefas. Consulte [`docs/API.md`](API.md) para rotas, formatos e limites.
 - Migrações Laravel registram organizações, papéis, tokens, demandas, tarefas e eventos de histórico. MariaDB é o destino; desenvolvimento local e testes usam SQLite.
 - O `.env.example` aponta para `database/mix7-demo.sqlite`, arquivo ignorado pelo Git. `DatabaseSeeder` só chama `DemoWorkspaceSeeder` em `APP_ENV=local`, conexão SQLite e nesse arquivo dedicado. O seeder gera dados fictícios e uma senha aleatória por execução; fora dessas condições, não cria contas de demonstração. Esse banco não serve para Hostinger nem para o CRM atual.
 - Demandas/tarefas têm telas, transições de estado com validação, autoria de ações e atribuição. A direção pode cadastrar contas profissionais vinculadas à organização, com senha armazenada por hash e sem cadastro público. Essa autorização é provisória até a matriz dos quatro papéis ser confirmada.
@@ -72,7 +72,7 @@ Nenhum deploy foi feito e não foram acessados painel, domínio, banco ou creden
 
 ## Contrato futuro do executável Windows
 
-O desktop será um cliente da API HTTPS do mesmo sistema. Endpoints serão versionados (`/api/v1`); autenticação de cliente desktop usará tokens pessoais com escopo mínimo, expiração e revogação. O desktop não terá acesso direto ao MariaDB, não guardará senha de banco e não duplicará regras de negócio. Hoje há leitura autenticada de identidade e demandas; escrita de demandas/tarefas e comandos de cronômetro pela API, aprovações, anexos e outros módulos ainda são trabalho futuro.
+O desktop será um cliente da API HTTPS do mesmo sistema. Endpoints serão versionados (`/api/v1`); autenticação de cliente desktop usará tokens pessoais com escopo mínimo, expiração e revogação. O desktop não terá acesso direto ao MariaDB, não guardará senha de banco e não duplicará regras de negócio. Hoje há leitura autenticada de identidade e demandas, além de escrita para estado de tarefas e cronômetro; criar demandas/tarefas pela API, transferir responsáveis, aprovações, anexos e outros módulos ainda são trabalho futuro.
 
 ## Não pronto para uso com dados reais
 
