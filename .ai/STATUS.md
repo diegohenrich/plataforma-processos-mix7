@@ -111,3 +111,5 @@ Concluir a plataforma de processos inteira conforme os três áudios. O protóti
 Continuação do projeto: escolher a próxima fatia baseada em requisitos explícitos e dependências reais; a fundação compartilhada, identidade, avaliação e integrações seguem pendentes. Próximos limites verificáveis: validar arraste físico do Explorador para o navegador quando disponível e obter caso real anonimizado para campos, papéis e exceções. Manter dados sintéticos até existir ambiente com identidade, permissões e armazenamento adequados. Comentários de sincronização antigos que dependem de confirmação pontual permanecem pendentes, sem impedir o uso de novos cartões de tarefa.
 
 Histórico operacional anterior preservado em [docs/VALIDACOES-HISTORICAS.md](../docs/VALIDACOES-HISTORICAS.md); este arquivo é a fonte vigente de status.
+
+- Sincronização deste atalho: commit c892ca6d7d8f2ea4f3fb1a625e8305b56c424564 está na branch remota e no PR #11. O conector Trello atual não oferece criação de comentário nem edição de descrição; o cartão #30 foi lido, mas não alterado. CI para o commit está pendente nesta consulta.
