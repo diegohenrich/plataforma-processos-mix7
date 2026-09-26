@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AiAgentController;
 use App\Http\Controllers\AiPlanningController;
+use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\SessionController;
 use App\Http\Controllers\DemandController;
 use App\Http\Controllers\DemandReviewController;
@@ -18,6 +19,10 @@ Route::post('/revisao/{token}/respostas', [DemandReviewController::class, 'respo
 Route::middleware('guest')->group(function (): void {
     Route::get('/entrar', [SessionController::class, 'create'])->name('login');
     Route::post('/entrar', [SessionController::class, 'store'])->middleware('throttle:5,1');
+    Route::get('/senha/esqueci', [PasswordResetController::class, 'requestForm'])->name('password.request');
+    Route::post('/senha/email', [PasswordResetController::class, 'sendLink'])->middleware('throttle:3,1')->name('password.email');
+    Route::get('/senha/redefinir/{token}', [PasswordResetController::class, 'resetForm'])->name('password.reset');
+    Route::post('/senha/redefinir', [PasswordResetController::class, 'reset'])->middleware('throttle:5,1')->name('password.update');
 });
 
 Route::middleware(['auth', 'active'])->group(function (): void {

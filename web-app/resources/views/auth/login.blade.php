@@ -9,6 +9,7 @@
         <p class="eyebrow" style="margin-top:30px">Área da equipe</p>
         <h1 class="login-title" id="login-title">Acesse sua conta</h1>
         <p class="subheading">Entre para acompanhar demandas e aprovações da agência.</p>
+        @if (session('status'))<p class="notice" role="status">{{ session('status') }}</p>@endif
         <form method="post" action="{{ url('/entrar') }}">
             @csrf
             <label class="field" for="email">E-mail
@@ -22,6 +23,7 @@
             <label class="field" for="remember" style="display:flex;align-items:center;gap:9px;font-weight:500"><input id="remember" name="remember" type="checkbox" value="1" style="width:16px;height:16px;margin:0"> Manter conectado neste dispositivo</label>
             <button class="primary" type="submit">Entrar</button>
         </form>
+        <p class="security-note"><a href="{{ route('password.request') }}">Esqueci minha senha</a></p>
         <p class="security-note">O acesso é criado pela administração da Mix7. Não há cadastro público nesta versão.</p>
     </section>
 </main>

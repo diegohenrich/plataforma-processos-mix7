@@ -1,5 +1,10 @@
 # Estado atual — Plataforma Mix7 — 2026-09-26
 
+## Recuperação de senha de contas — 2026-09-26
+- Implementei páginas de solicitar link e criar senha nova no Laravel, com broker padrão, token de uso único em hash, resposta genérica para não revelar contas, bloqueio para usuários inativos e limitação das rotas. O login mostra confirmação após a redefinição.
+- Validação: `php artisan test --compact` passou 71 testes (550 assertions), incluindo fluxo completo com notificação falsa, token armazenado como hash e uso único, e-mail desconhecido/inativo sem notificação e senha/token inválidos; `vendor/bin/pint` focado, `npm run build`, `composer validate --no-check-publish` e `git diff --check` passaram. Inspeção renderizada em navegador local: login, pedido e redefinição com e-mail sintético; visualmente sem erro aparente. Nenhum e-mail real foi enviado. Inspeção em celular não foi possível pelo controle de viewport indisponível nesta sessão.
+- O transporte SMTP não foi configurado nem testado, portanto o envio real permanece pendente. Commit, CI e Trello serão registrados após publicar a mudança.
+
 ## Provedor local sem tarifa por token — 2026-09-26
 - O usuário confirmou que quer operação dos agentes sem o custo recorrente de tokens do Gateway. Configurei o Laravel para aceitar endpoints OpenAI-compatible com provedor, base URL, modelo e chave selecionáveis por ambiente; autenticação ausente só é permitida com `AI_PROVIDER=openai-compatible` e `AI_ALLOW_UNAUTHENTICATED=true`. Vercel Gateway mantém compatibilidade retroativa.
 - Validação final: `php artisan test --compact` passou 67 testes (521 assertions); testes locais simulados cobrem endpoint/modelo, envio sem cabeçalho Authorization, recusa sem configuração, visibilidade e fila, OIDC e compatibilidade anterior. Pint focalizado passou; Pint global identifica seis arquivos preexistentes fora do escopo. `npm run build`, `composer validate --no-check-publish` e `git diff --check` passaram.
