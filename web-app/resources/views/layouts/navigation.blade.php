@@ -14,6 +14,7 @@
             @can('viewAny', App\Models\User::class)<a class="nav-item {{ $active === 'team' ? 'active' : '' }}" href="{{ route('team.index') }}"><span aria-hidden="true">♧</span> Equipe</a>@else<span class="nav-item" aria-disabled="true" title="Em construção"><span aria-hidden="true">♧</span> Equipe <span class="nav-state">Em breve</span></span>@endcan
         @endif
         @can('viewAny', App\Models\KnowledgeItem::class)<a class="nav-item {{ $active === 'knowledge' ? 'active' : '' }}" href="{{ route('knowledge.index') }}"><span aria-hidden="true">▤</span> Conhecimento</a>@endcan
+        @if (auth()->user()->role !== App\Enums\UserRole::Client)<a class="nav-item {{ $active === 'integrations' ? 'active' : '' }}" href="{{ route('api-tokens.index') }}"><span aria-hidden="true">⌘</span> Acessos da API</a>@endif
     </div>
     <div class="sidebar-note">A plataforma reúne o trabalho da agência e mantém cada etapa registrada.</div>
 </aside>
@@ -28,5 +29,6 @@
         @if (in_array(auth()->user()->role, [App\Enums\UserRole::AgencyOwner, App\Enums\UserRole::MarketingManager, App\Enums\UserRole::Professional], true))<a href="{{ route('performance-reviews.index') }}">Avaliações</a>@endif
         @can('viewAny', App\Models\User::class)<a href="{{ route('team.index') }}">Equipe</a>@endcan
         @can('viewAny', App\Models\KnowledgeItem::class)<a href="{{ route('knowledge.index') }}">Conhecimento</a>@endcan
+        @if (auth()->user()->role !== App\Enums\UserRole::Client)<a href="{{ route('api-tokens.index') }}">Acessos da API</a>@endif
     </div>
 </nav>

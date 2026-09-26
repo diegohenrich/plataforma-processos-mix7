@@ -17,7 +17,7 @@ Route::prefix('v1')->group(function (): void {
     Route::post('/public/reviews/{token}/responses', [DemandReviewController::class, 'respond'])->middleware('throttle:10,1');
 });
 
-Route::prefix('v1')->middleware(['auth:sanctum', 'active'])->group(function (): void {
+Route::prefix('v1')->middleware(['auth:sanctum', 'active', 'api.token'])->group(function (): void {
     Route::get('/me', function (Request $request) {
         $user = $request->user();
 

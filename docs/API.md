@@ -1,6 +1,8 @@
 # API Mix7 — versão 1
 
-A API pertence à aplicação Laravel e usa o mesmo banco, políticas e histórico do site. Rotas internas sob `/api/v1` exigem token Sanctum no cabeçalho `Authorization: Bearer …`, conta ativa e acesso autorizado. As duas rotas públicas de aprovação usam o token secreto, temporário e revogável do próprio link; não exigem conta. Respostas usam JSON. A API ainda não provisiona nem revoga tokens Sanctum; não distribua tokens de teste para usuários reais.
+A API pertence à aplicação Laravel e usa o mesmo banco, políticas e histórico do site. Rotas internas sob `/api/v1` exigem token Sanctum no cabeçalho `Authorization: Bearer …`, conta ativa e acesso autorizado. As duas rotas públicas de aprovação usam o token secreto, temporário e revogável do próprio link; não exigem conta. Respostas usam JSON.
+
+Usuários internos ativos podem emitir e revogar seus próprios tokens em `/integracoes/tokens`. A emissão exige a senha atual, nome e validade fixa de 7, 30 ou 90 dias; cada conta mantém no máximo 10 tokens não expirados. O segredo é mostrado uma única vez em resposta privada sem cache e o banco armazena somente seu hash. Tokens têm a permissão `api`, enquanto cada endpoint continua sujeito às regras de papel, organização e recurso. Clientes não podem emitir tokens internos; a revisão externa segue por link.
 
 ## Identidade e leitura
 
@@ -74,4 +76,4 @@ Erros de validação e transição de tarefa não permitida usam HTTP `422`; con
 
 ## Limites atuais
 
-A escrita cobre criação de demanda e tarefas, transições de etapa/tarefa, cronograma, transferência de responsável, cronômetro, evidência pós-aprovação, ciclo de links de revisão, convite/cancelamento de profissionais e clientes, avaliação/resposta e progresso pessoal de onboarding. Leitura de conhecimento e onboarding está disponível com isolamento por organização e pessoa. Gestão administrativa da biblioteca e de acesso a contas, bem como provisionamento de tokens Sanctum, ainda não têm endpoints nesta versão. A API não calcula pontuação ou ranking. Não existe aplicação Windows nesta entrega; o contrato fica documentado para esse cliente futuro. A matriz de perfis e a operação compartilhada ainda precisam de validação da Mix7 antes do uso com dados reais.
+A escrita cobre criação de demanda e tarefas, transições de etapa/tarefa, cronograma, transferência de responsável, cronômetro, evidência pós-aprovação, ciclo de links de revisão, convite/cancelamento de profissionais e clientes, avaliação/resposta e progresso pessoal de onboarding. Leitura de conhecimento e onboarding está disponível com isolamento por organização e pessoa. Tokens Sanctum podem ser emitidos/revogados pela própria pessoa interna na interface web; não há endpoints de administração dos tokens. Administração da biblioteca e de acesso a contas pela API ainda não está disponível. A API não calcula pontuação ou ranking. Não existe aplicação Windows nesta entrega; o contrato fica documentado para esse cliente futuro. A matriz de perfis e a operação compartilhada ainda precisam de validação da Mix7 antes do uso com dados reais.

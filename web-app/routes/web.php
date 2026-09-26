@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AiAgentController;
 use App\Http\Controllers\AiPlanningController;
+use App\Http\Controllers\ApiTokenController;
 use App\Http\Controllers\ApprovalsController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\SessionController;
@@ -67,6 +68,9 @@ Route::middleware(['auth', 'active'])->group(function (): void {
     Route::post('/conhecimento/{item}/atribuir', [KnowledgeController::class, 'assign'])->name('knowledge.assign');
     Route::patch('/onboarding/{assignment}/etapas/{step}', [KnowledgeController::class, 'toggleStep'])->name('knowledge.assignment-step');
     Route::get('/equipe', [TeamMemberController::class, 'index'])->name('team.index');
+    Route::get('/integracoes/tokens', [ApiTokenController::class, 'index'])->name('api-tokens.index');
+    Route::post('/integracoes/tokens', [ApiTokenController::class, 'store'])->middleware('throttle:5,10')->name('api-tokens.store');
+    Route::delete('/integracoes/tokens/{token}', [ApiTokenController::class, 'destroy'])->name('api-tokens.destroy');
     Route::patch('/equipe/{member}/acesso', [TeamMemberController::class, 'updateAccess'])->name('team.members.access');
     Route::get('/equipe/producao', [TeamActivityController::class, 'index'])->name('team.activity');
     Route::get('/equipe/capacidade', [TeamCapacityController::class, 'index'])->name('team.capacity');
