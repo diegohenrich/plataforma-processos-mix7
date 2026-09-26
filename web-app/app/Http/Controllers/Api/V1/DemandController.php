@@ -40,6 +40,7 @@ class DemandController extends Controller
                 ? [
                     'id' => $demand->id,
                     'title' => $demand->title,
+                    'module' => $this->moduleData($demand),
                     'status' => ['value' => $demand->status->value, 'label' => $demand->status->label()],
                     'updated_at' => $demand->updated_at?->toISOString(),
                 ]
@@ -47,6 +48,7 @@ class DemandController extends Controller
                     'id' => $demand->id,
                     'title' => $demand->title,
                     'brief' => $demand->brief,
+                    'module' => $this->moduleData($demand),
                     'status' => ['value' => $demand->status->value, 'label' => $demand->status->label()],
                     'created_at' => $demand->created_at?->toISOString(),
                     'created_by' => ['id' => $demand->creator->id, 'name' => $demand->creator->name],
@@ -71,6 +73,7 @@ class DemandController extends Controller
             return response()->json(['data' => [
                 'id' => $demand->id,
                 'title' => $demand->title,
+                'module' => $this->moduleData($demand),
                 'status' => ['value' => $demand->status->value, 'label' => $demand->status->label()],
                 'updated_at' => $demand->updated_at?->toISOString(),
             ]]);
@@ -85,6 +88,7 @@ class DemandController extends Controller
                 'id' => $demand->id,
                 'title' => $demand->title,
                 'brief' => $demand->brief,
+                'module' => $this->moduleData($demand),
                 'status' => ['value' => $demand->status->value, 'label' => $demand->status->label()],
                 'tasks' => $tasks->map(fn ($task) => [
                     'id' => $task->id,
@@ -95,5 +99,14 @@ class DemandController extends Controller
                 ]),
             ],
         ]);
+    }
+
+    private function moduleData(Demand $demand): ?array
+    {
+        if (! $demand->module_key) {
+            return null;
+        }
+
+        return ['key' => $demand->module_key->value, 'label' => $demand->module_key->label(), 'version' => $demand->module_version];
     }
 }

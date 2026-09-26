@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\DemandModule;
 use App\Enums\DemandStatus;
 use App\Enums\TaskStatus;
 use App\Enums\UserRole;
@@ -73,7 +74,9 @@ class DemandController extends Controller
             ->orderBy('name')
             ->get(['id', 'name']);
 
-        return view('demands.create', compact('professionals', 'clients'));
+        $modules = DemandModule::cases();
+
+        return view('demands.create', compact('professionals', 'clients', 'modules'));
     }
 
     public function store(Request $request): RedirectResponse|JsonResponse
@@ -83,6 +86,7 @@ class DemandController extends Controller
         $data = $request->validate([
             'title' => ['required', 'string', 'max:180'],
             'brief' => ['required', 'string', 'max:12000'],
+            'module_key' => ['required', Rule::enum(DemandModule::class)],
             'client_user_id' => [
                 'nullable',
                 'integer',
@@ -111,6 +115,8 @@ class DemandController extends Controller
                 'client_user_id' => $data['client_user_id'] ?? null,
                 'title' => $data['title'],
                 'brief' => $data['brief'],
+                'module_key' => DemandModule::from($data['module_key']),
+                'module_version' => DemandModule::from($data['module_key'])->version(),
                 'status' => DemandStatus::Received,
             ]);
 
@@ -162,6 +168,7 @@ class DemandController extends Controller
                 'data' => [
                     'id' => $demand->id,
                     'title' => $demand->title,
+                    'module' => ['key' => $demand->module_key->value, 'label' => $demand->module_key->label(), 'version' => $demand->module_version],
                     'status' => $demand->status->value,
                     'status_label' => $demand->status->label(),
                     'client_user_id' => $demand->client_user_id,

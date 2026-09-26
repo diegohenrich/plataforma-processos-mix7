@@ -50,6 +50,7 @@
                                             <span class="kanban-brief">{{ \Illuminate\Support\Str::limit($demand->brief, 125) }}</span>
                                         </a>
                                         <div class="kanban-meta">
+                                            @if ($demand->module_key)<span>{{ $demand->module_key->label() }} · v{{ $demand->module_version }}</span>@endif
                                             <span>{{ $demand->tasks->count() }} {{ \Illuminate\Support\Str::plural('tarefa', $demand->tasks->count()) }}</span>
                                             <span>{{ $demand->tasks->where('status', App\Enums\TaskStatus::Completed)->count() }} concluídas</span>
                                             @if($assigneeNames)<span title="{{ $assigneeNames }}">{{ $assigneeNames }}</span>@endif

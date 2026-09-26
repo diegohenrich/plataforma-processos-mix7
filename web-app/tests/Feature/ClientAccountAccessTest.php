@@ -145,6 +145,7 @@ class ClientAccountAccessTest extends TestCase
         $this->actingAs($owner)->from(route('demands.create'))->post(route('demands.store'), [
             'title' => 'Site institucional',
             'brief' => 'Briefing interno.',
+            'module_key' => 'website_review',
             'client_user_id' => $outsideClient->id,
             'tasks' => [['title' => 'Planejar', 'assignee_id' => $professional->id]],
         ])->assertSessionHasErrors('client_user_id');
@@ -160,6 +161,7 @@ class ClientAccountAccessTest extends TestCase
         $this->actingAs($owner)->post(route('demands.store'), [
             'title' => 'Campanha institucional',
             'brief' => 'Briefing aprovado pela gerência.',
+            'module_key' => 'social_creative',
             'client_user_id' => $client->id,
             'tasks' => [['title' => 'Planejar campanha', 'assignee_id' => $professional->id]],
         ])->assertRedirect()->assertSessionHasNoErrors();

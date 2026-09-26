@@ -34,6 +34,7 @@ class DemandWorkflowTest extends TestCase
             ->post(route('demands.store'), [
                 'title' => 'Site institucional',
                 'brief' => 'Apresentar serviços para novos clientes.',
+                'module_key' => 'website_review',
                 'tasks' => [
                     ['title' => 'Organizar referências', 'assignee_id' => $professional->id, 'estimate_minutes' => '90'],
                     ['title' => 'Rascunhar páginas', 'assignee_id' => $professional->id, 'estimate_minutes' => ''],
@@ -48,6 +49,7 @@ class DemandWorkflowTest extends TestCase
         $this->assertSame(2, $demand->tasks()->count());
         $this->assertSame(3, $demand->events()->count());
         $this->assertDatabaseHas('demand_events', ['demand_id' => $demand->id, 'actor_id' => $manager->id, 'event_type' => 'task_assigned']);
+        $this->get(route('demands.show', $demand))->assertOk()->assertSee('Tipo: Revisão de site')->assertSee('configuração v1');
     }
 
     public function test_manager_sees_all_demand_stages_in_kanban_and_can_switch_to_paginated_list(): void
@@ -159,12 +161,25 @@ class DemandWorkflowTest extends TestCase
             ->post(route('demands.store'), [
                 'title' => 'Site institucional',
                 'brief' => 'Briefing válido.',
+                'module_key' => 'website_review',
                 'tasks' => [['title' => 'Planejar página', 'assignee_id' => $outsideProfessional->id]],
             ])
             ->assertSessionHasErrors('tasks.0.assignee_id');
 
         $this->assertDatabaseCount('demands', 0);
         $this->assertSame(2, User::where('organization_id', $organization->id)->where('role', UserRole::Professional->value)->count());
+    }
+
+    public function test_new_demand_form_offers_only_the_two_confirmed_module_types(): void
+    {
+        [, $manager] = $this->team();
+
+        $this->actingAs($manager)->get(route('demands.create'))
+            ->assertOk()
+            ->assertSee('Tipo de aprovação')
+            ->assertSee('Criativo para redes sociais')
+            ->assertSee('Revisão de site')
+            ->assertSee('name="module_key"', false);
     }
 
     public function test_manager_can_set_and_clear_task_schedule_and_history_records_actor(): void

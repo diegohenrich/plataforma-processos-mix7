@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\DemandModule;
 use App\Enums\DemandStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -12,11 +13,11 @@ class Demand extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['organization_id', 'created_by', 'client_user_id', 'title', 'brief', 'status'];
+    protected $fillable = ['organization_id', 'created_by', 'client_user_id', 'title', 'brief', 'module_key', 'module_version', 'status'];
 
     protected function casts(): array
     {
-        return ['status' => DemandStatus::class];
+        return ['status' => DemandStatus::class, 'module_key' => DemandModule::class];
     }
 
     public function organization(): BelongsTo

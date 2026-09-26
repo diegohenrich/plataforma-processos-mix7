@@ -20,10 +20,12 @@ class ApiDemandMutationTest extends TestCase
     public function test_management_creates_a_demand_with_initial_tasks_and_audited_client_link(): void
     {
         [$organization, $owner, $professional, , $client] = $this->workspace();
-        $response = $this->authenticate($owner->createToken('desktop')->plainTextToken)
+        $token = $owner->createToken('desktop')->plainTextToken;
+        $response = $this->authenticate($token)
             ->postJson('/api/v1/demands', [
                 'title' => 'Site institucional',
                 'brief' => 'Briefing sintético para o site.',
+                'module_key' => 'website_review',
                 'client_user_id' => $client->id,
                 'tasks' => [
                     ['title' => 'Planejar páginas', 'assignee_id' => $professional->id, 'estimate_minutes' => 90],
@@ -34,6 +36,9 @@ class ApiDemandMutationTest extends TestCase
         $response->assertCreated()
             ->assertJsonPath('data.title', 'Site institucional')
             ->assertJsonPath('data.status', DemandStatus::Received->value)
+            ->assertJsonPath('data.module.key', 'website_review')
+            ->assertJsonPath('data.module.label', 'Revisão de site')
+            ->assertJsonPath('data.module.version', 1)
             ->assertJsonPath('data.client_user_id', $client->id)
             ->assertJsonCount(2, 'data.tasks')
             ->assertJsonPath('data.tasks.0.assignee.id', $professional->id)
@@ -42,6 +47,10 @@ class ApiDemandMutationTest extends TestCase
         $demand = Demand::query()->firstOrFail();
         $this->assertSame($organization->id, $demand->organization_id);
         $this->assertSame($owner->id, $demand->created_by);
+        $this->assertSame('website_review', $demand->module_key->value);
+        $this->assertSame(1, $demand->module_version);
+        $this->authenticate($token)->getJson("/api/v1/demands/{$demand->id}")
+            ->assertOk()->assertJsonPath('data.module.key', 'website_review')->assertJsonPath('data.module.version', 1);
         $this->assertDatabaseHas('demand_events', [
             'demand_id' => $demand->id,
             'actor_id' => $owner->id,
@@ -62,6 +71,7 @@ class ApiDemandMutationTest extends TestCase
         $payload = [
             'title' => 'Demanda inválida',
             'brief' => 'Briefing sintético.',
+            'module_key' => 'social_creative',
             'tasks' => [['title' => 'Tarefa', 'assignee_id' => $professional->id]],
         ];
 
@@ -81,6 +91,21 @@ class ApiDemandMutationTest extends TestCase
 
         $this->assertSame(0, Demand::query()->count());
         $this->assertSame(0, DemandTask::query()->count());
+    }
+
+    public function test_demand_creation_rejects_unknown_approval_modules(): void
+    {
+        [, $owner, $professional] = $this->workspace();
+
+        $this->authenticate($owner->createToken('desktop')->plainTextToken)
+            ->postJson('/api/v1/demands', [
+                'title' => 'Tipo inexistente',
+                'brief' => 'Briefing sintético.',
+                'module_key' => 'inventado',
+                'tasks' => [['title' => 'Preparar material', 'assignee_id' => $professional->id]],
+            ])->assertUnprocessable()->assertJsonValidationErrors('module_key');
+
+        $this->assertSame(0, Demand::query()->count());
     }
 
     public function test_management_adds_tasks_and_demand_transition_waits_for_task_completion(): void

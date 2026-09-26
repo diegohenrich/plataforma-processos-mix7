@@ -9,8 +9,8 @@ Usuários internos ativos podem emitir e revogar seus próprios tokens em `/inte
 | Método e rota | Uso | Acesso |
 | --- | --- | --- |
 | `GET /me` | Identidade, papel e organização da conta autenticada | Qualquer perfil ativo |
-| `GET /demands` | Até 100 demandas recentes visíveis à pessoa | Dados reduzidos para clientes e tarefas atribuídas filtradas para profissionais |
-| `GET /demands/{demand}` | Detalhe autorizado da demanda | Cliente vê título, etapa e atualização; profissional vê suas tarefas; gestão vê o detalhe da organização |
+| `GET /demands` | Até 100 demandas recentes visíveis à pessoa, incluindo chave e versão do módulo | Dados reduzidos para clientes e tarefas atribuídas filtradas para profissionais |
+| `GET /demands/{demand}` | Detalhe autorizado da demanda, incluindo chave e versão do módulo | Cliente vê título, módulo, etapa e atualização; profissional vê suas tarefas; gestão vê o detalhe da organização |
 | `GET /team/activity` | Atividade e produção dos últimos 30 dias | Direção/gerência recebem totais agregados sem títulos de tarefas; profissional recebe somente contagem pessoal, suas próprias tarefas abertas e seu cronômetro; cliente não tem acesso |
 | `GET /team/members` | Lista contas profissionais e clientes da agência, com papel e estado de acesso | Somente direção; no máximo 200 registros, sem contas de direção/gerência ou de outras organizações |
 | `GET /team/invitations` | Lista convites pendentes e ainda válidos, sem segredo/token | Somente direção; resposta sem cache e filtrada pela organização |
@@ -22,7 +22,7 @@ Usuários internos ativos podem emitir e revogar seus próprios tokens em `/inte
 | `POST /knowledge/{item}/assignments` | `{"user_id":17}` atribui uma trilha a profissional ativo | Direção/gerência; uma atribuição por pessoa/trilha e todas as etapas são copiadas para o progresso individual |
 | `GET /onboarding/assignments` | Lista as trilhas atribuídas à própria pessoa, com etapas e progresso | Somente profissionais; não lista trilhas de colegas |
 | `PATCH /onboarding/assignments/{assignment}/steps/{step}` | Alterna a conclusão da etapa atribuída | Somente o profissional designado e somente para etapa da mesma trilha/organização |
-| `POST /demands` | Cria demanda e de 1 a 20 tarefas iniciais em uma transação | Direção/gerência; cliente opcional e profissionais ativos devem pertencer à mesma organização |
+| `POST /demands` | `title`, `brief`, `module_key`, `tasks[]`; cria demanda e de 1 a 20 tarefas iniciais numa transação | Direção/gerência; módulo precisa ser `social_creative` ou `website_review`; cliente opcional e profissionais ativos devem pertencer à mesma organização |
 | `POST /demands/{demand}/tasks` | Acrescenta uma tarefa atribuída à demanda | Direção/gerência da organização, exceto durante aprovação do cliente, entrega ou conclusão |
 | `PATCH /demands/{demand}/status` | `{"status":"planning"}` | Direção/gerência; transições do fluxo são validadas e revisão interna exige todas as tarefas concluídas |
 | `POST /demands/{demand}/delivery-evidences` | `{"outcome":"published","evidence_url":"https://…"}` ou observação `details` | Direção/gerência na etapa Entrega ou depois; registra autoria e histórico sem publicar conteúdo nem mover a etapa |
