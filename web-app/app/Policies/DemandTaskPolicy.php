@@ -33,4 +33,11 @@ class DemandTaskPolicy
             && $user->organization_id === $task->organization_id
             && in_array($user->role, [UserRole::AgencyOwner, UserRole::MarketingManager], true);
     }
+
+    public function updateAssignee(User $user, DemandTask $task): bool
+    {
+        return $user->is_active
+            && $user->organization_id === $task->organization_id
+            && in_array($user->role, [UserRole::AgencyOwner, UserRole::MarketingManager], true);
+    }
 }

@@ -6,6 +6,7 @@ use App\Enums\DemandStatus;
 use App\Enums\TaskStatus;
 use App\Enums\UserRole;
 use App\Models\Demand;
+use App\Models\DemandEvent;
 use App\Models\DemandTask;
 use App\Models\Organization;
 use App\Models\TaskTimeEntry;
@@ -115,6 +116,118 @@ class DemandWorkflowTest extends TestCase
             'planned_due_on' => '2026-10-07',
         ])->assertForbidden();
         $this->assertNull($task->fresh()->planned_start_on);
+    }
+
+    public function test_manager_can_transfer_an_inactive_professionals_open_task_with_audit_history(): void
+    {
+        [$organization, $manager, $previousAssignee, $nextAssignee] = $this->team();
+        $demand = $this->demand($organization, $manager);
+        $task = $this->task($demand, $previousAssignee, $manager, 'Finalizar página inicial');
+        $task->update(['status' => TaskStatus::Paused]);
+        DemandEvent::create([
+            'organization_id' => $organization->id,
+            'demand_id' => $demand->id,
+            'task_id' => $task->id,
+            'actor_id' => $manager->id,
+            'event_type' => 'task_assigned',
+            'summary' => 'Tarefa "Finalizar página inicial" atribuída a '.$previousAssignee->name,
+        ]);
+        $previousAssignee->update(['is_active' => false]);
+
+        $this->actingAs($manager)->get(route('demands.show', $demand))
+            ->assertOk()
+            ->assertSee('Acesso desativado')
+            ->assertSee('Transferir tarefa')
+            ->assertSee($nextAssignee->name);
+
+        $this->patch(route('demand-tasks.assignee', $task), [
+            'assignee_id' => $nextAssignee->id,
+        ])->assertRedirect()->assertSessionHasNoErrors();
+
+        $this->assertSame($nextAssignee->id, $task->fresh()->assigned_to);
+        $this->assertSame(TaskStatus::Paused, $task->fresh()->status);
+        $this->assertDatabaseHas('demand_events', [
+            'task_id' => $task->id,
+            'actor_id' => $manager->id,
+            'event_type' => 'task_reassigned',
+            'summary' => $manager->name.' reatribuiu "Finalizar página inicial" de '.$previousAssignee->name.' para '.$nextAssignee->name,
+        ]);
+
+        $this->assertDatabaseHas('demand_events', [
+            'task_id' => $task->id,
+            'event_type' => 'task_assigned',
+            'summary' => 'Tarefa "Finalizar página inicial" atribuída a '.$previousAssignee->name,
+        ]);
+        $this->actingAs($manager)->get(route('demands.show', $demand))
+            ->assertOk()
+            ->assertSee('Atribuída a')
+            ->assertSee($nextAssignee->name)
+            ->assertSee('Reatribuir tarefa');
+    }
+
+    public function test_reassigning_an_in_progress_task_closes_timer_and_pauses_it(): void
+    {
+        [$organization, $manager, $previousAssignee, $nextAssignee] = $this->team();
+        $demand = $this->demand($organization, $manager);
+        $task = $this->task($demand, $previousAssignee, $manager, 'Preparar arte final');
+        $task->update(['status' => TaskStatus::InProgress]);
+        $entry = TaskTimeEntry::create([
+            'organization_id' => $organization->id,
+            'task_id' => $task->id,
+            'user_id' => $previousAssignee->id,
+            'started_at' => now()->subMinutes(12),
+        ]);
+
+        $this->actingAs($manager)->patch(route('demand-tasks.assignee', $task), [
+            'assignee_id' => $nextAssignee->id,
+        ])->assertRedirect()->assertSessionHasNoErrors();
+
+        $this->assertSame($nextAssignee->id, $task->fresh()->assigned_to);
+        $this->assertSame(TaskStatus::Paused, $task->fresh()->status);
+        $this->assertNotNull($entry->fresh()->ended_at);
+        $this->assertDatabaseHas('demand_events', [
+            'task_id' => $task->id,
+            'actor_id' => $manager->id,
+            'event_type' => 'timer_paused',
+        ]);
+        $this->assertDatabaseHas('demand_events', [
+            'task_id' => $task->id,
+            'actor_id' => $manager->id,
+            'event_type' => 'task_status_changed',
+            'from_status' => TaskStatus::InProgress->value,
+            'to_status' => TaskStatus::Paused->value,
+        ]);
+    }
+
+    public function test_reassignment_rejects_professional_cross_organization_inactive_and_completed_tasks(): void
+    {
+        [$organization, $manager, $professional, $colleague] = $this->team();
+        [, , $outsideProfessional] = $this->team('outside');
+        $demand = $this->demand($organization, $manager);
+        $task = $this->task($demand, $professional, $manager, 'Revisar formulário');
+        $inactive = User::factory()->create([
+            'organization_id' => $organization->id,
+            'role' => UserRole::Professional,
+            'is_active' => false,
+        ]);
+
+        $this->actingAs($professional)->patch(route('demand-tasks.assignee', $task), [
+            'assignee_id' => $colleague->id,
+        ])->assertForbidden();
+
+        $this->actingAs($manager)->patch(route('demand-tasks.assignee', $task), [
+            'assignee_id' => $outsideProfessional->id,
+        ])->assertSessionHasErrors('assignee_id');
+        $this->patch(route('demand-tasks.assignee', $task), [
+            'assignee_id' => $inactive->id,
+        ])->assertSessionHasErrors('assignee_id');
+        $this->assertSame($professional->id, $task->fresh()->assigned_to);
+
+        $task->update(['status' => TaskStatus::Completed]);
+        $this->patch(route('demand-tasks.assignee', $task), [
+            'assignee_id' => $colleague->id,
+        ])->assertSessionHasErrors('assignee_id');
+        $this->assertSame($professional->id, $task->fresh()->assigned_to);
     }
 
     public function test_demand_cronograma_only_contains_the_professionals_own_tasks(): void

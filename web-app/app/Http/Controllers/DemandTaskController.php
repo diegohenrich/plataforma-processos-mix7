@@ -241,4 +241,97 @@ class DemandTaskController extends Controller
 
         return back()->with('success', 'Datas planejadas salvas no cronograma.');
     }
+
+    public function updateAssignee(Request $request, DemandTask $task): RedirectResponse
+    {
+        $this->authorize('updateAssignee', $task);
+        $organizationId = $request->user()->organization_id;
+        $data = $request->validate([
+            'assignee_id' => [
+                'required',
+                'integer',
+                Rule::exists('users', 'id')->where(fn ($query) => $query
+                    ->where('organization_id', $organizationId)
+                    ->where('role', UserRole::Professional->value)
+                    ->where('is_active', true)),
+            ],
+        ]);
+
+        $result = DB::transaction(function () use ($data, $organizationId, $request, $task): ?string {
+            $lockedTask = DemandTask::query()->whereKey($task->id)->lockForUpdate()->firstOrFail();
+            if ($lockedTask->status === TaskStatus::Completed) {
+                return 'Tarefas concluídas mantêm o responsável do registro histórico.';
+            }
+
+            $nextAssignee = User::query()
+                ->where('organization_id', $organizationId)
+                ->where('role', UserRole::Professional->value)
+                ->where('is_active', true)
+                ->whereKey($data['assignee_id'])
+                ->lockForUpdate()
+                ->first();
+
+            if (! $nextAssignee) {
+                return 'Escolha uma pessoa ativa da equipe desta organização.';
+            }
+
+            if ((int) $lockedTask->assigned_to === (int) $nextAssignee->id) {
+                return null;
+            }
+
+            $previousAssignee = User::query()->whereKey($lockedTask->assigned_to)->firstOrFail();
+            $actor = $request->user();
+            $now = CarbonImmutable::now();
+            $activeEntries = TaskTimeEntry::query()
+                ->where('task_id', $lockedTask->id)
+                ->whereNull('ended_at')
+                ->lockForUpdate()
+                ->get();
+
+            foreach ($activeEntries as $entry) {
+                $entry->update(['ended_at' => $now]);
+            }
+
+            if ($lockedTask->status === TaskStatus::InProgress) {
+                $lockedTask->update(['status' => TaskStatus::Paused]);
+                DemandEvent::create([
+                    'organization_id' => $lockedTask->organization_id,
+                    'demand_id' => $lockedTask->demand_id,
+                    'task_id' => $lockedTask->id,
+                    'actor_id' => $actor->id,
+                    'event_type' => 'task_status_changed',
+                    'summary' => $actor->name.' pausou "'.$lockedTask->title.'" para transferir de '.$previousAssignee->name.' para '.$nextAssignee->name,
+                    'from_status' => TaskStatus::InProgress->value,
+                    'to_status' => TaskStatus::Paused->value,
+                ]);
+            }
+
+            if ($activeEntries->isNotEmpty()) {
+                DemandEvent::create([
+                    'organization_id' => $lockedTask->organization_id,
+                    'demand_id' => $lockedTask->demand_id,
+                    'task_id' => $lockedTask->id,
+                    'actor_id' => $actor->id,
+                    'event_type' => 'timer_paused',
+                    'summary' => $actor->name.' encerrou o cronômetro de '.$previousAssignee->name.' ao transferir "'.$lockedTask->title.'"',
+                ]);
+            }
+
+            $lockedTask->update(['assigned_to' => $nextAssignee->id]);
+            DemandEvent::create([
+                'organization_id' => $lockedTask->organization_id,
+                'demand_id' => $lockedTask->demand_id,
+                'task_id' => $lockedTask->id,
+                'actor_id' => $actor->id,
+                'event_type' => 'task_reassigned',
+                'summary' => $actor->name.' reatribuiu "'.$lockedTask->title.'" de '.$previousAssignee->name.' para '.$nextAssignee->name,
+            ]);
+
+            return null;
+        });
+
+        return $result
+            ? back()->withErrors(['assignee_id' => $result])
+            : back()->with('success', 'Responsável atualizado. O histórico mantém quem executou cada etapa.');
+    }
 }
