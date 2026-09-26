@@ -23,6 +23,7 @@ Route::middleware(['auth', 'active'])->group(function (): void {
     Route::get('/painel', fn () => view('dashboard'))->name('dashboard');
     Route::resource('demandas', DemandController::class)->only(['index', 'create', 'store', 'show'])->names('demands')->parameters(['demandas' => 'demand']);
     Route::patch('/demandas/{demand}/etapa', [DemandController::class, 'updateStatus'])->name('demands.status');
+    Route::patch('/demandas/{demand}/cliente', [DemandController::class, 'assignClient'])->name('demands.client.assign');
     Route::post('/demandas/{demand}/planejamento-ia', [AiPlanningController::class, 'propose'])->middleware('throttle:3,1')->name('ai-planning.propose');
     Route::post('/demandas/{demand}/planejamento-ia/{run}/aprovar', [AiPlanningController::class, 'approve'])->name('ai-planning.approve');
     Route::delete('/demandas/{demand}/planejamento-ia/{run}', [AiPlanningController::class, 'discard'])->name('ai-planning.discard');
@@ -45,5 +46,6 @@ Route::middleware(['auth', 'active'])->group(function (): void {
     Route::patch('/onboarding/{assignment}/etapas/{step}', [KnowledgeController::class, 'toggleStep'])->name('knowledge.assignment-step');
     Route::get('/equipe', [TeamMemberController::class, 'index'])->name('team.index');
     Route::post('/equipe', [TeamMemberController::class, 'store'])->name('team.store');
+    Route::post('/equipe/clientes', [TeamMemberController::class, 'storeClient'])->name('team.clients.store');
     Route::post('/sair', [SessionController::class, 'destroy'])->name('logout');
 });

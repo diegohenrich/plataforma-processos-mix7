@@ -29,11 +29,14 @@ class DemandController extends Controller
                         ->orWhereHas('tasks', fn (Builder $tasks) => $tasks->where('assigned_to', $user->id));
                 });
             })
+            ->when($user->role === UserRole::Client, fn (Builder $query) => $query->where('client_user_id', $user->id))
             ->with([
                 'creator:id,name',
+                'client:id,name',
                 'tasks' => fn ($tasks) => $tasks
                     ->with('assignee:id,name')
-                    ->when($user->role === UserRole::Professional, fn (Builder $query) => $query->where('assigned_to', $user->id)),
+                    ->when($user->role === UserRole::Professional, fn (Builder $query) => $query->where('assigned_to', $user->id))
+                    ->when($user->role === UserRole::Client, fn (Builder $query) => $query->whereRaw('1 = 0')),
             ])
             ->latest()
             ->paginate(12);
@@ -50,8 +53,14 @@ class DemandController extends Controller
             ->where('is_active', true)
             ->orderBy('name')
             ->get(['id', 'name']);
+        $clients = User::query()
+            ->where('organization_id', $request->user()->organization_id)
+            ->where('role', UserRole::Client->value)
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name']);
 
-        return view('demands.create', compact('professionals'));
+        return view('demands.create', compact('professionals', 'clients'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -61,6 +70,14 @@ class DemandController extends Controller
         $data = $request->validate([
             'title' => ['required', 'string', 'max:180'],
             'brief' => ['required', 'string', 'max:12000'],
+            'client_user_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('users', 'id')->where(fn ($query) => $query
+                    ->where('organization_id', $organizationId)
+                    ->where('role', UserRole::Client->value)
+                    ->where('is_active', true)),
+            ],
             'tasks' => ['required', 'array', 'min:1', 'max:20'],
             'tasks.*.title' => ['required', 'string', 'max:180'],
             'tasks.*.assignee_id' => [
@@ -78,10 +95,21 @@ class DemandController extends Controller
             $demand = Demand::create([
                 'organization_id' => $organizationId,
                 'created_by' => $request->user()->id,
+                'client_user_id' => $data['client_user_id'] ?? null,
                 'title' => $data['title'],
                 'brief' => $data['brief'],
                 'status' => DemandStatus::Received,
             ]);
+
+            if ($demand->client_user_id) {
+                DemandEvent::create([
+                    'organization_id' => $organizationId,
+                    'demand_id' => $demand->id,
+                    'actor_id' => $request->user()->id,
+                    'event_type' => 'demand_client_assigned',
+                    'summary' => 'Demanda vinculada ao cliente '.$demand->client()->value('name'),
+                ]);
+            }
 
             DemandEvent::create([
                 'organization_id' => $organizationId,
@@ -122,6 +150,10 @@ class DemandController extends Controller
     {
         $this->authorize('view', $demand);
         $user = $request->user();
+        if ($user->role === UserRole::Client) {
+            return view('demands.client-show', ['demand' => $demand]);
+        }
+
         $tasks = $demand->tasks()
             ->with(['creator:id,name', 'assignee:id,name', 'timeEntries', 'dependencies:id,title,status'])
             ->when($user->role === UserRole::Professional, fn (Builder $query) => $query->where('assigned_to', $user->id))
@@ -129,7 +161,7 @@ class DemandController extends Controller
 
         return view('demands.show', [
             'currentUser' => $user,
-            'demand' => $demand->load(['creator:id,name', 'organization:id,name']),
+            'demand' => $demand->load(['creator:id,name', 'organization:id,name', 'client:id,name,email']),
             'tasks' => $tasks,
             'events' => $demand->events()
                 ->with('actor:id,name')
@@ -141,6 +173,9 @@ class DemandController extends Controller
             'canManage' => $request->user()->can('manage', $demand),
             'professionals' => $request->user()->can('manage', $demand)
                 ? User::query()->where('organization_id', $user->organization_id)->where('role', UserRole::Professional->value)->where('is_active', true)->orderBy('name')->get(['id', 'name'])
+                : collect(),
+            'clients' => $request->user()->can('manage', $demand)
+                ? User::query()->where('organization_id', $user->organization_id)->where('role', UserRole::Client->value)->where('is_active', true)->orderBy('name')->get(['id', 'name', 'email'])
                 : collect(),
             'nextStatuses' => $demand->status->next(),
             'activeTimeTaskId' => $user->activeTimeEntry()->value('task_id'),
@@ -157,6 +192,44 @@ class DemandController extends Controller
                 ->take(8)
                 ->get(),
         ]);
+    }
+
+    public function assignClient(Request $request, Demand $demand): RedirectResponse
+    {
+        $this->authorize('manage', $demand);
+        $organizationId = $request->user()->organization_id;
+        $data = $request->validate([
+            'client_user_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('users', 'id')->where(fn ($query) => $query
+                    ->where('organization_id', $organizationId)
+                    ->where('role', UserRole::Client->value)
+                    ->where('is_active', true)),
+            ],
+        ]);
+
+        DB::transaction(function () use ($demand, $request, $data, $organizationId): void {
+            $locked = Demand::query()->whereKey($demand->id)->lockForUpdate()->firstOrFail();
+            if ((int) $locked->client_user_id === (int) ($data['client_user_id'] ?? 0)) {
+                return;
+            }
+
+            $previousClient = $locked->client()->value('name');
+            $locked->update(['client_user_id' => $data['client_user_id'] ?? null]);
+            $clientName = isset($data['client_user_id']) ? User::query()->whereKey($data['client_user_id'])->value('name') : null;
+            DemandEvent::create([
+                'organization_id' => $organizationId,
+                'demand_id' => $locked->id,
+                'actor_id' => $request->user()->id,
+                'event_type' => 'demand_client_assigned',
+                'summary' => $clientName
+                    ? 'Demanda vinculada ao cliente '.$clientName
+                    : 'Vínculo do cliente '.($previousClient ?: 'anterior').' removido',
+            ]);
+        });
+
+        return back()->with('success', 'Vínculo do cliente atualizado.');
     }
 
     public function updateStatus(Request $request, Demand $demand): RedirectResponse

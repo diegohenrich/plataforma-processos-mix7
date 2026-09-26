@@ -72,6 +72,11 @@ class User extends Authenticatable
         return $this->hasMany(Demand::class, 'created_by');
     }
 
+    public function clientDemands(): HasMany
+    {
+        return $this->hasMany(Demand::class, 'client_user_id');
+    }
+
     public function activeTimeEntry(): HasOne
     {
         return $this->hasOne(TaskTimeEntry::class)->whereNull('ended_at');

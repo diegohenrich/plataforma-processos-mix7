@@ -23,33 +23,42 @@ class DemandController extends Controller
                         ->orWhereHas('tasks', fn (Builder $tasks) => $tasks->where('assigned_to', $user->id));
                 });
             })
+            ->when($user->role === UserRole::Client, fn (Builder $query) => $query->where('client_user_id', $user->id))
             ->with([
                 'creator:id,name',
                 'tasks' => fn ($tasks) => $tasks
                     ->with('assignee:id,name')
-                    ->when($user->role === UserRole::Professional, fn (Builder $query) => $query->where('assigned_to', $user->id)),
+                    ->when($user->role === UserRole::Professional, fn (Builder $query) => $query->where('assigned_to', $user->id))
+                    ->when($user->role === UserRole::Client, fn (Builder $query) => $query->whereRaw('1 = 0')),
             ])
             ->latest()
             ->limit(100)
             ->get();
 
         return response()->json([
-            'data' => $demands->map(fn (Demand $demand) => [
-                'id' => $demand->id,
-                'title' => $demand->title,
-                'brief' => $demand->brief,
-                'status' => ['value' => $demand->status->value, 'label' => $demand->status->label()],
-                'created_at' => $demand->created_at?->toISOString(),
-                'created_by' => ['id' => $demand->creator->id, 'name' => $demand->creator->name],
-                'tasks' => $demand->tasks
-                    ->map(fn ($task) => [
-                        'id' => $task->id,
-                        'title' => $task->title,
-                        'status' => ['value' => $task->status->value, 'label' => $task->status->label()],
-                        'estimate_minutes' => $task->estimate_minutes,
-                        'assignee' => ['id' => $task->assignee->id, 'name' => $task->assignee->name],
-                    ]),
-            ]),
+            'data' => $demands->map(fn (Demand $demand) => $user->role === UserRole::Client
+                ? [
+                    'id' => $demand->id,
+                    'title' => $demand->title,
+                    'status' => ['value' => $demand->status->value, 'label' => $demand->status->label()],
+                    'updated_at' => $demand->updated_at?->toISOString(),
+                ]
+                : [
+                    'id' => $demand->id,
+                    'title' => $demand->title,
+                    'brief' => $demand->brief,
+                    'status' => ['value' => $demand->status->value, 'label' => $demand->status->label()],
+                    'created_at' => $demand->created_at?->toISOString(),
+                    'created_by' => ['id' => $demand->creator->id, 'name' => $demand->creator->name],
+                    'tasks' => $demand->tasks
+                        ->map(fn ($task) => [
+                            'id' => $task->id,
+                            'title' => $task->title,
+                            'status' => ['value' => $task->status->value, 'label' => $task->status->label()],
+                            'estimate_minutes' => $task->estimate_minutes,
+                            'assignee' => ['id' => $task->assignee->id, 'name' => $task->assignee->name],
+                        ]),
+                ]),
             'meta' => ['limit' => 100],
         ]);
     }
@@ -58,6 +67,14 @@ class DemandController extends Controller
     {
         $this->authorize('view', $demand);
         $user = $request->user();
+        if ($user->role === UserRole::Client) {
+            return response()->json(['data' => [
+                'id' => $demand->id,
+                'title' => $demand->title,
+                'status' => ['value' => $demand->status->value, 'label' => $demand->status->label()],
+                'updated_at' => $demand->updated_at?->toISOString(),
+            ]]);
+        }
         $tasks = $demand->tasks()
             ->with('assignee:id,name')
             ->when($user->role === UserRole::Professional, fn (Builder $query) => $query->where('assigned_to', $user->id))

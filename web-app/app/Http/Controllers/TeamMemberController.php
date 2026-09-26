@@ -20,7 +20,13 @@ class TeamMemberController extends Controller
             ->orderBy('name')
             ->paginate(20);
 
-        return view('team.index', compact('professionals'));
+        $clients = User::query()
+            ->where('organization_id', $request->user()->organization_id)
+            ->where('role', UserRole::Client->value)
+            ->orderBy('name')
+            ->paginate(20, ['*'], 'clients_page');
+
+        return view('team.index', compact('professionals', 'clients'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -42,5 +48,26 @@ class TeamMemberController extends Controller
         ]);
 
         return redirect()->route('team.index')->with('success', 'Profissional adicionado à equipe.');
+    }
+
+    public function storeClient(Request $request): RedirectResponse
+    {
+        $this->authorize('create', User::class);
+        $data = $request->validate([
+            'client_name' => ['required', 'string', 'max:160'],
+            'client_email' => ['required', 'email', 'max:255', 'unique:users,email'],
+            'client_password' => ['required', 'string', 'min:12', 'max:200'],
+        ]);
+
+        User::create([
+            'name' => trim($data['client_name']),
+            'email' => mb_strtolower(trim($data['client_email'])),
+            'password' => $data['client_password'],
+            'organization_id' => $request->user()->organization_id,
+            'role' => UserRole::Client,
+            'is_active' => true,
+        ]);
+
+        return redirect()->route('team.index')->with('success', 'Conta de cliente criada. Compartilhe o acesso com a pessoa por canal seguro.');
     }
 }

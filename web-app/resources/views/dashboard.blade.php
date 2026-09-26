@@ -9,6 +9,11 @@
         @include('layouts.topbar')
         <div class="content">
             @include('partials.flash')
+            @if (auth()->user()->role === App\Enums\UserRole::Client)
+                <section class="welcome"><div><p class="eyebrow">Área do cliente</p><h1 class="heading">Olá, {{ auth()->user()->name }}</h1><p class="subheading">Acompanhe as demandas que a Mix7 vinculou à sua conta.</p></div><span class="status">Conta ativa</span></section>
+                <section class="grid" aria-label="Área do cliente"><a class="module module-link" href="{{ route('demands.index') }}"><span class="icon" aria-hidden="true">◷</span><h3>Minhas demandas</h3><p>Veja o nome e a etapa atual dos seus trabalhos.</p><span class="module-action">Abrir minhas demandas →</span></a></section>
+                <p class="footnote">Para revisar um material, use o link seguro enviado pela equipe. Esse link funciona sem entrar na conta.</p>
+            @else
             <section class="welcome">
                 <div><p class="eyebrow">Plataforma de processos</p><h1 class="heading">Olá, {{ auth()->user()->name }}</h1><p class="subheading">Acompanhe o trabalho da agência e registre cada etapa.</p></div>
                 <span class="status">Conta ativa</span>
@@ -27,6 +32,7 @@
                 <article class="module pending"><span class="icon" aria-hidden="true">⌁</span><h3>Indicadores de gestão</h3><p>Fórmulas e critérios aguardam definição antes de pontuar.</p></article>
             </section>
             <p class="footnote">Conhecimento e demandas já estão disponíveis nesta etapa. Outros módulos ainda estão sendo construídos.</p>
+            @endif
         </div>
     </main>
 </div>

@@ -12,7 +12,7 @@ class Demand extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['organization_id', 'created_by', 'title', 'brief', 'status'];
+    protected $fillable = ['organization_id', 'created_by', 'client_user_id', 'title', 'brief', 'status'];
 
     protected function casts(): array
     {
@@ -27,6 +27,11 @@ class Demand extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function client(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'client_user_id');
     }
 
     public function tasks(): HasMany

@@ -1,4 +1,11 @@
-# Estado atual — Plataforma Mix7 — 2026-09-25
+# Estado atual — Plataforma Mix7 — 2026-09-26
+
+## Contas de cliente e isolamento inicial de demandas — 2026-09-26
+- Direção cria contas de Cliente com senha armazenada por hash; direção/gerência podem vincular demandas somente a conta Cliente ativa da mesma organização, na criação ou edição, com autoria registrada no histórico.
+- Conta cliente lista e abre somente demandas atribuídas a si e vê nome, etapa e atualização. Briefing, tarefas, nomes da equipe, eventos internos, conhecimento e ferramentas de IA ficam bloqueados na interface e API; aprovação continua por link sem login. Navegação do cliente não mostra atalhos internos.
+- Verificação: `php artisan test --compact` passou 56 testes/436 assertions; Pint, `npm run build` e `git diff --check` passaram. Navegador de QA isolado com SQLite sintético confirmou login, dashboard do cliente, lista e detalhe reduzido; renderização desktop e 390×844 sem overflow horizontal. Nenhum dado da aba de trabalho foi usado.
+- Restam matriz final dos papéis, convite/recuperação de conta, validação com a Mix7 e teste compartilhado; não usar dados reais ainda.
+- Também corrigi a informação de custos do Gateway para refletir a [documentação oficial](https://vercel.com/docs/ai-gateway/pricing) consultada em 26/09: US$ 5 mensais no tier gratuito, tarifas por modelo/tokens, BYOK com crédito do Gateway exigido. Nenhuma credencial, chamada ou compra foi ativada.
 
 ## Assistente interno de IA — runtime inicial no Laravel — 2026-09-25
 - Implementei a primeira função do agente da Mix7 inspirada na arquitetura identificada no TryCRM: assistente por demanda, executado em job Laravel, usando Vercel AI Gateway opcional. Neste corte só direção/gerência acessa; ferramentas de leitura consultam briefing, tarefas e referências ativas da organização, além de feedback de revisão. Não há ferramentas de escrita, envio de mensagens nem decisão automática. O painel registra estado, resposta, fontes consultadas, tokens e eventual custo informado; custo ausente continua desconhecido, nunca estimado.
@@ -9,7 +16,7 @@
 
 ## Custos e operação dos agentes IA — 2026-09-25
 - O usuário perguntou como TryCRM oferece agentes gratuitamente e quer funcionamento equivalente na Mix7. Inspeção somente leitura do repositório confirmou código de execução de agentes/ferramentas e suporte a AI Gateway; os arquivos versionados não revelam qual credencial, plano, cota ou pagamento está ativo na instalação do usuário.
-- A documentação oficial Vercel consultada em 25/09/2026 informa US$ 5 de crédito a cada 30 dias no tier gratuito do Gateway, somente para modelos elegíveis, com cotas menores por modelo e sem BYOK. O agente Laravel existente é apenas planejamento assistido; autenticação e chamadas reais não foram ativadas. Nenhum conteúdo real foi enviado.
+- A documentação oficial Vercel consultada inicialmente em 25/09/2026 informava condições mais restritas. Revisão em 26/09/2026: a página oficial atual anuncia US$ 5 de crédito mensal no tier gratuito, sujeito às tarifas por modelo/tokens; BYOK é suportado, mas exige saldo no Gateway e pode recorrer a ele se a chave falhar. O agente Laravel existente tem planejamento assistido e runtime de pergunta por fila, mas autenticação e chamadas reais não foram ativadas. Nenhum conteúdo real foi enviado.
 - Mantida a arquitetura escolhida: site Laravel na Hostinger. Hospedagem Vercel Hobby não será presumida adequada à operação comercial da Mix7; os termos limitam esse plano ao uso pessoal/não comercial e permitem treinamento com conteúdo em Hobby/trial Pro. Antes de ampliar agentes ou transmitir briefing real, definir modelo, política de dados/retenção e teto de custo. Atualizei arquitetura, requisitos, roadmap, contexto e decisões com esses limites.
 - Fontes: https://vercel.com/docs/ai-gateway/pricing e https://vercel.com/legal/terms. Implementação multiagente completa continua pendente; nenhuma credencial ou compra foi ativada.
 - Trello sincronizado: #36 foi para Concluído com evidências; #37 e #38 tiveram os limites atuais de gratuidade e a decisão Hostinger atualizados. Criei o cartão #39 [Implementar runtime seguro de agentes IA para a Mix7](https://trello.com/c/Tim9aDuc/39-implementar-runtime-seguro-de-agentes-ia-para-a-mix7) em Próximas entregas, com escopo, aceite e dependências.

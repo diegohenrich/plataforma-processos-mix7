@@ -10,13 +10,17 @@ class DemandPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->is_active && $user->organization_id !== null && $user->role !== UserRole::Client;
+        return $user->is_active && $user->organization_id !== null;
     }
 
     public function view(User $user, Demand $demand): bool
     {
-        if (! $user->is_active || $user->organization_id !== $demand->organization_id || $user->role === UserRole::Client) {
+        if (! $user->is_active || $user->organization_id !== $demand->organization_id) {
             return false;
+        }
+
+        if ($user->role === UserRole::Client) {
+            return $demand->client_user_id === $user->id;
         }
 
         if (in_array($user->role, [UserRole::AgencyOwner, UserRole::MarketingManager], true)) {

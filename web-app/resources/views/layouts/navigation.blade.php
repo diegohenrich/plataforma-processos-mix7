@@ -3,11 +3,21 @@
     <div>
         <p class="nav-label">Espaço de trabalho</p>
         <a class="nav-item {{ $active === 'dashboard' ? 'active' : '' }}" href="{{ route('dashboard') }}"><span aria-hidden="true">▦</span> Visão geral</a>
-        <a class="nav-item {{ $active === 'demands' ? 'active' : '' }}" href="{{ route('demands.index') }}"><span aria-hidden="true">◷</span> Demandas</a>
-        <span class="nav-item" aria-disabled="true" title="Em construção"><span aria-hidden="true">✓</span> Aprovações <span class="nav-state">Em breve</span></span>
-        @can('viewAny', App\Models\User::class)<a class="nav-item {{ $active === 'team' ? 'active' : '' }}" href="{{ route('team.index') }}"><span aria-hidden="true">♧</span> Equipe</a>@else<span class="nav-item" aria-disabled="true" title="Em construção"><span aria-hidden="true">♧</span> Equipe <span class="nav-state">Em breve</span></span>@endcan
-        <a class="nav-item {{ $active === 'knowledge' ? 'active' : '' }}" href="{{ route('knowledge.index') }}"><span aria-hidden="true">▤</span> Conhecimento</a>
+        <a class="nav-item {{ $active === 'demands' ? 'active' : '' }}" href="{{ route('demands.index') }}"><span aria-hidden="true">◷</span> {{ auth()->user()->role === App\Enums\UserRole::Client ? 'Minhas demandas' : 'Demandas' }}</a>
+        @if (auth()->user()->role !== App\Enums\UserRole::Client)
+            <span class="nav-item" aria-disabled="true" title="Em construção"><span aria-hidden="true">✓</span> Aprovações <span class="nav-state">Em breve</span></span>
+            @can('viewAny', App\Models\User::class)<a class="nav-item {{ $active === 'team' ? 'active' : '' }}" href="{{ route('team.index') }}"><span aria-hidden="true">♧</span> Equipe</a>@else<span class="nav-item" aria-disabled="true" title="Em construção"><span aria-hidden="true">♧</span> Equipe <span class="nav-state">Em breve</span></span>@endcan
+        @endif
+        @can('viewAny', App\Models\KnowledgeItem::class)<a class="nav-item {{ $active === 'knowledge' ? 'active' : '' }}" href="{{ route('knowledge.index') }}"><span aria-hidden="true">▤</span> Conhecimento</a>@endcan
     </div>
     <div class="sidebar-note">A plataforma reúne o trabalho da agência e mantém cada etapa registrada.</div>
 </aside>
-<nav class="mobile-nav" aria-label="Navegação para celular"><div class="brand"><span class="brand-mark" aria-hidden="true">M</span><span>Mix7 | Processos</span></div><div class="mobile-nav-actions"><a href="{{ route('dashboard') }}">Início</a><a href="{{ route('demands.index') }}">Demandas</a>@can('viewAny', App\Models\User::class)<a href="{{ route('team.index') }}">Equipe</a>@endcan<a href="{{ route('knowledge.index') }}">Conhecimento</a></div></nav>
+<nav class="mobile-nav" aria-label="Navegação para celular">
+    <div class="brand"><span class="brand-mark" aria-hidden="true">M</span><span>Mix7 | Processos</span></div>
+    <div class="mobile-nav-actions">
+        <a href="{{ route('dashboard') }}">Início</a>
+        <a href="{{ route('demands.index') }}">{{ auth()->user()->role === App\Enums\UserRole::Client ? 'Minhas demandas' : 'Demandas' }}</a>
+        @can('viewAny', App\Models\User::class)<a href="{{ route('team.index') }}">Equipe</a>@endcan
+        @can('viewAny', App\Models\KnowledgeItem::class)<a href="{{ route('knowledge.index') }}">Conhecimento</a>@endcan
+    </div>
+</nav>
