@@ -64,6 +64,43 @@ class TeamActivityTest extends TestCase
         $this->actingAs($professional)->get(route('team.index'))->assertForbidden();
     }
 
+    public function test_activity_api_keeps_team_aggregates_separate_from_personal_task_details(): void
+    {
+        [$organization, $owner, $manager, $professional, $colleague, $client] = $this->workspace();
+        $demand = $this->demand($organization, $owner);
+        $ownTask = $this->task($demand, $professional, 'Minha tarefa privada', TaskStatus::InProgress, 45);
+        $this->task($demand, $colleague, 'Tarefa privada da colega', TaskStatus::Todo, 90);
+        TaskTimeEntry::create([
+            'organization_id' => $organization->id,
+            'task_id' => $ownTask->id,
+            'user_id' => $professional->id,
+            'started_at' => CarbonImmutable::now()->subMinutes(10),
+            'ended_at' => null,
+        ]);
+
+        $managementResponse = $this->actingAs($manager)->getJson('/api/v1/team/activity')
+            ->assertOk()
+            ->assertJsonPath('data.personal', false)
+            ->assertJsonPath('data.professionals.0.id', $professional->id)
+            ->assertJsonPath('data.professionals.0.tasks.in_progress', 1)
+            ->assertJsonPath('data.professionals.0.estimate_minutes', 45)
+            ->assertJsonPath('data.my_tasks', [])
+            ->assertJsonPath('data.active_timer', null);
+        $this->assertStringNotContainsString('Minha tarefa privada', $managementResponse->getContent());
+        $this->assertStringNotContainsString('Tarefa privada da colega', $managementResponse->getContent());
+
+        $personalResponse = $this->actingAs($professional)->getJson('/api/v1/team/activity')
+            ->assertOk()
+            ->assertJsonPath('data.personal', true)
+            ->assertJsonPath('data.professionals.0.id', $professional->id)
+            ->assertJsonPath('data.my_tasks.0.id', $ownTask->id)
+            ->assertJsonPath('data.my_tasks.0.title', 'Minha tarefa privada')
+            ->assertJsonPath('data.active_timer.task_id', $ownTask->id);
+        $this->assertStringNotContainsString('Tarefa privada da colega', $personalResponse->getContent());
+
+        $this->actingAs($client)->getJson('/api/v1/team/activity')->assertForbidden();
+    }
+
     public function test_client_cannot_access_activity_dashboard(): void
     {
         [$organization, , , , , $client] = $this->workspace();

@@ -8,13 +8,14 @@ use App\Models\DemandTask;
 use App\Models\TaskTimeEntry;
 use App\Models\User;
 use Carbon\CarbonImmutable;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
 
 class TeamActivityController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request): View|JsonResponse
     {
         $this->authorize('viewActivity', User::class);
         $viewer = $request->user();
@@ -92,6 +93,49 @@ class TeamActivityController extends Controller
         $activeEntry = $personal
             ? TaskTimeEntry::query()->where('user_id', $viewer->id)->whereNull('ended_at')->with('task:id,title,demand_id')->first()
             : null;
+
+        if ($request->expectsJson()) {
+            $professionalRows = $rows->map(fn (array $row): array => [
+                'id' => $row['user']->id,
+                'name' => $row['user']->name,
+                'is_active' => $row['is_active'],
+                'tasks' => [
+                    'todo' => $row['todo'],
+                    'in_progress' => $row['in_progress'],
+                    'paused' => $row['paused'],
+                    'blocked' => $row['blocked'],
+                    'open' => $row['open'],
+                ],
+                'estimate_minutes' => $row['estimate_minutes'],
+                'completed_last_30_days' => $row['completed_30d'],
+                'recorded_seconds_last_30_days' => $row['recorded_seconds_30d'],
+            ])->values();
+            $personalTasks = $personal
+                ? $myTasks->getCollection()->map(fn (DemandTask $task): array => [
+                    'id' => $task->id,
+                    'title' => $task->title,
+                    'status' => $task->status->value,
+                    'status_label' => $task->status->label(),
+                    'estimate_minutes' => $task->estimate_minutes,
+                    'demand' => ['id' => $task->demand->id, 'title' => $task->demand->title],
+                ])->values()
+                : collect();
+
+            return response()->json([
+                'data' => [
+                    'personal' => $personal,
+                    'period_start' => $periodStart->toISOString(),
+                    'period_end' => $now->toISOString(),
+                    'professionals' => $professionalRows,
+                    'my_tasks' => $personalTasks,
+                    'active_timer' => $activeEntry ? [
+                        'task_id' => $activeEntry->task_id,
+                        'task_title' => $activeEntry->task->title,
+                        'started_at' => $activeEntry->started_at->toISOString(),
+                    ] : null,
+                ],
+            ]);
+        }
 
         return view('team.activity', [
             'rows' => $rows,

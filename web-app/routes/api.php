@@ -6,6 +6,7 @@ use App\Http\Controllers\DemandDeliveryEvidenceController;
 use App\Http\Controllers\DemandReviewController;
 use App\Http\Controllers\DemandTaskController;
 use App\Http\Controllers\PerformanceReviewController;
+use App\Http\Controllers\TeamActivityController;
 use App\Http\Controllers\TeamInvitationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -31,6 +32,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active'])->group(function (): 
     });
     Route::get('/demands', [DemandController::class, 'index']);
     Route::get('/demands/{demand}', [DemandController::class, 'show']);
+    Route::get('/team/activity', [TeamActivityController::class, 'index']);
     Route::post('/demands', [WebDemandController::class, 'store']);
     Route::patch('/demands/{demand}/status', [WebDemandController::class, 'updateStatus']);
     Route::post('/demands/{demand}/tasks', [DemandTaskController::class, 'store']);

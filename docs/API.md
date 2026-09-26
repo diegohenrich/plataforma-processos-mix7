@@ -9,6 +9,7 @@ A API pertence à aplicação Laravel e usa o mesmo banco, políticas e históri
 | `GET /me` | Identidade, papel e organização da conta autenticada | Qualquer perfil ativo |
 | `GET /demands` | Até 100 demandas recentes visíveis à pessoa | Dados reduzidos para clientes e tarefas atribuídas filtradas para profissionais |
 | `GET /demands/{demand}` | Detalhe autorizado da demanda | Cliente vê título, etapa e atualização; profissional vê suas tarefas; gestão vê o detalhe da organização |
+| `GET /team/activity` | Atividade e produção dos últimos 30 dias | Direção/gerência recebem totais agregados sem títulos de tarefas; profissional recebe somente contagem pessoal, suas próprias tarefas abertas e seu cronômetro; cliente não tem acesso |
 | `POST /demands` | Cria demanda e de 1 a 20 tarefas iniciais em uma transação | Direção/gerência; cliente opcional e profissionais ativos devem pertencer à mesma organização |
 | `POST /demands/{demand}/tasks` | Acrescenta uma tarefa atribuída à demanda | Direção/gerência da organização, exceto durante aprovação do cliente, entrega ou conclusão |
 | `PATCH /demands/{demand}/status` | `{"status":"planning"}` | Direção/gerência; transições do fluxo são validadas e revisão interna exige todas as tarefas concluídas |
