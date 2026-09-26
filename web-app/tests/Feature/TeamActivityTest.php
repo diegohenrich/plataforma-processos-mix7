@@ -81,11 +81,13 @@ class TeamActivityTest extends TestCase
         $managementResponse = $this->actingAs($manager)->getJson('/api/v1/team/activity')
             ->assertOk()
             ->assertJsonPath('data.personal', false)
-            ->assertJsonPath('data.professionals.0.id', $professional->id)
-            ->assertJsonPath('data.professionals.0.tasks.in_progress', 1)
-            ->assertJsonPath('data.professionals.0.estimate_minutes', 45)
             ->assertJsonPath('data.my_tasks', [])
             ->assertJsonPath('data.active_timer', null);
+        $managerRows = collect($managementResponse->json('data.professionals'));
+        $managerProfessional = $managerRows->firstWhere('id', $professional->id);
+        $this->assertNotNull($managerProfessional);
+        $this->assertSame(1, $managerProfessional['tasks']['in_progress']);
+        $this->assertSame(45, $managerProfessional['estimate_minutes']);
         $this->assertStringNotContainsString('Minha tarefa privada', $managementResponse->getContent());
         $this->assertStringNotContainsString('Tarefa privada da colega', $managementResponse->getContent());
 

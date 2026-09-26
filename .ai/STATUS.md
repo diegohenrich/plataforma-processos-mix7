@@ -1,7 +1,7 @@
 ## Painel de produção pela API — 2026-09-26
 - Acrescentei `GET /api/v1/team/activity` usando os mesmos cálculos do painel web. Direção/gerência veem indicadores agregados e nomes da equipe, sem título de tarefa; profissional vê só suas tarefas e cronômetro; cliente é recusado.
 - Validação local: 142 testes/1.171 assertions, Pint nos arquivos PHP afetados, `composer validate --no-check-publish`, `npm run build`, `route:list` (22 rotas) e `git diff --check` passaram. `TeamActivityTest` inclui verificações de não exposição de títulos internos e bloqueio de acesso para cliente.
-- Contrato API, arquitetura, roadmap e contexto atualizados. Sem tela nova; inspeção visual não se aplica. GitHub/CI pendentes; registro no Trello depende da confirmação solicitada.
+- Contrato API, arquitetura, roadmap e contexto atualizados. Sem tela nova; inspeção visual não se aplica. O primeiro CI revelou uma suposição frágil sobre a ordem dos nomes no teste; troquei por busca pelo ID da pessoa e a suíte local voltou a passar (142 testes/1.171 assertions). Rerun do CI e registro no Trello pendentes; autorização do cartão foi solicitada.
 
 ## Avaliação e resposta pela API — 2026-09-26
 - Direção/gerência podem registrar avaliações de prazo/qualidade, evidências e fatores externos em tarefas concluídas; o sistema conserva peso 2/1 já definido para o papel. Somente a pessoa avaliada pode responder e a resposta fica no histórico. Não há nota calculada nem ranking.
