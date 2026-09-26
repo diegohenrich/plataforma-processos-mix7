@@ -3,7 +3,8 @@
 ## Quadros compartilhados de demandas e tarefas — 2026-09-26
 - Laravel agora abre demandas em Kanban por etapa, preserva alternância para lista paginada e oferece um quadro independente de tarefas por estado. Direção/gerência podem mover demandas entre etapas permitidas; revisão interna não libera com tarefas abertas. Profissional vê somente demandas relacionadas ao seu trabalho em leitura e só suas tarefas no quadro de tarefas. Movimentação continua protegida pela autorização, transições, dependências e encerramento de timer existentes.
 - Validação: `php artisan test --compact` passou 87 testes/708 assertions usando SQLite em memória; Pint focalizado, `npm run build`, `composer validate --no-check-publish` e `git diff --check` passaram. O teste novo cobre quadros, troca para lista, perfis, tarefa movida e evento de auditoria.
-- Pendente antes da conclusão desta fatia: abrir e inspecionar visualmente os quadros em navegador QA autenticado por desktop/celular, sincronizar commit e confirmação do SHA remoto, CI e atualização do Trello #18. Se a inspeção visual não funcionar nesta sessão, registrar evidência e limitação; não declarar validação visual concluída.
+- Sincronização GitHub: implementação no commit `d466a63258b2597c51917d31e407e38cf1488539`, branch `codex/fundacao-compartilhada`; SHA remoto conferido idêntico. Os dois checks de CI do commit passaram (runs `36263353078` e `36263351361`). PR #11 permanece em rascunho.
+- Pendente antes de concluir a validação desta fatia: inspeção visual autenticada dos quadros em navegador desktop/celular. A tentativa com banco QA sintético não passou do login na automação da interface; não prova defeito de autenticação nem valida o quadro renderizado. Também falta atualizar Trello #18: o cartão foi aberto, mas a interface não expôs editor de comentário; nenhum comentário foi salvo. Não marcar a tarefa concluída no Trello, pois o checklist ainda depende do piloto real da Mix7.
 - Escopo ainda aberto do produto completo: consultar `docs/ROADMAP.md` e `docs/AUDITORIA-FUNCIONAL-POR-PERFIL.md`; Kanban é apenas uma entrega, e publicação compartilhada, regras da Mix7, disponibilidade, avaliação, governança de IA, operações e piloto seguem pendentes.
 
 ## Anotação de trecho em revisão por link — 2026-09-26
@@ -214,6 +215,8 @@ Concluir a plataforma de processos inteira conforme os três áudios. O protóti
 
 ## Próximo passo
 Continuação do projeto: escolher a próxima fatia baseada em requisitos explícitos e dependências reais; a fundação compartilhada, identidade, avaliação e integrações seguem pendentes. Próximos limites verificáveis: validar arraste físico do Explorador para o navegador quando disponível e obter caso real anonimizado para campos, papéis e exceções. Manter dados sintéticos até existir ambiente com identidade, permissões e armazenamento adequados. Comentários de sincronização antigos que dependem de confirmação pontual permanecem pendentes, sem impedir o uso de novos cartões de tarefa.
+
+- Atualização desta etapa: os checks de CI para o Kanban passaram; SHA local e remoto foram confirmados. O resultado está publicado no GitHub, mas o cartão #18 não recebeu atualização por indisponibilidade do editor de comentário na interface. A validação visual dos quadros continua pendente pelo bloqueio da sessão QA.
 
 Histórico operacional anterior preservado em [docs/VALIDACOES-HISTORICAS.md](../docs/VALIDACOES-HISTORICAS.md); este arquivo é a fonte vigente de status.
 
