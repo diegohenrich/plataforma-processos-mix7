@@ -1,3 +1,9 @@
+## Especialista de aprovação com IA na demanda — 2026-09-26
+- O assistente da demanda agora oferece uma opção que organiza até 20 respostas de revisão em ordem cronológica, distinguindo versão, data, tipo e âncora. Ferramentas disponíveis ao especialista: leitura do contexto daquela demanda e feedback dos links dela; sem pesquisa geral, dados de equipe, edição ou decisão de aprovação.
+- Validação: suíte Laravel completa passou 108 testes/856 assertions; Pint focalizado, build Vite, Composer validate e git diff --check passaram. Teste focal confirmou a seleção enfileirada, ferramentas restritas e resposta baseada no feedback. Nenhuma chamada real ao provedor foi feita.
+- Inspeção visual renderizada da tela ainda pendente devido ao bloqueio anterior do navegador local. Publicação no GitHub e atualização do Trello #39 pendentes para esta entrega.
+- Permanecem fora desta fatia especialistas de publicação/agendamento, ações revisáveis e automações; política de dados/provedor e worker continuam sem validação operacional.
+
 ## Especialistas organizacionais de IA — 2026-09-26
 - A tela do assistente agora permite escolher consulta geral, conhecimento/onboarding ou operação/produção. O servidor valida a opção, grava o especialista no histórico de execução e só disponibiliza ferramentas de leitura próprias àquela especialidade; perguntas continuam guardadas como hash/tamanho, e cada usuário vê apenas as próprias execuções.
 - Validação: suíte Laravel completa passou 107 testes/849 assertions; Pint focalizado, build Vite, Composer validate e git diff --check passaram. Testes confirmam que conhecimento só recebe busca da biblioteca ativa, operação só recebe métricas agregadas e opções desconhecidas não enfileiram chamadas. Nenhuma chamada real ao provedor foi feita.

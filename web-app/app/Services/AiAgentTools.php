@@ -20,7 +20,7 @@ class AiAgentTools
     public function definitions(User $user, ?Demand $demand, string $agent = 'organization_assistant'): array
     {
         $tools = [];
-        if ($demand && $agent === 'demand_assistant') {
+        if ($demand && in_array($agent, ['demand_assistant', 'approval_assistant'], true)) {
             $tools[] = $this->tool('read_demand_context', 'Lê o resumo autorizado desta demanda e as tarefas atribuídas à pessoa que perguntou.', [
                 'type' => 'object', 'properties' => new \stdClass, 'required' => [], 'additionalProperties' => false,
             ]);
@@ -40,11 +40,17 @@ class AiAgentTools
                 'properties' => ['query' => ['type' => 'string', 'minLength' => 2, 'maxLength' => 180]],
                 'required' => ['query'], 'additionalProperties' => false,
             ]);
-            if ($demand) {
+            if ($demand && in_array($agent, ['demand_assistant', 'approval_assistant'], true)) {
                 $tools[] = $this->tool('list_client_feedback', 'Lê comentários e decisões do cliente desta demanda, sem revelar token ou arquivo privado.', [
                     'type' => 'object', 'properties' => new \stdClass, 'required' => [], 'additionalProperties' => false,
                 ]);
             }
+        }
+
+        if ($canManage && $demand && $agent === 'approval_assistant') {
+            $tools[] = $this->tool('list_client_feedback', 'Lê comentários e decisões do cliente desta demanda, sem revelar token ou arquivo privado.', [
+                'type' => 'object', 'properties' => new \stdClass, 'required' => [], 'additionalProperties' => false,
+            ]);
         }
 
         if (in_array($user->role, [UserRole::AgencyOwner, UserRole::MarketingManager], true) && in_array($agent, ['operations_assistant', 'organization_assistant'], true)) {

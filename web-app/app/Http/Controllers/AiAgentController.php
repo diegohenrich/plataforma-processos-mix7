@@ -83,6 +83,7 @@ class AiAgentController extends Controller
 
         $data = $request->validate([
             'question' => ['required', 'string', 'min:3', 'max:3000'],
+            'specialist' => ['nullable', 'string', 'in:demand_assistant,approval_assistant'],
         ]);
 
         $model = (string) config('services.ai_gateway.model');
@@ -98,7 +99,7 @@ class AiAgentController extends Controller
                 'organization_id' => $demand->organization_id,
                 'demand_id' => $demand->id,
                 'requested_by' => $request->user()->id,
-                'agent' => 'demand_assistant',
+                'agent' => $data['specialist'] ?? 'demand_assistant',
                 'provider' => $provider,
                 'model' => $model,
                 'input_hash' => hash('sha256', $data['question']),

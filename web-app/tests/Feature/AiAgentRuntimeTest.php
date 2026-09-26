@@ -57,6 +57,33 @@ class AiAgentRuntimeTest extends TestCase
         Http::assertNothingSent();
     }
 
+    public function test_approval_specialist_is_scoped_to_demand_and_client_feedback(): void
+    {
+        [$organization, $manager, , $demand] = $this->workspace();
+        Bus::fake();
+
+        $this->actingAs($manager)->post(route('ai-agent.ask', $demand), [
+            'specialist' => 'approval_assistant',
+            'question' => 'Organize os comentários da revisão.',
+        ])->assertRedirect()->assertSessionHasNoErrors();
+
+        $run = AiAgentRun::where('agent', 'approval_assistant')->firstOrFail();
+        Bus::assertDispatched(ProcessAiAgentRun::class);
+
+        $tools = collect(app(AiAgentTools::class)->definitions($manager, $demand, $run->agent))
+            ->pluck('function.name')->all();
+        $this->assertSame(['read_demand_context', 'list_client_feedback'], $tools);
+
+        Http::fakeSequence()->push($this->toolResponse([
+            ['id' => 'feedback', 'function' => ['name' => 'list_client_feedback', 'arguments' => '{}']],
+        ]), 200)->push($this->answerResponse('O comentário da versão 1 pede ajuste.'), 200);
+        $result = app(AiAgentRuntime::class)->run($demand, $manager, 'Organize o feedback.', $run->agent);
+
+        $this->assertSame('O comentário da versão 1 pede ajuste.', $result['answer']);
+        $this->assertSame(['list_client_feedback'], collect($result['tool_trace'])->pluck('tool')->all());
+        Http::assertSent(fn ($request) => collect($request['tools'])->pluck('function.name')->all() === ['read_demand_context', 'list_client_feedback']);
+    }
+
     public function test_organization_assistant_queues_audited_question_without_demand_or_raw_prompt(): void
     {
         [, $manager] = $this->workspace();
