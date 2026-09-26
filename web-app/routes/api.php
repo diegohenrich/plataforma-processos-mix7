@@ -3,9 +3,15 @@
 use App\Http\Controllers\Api\V1\DemandController;
 use App\Http\Controllers\DemandController as WebDemandController;
 use App\Http\Controllers\DemandDeliveryEvidenceController;
+use App\Http\Controllers\DemandReviewController;
 use App\Http\Controllers\DemandTaskController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+
+Route::prefix('v1')->group(function (): void {
+    Route::get('/public/reviews/{token}', [DemandReviewController::class, 'showApi'])->middleware('throttle:30,1');
+    Route::post('/public/reviews/{token}/responses', [DemandReviewController::class, 'respond'])->middleware('throttle:10,1');
+});
 
 Route::prefix('v1')->middleware(['auth:sanctum', 'active'])->group(function (): void {
     Route::get('/me', function (Request $request) {

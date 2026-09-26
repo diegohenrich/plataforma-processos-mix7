@@ -158,6 +158,70 @@ class DemandReviewLinkTest extends TestCase
             ->assertDontSee('Enviar comentário');
     }
 
+    public function test_public_review_api_returns_only_the_shared_version_without_login(): void
+    {
+        [$organization, $manager, $demand] = $this->setupApproval();
+        $token = $this->createLink($manager, $demand, 'https://preview.example.test/site-v1');
+        $link = $demand->reviewLinks()->firstOrFail();
+        $link->responses()->create([
+            'reviewer_name' => 'Cliente Mix7',
+            'type' => 'annotation',
+            'comment' => 'Mover este botão.',
+            'anchor_type' => 'area',
+            'anchor_data' => ['x' => 40, 'y' => 55],
+            'created_at' => now(),
+        ]);
+
+        $this->getJson('/api/v1/public/reviews/'.$token)
+            ->assertOk()
+            ->assertJsonPath('data.demand_title', 'Site institucional')
+            ->assertJsonPath('data.version', 1)
+            ->assertJsonPath('data.material_url', 'https://preview.example.test/site-v1')
+            ->assertJsonPath('data.responses.0.anchor_data.x', 40)
+            ->assertHeader('Cache-Control', 'no-store, private')
+            ->assertDontSee('Briefing privado do teste');
+    }
+
+    public function test_public_review_api_records_approval_and_blocks_later_decisions(): void
+    {
+        [$organization, $manager, $demand] = $this->setupApproval();
+        $token = $this->createLink($manager, $demand, 'https://preview.example.test/site-v1');
+
+        $this->postJson('/api/v1/public/reviews/'.$token.'/responses', [
+            'reviewer_name' => 'Cliente Mix7',
+            'type' => 'approved',
+        ])->assertCreated()
+            ->assertJsonPath('data.type', 'approved')
+            ->assertJsonPath('message', 'Sua resposta foi registrada. Obrigado pela revisão.');
+
+        $this->assertSame(DemandStatus::Delivery, $demand->fresh()->status);
+        $this->assertDatabaseHas('demand_review_responses', [
+            'reviewer_name' => 'Cliente Mix7',
+            'type' => 'approved',
+        ]);
+        $this->postJson('/api/v1/public/reviews/'.$token.'/responses', [
+            'reviewer_name' => 'Cliente Mix7',
+            'type' => 'changes_requested',
+            'comment' => 'Alterar depois da aprovação.',
+        ])->assertStatus(410);
+    }
+
+    public function test_public_review_api_rejects_revoked_and_expired_tokens(): void
+    {
+        [$organization, $manager, $demand] = $this->setupApproval();
+        $revokedToken = $this->createLink($manager, $demand, 'https://preview.example.test/revoked');
+        $demand->reviewLinks()->firstOrFail()->update(['revoked_at' => now()]);
+
+        $this->getJson('/api/v1/public/reviews/'.$revokedToken)->assertStatus(410);
+        $this->postJson('/api/v1/public/reviews/'.$revokedToken.'/responses', [
+            'reviewer_name' => 'Cliente Mix7',
+            'type' => 'approved',
+        ])->assertStatus(410);
+
+        $demand->reviewLinks()->firstOrFail()->update(['revoked_at' => null, 'expires_at' => now()->subMinute()]);
+        $this->getJson('/api/v1/public/reviews/'.$revokedToken)->assertStatus(410);
+    }
+
     public function test_approval_advances_demand_and_prevents_another_decision(): void
     {
         [$organization, $manager, $demand] = $this->setupApproval();

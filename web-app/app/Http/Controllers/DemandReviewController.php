@@ -7,6 +7,7 @@ use App\Models\Demand;
 use App\Models\DemandEvent;
 use App\Models\DemandReviewLink;
 use App\Models\DemandReviewResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -106,6 +107,35 @@ class DemandReviewController extends Controller
         return view('client-reviews.show', compact('reviewLink', 'hasDecision', 'materialUrl'));
     }
 
+    public function showApi(string $token): JsonResponse
+    {
+        $reviewLink = $this->findLink($token);
+        abort_unless($reviewLink->revoked_at === null && $reviewLink->expires_at->isFuture(), 410);
+        $reviewLink->load('responses');
+        $hasDecision = $reviewLink->responses->contains(fn (DemandReviewResponse $response): bool => in_array($response->type, ['approved', 'changes_requested'], true));
+        abort_unless($reviewLink->demand->status === DemandStatus::ClientApproval || $hasDecision, 410);
+
+        return response()->json([
+            'data' => [
+                'demand_title' => $reviewLink->demand->title,
+                'version' => $reviewLink->version,
+                'expires_at' => $reviewLink->expires_at->toISOString(),
+                'decision_recorded' => $hasDecision,
+                'material_url' => $reviewLink->material_file_path
+                    ? route('client-reviews.material', ['token' => $token])
+                    : $reviewLink->material_url,
+                'responses' => $reviewLink->responses->map(fn (DemandReviewResponse $response): array => [
+                    'reviewer_name' => $response->reviewer_name,
+                    'type' => $response->type,
+                    'comment' => $response->comment,
+                    'anchor_type' => $response->anchor_type,
+                    'anchor_data' => $response->anchor_data,
+                    'created_at' => $response->created_at?->toISOString(),
+                ])->values(),
+            ],
+        ])->header('Cache-Control', 'private, no-store');
+    }
+
     public function material(Request $request, string $token): BinaryFileResponse
     {
         $reviewLink = $this->findLink($token);
@@ -124,7 +154,7 @@ class DemandReviewController extends Controller
         return $this->streamPrivateMaterial($reviewLink, $request->boolean('download'));
     }
 
-    public function respond(Request $request, string $token): RedirectResponse
+    public function respond(Request $request, string $token): RedirectResponse|JsonResponse
     {
         $data = $request->validate([
             'reviewer_name' => ['required', 'string', 'min:2', 'max:120'],
@@ -183,7 +213,7 @@ class DemandReviewController extends Controller
             ? (float) $request->input('anchor_height')
             : null;
 
-        DB::transaction(function () use ($data, $token, $anchorPath, $anchorWidth, $anchorHeight): void {
+        $response = DB::transaction(function () use ($data, $token, $anchorPath, $anchorWidth, $anchorHeight): DemandReviewResponse {
             $reviewLink = $this->findLink($token, lock: true);
             abort_unless($reviewLink->isAvailable(), 410, 'Este link expirou ou não está mais disponível.');
             $hasDecision = $reviewLink->responses()->whereIn('type', ['approved', 'changes_requested'])->exists();
@@ -191,7 +221,7 @@ class DemandReviewController extends Controller
                 throw ValidationException::withMessages(['type' => 'Esta versão já recebeu uma decisão final.']);
             }
 
-            $reviewLink->responses()->create([
+            $response = $reviewLink->responses()->create([
                 'reviewer_name' => $data['reviewer_name'],
                 'type' => $data['type'],
                 'comment' => $data['comment'] ?? null,
@@ -224,7 +254,22 @@ class DemandReviewController extends Controller
                     'to_status' => $next->value,
                 ]);
             }
+
+            return $response;
         });
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Sua resposta foi registrada. Obrigado pela revisão.',
+                'data' => [
+                    'type' => $response->type,
+                    'comment' => $response->comment,
+                    'anchor_type' => $response->anchor_type,
+                    'anchor_data' => $response->anchor_data,
+                    'created_at' => $response->created_at?->toISOString(),
+                ],
+            ], 201)->header('Cache-Control', 'private, no-store');
+        }
 
         return back()->with('success', 'Sua resposta foi registrada. Obrigado pela revisão.');
     }

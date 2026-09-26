@@ -1,6 +1,6 @@
 # API Mix7 — versão 1
 
-A API pertence à aplicação Laravel e usa o mesmo banco, políticas e histórico do site. Todas as rotas ficam sob `/api/v1` e exigem um token Sanctum no cabeçalho `Authorization: Bearer …`, conta ativa e acesso autorizado. Respostas usam JSON. A API ainda não provisiona nem revoga tokens; não distribua tokens de teste para usuários reais.
+A API pertence à aplicação Laravel e usa o mesmo banco, políticas e histórico do site. Rotas internas sob `/api/v1` exigem token Sanctum no cabeçalho `Authorization: Bearer …`, conta ativa e acesso autorizado. As duas rotas públicas de aprovação usam o token secreto, temporário e revogável do próprio link; não exigem conta. Respostas usam JSON. A API ainda não provisiona nem revoga tokens Sanctum; não distribua tokens de teste para usuários reais.
 
 ## Identidade e leitura
 
@@ -13,6 +13,17 @@ A API pertence à aplicação Laravel e usa o mesmo banco, políticas e históri
 | `POST /demands/{demand}/tasks` | Acrescenta uma tarefa atribuída à demanda | Direção/gerência da organização, exceto durante aprovação do cliente, entrega ou conclusão |
 | `PATCH /demands/{demand}/status` | `{"status":"planning"}` | Direção/gerência; transições do fluxo são validadas e revisão interna exige todas as tarefas concluídas |
 | `POST /demands/{demand}/delivery-evidences` | `{"outcome":"published","evidence_url":"https://…"}` ou observação `details` | Direção/gerência na etapa Entrega ou depois; registra autoria e histórico sem publicar conteúdo nem mover a etapa |
+
+## Aprovação externa por link
+
+O link é uma credencial: qualquer pessoa que o possua pode ver somente o material daquela versão e responder em nome informado. O token não deve ser incluído em logs, analytics ou links de terceiros. Leitura e resposta têm limites de 30 e 10 requisições por minuto por origem.
+
+| Método e rota | Uso | Comportamento |
+| --- | --- | --- |
+| `GET /public/reviews/{token}` | Lê título da demanda, versão, validade, material e respostas ligadas à versão | Sem login; token expirado, revogado ou indisponível retorna `410`; resposta é privada e não armazenável em cache |
+| `POST /public/reviews/{token}/responses` | Usa os mesmos campos `reviewer_name`, `type`, `comment` e âncoras da revisão web | `comment`, `annotation`, `approved` ou `changes_requested`; decisão final move a etapa e não pode ser repetida |
+
+Arquivos privados continuam disponíveis pela URL de material que o `GET` retorna e passam pela mesma checagem do link. Aprovação e pedido de ajustes registram o evento da demanda; comentários e anotações permanecem ligados à versão. Os links públicos não expõem briefing nem tarefas internas.
 
 ## Tarefas e cronômetro
 
@@ -51,4 +62,4 @@ Erros de validação e transição de tarefa não permitida usam HTTP `422`; con
 
 ## Limites atuais
 
-A escrita cobre criação de demanda e tarefas, transições de etapa/tarefa, cronograma, transferência de responsável, cronômetro e registro de evidência pós-aprovação, reutilizando regras já aplicadas pelo site. Gerir conhecimento/equipe, aprovação, anexos e configuração de tokens ainda não têm endpoints de escrita nesta versão. Não existe aplicação Windows nesta entrega; o contrato fica documentado para esse cliente futuro. A matriz de perfis e a operação compartilhada ainda precisam de validação da Mix7 antes do uso com dados reais.
+A escrita cobre criação de demanda e tarefas, transições de etapa/tarefa, cronograma, transferência de responsável, cronômetro, registro de evidência pós-aprovação e resposta à aprovação externa por link. Gestão interna de conhecimento/equipe, criação/revogação de links e provisionamento de tokens ainda não têm endpoints de API nesta versão. Não existe aplicação Windows nesta entrega; o contrato fica documentado para esse cliente futuro. A matriz de perfis e a operação compartilhada ainda precisam de validação da Mix7 antes do uso com dados reais.
