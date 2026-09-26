@@ -1,7 +1,7 @@
 ## Especialistas organizacionais de IA — 2026-09-26
 - A tela do assistente agora permite escolher consulta geral, conhecimento/onboarding ou operação/produção. O servidor valida a opção, grava o especialista no histórico de execução e só disponibiliza ferramentas de leitura próprias àquela especialidade; perguntas continuam guardadas como hash/tamanho, e cada usuário vê apenas as próprias execuções.
 - Validação: suíte Laravel completa passou 107 testes/849 assertions; Pint focalizado, build Vite, Composer validate e git diff --check passaram. Testes confirmam que conhecimento só recebe busca da biblioteca ativa, operação só recebe métricas agregadas e opções desconhecidas não enfileiram chamadas. Nenhuma chamada real ao provedor foi feita.
-- A inspeção visual renderizada desta alteração ainda está pendente; sem política de dados/provedor e worker confirmados, não foi feita chamada externa. GitHub/Trello da nova tarefa ainda serão sincronizados; cartão relacionado #39.
+- A inspeção visual renderizada desta alteração ainda está pendente; sem política de dados/provedor e worker confirmados, não foi feita chamada externa. Commit `8d73b4412ccf0deef81cd310ec9e797a6276b359` publicado na branch `codex/fundacao-compartilhada`; SHA local/remoto igual. CI de push `36270052534` e PR #11 `36270054746` passou. O comentário do Trello #39 está pronto e aguarda confirmação específica para publicação.
 - Permanecem fora desta fatia: agente de aprovações, automações com escrita e ações propostas com confirmação humana; eles exigem desenho por módulo e fronteira explícita.
 
 ## Feedback de aprovação ordenado entre versões para IA — 2026-09-26
