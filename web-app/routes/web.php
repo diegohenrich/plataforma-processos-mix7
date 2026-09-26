@@ -1,7 +1,7 @@
 <?php
 
-use App\Http\Controllers\AiPlanningController;
 use App\Http\Controllers\AiAgentController;
+use App\Http\Controllers\AiPlanningController;
 use App\Http\Controllers\Auth\SessionController;
 use App\Http\Controllers\DemandController;
 use App\Http\Controllers\DemandReviewController;
