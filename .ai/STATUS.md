@@ -2,7 +2,7 @@
 - Direção/gerência podem registrar prazo e qualidade de tarefas concluídas, evidências e fatores externos; direção registra peso 2 e gerência peso 1 conforme os áudios. Profissional vê e responde somente às próprias avaliações; respostas são preservadas no histórico. Clientes não acessam o módulo. Uma pessoa avaliadora tem um registro por tarefa.
 - Não há pontuação calculada, ranking ou consequência automática: escala, fórmula, combinação de pesos, período, contestação e finalidade ainda dependem de decisão da Mix7.
 - Validação local: `php artisan test --compact` passou 100 testes/795 assertions; Pint nos arquivos PHP alterados, `composer validate --no-check-publish`, `npm run build` e `git diff --check` passaram. Testes cobrem perfis, pesos 2/1, respostas, duplicidade e isolamento de organização.
-- Limitação: inspeção visual renderizada não foi possível porque a tentativa anterior no navegador local foi bloqueada por política; nenhum caminho alternativo foi usado. Trello ainda não sincronizado; preparar o cartão #9, mas a publicação de comentário precisa ser confirmada na interface.
+- Limitação: inspeção visual renderizada não foi possível porque a tentativa anterior no navegador local foi bloqueada por política; nenhum caminho alternativo foi usado. GitHub sincronizado no commit `0a577d63c0f26e2a924846a1f78459f3853364a9` na branch `codex/fundacao-compartilhada`; SHA local/remoto igual. Checks push `36268483217` e PR #11 `36268486531` passaram; PR continua em rascunho. Trello pendente: o cartão da avaliação precisa receber resultado/commit, mas enviar comentário pela interface requer confirmação explícita no momento da publicação.
 # Estado atual — Plataforma Mix7 — 2026-09-26
 
 ## Busca de demandas relacionadas pelo assistente — 2026-09-26
