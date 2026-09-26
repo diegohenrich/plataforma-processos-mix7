@@ -1,3 +1,8 @@
+## Criar e revogar links de aprovação pela API — 2026-09-26
+- Acrescentei operações autenticadas para direção/gerência gerar uma versão na etapa de aprovação e revogar links. O token em texto puro só aparece uma vez na URL de resposta, não é persistido; o banco guarda o hash. Versões anteriores são revogadas pelo fluxo existente.
+- Validação local: 139 testes/1.121 assertions, Pint nos arquivos PHP afetados, `composer validate --no-check-publish`, `npm run build`, `route:list` (17 rotas) e `git diff --check` passaram. `DemandReviewLinkTest` cobre escopo por papel, segredo em hash, leitura pública após criação e bloqueio após revogação.
+- Atualizei contrato API, arquitetura, roadmap e contexto. Sem interface nova; inspeção visual não se aplica. GitHub e CI pendentes; confirmação para registrar o cartão combinado de aprovação via API no Trello ainda pendente.
+
 ## Aprovação externa por link na API — 2026-09-26
 - A API pública oferece leitura da versão compartilhada e envio de comentário/anotação/aprovação/pedido de ajustes sem conta. Reutiliza o mesmo token temporário, revogável e de uso limitado do fluxo web; não devolve briefing nem tarefas internas. A decisão gera transição e evento existentes.
 - Validação local: 138 testes/1.107 assertions, Pint nos arquivos PHP afetados, `composer validate --no-check-publish`, `npm run build`, `route:list` (15 rotas) e `git diff --check` passaram. `DemandReviewLinkTest` cobre JSON sem login, isolamento de conteúdo, anotações, decisão única e token expirado/revogado. Sem interface nova; inspeção visual não se aplica.

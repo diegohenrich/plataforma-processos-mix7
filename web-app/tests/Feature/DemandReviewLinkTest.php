@@ -222,6 +222,34 @@ class DemandReviewLinkTest extends TestCase
         $this->getJson('/api/v1/public/reviews/'.$revokedToken)->assertStatus(410);
     }
 
+    public function test_management_can_create_and_revoke_review_links_through_the_api(): void
+    {
+        [$organization, $manager, $demand, $professional] = $this->setupApproval();
+
+        $creation = $this->actingAs($manager)->postJson('/api/v1/demands/'.$demand->id.'/review-links', [
+            'material_url' => 'https://preview.example.test/api-review',
+            'expires_at' => now()->addDays(2)->toIso8601String(),
+        ])->assertCreated()
+            ->assertJsonPath('data.version', 1)
+            ->assertHeader('Cache-Control', 'no-store, private')
+            ->assertHeader('Referrer-Policy', 'no-referrer');
+
+        $reviewUrl = $creation->json('data.review_url');
+        $token = basename(parse_url($reviewUrl, PHP_URL_PATH));
+        $link = $demand->reviewLinks()->firstOrFail();
+        $this->assertSame(64, strlen($token));
+        $this->assertSame(hash('sha256', $token), $link->token_hash);
+        $this->assertStringNotContainsString($token, $link->token_hash);
+        $this->getJson('/api/v1/public/reviews/'.$token)->assertOk();
+
+        $this->actingAs($professional)->deleteJson('/api/v1/demands/'.$demand->id.'/review-links/'.$link->id)
+            ->assertForbidden();
+        $this->actingAs($manager)->deleteJson('/api/v1/demands/'.$demand->id.'/review-links/'.$link->id)
+            ->assertOk()
+            ->assertJsonPath('data.id', $link->id);
+        $this->getJson('/api/v1/public/reviews/'.$token)->assertStatus(410);
+    }
+
     public function test_approval_advances_demand_and_prevents_another_decision(): void
     {
         [$organization, $manager, $demand] = $this->setupApproval();

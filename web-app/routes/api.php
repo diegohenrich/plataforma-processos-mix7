@@ -33,6 +33,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active'])->group(function (): 
     Route::patch('/demands/{demand}/status', [WebDemandController::class, 'updateStatus']);
     Route::post('/demands/{demand}/tasks', [DemandTaskController::class, 'store']);
     Route::post('/demands/{demand}/delivery-evidences', [DemandDeliveryEvidenceController::class, 'store']);
+    Route::post('/demands/{demand}/review-links', [DemandReviewController::class, 'store']);
+    Route::delete('/demands/{demand}/review-links/{reviewLink}', [DemandReviewController::class, 'revoke']);
     Route::patch('/tasks/{task}/status', [DemandTaskController::class, 'updateStatus']);
     Route::post('/tasks/{task}/timer/start', [DemandTaskController::class, 'startTimer']);
     Route::post('/tasks/{task}/timer/pause', [DemandTaskController::class, 'pauseTimer']);

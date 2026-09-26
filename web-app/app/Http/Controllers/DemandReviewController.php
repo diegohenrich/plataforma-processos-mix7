@@ -22,7 +22,7 @@ use Throwable;
 
 class DemandReviewController extends Controller
 {
-    public function store(Request $request, Demand $demand): RedirectResponse
+    public function store(Request $request, Demand $demand): RedirectResponse|JsonResponse
     {
         $this->authorize('manage', $demand);
         abort_unless($demand->status === DemandStatus::ClientApproval, 409, 'A demanda precisa estar em aprovação do cliente.');
@@ -72,17 +72,39 @@ class DemandReviewController extends Controller
             throw $exception;
         }
 
-        return back()->with('review_link_url', route('client-reviews.show', ['token' => $plainToken]))
+        $reviewUrl = route('client-reviews.show', ['token' => $plainToken]);
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Link da versão criado. Envie-o ao cliente por um canal aprovado.',
+                'data' => [
+                    'id' => $link->id,
+                    'demand_id' => $link->demand_id,
+                    'version' => $link->version,
+                    'review_url' => $reviewUrl,
+                    'expires_at' => $link->expires_at->toISOString(),
+                ],
+            ], 201)->header('Cache-Control', 'private, no-store')
+                ->header('Referrer-Policy', 'no-referrer');
+        }
+
+        return back()->with('review_link_url', $reviewUrl)
             ->with('review_link_id', $link->id)
             ->with('success', 'Link da versão '.$link->version.' criado. Copie-o agora para enviar ao cliente.');
     }
 
-    public function revoke(Request $request, Demand $demand, DemandReviewLink $reviewLink): RedirectResponse
+    public function revoke(Request $request, Demand $demand, DemandReviewLink $reviewLink): RedirectResponse|JsonResponse
     {
         $this->authorize('manage', $demand);
         abort_unless($reviewLink->demand_id === $demand->id && $reviewLink->organization_id === $request->user()->organization_id, 404);
         if ($reviewLink->revoked_at === null) {
             $reviewLink->update(['revoked_at' => now()]);
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Link de revisão revogado.',
+                'data' => ['id' => $reviewLink->id, 'revoked_at' => $reviewLink->fresh()->revoked_at->toISOString()],
+            ])->header('Cache-Control', 'private, no-store');
         }
 
         return back()->with('success', 'Link revogado.');
