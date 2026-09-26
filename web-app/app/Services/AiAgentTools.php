@@ -17,23 +17,24 @@ use Illuminate\Validation\ValidationException;
 class AiAgentTools
 {
     /** @return list<array<string, mixed>> */
-    public function definitions(User $user, ?Demand $demand): array
+    public function definitions(User $user, ?Demand $demand, string $agent = 'organization_assistant'): array
     {
         $tools = [];
-        if ($demand) {
+        if ($demand && $agent === 'demand_assistant') {
             $tools[] = $this->tool('read_demand_context', 'Lê o resumo autorizado desta demanda e as tarefas atribuídas à pessoa que perguntou.', [
                 'type' => 'object', 'properties' => new \stdClass, 'required' => [], 'additionalProperties' => false,
             ]);
         }
-        $tools[] =
-            $this->tool('search_knowledge', 'Busca referências e instruções internas ativas desta organização por palavras-chave.', [
+        if (in_array($agent, ['demand_assistant', 'organization_assistant', 'knowledge_assistant'], true)) {
+            $tools[] = $this->tool('search_knowledge', 'Busca referências e instruções internas ativas desta organização por palavras-chave.', [
                 'type' => 'object',
                 'properties' => ['query' => ['type' => 'string', 'minLength' => 2, 'maxLength' => 180]],
                 'required' => ['query'], 'additionalProperties' => false,
             ]);
+        }
 
         $canManage = $demand ? $user->can('manage', $demand) : in_array($user->role, [UserRole::AgencyOwner, UserRole::MarketingManager], true);
-        if ($canManage) {
+        if ($canManage && in_array($agent, ['demand_assistant', 'organization_assistant'], true)) {
             $tools[] = $this->tool('search_organization_demands', 'Busca até cinco demandas da própria organização por parte do título e retorna somente etapa, data de atualização e quantidade de tarefas; não retorna briefing nem dados de clientes.', [
                 'type' => 'object',
                 'properties' => ['query' => ['type' => 'string', 'minLength' => 2, 'maxLength' => 180]],
@@ -46,7 +47,7 @@ class AiAgentTools
             }
         }
 
-        if (in_array($user->role, [UserRole::AgencyOwner, UserRole::MarketingManager], true)) {
+        if (in_array($user->role, [UserRole::AgencyOwner, UserRole::MarketingManager], true) && in_array($agent, ['operations_assistant', 'organization_assistant'], true)) {
             $tools[] = $this->tool('summarize_team_activity', 'Lê contagens factuais da equipe desta organização: tarefas abertas por estado, estimativas, conclusões e tempo registrado nos últimos 30 dias. Não calcula capacidade nem pontua pessoas.', [
                 'type' => 'object', 'properties' => new \stdClass, 'required' => [], 'additionalProperties' => false,
             ]);

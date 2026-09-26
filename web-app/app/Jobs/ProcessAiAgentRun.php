@@ -33,7 +33,7 @@ class ProcessAiAgentRun implements ShouldQueue
         $run->update(['status' => 'running', 'started_at' => now()]);
 
         try {
-            $result = $runtime->run($run->demand, $run->requester, Crypt::decryptString($this->encryptedQuestion));
+            $result = $runtime->run($run->demand, $run->requester, Crypt::decryptString($this->encryptedQuestion), $run->agent);
             $run->update([
                 'status' => 'completed',
                 'answer' => $result['answer'],

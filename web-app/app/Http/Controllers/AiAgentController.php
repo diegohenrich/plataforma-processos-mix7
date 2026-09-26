@@ -21,7 +21,7 @@ class AiAgentController extends Controller
         $user = $request->user();
         abort_unless($user->is_active && $user->organization_id !== null && in_array($user->role, [UserRole::AgencyOwner, UserRole::MarketingManager], true), 403);
         $runs = AiAgentRun::query()->where('organization_id', $user->organization_id)
-            ->whereNull('demand_id')->where('agent', 'organization_assistant')->where('requested_by', $user->id)
+            ->whereNull('demand_id')->whereIn('agent', ['organization_assistant', 'knowledge_assistant', 'operations_assistant'])->where('requested_by', $user->id)
             ->latest()->paginate(15);
         $configured = (config('services.ai_gateway.key') || config('services.ai_gateway.oidc_token') || (config('services.ai_gateway.provider') === 'openai-compatible' && config('services.ai_gateway.allow_unauthenticated')))
             && config('services.ai_gateway.model') && config('services.ai_gateway.base_url');
@@ -33,7 +33,11 @@ class AiAgentController extends Controller
     {
         $user = $request->user();
         abort_unless($user->is_active && $user->organization_id !== null && in_array($user->role, [UserRole::AgencyOwner, UserRole::MarketingManager], true), 403);
-        $data = $request->validate(['question' => ['required', 'string', 'min:3', 'max:3000']]);
+        $data = $request->validate([
+            'question' => ['required', 'string', 'min:3', 'max:3000'],
+            'specialist' => ['nullable', 'string', 'in:organization_assistant,knowledge_assistant,operations_assistant'],
+        ]);
+        $agent = $data['specialist'] ?? 'organization_assistant';
         $model = (string) config('services.ai_gateway.model');
         $provider = (string) config('services.ai_gateway.provider');
         $allowUnauthenticated = $provider === 'openai-compatible' && config('services.ai_gateway.allow_unauthenticated') === true;
@@ -45,7 +49,7 @@ class AiAgentController extends Controller
             'organization_id' => $user->organization_id,
             'demand_id' => null,
             'requested_by' => $user->id,
-            'agent' => 'organization_assistant',
+            'agent' => $agent,
             'provider' => $provider,
             'model' => $model,
             'input_hash' => hash('sha256', $data['question']),
@@ -67,7 +71,7 @@ class AiAgentController extends Controller
     public function organizationStatus(Request $request, AiAgentRun $run): JsonResponse
     {
         $user = $request->user();
-        abort_unless($run->demand_id === null && $run->agent === 'organization_assistant' && $run->organization_id === $user->organization_id && $run->requested_by === $user->id, 404);
+        abort_unless($run->demand_id === null && in_array($run->agent, ['organization_assistant', 'knowledge_assistant', 'operations_assistant'], true) && $run->organization_id === $user->organization_id && $run->requested_by === $user->id, 404);
 
         return response()->json(['status' => $run->status]);
     }

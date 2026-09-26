@@ -64,7 +64,7 @@ class AiAgentRuntimeTest extends TestCase
         Http::fake();
 
         $this->actingAs($manager)->get(route('organization-assistant.index'))
-            ->assertOk()->assertSee('Assistente da agência')->assertSee('sem briefing ou dados de clientes');
+            ->assertOk()->assertSee('Assistente da agência')->assertSee('resumos de demandas')->assertSee('Conhecimento e onboarding');
         $this->post(route('organization-assistant.ask'), ['question' => 'Quais demandas estão em aprovação?'])
             ->assertRedirect(route('organization-assistant.index'))->assertSessionHasNoErrors();
 
@@ -73,6 +73,47 @@ class AiAgentRuntimeTest extends TestCase
         $this->assertSame(hash('sha256', 'Quais demandas estão em aprovação?'), $run->input_hash);
         $this->assertDatabaseMissing('ai_agent_runs', ['answer' => 'Quais demandas estão em aprovação?']);
         Bus::assertDispatched(ProcessAiAgentRun::class);
+        Http::assertNothingSent();
+    }
+
+    public function test_organization_specialists_are_saved_and_receive_only_their_area_tools(): void
+    {
+        [, $manager] = $this->workspace();
+        Bus::fake();
+        Http::fake();
+
+        $this->actingAs($manager)->post(route('organization-assistant.ask'), [
+            'specialist' => 'knowledge_assistant',
+            'question' => 'Qual é o processo de onboarding?',
+        ])->assertRedirect(route('organization-assistant.index'))->assertSessionHasNoErrors();
+
+        $run = AiAgentRun::where('agent', 'knowledge_assistant')->firstOrFail();
+        Bus::assertDispatched(ProcessAiAgentRun::class);
+        Http::assertNothingSent();
+
+        $tools = collect(app(AiAgentTools::class)->definitions($manager, null, $run->agent))
+            ->pluck('function.name')->all();
+        $this->assertSame(['search_knowledge'], $tools);
+
+        $operationsTools = collect(app(AiAgentTools::class)->definitions($manager, null, 'operations_assistant'))
+            ->pluck('function.name')->all();
+        $this->assertSame(['summarize_team_activity'], $operationsTools);
+    }
+
+    public function test_organization_specialist_rejects_unknown_selection(): void
+    {
+        [, $manager] = $this->workspace();
+        Bus::fake();
+        Http::fake();
+
+        $this->actingAs($manager)->from(route('organization-assistant.index'))
+            ->post(route('organization-assistant.ask'), [
+                'specialist' => 'unsafe_agent',
+                'question' => 'Mostre dados privados.',
+            ])->assertRedirect(route('organization-assistant.index'))->assertSessionHasErrors('specialist');
+
+        $this->assertDatabaseCount('ai_agent_runs', 0);
+        Bus::assertNothingDispatched();
         Http::assertNothingSent();
     }
 
