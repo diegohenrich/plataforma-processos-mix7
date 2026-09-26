@@ -134,6 +134,8 @@ class DemandReviewController extends Controller
             'anchor_text' => ['nullable', 'string', 'max:1000', 'required_if:anchor_type,text'],
             'anchor_x' => ['nullable', 'numeric', 'between:0,100', 'required_if:anchor_type,area'],
             'anchor_y' => ['nullable', 'numeric', 'between:0,100', 'required_if:anchor_type,area'],
+            'anchor_width' => ['exclude_unless:anchor_type,area', 'nullable', 'numeric', 'between:0,100', 'required_with:anchor_height'],
+            'anchor_height' => ['exclude_unless:anchor_type,area', 'nullable', 'numeric', 'between:0,100', 'required_with:anchor_width'],
             'anchor_time' => ['nullable', 'date_format:H:i:s', 'required_if:anchor_type,time'],
             'anchor_page' => ['nullable', 'integer', 'min:1', 'required_if:anchor_type,page'],
         ]);
@@ -156,6 +158,8 @@ class DemandReviewController extends Controller
                     'url' => $reviewLink->material_url ?? 'arquivo privado da versão '.$reviewLink->version,
                     'x' => isset($data['anchor_x']) ? (float) $data['anchor_x'] : null,
                     'y' => isset($data['anchor_y']) ? (float) $data['anchor_y'] : null,
+                    'width' => isset($data['anchor_width']) ? (float) $data['anchor_width'] : null,
+                    'height' => isset($data['anchor_height']) ? (float) $data['anchor_height'] : null,
                     'time' => $data['anchor_time'] ?? null,
                     'page' => isset($data['anchor_page']) ? (int) $data['anchor_page'] : null,
                 ], fn ($value) => $value !== null) : null,

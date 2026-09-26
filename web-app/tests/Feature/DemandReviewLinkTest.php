@@ -82,7 +82,9 @@ class DemandReviewLinkTest extends TestCase
             ->assertSee('Ancorar este comentário em')
             ->assertSee('Trecho de texto')
             ->assertSee('Área da página')
-            ->assertSee('Marcar área na prévia')
+            ->assertSee('Selecionar área na prévia')
+            ->assertSee('Arraste sobre a prévia para selecionar uma região')
+            ->assertSee('name="anchor_width" type="number" data-optional="true"', false)
             ->assertSee('sandbox="allow-scripts allow-forms"', false);
 
         $this->post(route('client-reviews.respond', $token), [
@@ -132,6 +134,23 @@ class DemandReviewLinkTest extends TestCase
         $this->assertDatabaseCount('demand_review_responses', 4);
         $this->assertSame('00:01:25', $demand->reviewLinks()->firstOrFail()->responses()->where('anchor_type', 'time')->firstOrFail()->anchor_data['time']);
         $this->assertSame(3, $demand->reviewLinks()->firstOrFail()->responses()->where('anchor_type', 'page')->firstOrFail()->anchor_data['page']);
+
+        $this->post(route('client-reviews.respond', $token), [
+            'reviewer_name' => 'Cliente Mix7',
+            'type' => 'annotation',
+            'comment' => 'Alterar este bloco inteiro.',
+            'anchor_type' => 'area',
+            'anchor_x' => 42.5,
+            'anchor_y' => 31,
+            'anchor_width' => 26.5,
+            'anchor_height' => 14,
+        ])->assertRedirect();
+
+        $rectangleAnnotation = $demand->reviewLinks()->firstOrFail()->responses()->latest('id')->firstOrFail();
+        $this->assertSame(26.5, $rectangleAnnotation->anchor_data['width']);
+        $this->assertEquals(14, $rectangleAnnotation->anchor_data['height']);
+        $this->actingAs($manager)->get(route('demands.show', $demand))
+            ->assertOk()->assertSee('largura 26.5%, altura 14%');
     }
 
     public function test_annotation_anchor_values_are_validated(): void
@@ -146,7 +165,9 @@ class DemandReviewLinkTest extends TestCase
             'anchor_type' => 'area',
             'anchor_x' => 101,
             'anchor_y' => -1,
-        ])->assertSessionHasErrors(['anchor_x', 'anchor_y']);
+            'anchor_width' => 101,
+            'anchor_height' => -1,
+        ])->assertSessionHasErrors(['anchor_x', 'anchor_y', 'anchor_width', 'anchor_height']);
 
         $this->post(route('client-reviews.respond', $token), [
             'reviewer_name' => 'Cliente Mix7',
@@ -155,6 +176,16 @@ class DemandReviewLinkTest extends TestCase
             'anchor_type' => 'time',
             'anchor_time' => '25:90:99',
         ])->assertSessionHasErrors('anchor_time');
+
+        $this->post(route('client-reviews.respond', $token), [
+            'reviewer_name' => 'Cliente Mix7',
+            'type' => 'annotation',
+            'comment' => 'Marcar uma região.',
+            'anchor_type' => 'area',
+            'anchor_x' => 40,
+            'anchor_y' => 50,
+            'anchor_width' => 20,
+        ])->assertSessionHasErrors('anchor_height');
         $this->assertDatabaseCount('demand_review_responses', 0);
     }
 
