@@ -12,6 +12,7 @@ A API pertence à aplicação Laravel e usa o mesmo banco, políticas e históri
 | `POST /demands` | Cria demanda e de 1 a 20 tarefas iniciais em uma transação | Direção/gerência; cliente opcional e profissionais ativos devem pertencer à mesma organização |
 | `POST /demands/{demand}/tasks` | Acrescenta uma tarefa atribuída à demanda | Direção/gerência da organização, exceto durante aprovação do cliente, entrega ou conclusão |
 | `PATCH /demands/{demand}/status` | `{"status":"planning"}` | Direção/gerência; transições do fluxo são validadas e revisão interna exige todas as tarefas concluídas |
+| `POST /demands/{demand}/delivery-evidences` | `{"outcome":"published","evidence_url":"https://…"}` ou observação `details` | Direção/gerência na etapa Entrega ou depois; registra autoria e histórico sem publicar conteúdo nem mover a etapa |
 
 ## Tarefas e cronômetro
 
@@ -50,4 +51,4 @@ Erros de validação e transição de tarefa não permitida usam HTTP `422`; con
 
 ## Limites atuais
 
-A escrita cobre criação de demanda e tarefas, transições de etapa/tarefa, cronograma, transferência de responsável e cronômetro, reutilizando regras já aplicadas pelo site. Gerir conhecimento/equipe, aprovação, anexos e configuração de tokens ainda não têm endpoints de escrita nesta versão. Não existe aplicação Windows nesta entrega; o contrato fica documentado para esse cliente futuro. A matriz de perfis e a operação compartilhada ainda precisam de validação da Mix7 antes do uso com dados reais.
+A escrita cobre criação de demanda e tarefas, transições de etapa/tarefa, cronograma, transferência de responsável, cronômetro e registro de evidência pós-aprovação, reutilizando regras já aplicadas pelo site. Gerir conhecimento/equipe, aprovação, anexos e configuração de tokens ainda não têm endpoints de escrita nesta versão. Não existe aplicação Windows nesta entrega; o contrato fica documentado para esse cliente futuro. A matriz de perfis e a operação compartilhada ainda precisam de validação da Mix7 antes do uso com dados reais.

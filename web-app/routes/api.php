@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\DemandController;
 use App\Http\Controllers\DemandController as WebDemandController;
+use App\Http\Controllers\DemandDeliveryEvidenceController;
 use App\Http\Controllers\DemandTaskController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -25,6 +26,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active'])->group(function (): 
     Route::post('/demands', [WebDemandController::class, 'store']);
     Route::patch('/demands/{demand}/status', [WebDemandController::class, 'updateStatus']);
     Route::post('/demands/{demand}/tasks', [DemandTaskController::class, 'store']);
+    Route::post('/demands/{demand}/delivery-evidences', [DemandDeliveryEvidenceController::class, 'store']);
     Route::patch('/tasks/{task}/status', [DemandTaskController::class, 'updateStatus']);
     Route::post('/tasks/{task}/timer/start', [DemandTaskController::class, 'startTimer']);
     Route::post('/tasks/{task}/timer/pause', [DemandTaskController::class, 'pauseTimer']);

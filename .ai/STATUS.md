@@ -1,3 +1,9 @@
+## Evidência de entrega pelo cliente de API — 2026-09-26
+- A API agora registra Entregue/Agendado/Publicado com URL ou observação, data opcional, conta autora e evento de histórico. A mesma autorização de direção/gerência e as mesmas etapas Entrega/Concluída do site são aplicadas; não publica conteúdo nem muda etapa.
+- Validação local: 135 testes/1.087 assertions; Pint nos arquivos PHP afetados, `composer validate --no-check-publish`, `npm run build`, `route:list` (13 rotas) e `git diff --check` passaram. Os três testes focais cobrem autorização, organização, estágio permitido, campos obrigatórios, autoria e preservação da etapa.
+- Atualizei contrato API, arquitetura, roadmap e contexto. Sem interface nova; inspeção visual não se aplica. Dados sintéticos apenas.
+- GitHub: commit e CI ainda pendentes. Trello: confirmação para criar/publicar o cartão desta fatia ainda não recebida; aguarda autorização para registrar na interface.
+
 ## Cronograma e transferência de tarefas na API — 2026-09-26
 - Acrescentei `PATCH /tasks/{task}/schedule` e `/assignee` para direção/gerência. Reutilizam policy, validação e trilha existentes; responsáveis precisam ser profissionais ativos da mesma organização. Transferência fecha timers abertos, pausa tarefa em execução e preserva autoria e responsável anterior.
 - Validação local: suíte Laravel 132 testes/1068 assertions; Pint, Composer validate, build Vite e `git diff --check` passaram. Os testes cobrem salvar datas, transferência com timer ativo, isolamento de papéis/organizações, datas invertidas, conta inativa e tarefa concluída. Sem tela alterada; inspeção visual não se aplica. Nenhum dado real foi usado.

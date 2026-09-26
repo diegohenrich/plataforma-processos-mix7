@@ -6,6 +6,7 @@ use App\Enums\DemandStatus;
 use App\Models\Demand;
 use App\Models\DemandDeliveryEvidence;
 use App\Models\DemandEvent;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -13,7 +14,7 @@ use Illuminate\Validation\Rule;
 
 class DemandDeliveryEvidenceController extends Controller
 {
-    public function store(Request $request, Demand $demand): RedirectResponse
+    public function store(Request $request, Demand $demand): RedirectResponse|JsonResponse
     {
         $this->authorize('manage', $demand);
         abort_unless(in_array($demand->status, [DemandStatus::Delivery, DemandStatus::Completed], true), 409, 'A evidência só pode ser registrada na etapa Entrega ou depois da conclusão.');
@@ -25,7 +26,7 @@ class DemandDeliveryEvidenceController extends Controller
             'occurred_at' => ['nullable', 'date'],
         ]);
 
-        DB::transaction(function () use ($request, $demand, $data): void {
+        $evidence = DB::transaction(function () use ($request, $demand, $data): DemandDeliveryEvidence {
             $evidence = DemandDeliveryEvidence::create([
                 'organization_id' => $demand->organization_id,
                 'demand_id' => $demand->id,
@@ -46,7 +47,24 @@ class DemandDeliveryEvidenceController extends Controller
                 'event_type' => 'delivery_evidence_recorded',
                 'summary' => $request->user()->name.' registrou evidência de '.$label.'.',
             ]);
+
+            return $evidence;
         });
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Evidência registrada no histórico da demanda.',
+                'data' => [
+                    'id' => $evidence->id,
+                    'demand_id' => $evidence->demand_id,
+                    'outcome' => $evidence->outcome,
+                    'evidence_url' => $evidence->evidence_url,
+                    'details' => $evidence->details,
+                    'occurred_at' => $evidence->occurred_at?->toISOString(),
+                    'recorded_by' => $request->user()->id,
+                ],
+            ], 201);
+        }
 
         return back()->with('success', 'Evidência registrada no histórico da demanda.');
     }
