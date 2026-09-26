@@ -35,6 +35,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active', 'api.token'])->group(
     Route::get('/demands', [DemandController::class, 'index']);
     Route::get('/demands/{demand}', [DemandController::class, 'show']);
     Route::get('/team/activity', [TeamActivityController::class, 'index']);
+    Route::get('/team/members', [ApiTeamMemberController::class, 'index']);
+    Route::get('/team/invitations', [ApiTeamMemberController::class, 'invitations']);
     Route::get('/knowledge', [KnowledgeController::class, 'index']);
     Route::post('/knowledge', [KnowledgeController::class, 'store']);
     Route::put('/knowledge/{item}', [KnowledgeController::class, 'update']);
