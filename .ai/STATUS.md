@@ -353,3 +353,9 @@ Continuação do projeto: escolher a próxima fatia baseada em requisitos explí
 Histórico operacional anterior preservado em [docs/VALIDACOES-HISTORICAS.md](../docs/VALIDACOES-HISTORICAS.md); este arquivo é a fonte vigente de status.
 
 - Sincronização deste atalho: commit c892ca6d7d8f2ea4f3fb1a625e8305b56c424564 está na branch remota e no PR #11. O conector Trello atual não oferece criação de comentário nem edição de descrição; o cartão #30 foi lido, mas não alterado. CI para o commit está pendente nesta consulta.
+## Conhecimento e onboarding pela API — 2026-09-26
+- Acrescentei leitura autenticada da biblioteca com filtros por tipo e busca, limitada à organização e a conteúdo ativo; direção, gerência e profissionais têm acesso interno, clientes não.
+- Profissionais consultam somente suas atribuições de onboarding e podem alternar conclusão das próprias etapas. Testes verificam isolamento organizacional, ocultação de trilhas de colegas e bloqueio para gestão no endpoint de autoatendimento.
+- Validação: `php artisan test` passou (145 testes, 1.188 assertions); `vendor/bin/pint --test` nos três arquivos PHP passou; `composer validate --no-check-publish`, `npm run build`, `route:list --path=api/v1` (25 rotas) e `git diff --check` passaram. Não houve mudança visual.
+- Atualizei `docs/API.md`, `docs/ARQUITETURA-HOSTINGER-LARAVEL.md`, `docs/ROADMAP.md` e `.ai/CONTEXT.md`. Nenhuma tela foi alterada; validação visual não se aplica.
+- Commit e CI do GitHub ainda pendentes. Sincronização com Trello segue pendente da confirmação pontual solicitada anteriormente para registrar comentário no cartão.

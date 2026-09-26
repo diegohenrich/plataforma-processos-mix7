@@ -77,7 +77,7 @@ Nenhum deploy foi feito e não foram acessados painel, domínio, banco ou creden
 
 ## Contrato futuro do executável Windows
 
-O desktop será um cliente da API HTTPS do mesmo sistema. Endpoints serão versionados (`/api/v1`); autenticação de cliente desktop usará tokens pessoais com escopo mínimo, expiração e revogação. O desktop não terá acesso direto ao MariaDB, não guardará senha de banco e não duplicará regras de negócio. Hoje há leitura autenticada de identidade/demandas e escrita para criar demandas/tarefas, mudar etapa/estado, controlar cronômetro, planejar tarefas, transferir responsáveis e registrar evidência de entrega/agendamento/publicação. Aprovações, anexos e outros módulos ainda são trabalho futuro; ver o contrato em [`docs/API.md`](API.md).
+O desktop será um cliente da API HTTPS do mesmo sistema. Endpoints serão versionados (`/api/v1`); autenticação de cliente desktop usará tokens pessoais com escopo mínimo, expiração e revogação. O desktop não terá acesso direto ao MariaDB, não guardará senha de banco e não duplicará regras de negócio. Hoje há leitura autenticada de identidade/demandas, atividade da equipe, biblioteca e onboarding; profissionais consultam apenas suas próprias trilhas e marcam etapas. A escrita inclui criar demandas/tarefas, mudar etapa/estado, controlar cronômetro, planejar tarefas, transferir responsáveis e registrar evidência de entrega/agendamento/publicação. A administração da biblioteca e de acessos pela API ainda é trabalho futuro; ver o contrato em [`docs/API.md`](API.md).
 
 ## Não pronto para uso com dados reais
 

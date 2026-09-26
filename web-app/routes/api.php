@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\DemandController;
+use App\Http\Controllers\Api\V1\KnowledgeController;
 use App\Http\Controllers\DemandController as WebDemandController;
 use App\Http\Controllers\DemandDeliveryEvidenceController;
 use App\Http\Controllers\DemandReviewController;
@@ -33,6 +34,9 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active'])->group(function (): 
     Route::get('/demands', [DemandController::class, 'index']);
     Route::get('/demands/{demand}', [DemandController::class, 'show']);
     Route::get('/team/activity', [TeamActivityController::class, 'index']);
+    Route::get('/knowledge', [KnowledgeController::class, 'index']);
+    Route::get('/onboarding/assignments', [KnowledgeController::class, 'assignments']);
+    Route::patch('/onboarding/assignments/{assignment}/steps/{step}', [KnowledgeController::class, 'toggleStep']);
     Route::post('/demands', [WebDemandController::class, 'store']);
     Route::patch('/demands/{demand}/status', [WebDemandController::class, 'updateStatus']);
     Route::post('/demands/{demand}/tasks', [DemandTaskController::class, 'store']);
