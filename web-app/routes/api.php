@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\DemandController;
 use App\Http\Controllers\Api\V1\KnowledgeController;
+use App\Http\Controllers\Api\V1\TeamMemberController as ApiTeamMemberController;
 use App\Http\Controllers\DemandController as WebDemandController;
 use App\Http\Controllers\DemandDeliveryEvidenceController;
 use App\Http\Controllers\DemandReviewController;
@@ -50,6 +51,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active', 'api.token'])->group(
     Route::delete('/demands/{demand}/review-links/{reviewLink}', [DemandReviewController::class, 'revoke']);
     Route::post('/team/invitations', [TeamInvitationController::class, 'store'])->middleware('throttle:10,1');
     Route::delete('/team/invitations/{invitation}', [TeamInvitationController::class, 'revoke']);
+    Route::patch('/team/members/{member}/access', [ApiTeamMemberController::class, 'toggleAccess']);
     Route::post('/team/performance-reviews', [PerformanceReviewController::class, 'store'])->middleware('throttle:10,1');
     Route::post('/team/performance-reviews/{review}/responses', [PerformanceReviewController::class, 'respond'])->middleware('throttle:10,1');
     Route::patch('/tasks/{task}/status', [DemandTaskController::class, 'updateStatus']);
