@@ -43,4 +43,9 @@ class Demand extends Model
     {
         return $this->hasMany(DemandReviewLink::class)->orderByDesc('version');
     }
+
+    public function aiPlanningRuns(): HasMany
+    {
+        return $this->hasMany(AiPlanningRun::class)->latest();
+    }
 }

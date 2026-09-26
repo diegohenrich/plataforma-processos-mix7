@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AiPlanningController;
 use App\Http\Controllers\Auth\SessionController;
 use App\Http\Controllers\DemandController;
 use App\Http\Controllers\DemandReviewController;
@@ -20,6 +21,9 @@ Route::middleware(['auth', 'active'])->group(function (): void {
     Route::get('/painel', fn () => view('dashboard'))->name('dashboard');
     Route::resource('demandas', DemandController::class)->only(['index', 'create', 'store', 'show'])->names('demands')->parameters(['demandas' => 'demand']);
     Route::patch('/demandas/{demand}/etapa', [DemandController::class, 'updateStatus'])->name('demands.status');
+    Route::post('/demandas/{demand}/planejamento-ia', [AiPlanningController::class, 'propose'])->middleware('throttle:3,1')->name('ai-planning.propose');
+    Route::post('/demandas/{demand}/planejamento-ia/{run}/aprovar', [AiPlanningController::class, 'approve'])->name('ai-planning.approve');
+    Route::delete('/demandas/{demand}/planejamento-ia/{run}', [AiPlanningController::class, 'discard'])->name('ai-planning.discard');
     Route::post('/demandas/{demand}/links-revisao', [DemandReviewController::class, 'store'])->name('demand-reviews.store');
     Route::delete('/demandas/{demand}/links-revisao/{reviewLink}', [DemandReviewController::class, 'revoke'])->name('demand-reviews.revoke');
     Route::get('/demandas/{demand}/links-revisao/{reviewLink}/material', [DemandReviewController::class, 'teamMaterial'])->name('demand-reviews.team-material');

@@ -48,10 +48,45 @@
             <div class="detail-grid">
                 <div class="detail-main">
                     <section class="panel"><div class="section-heading"><div><h2>Briefing</h2><p>O pedido original fica guardado na demanda.</p></div></div><div class="brief-text">{{ $demand->brief }}</div></section>
+                    @if ($canManage)
+                        <section class="panel ai-planning-panel">
+                            <div class="section-heading"><div><h2>Planejamento com IA</h2><p>A IA prepara uma proposta. Nenhuma tarefa é criada sem sua revisão e aprovação.</p></div></div>
+                            @if ($demand->status === App\Enums\DemandStatus::Planning)
+                                @if (config('services.ai_gateway.key') && config('services.ai_gateway.model'))
+                                    <form method="post" action="{{ route('ai-planning.propose', $demand) }}">@csrf<button class="secondary-button" type="submit">Gerar proposta a partir do briefing</button><span class="field-help">O título, briefing e nomes das tarefas existentes serão enviados ao provedor de IA configurado.</span></form>
+                                @else
+                                    <div class="notice notice-info">Agente opcional indisponível: configure AI_GATEWAY_API_KEY e AI_PLANNING_MODEL no ambiente para habilitar propostas.</div>
+                                @endif
+                            @else
+                                <p class="empty-inline">Disponível quando a demanda estiver na etapa Planejamento.</p>
+                            @endif
+                            @error('ai')<div class="notice notice-error">{{ $message }}</div>@enderror
+                            @foreach ($aiPlanningRuns as $run)
+                                <article class="ai-proposal">
+                                    <div class="ai-proposal-meta"><strong>Proposta de {{ $run->requester->name }}</strong><span>{{ $run->created_at->format('d/m/Y H:i') }} · {{ $run->model }}</span><span>Estado: {{ match ($run->status) {'pending' => 'Aguardando revisão', 'approved' => 'Aplicada', 'discarded' => 'Descartada', default => $run->status} }}</span></div>
+                                    <p>{{ $run->proposal['summary'] ?? '' }}</p>
+                                    @if ($run->status === 'pending' && $demand->status === App\Enums\DemandStatus::Planning)
+                                        <form method="post" action="{{ route('ai-planning.approve', [$demand, $run]) }}" class="ai-review-form">@csrf
+                                            @foreach (($run->proposal['questions'] ?? []) as $questionIndex => $question)<label class="field">Pergunta para completar o briefing<input name="questions[{{ $questionIndex }}]" value="{{ $question }}" maxlength="500" required></label>@endforeach
+                                            @foreach (($run->proposal['tasks'] ?? []) as $index => $suggestedTask)
+                                                <div class="ai-task-row"><label class="field">Aplicar esta tarefa?<select name="tasks[{{ $index }}][include]" data-ai-include><option value="1" selected>Sim, incluir</option><option value="0">Não, remover</option></select></label><fieldset class="ai-task-fields"><label class="field">Tarefa sugerida<input name="tasks[{{ $index }}][title]" value="{{ $suggestedTask['title'] }}" maxlength="180" required></label><label class="field">Perfil sugerido<input name="tasks[{{ $index }}][responsibility_profile]" value="{{ $suggestedTask['responsibility_profile'] }}" maxlength="120" required></label><label class="field">Estimativa (minutos)<input type="number" name="tasks[{{ $index }}][estimate_minutes]" value="{{ $suggestedTask['estimate_minutes'] }}" min="1" max="100000" required></label><label class="field">Responsável<select name="tasks[{{ $index }}][assignee_id]" required><option value="">Escolha uma pessoa</option>@foreach ($professionals as $professional)<option value="{{ $professional->id }}">{{ $professional->name }}</option>@endforeach</select></label><p>{{ $suggestedTask['rationale'] }}@if ($suggestedTask['depends_on'])<br><strong>Depende de:</strong> @foreach ($suggestedTask['depends_on'] as $dependencyIndex){{ $run->proposal['tasks'][$dependencyIndex]['title'] ?? 'Tarefa anterior' }}@if (!$loop->last), @endif @endforeach @else<br>Sem dependências anteriores.@endif</p></fieldset></div>
+                                            @endforeach
+                                            <p class="field-help">Ao remover uma tarefa, as tarefas seguintes deixam de depender dela.</p>
+                                            @if ($professionals->isEmpty())<p class="empty-inline">Cadastre profissionais antes de aplicar a proposta.</p>@else<div class="form-actions"><button class="primary-button" type="submit">Revisar e criar tarefas selecionadas</button></div>@endif
+                                        </form>
+                                        <form method="post" action="{{ route('ai-planning.discard', [$demand, $run]) }}" class="ai-discard-form">@csrf @method('DELETE')<button class="secondary-button" type="submit">Descartar proposta inteira</button></form>
+                                    @elseif ($run->reviewer)
+                                        <p class="field-help">Revisada por {{ $run->reviewer->name }} em {{ $run->reviewed_at?->format('d/m/Y H:i') }}. {{ collect($run->reviewed_tasks['tasks'] ?? [])->filter(fn ($task) => ($task['include'] ?? true) === true)->count() }} tarefa(s) aplicada(s).</p>
+                                        @if (!empty($run->reviewed_tasks['questions']))<div class="ai-follow-up"><strong>Perguntas registradas para completar o briefing</strong><ul>@foreach ($run->reviewed_tasks['questions'] as $question)<li>{{ $question }}</li>@endforeach</ul></div>@endif
+                                    @endif
+                                </article>
+                            @endforeach
+                        </section>
+                    @endif
                     <section class="panel"><div class="section-heading"><div><h2>Tarefas <span class="count-badge">{{ $tasks->count() }}</span></h2><p>Quem faz cada parte e em que ponto está.</p></div></div>
                         @forelse ($tasks as $task)
                             @php($workedSeconds = $task->timeEntries->sum(fn ($entry) => ($entry->ended_at ?? now())->getTimestamp() - $entry->started_at->getTimestamp()))
-                            <article class="task-card"><div class="task-card-content"><div class="task-card-heading"><h3>{{ $task->title }}</h3><span class="pill pill-task pill-{{ $task->status->value }}">{{ $task->status->label() }}</span></div><p>Atribuída a <strong>{{ $task->assignee->name }}</strong> · Criada por {{ $task->creator->name }}@if ($task->estimate_minutes) · {{ $task->estimate_minutes }} min estimados @endif @can('trackTime', $task)· <span data-total-seconds="{{ $workedSeconds }}">{{ gmdate('H:i:s', $workedSeconds) }} registrados</span>@endcan</p>
+                            <article class="task-card"><div class="task-card-content"><div class="task-card-heading"><h3>{{ $task->title }}</h3><span class="pill pill-task pill-{{ $task->status->value }}">{{ $task->status->label() }}</span></div>@if ($task->description)<p>{{ $task->description }}</p>@endif<p>Atribuída a <strong>{{ $task->assignee->name }}</strong> · Criada por {{ $task->creator->name }}@if ($task->estimate_minutes) · {{ $task->estimate_minutes }} min estimados @endif @can('trackTime', $task)· <span data-total-seconds="{{ $workedSeconds }}">{{ gmdate('H:i:s', $workedSeconds) }} registrados</span>@endcan</p>@if ($task->dependencies->isNotEmpty())<p class="task-dependency"><strong>Começa depois de:</strong> @foreach ($task->dependencies as $dependency){{ $dependency->title }} ({{ $dependency->status->label() }})@if (!$loop->last), @endif @endforeach</p>@endif
                                     @can('trackTime', $task)<div class="timer-actions">@if ($activeTimeTaskId === $task->id)<form method="post" action="{{ route('demand-tasks.timer.pause', $task) }}">@csrf<button type="submit" class="secondary-button">Pausar cronômetro</button></form>@else<form method="post" action="{{ route('demand-tasks.timer.start', $task) }}">@csrf<button type="submit" class="secondary-button" {{ $activeTimeTaskId ? 'disabled' : '' }}>Iniciar cronômetro</button></form>@endif</div>@endcan</div>@can('updateStatus', $task)<form method="post" action="{{ route('demand-tasks.status', $task) }}" class="task-status-form">@csrf @method('PATCH')<label class="sr-only" for="task-status-{{ $task->id }}">Atualizar status de {{ $task->title }}</label><select id="task-status-{{ $task->id }}" name="status"><option value="{{ $task->status->value }}">{{ $task->status->label() }}</option>@foreach ($task->status->next() as $status)<option value="{{ $status->value }}">{{ $status->label() }}</option>@endforeach</select><button type="submit" class="icon-button" aria-label="Salvar status da tarefa">Salvar</button></form>@endcan</article>
                         @empty
                             <p class="empty-inline">Você ainda não tem tarefas atribuídas nesta demanda.</p>
@@ -67,4 +102,20 @@
         </div>
     </main>
 </div>
+<style>
+.ai-planning-panel{margin-bottom:18px}.ai-planning-panel form>.field-help{max-width:640px}.ai-proposal{margin-top:18px;padding:17px;background:#f7fbfc;border:1px solid #dcebed;border-radius:13px}.ai-proposal-meta{display:flex;flex-wrap:wrap;gap:8px 14px;color:#718087;font-size:11px}.ai-proposal-meta strong{color:#204b61}.ai-proposal>p{color:#52666e;font-size:13px;line-height:1.6}.ai-task-row{display:grid;grid-template-columns:minmax(150px,.35fr) minmax(0,1fr);gap:16px;padding:14px 0;border-top:1px solid #e6eeee}.ai-task-row>.field,.ai-task-fields .field{margin:0 0 12px}.ai-task-fields{min-width:0;margin:0;padding:0;border:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 12px}.ai-task-fields>p{grid-column:1/-1;margin:4px 0;color:#718087;font-size:11px;line-height:1.6}.ai-discard-form{margin-top:10px}.ai-follow-up{margin-top:10px;padding:12px 14px;border-radius:11px;background:#f4f8f8;color:#52666e;font-size:11px}.ai-follow-up ul{margin:7px 0 0;padding-left:18px}.task-dependency{color:#718087;font-size:11px;margin:7px 0 0}.task-dependency strong{color:#52666e}@media(max-width:700px){.ai-task-row,.ai-task-fields{grid-template-columns:1fr}.ai-task-fields>p{grid-column:auto}.ai-task-row{gap:5px}.ai-proposal{padding:13px}}
+</style>
+@if ($canManage)
+<script>
+document.querySelectorAll('[data-ai-include]').forEach((select) => {
+    const row = select.closest('.ai-task-row');
+    const fields = row.querySelector('.ai-task-fields');
+    const sync = () => {
+        fields.disabled = select.value !== '1';
+    };
+    select.addEventListener('change', sync);
+    sync();
+});
+</script>
+@endif
 @endsection

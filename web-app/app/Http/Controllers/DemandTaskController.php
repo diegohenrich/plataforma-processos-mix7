@@ -38,6 +38,10 @@ class DemandTaskController extends Controller
                 return 'Uma tarefa concluída não pode iniciar o cronômetro.';
             }
 
+            if ($task->dependencies()->where('status', '!=', TaskStatus::Completed->value)->exists()) {
+                return 'Conclua as tarefas anteriores antes de iniciar esta tarefa.';
+            }
+
             $now = CarbonImmutable::now();
             TaskTimeEntry::create([
                 'organization_id' => $task->organization_id,
@@ -168,6 +172,10 @@ class DemandTaskController extends Controller
 
         if (! in_array($to, $from->next(), true)) {
             return back()->withErrors(['status' => 'Essa mudança de status não é permitida.']);
+        }
+
+        if ($to === TaskStatus::InProgress && $task->dependencies()->where('status', '!=', TaskStatus::Completed->value)->exists()) {
+            return back()->withErrors(['status' => 'Conclua as tarefas anteriores antes de iniciar esta tarefa.']);
         }
 
         DB::transaction(function () use ($task, $from, $to, $request): void {

@@ -6,6 +6,7 @@ use App\Enums\TaskStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class DemandTask extends Model
@@ -37,5 +38,15 @@ class DemandTask extends Model
     public function timeEntries(): HasMany
     {
         return $this->hasMany(TaskTimeEntry::class, 'task_id');
+    }
+
+    public function dependencies(): BelongsToMany
+    {
+        return $this->belongsToMany(self::class, 'demand_task_dependencies', 'task_id', 'depends_on_task_id');
+    }
+
+    public function dependents(): BelongsToMany
+    {
+        return $this->belongsToMany(self::class, 'demand_task_dependencies', 'depends_on_task_id', 'task_id');
     }
 }
