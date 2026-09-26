@@ -89,8 +89,41 @@
                                     @endforeach
                                 </div>
                             @endif
-                        </section>
+                </section>
+            @endif
+            @if (in_array($demand->status, [App\Enums\DemandStatus::Delivery, App\Enums\DemandStatus::Completed], true))
+                <section class="panel delivery-evidence-panel">
+                    <div class="section-heading"><div><h2>Registro de entrega, agendamento ou publicação</h2><p>Registre o que aconteceu depois da aprovação e guarde uma referência. Este registro não publica por você nem altera a etapa.</p></div></div>
+                    @if ($canManage)
+                        <form method="post" action="{{ route('demands.delivery-evidence.store', $demand) }}" class="delivery-evidence-form">@csrf
+                        <label class="field" for="delivery-outcome">O que aconteceu?</label>
+                        <select id="delivery-outcome" name="outcome" required>
+                            <option value="">Escolha uma opção</option>
+                            <option value="delivered" @selected(old('outcome') === 'delivered')>Entregue ao cliente</option>
+                            <option value="scheduled" @selected(old('outcome') === 'scheduled')>Agendado</option>
+                            <option value="published" @selected(old('outcome') === 'published')>Publicado</option>
+                        </select>
+                        <label class="field" for="delivery-evidence-url">Link de referência (opcional se preencher a observação)<input id="delivery-evidence-url" type="url" name="evidence_url" maxlength="2048" value="{{ old('evidence_url') }}" placeholder="https://..."></label>
+                        <label class="field" for="delivery-evidence-details">Observação (opcional se preencher o link)<textarea id="delivery-evidence-details" name="details" rows="3" maxlength="3000">{{ old('details') }}</textarea></label>
+                        <label class="field" for="delivery-occurred-at">Quando ocorreu (opcional)<input id="delivery-occurred-at" type="datetime-local" name="occurred_at" value="{{ old('occurred_at') }}"></label>
+                            <button class="primary-button" type="submit">Registrar evidência</button>
+                        </form>
+                        @foreach (['outcome', 'evidence_url', 'details', 'occurred_at'] as $field)
+                            @error($field)<span class="error">{{ $message }}</span>@enderror
+                        @endforeach
                     @endif
+                    @if ($deliveryEvidences->isNotEmpty())
+                        <h3 class="review-history-title">Histórico de entregas</h3>
+                        <ul class="review-link-list">
+                            @foreach ($deliveryEvidences as $evidence)
+                                <li><div><strong>{{ match ($evidence->outcome) {'scheduled' => 'Agendado', 'published' => 'Publicado', default => 'Entregue ao cliente'} }}</strong><span>Registrado por {{ $evidence->recorder->name }} em {{ $evidence->created_at->format('d/m/Y H:i') }}@if ($evidence->occurred_at) · Ocorrido em {{ $evidence->occurred_at->format('d/m/Y H:i') }}@endif</span>@if ($evidence->evidence_url)<a href="{{ $evidence->evidence_url }}" target="_blank" rel="noopener noreferrer">Abrir referência</a>@endif @if ($evidence->details)<p>{{ $evidence->details }}</p>@endif</div></li>
+                            @endforeach
+                        </ul>
+                    @else
+                        <p class="empty-inline">Ainda não há registro de entrega, agendamento ou publicação.</p>
+                    @endif
+                </section>
+            @endif
                     @if ($canManage)
                         <section class="panel ai-planning-panel">
                             <div class="section-heading"><div><h2>Planejamento com IA</h2><p>A IA prepara uma proposta. Nenhuma tarefa é criada sem sua revisão e aprovação.</p></div></div>

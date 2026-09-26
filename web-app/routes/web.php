@@ -6,6 +6,7 @@ use App\Http\Controllers\ApprovalsController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\SessionController;
 use App\Http\Controllers\DemandController;
+use App\Http\Controllers\DemandDeliveryEvidenceController;
 use App\Http\Controllers\DemandReviewController;
 use App\Http\Controllers\DemandTaskController;
 use App\Http\Controllers\KnowledgeController;
@@ -34,6 +35,7 @@ Route::middleware(['auth', 'active'])->group(function (): void {
     Route::get('/painel', fn () => view('dashboard'))->name('dashboard');
     Route::resource('demandas', DemandController::class)->only(['index', 'create', 'store', 'show'])->names('demands')->parameters(['demandas' => 'demand']);
     Route::patch('/demandas/{demand}/etapa', [DemandController::class, 'updateStatus'])->name('demands.status');
+    Route::post('/demandas/{demand}/evidencias-entrega', [DemandDeliveryEvidenceController::class, 'store'])->name('demands.delivery-evidence.store');
     Route::patch('/demandas/{demand}/cliente', [DemandController::class, 'assignClient'])->name('demands.client.assign');
     Route::get('/tarefas/quadro', [DemandTaskController::class, 'board'])->name('demand-tasks.board');
     Route::get('/aprovacoes', [ApprovalsController::class, 'index'])->name('approvals.index');

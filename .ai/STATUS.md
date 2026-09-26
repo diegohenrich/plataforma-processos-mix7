@@ -1,3 +1,9 @@
+## Registro manual de evidência após aprovação — 2026-09-26
+- Direção/gerência podem registrar entregue, agendado ou publicado quando a demanda está em Entrega ou Concluída, com data opcional e URL HTTP/HTTPS ou observação. A autoria fica vinculada à conta e cada registro cria evento auditável. Profissionais com acesso à demanda podem consultar; clientes não veem notas internas. Registrar não altera etapa nem chama plataforma externa.
+- Validação: suíte Laravel completa passou 112 testes/885 assertions; Pint focalizado, build Vite, Composer validate e git diff --check passaram. Testes verificam URL e observação, exigência de referência ou nota, permissões por papel/organização, etapa, ausência de mudança de estado e visibilidade para equipe versus cliente.
+- Inspeção visual renderizada da tela ainda pendente devido ao bloqueio anterior no navegador local. GitHub/Trello desta tarefa serão sincronizados depois do commit; cartão #39 continua aguardando confirmação específica para publicar comentário.
+- Integrações de publicação/agendamento e a exigência de evidência para concluir continuam pendentes de definição operacional da Mix7.
+
 ## Especialista de aprovação com IA na demanda — 2026-09-26
 - O assistente da demanda agora oferece uma opção que organiza até 20 respostas de revisão em ordem cronológica, distinguindo versão, data, tipo e âncora. Ferramentas disponíveis ao especialista: leitura do contexto daquela demanda e feedback dos links dela; sem pesquisa geral, dados de equipe, edição ou decisão de aprovação.
 - Validação: suíte Laravel completa passou 108 testes/856 assertions; Pint focalizado, build Vite, Composer validate e git diff --check passaram. Teste focal confirmou a seleção enfileirada, ferramentas restritas e resposta baseada no feedback. Nenhuma chamada real ao provedor foi feita.

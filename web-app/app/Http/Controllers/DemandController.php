@@ -194,6 +194,7 @@ class DemandController extends Controller
             'nextStatuses' => $demand->status->next(),
             'activeTimeTaskId' => $user->activeTimeEntry()->value('task_id'),
             'reviewLinks' => $request->user()->can('manage', $demand) ? $demand->reviewLinks()->with('responses')->get() : collect(),
+            'deliveryEvidences' => $demand->deliveryEvidences()->with('recorder:id,name')->get(),
             'aiPlanningRuns' => $request->user()->can('manage', $demand) ? $demand->aiPlanningRuns()->with(['requester:id,name', 'reviewer:id,name'])->take(5)->get() : collect(),
             'aiAgentRuns' => $demand->aiAgentRuns()
                 ->with('requester:id,name')
