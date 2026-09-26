@@ -48,6 +48,106 @@ class DemandWorkflowTest extends TestCase
         $this->assertDatabaseHas('demand_events', ['demand_id' => $demand->id, 'actor_id' => $manager->id, 'event_type' => 'task_assigned']);
     }
 
+    public function test_manager_sees_all_demand_stages_in_kanban_and_can_switch_to_paginated_list(): void
+    {
+        [$organization, $manager, $professional] = $this->team();
+        $demand = $this->demand($organization, $manager);
+        $this->task($demand, $professional, $manager, 'Produzir a página');
+
+        $this->actingAs($manager)->get(route('demands.index'))
+            ->assertOk()
+            ->assertSee('Quadro')
+            ->assertSee('Lista')
+            ->assertSee('Quadro de demandas por etapa')
+            ->assertSee('Demanda recebida')
+            ->assertSee('Aprovação do cliente')
+            ->assertSee('1 tarefa')
+            ->assertSee('kanban-move', false)
+            ->assertSee('Mover para');
+
+        $this->get(route('demands.index', ['view' => 'list']))
+            ->assertOk()
+            ->assertSee('Lista de demandas')
+            ->assertSee('Site institucional')
+            ->assertDontSee('Quadro de demandas por etapa');
+    }
+
+    public function test_task_board_shows_shared_work_by_status_and_manager_can_move_tasks(): void
+    {
+        [$organization, $manager, $professional] = $this->team();
+        $demand = $this->demand($organization, $manager);
+        $task = $this->task($demand, $professional, $manager, 'Criar página inicial');
+
+        $this->actingAs($manager)->get(route('demand-tasks.board'))
+            ->assertOk()
+            ->assertSee('Quadro de tarefas')
+            ->assertSee('Criar página inicial')
+            ->assertSee($demand->title)
+            ->assertSee('A fazer')
+            ->assertSee('Mover para')
+            ->assertSee('data-task-column', false);
+
+        $this->patch(route('demand-tasks.status', $task), ['status' => TaskStatus::InProgress->value])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+        $this->assertSame(TaskStatus::InProgress, $task->fresh()->status);
+        $this->assertDatabaseHas('demand_events', [
+            'task_id' => $task->id,
+            'actor_id' => $manager->id,
+            'event_type' => 'task_status_changed',
+            'to_status' => TaskStatus::InProgress->value,
+        ]);
+    }
+
+    public function test_professional_task_board_contains_only_assigned_tasks_and_can_update_own_work(): void
+    {
+        [$organization, $manager, $professional, $colleague] = $this->team();
+        $demand = $this->demand($organization, $manager);
+        $ownTask = $this->task($demand, $professional, $manager, 'Minha entrega');
+        $this->task($demand, $colleague, $manager, 'Entrega da colega');
+
+        $this->actingAs($professional)->get(route('demand-tasks.board'))
+            ->assertOk()
+            ->assertSee('Minha entrega')
+            ->assertDontSee('Entrega da colega')
+            ->assertSee('Mover para');
+
+        $this->patch(route('demand-tasks.status', $ownTask), ['status' => TaskStatus::InProgress->value])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+    }
+
+    public function test_client_cannot_open_internal_task_board(): void
+    {
+        [$organization, $manager] = $this->team();
+        $client = User::factory()->create([
+            'organization_id' => $organization->id,
+            'role' => UserRole::Client,
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($client)->get(route('demand-tasks.board'))->assertForbidden();
+    }
+
+    public function test_professional_kanban_only_shows_assigned_or_created_demands_and_has_no_stage_controls(): void
+    {
+        [$organization, $manager, $professional, $colleague] = $this->team();
+        $visible = $this->demand($organization, $manager);
+        $visible->update(['title' => 'Demanda da minha tarefa']);
+        $this->task($visible, $professional, $manager, 'Minha tarefa');
+        $hidden = $this->demand($organization, $manager);
+        $hidden->update(['title' => 'Demanda da colega']);
+        $this->task($hidden, $colleague, $manager, 'Tarefa da colega');
+
+        $this->actingAs($professional)->get(route('demands.index'))
+            ->assertOk()
+            ->assertSee('Quadro de demandas por etapa')
+            ->assertSee('Demanda da minha tarefa')
+            ->assertDontSee('Demanda da colega')
+            ->assertDontSee('data-kanban-move', false)
+            ->assertSee('draggable="false"', false);
+    }
+
     public function test_task_cannot_be_assigned_to_a_user_from_another_organization(): void
     {
         [$organization, $manager] = $this->team();
@@ -254,7 +354,7 @@ class DemandWorkflowTest extends TestCase
         $ownTask = $this->task($demand, $professional, $manager, 'Fazer wireframe');
         $this->task($demand, $colleague, $manager, 'Revisar conteúdo');
 
-        $this->actingAs($professional)->get(route('demands.index'))
+        $this->actingAs($professional)->get(route('demands.index', ['view' => 'list']))
             ->assertOk()
             ->assertSee('<strong>1</strong>', false)
             ->assertSee('0 concluídas');

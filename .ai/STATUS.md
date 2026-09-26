@@ -1,5 +1,11 @@
 # Estado atual — Plataforma Mix7 — 2026-09-26
 
+## Quadros compartilhados de demandas e tarefas — 2026-09-26
+- Laravel agora abre demandas em Kanban por etapa, preserva alternância para lista paginada e oferece um quadro independente de tarefas por estado. Direção/gerência podem mover demandas entre etapas permitidas; revisão interna não libera com tarefas abertas. Profissional vê somente demandas relacionadas ao seu trabalho em leitura e só suas tarefas no quadro de tarefas. Movimentação continua protegida pela autorização, transições, dependências e encerramento de timer existentes.
+- Validação: `php artisan test --compact` passou 87 testes/708 assertions usando SQLite em memória; Pint focalizado, `npm run build`, `composer validate --no-check-publish` e `git diff --check` passaram. O teste novo cobre quadros, troca para lista, perfis, tarefa movida e evento de auditoria.
+- Pendente antes da conclusão desta fatia: abrir e inspecionar visualmente os quadros em navegador QA autenticado por desktop/celular, sincronizar commit e confirmação do SHA remoto, CI e atualização do Trello #18. Se a inspeção visual não funcionar nesta sessão, registrar evidência e limitação; não declarar validação visual concluída.
+- Escopo ainda aberto do produto completo: consultar `docs/ROADMAP.md` e `docs/AUDITORIA-FUNCIONAL-POR-PERFIL.md`; Kanban é apenas uma entrega, e publicação compartilhada, regras da Mix7, disponibilidade, avaliação, governança de IA, operações e piloto seguem pendentes.
+
 ## Anotação de trecho em revisão por link — 2026-09-26
 - Para entregas de site por URL, a seleção de “Trecho de texto” agora explica ao cliente como abrir a página em outra guia, selecionar/copiar o conteúdo e colar a referência; o botão abre o endereço sem encaminhar referrer. A seleção automática ainda não existe porque a página externa não pode ser lida pela prévia isolada entre origens.
 - O teste focal (`tests/Feature/DemandReviewLinkTest.php`) passou: 15 testes/175 assertions. `npm run build` e `git diff --check` passaram. Inspeção renderizada em revisão fictícia confirmou texto e link visíveis no formulário expandido; layout não transbordou no viewport observado. Não abri a URL externa nem enviei anotações.

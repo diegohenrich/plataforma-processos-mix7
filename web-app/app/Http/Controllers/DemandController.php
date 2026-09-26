@@ -21,7 +21,8 @@ class DemandController extends Controller
     {
         $this->authorize('viewAny', Demand::class);
         $user = $request->user();
-        $demands = Demand::query()
+        $isBoard = $user->role !== UserRole::Client && $request->query('view') !== 'list';
+        $query = Demand::query()
             ->where('organization_id', $user->organization_id)
             ->when($user->role === UserRole::Professional, function (Builder $query) use ($user): void {
                 $query->where(function (Builder $visible) use ($user): void {
@@ -38,10 +39,21 @@ class DemandController extends Controller
                     ->when($user->role === UserRole::Professional, fn (Builder $query) => $query->where('assigned_to', $user->id))
                     ->when($user->role === UserRole::Client, fn (Builder $query) => $query->whereRaw('1 = 0')),
             ])
-            ->latest()
-            ->paginate(12);
+            ->latest();
 
-        return view('demands.index', compact('demands'));
+        $demands = $isBoard ? $query->get() : $query->paginate(12)->withQueryString();
+        $boardColumns = $isBoard
+            ? collect(DemandStatus::cases())->mapWithKeys(fn (DemandStatus $status) => [
+                $status->value => $demands->where('status', $status)->values(),
+            ])
+            : collect();
+
+        return view('demands.index', [
+            'demands' => $demands,
+            'isBoard' => $isBoard,
+            'boardColumns' => $boardColumns,
+            'canMoveDemands' => $user->can('create', Demand::class),
+        ]);
     }
 
     public function create(Request $request): View

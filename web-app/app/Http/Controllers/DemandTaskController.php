@@ -15,9 +15,31 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\View\View;
 
 class DemandTaskController extends Controller
 {
+    public function board(Request $request): View
+    {
+        $user = $request->user();
+        abort_unless(in_array($user->role, [UserRole::AgencyOwner, UserRole::MarketingManager, UserRole::Professional], true), 403);
+
+        $tasks = DemandTask::query()
+            ->where('organization_id', $user->organization_id)
+            ->when($user->role === UserRole::Professional, fn ($query) => $query->where('assigned_to', $user->id))
+            ->with(['demand:id,title,status', 'assignee:id,name,is_active', 'dependencies:id,title,status'])
+            ->latest()
+            ->get();
+        $boardColumns = collect(TaskStatus::cases())->mapWithKeys(fn (TaskStatus $status) => [
+            $status->value => $tasks->where('status', $status)->values(),
+        ]);
+
+        return view('demands.tasks-board', [
+            'boardColumns' => $boardColumns,
+            'currentUser' => $user,
+        ]);
+    }
+
     public function startTimer(Request $request, DemandTask $task): RedirectResponse
     {
         $this->authorize('trackTime', $task);
