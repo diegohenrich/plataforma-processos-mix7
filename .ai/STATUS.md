@@ -1,7 +1,7 @@
 ## Aprovação externa por link na API — 2026-09-26
 - A API pública oferece leitura da versão compartilhada e envio de comentário/anotação/aprovação/pedido de ajustes sem conta. Reutiliza o mesmo token temporário, revogável e de uso limitado do fluxo web; não devolve briefing nem tarefas internas. A decisão gera transição e evento existentes.
 - Validação local: 138 testes/1.107 assertions, Pint nos arquivos PHP afetados, `composer validate --no-check-publish`, `npm run build`, `route:list` (15 rotas) e `git diff --check` passaram. `DemandReviewLinkTest` cobre JSON sem login, isolamento de conteúdo, anotações, decisão única e token expirado/revogado. Sem interface nova; inspeção visual não se aplica.
-- Contrato API, arquitetura, roadmap e contexto foram atualizados. GitHub e CI ainda pendentes. Trello depende de confirmação pontual para registrar esta tarefa.
+- Contrato API, arquitetura, roadmap e contexto foram atualizados. Commit `373559146712c793e3e6fa31c0beae5acb85eb87` publicado na branch `codex/fundacao-compartilhada`, SHA local/remoto idêntico; os checks do push e da PR #11 passaram ([push](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36275850069), [PR](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36275854523)). Trello depende de confirmação pontual para registrar esta tarefa.
 
 ## Evidência de entrega pelo cliente de API — 2026-09-26
 - A API agora registra Entregue/Agendado/Publicado com URL ou observação, data opcional, conta autora e evento de histórico. A mesma autorização de direção/gerência e as mesmas etapas Entrega/Concluída do site são aplicadas; não publica conteúdo nem muda etapa.
