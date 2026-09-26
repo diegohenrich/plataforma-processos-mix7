@@ -49,6 +49,37 @@
                 <div class="detail-main">
                     <section class="panel"><div class="section-heading"><div><h2>Briefing</h2><p>O pedido original fica guardado na demanda.</p></div></div><div class="brief-text">{{ $demand->brief }}</div></section>
                     @if ($canManage)
+                        @php($assistantConfigured = (config('services.ai_gateway.key') || config('services.ai_gateway.oidc_token')) && config('services.ai_gateway.model'))
+                        <section class="panel ai-assistant-panel" aria-labelledby="ai-assistant-heading">
+                            <div class="section-heading"><div><h2 id="ai-assistant-heading">Assistente da demanda</h2><p>Faça perguntas sobre esta demanda e as referências internas que você pode consultar.</p></div><span class="assistant-badge">Somente leitura</span></div>
+                            <p class="assistant-privacy">Quando habilitado, sua pergunta e os trechos de contexto consultados serão enviados ao provedor de IA configurado. Não inclua senhas, dados pessoais desnecessários ou informações que a Mix7 não autorizou compartilhar. O assistente não cria tarefas nem altera etapas.</p>
+                            @if ($assistantConfigured)
+                                <form method="post" action="{{ route('ai-agent.ask', $demand) }}" class="assistant-form">@csrf
+                                    <label class="field" for="assistant-question">O que você precisa entender?</label>
+                                    <textarea id="assistant-question" name="question" rows="3" minlength="3" maxlength="3000" required placeholder="Ex.: Quais tarefas ainda faltam e quais referências se aplicam?">{{ old('question') }}</textarea>
+                                    <div class="assistant-form-footer"><span class="field-help">Até 3 consultas por minuto. A execução pode levar alguns segundos.</span><button class="primary-button" type="submit">Perguntar ao assistente</button></div>
+                                </form>
+                            @else
+                                <div class="notice notice-info">Assistente ainda não configurado. Nenhuma pergunta será enviada enquanto faltar modelo ou credencial do AI Gateway. Na Vercel, OIDC pode autenticar sem chave própria; fora dela, configure AI_GATEWAY_API_KEY e um modelo elegível. Créditos gratuitos e seus limites dependem da conta e do modelo, então este projeto não presume chamadas sem custo.</div>
+                            @endif
+                            @error('assistant')<div class="notice notice-error">{{ $message }}</div>@enderror
+                            @error('question')<div class="notice notice-error">{{ $message }}</div>@enderror
+                            @if ($aiAgentRuns->isNotEmpty())
+                                <h3 class="assistant-history-heading">Perguntas recentes</h3>
+                                <div class="assistant-history" data-assistant-poll>
+                                    @foreach ($aiAgentRuns as $run)
+                                        <article class="assistant-run" data-status-url="{{ in_array($run->status, ['queued', 'running'], true) ? route('ai-agent.status', [$demand, $run]) : '' }}">
+                                            <div class="assistant-run-meta"><strong>{{ $run->requester->name }}</strong><time datetime="{{ $run->created_at->toISOString() }}">{{ $run->created_at->format('d/m/Y H:i') }}</time><span class="assistant-state assistant-state-{{ $run->status }}" data-assistant-state>{{ match ($run->status) {'queued' => 'Na fila', 'running' => 'Consultando', 'completed' => 'Concluído', 'failed' => 'Falhou', default => $run->status} }}</span></div>
+                                            @if ($run->answer)<p class="assistant-answer">{{ $run->answer }}</p>@elseif ($run->status === 'failed')<p class="assistant-error">{{ $run->error_message ?: 'Não foi possível concluir a consulta.' }}</p>@else<p class="assistant-pending">O assistente está preparando a resposta…</p>@endif
+                                            @if ($run->tool_trace)<p class="assistant-sources"><strong>Consultas registradas:</strong> @foreach ($run->tool_trace as $receipt){{ match ($receipt['tool'] ?? '') {'read_demand_context' => 'demanda', 'search_knowledge' => 'conhecimento interno', 'list_client_feedback' => 'feedback do cliente', default => 'consulta recusada'} }}@if (!$loop->last), @endif @endforeach</p>@endif
+                                            @if ($run->input_tokens || $run->output_tokens || $run->provider_cost !== null)<p class="assistant-usage">Tokens: {{ $run->input_tokens ?? '—' }} entrada · {{ $run->output_tokens ?? '—' }} saída · Custo reportado pelo provedor: {{ $run->provider_cost !== null ? '$'.number_format((float) $run->provider_cost, 6, '.', ',').' USD' : 'não informado' }}</p>@elseif ($run->status === 'completed')<p class="assistant-usage">O provedor não informou o custo desta execução.</p>@endif
+                                        </article>
+                                    @endforeach
+                                </div>
+                            @endif
+                        </section>
+                    @endif
+                    @if ($canManage)
                         <section class="panel ai-planning-panel">
                             <div class="section-heading"><div><h2>Planejamento com IA</h2><p>A IA prepara uma proposta. Nenhuma tarefa é criada sem sua revisão e aprovação.</p></div></div>
                             @if ($demand->status === App\Enums\DemandStatus::Planning)
@@ -104,6 +135,7 @@
 </div>
 <style>
 .ai-planning-panel{margin-bottom:18px}.ai-planning-panel form>.field-help{max-width:640px}.ai-proposal{margin-top:18px;padding:17px;background:#f7fbfc;border:1px solid #dcebed;border-radius:13px}.ai-proposal-meta{display:flex;flex-wrap:wrap;gap:8px 14px;color:#718087;font-size:11px}.ai-proposal-meta strong{color:#204b61}.ai-proposal>p{color:#52666e;font-size:13px;line-height:1.6}.ai-task-row{display:grid;grid-template-columns:minmax(150px,.35fr) minmax(0,1fr);gap:16px;padding:14px 0;border-top:1px solid #e6eeee}.ai-task-row>.field,.ai-task-fields .field{margin:0 0 12px}.ai-task-fields{min-width:0;margin:0;padding:0;border:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 12px}.ai-task-fields>p{grid-column:1/-1;margin:4px 0;color:#718087;font-size:11px;line-height:1.6}.ai-discard-form{margin-top:10px}.ai-follow-up{margin-top:10px;padding:12px 14px;border-radius:11px;background:#f4f8f8;color:#52666e;font-size:11px}.ai-follow-up ul{margin:7px 0 0;padding-left:18px}.task-dependency{color:#718087;font-size:11px;margin:7px 0 0}.task-dependency strong{color:#52666e}@media(max-width:700px){.ai-task-row,.ai-task-fields{grid-template-columns:1fr}.ai-task-fields>p{grid-column:auto}.ai-task-row{gap:5px}.ai-proposal{padding:13px}}
+.ai-assistant-panel{margin-bottom:18px}.assistant-badge{white-space:nowrap;border-radius:999px;background:#e8f5fa;color:#204b61;padding:7px 10px;font-size:10px;font-weight:700}.assistant-privacy,.assistant-usage,.assistant-sources{color:#718087;font-size:11px;line-height:1.6}.assistant-form{margin-top:14px}.assistant-form textarea{display:block;width:100%;resize:vertical;border:1px solid #d5e0e3;border-radius:10px;padding:12px;color:#202e35;font:inherit}.assistant-form-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:10px}.assistant-history-heading{margin:22px 0 10px;color:#204b61;font-size:14px}.assistant-run{margin-top:10px;padding:14px;background:#f7fbfc;border:1px solid #dcebed;border-radius:12px}.assistant-run-meta{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;color:#718087;font-size:11px}.assistant-run-meta strong{color:#204b61}.assistant-state{padding:4px 8px;border-radius:999px;background:#edf1f2}.assistant-state-completed{background:#e8f6ed;color:#287348}.assistant-state-failed{background:#fff0ef;color:#a73d39}.assistant-state-running,.assistant-state-queued{background:#fff6df;color:#876516}.assistant-answer{white-space:pre-wrap;color:#344d56;font-size:13px;line-height:1.7}.assistant-error{color:#a73d39;font-size:12px}.assistant-pending{color:#718087;font-size:12px}.assistant-sources,.assistant-usage{margin:8px 0 0}.assistant-sources strong{color:#52666e}@media(max-width:700px){.assistant-form-footer{align-items:stretch;flex-direction:column}.assistant-form-footer .primary-button{width:100%}.assistant-badge{font-size:9px}}
 </style>
 @if ($canManage)
 <script>
@@ -118,4 +150,27 @@ document.querySelectorAll('[data-ai-include]').forEach((select) => {
 });
 </script>
 @endif
+<script>
+(() => {
+    const runs = [...document.querySelectorAll('[data-assistant-poll] .assistant-run[data-status-url]')];
+    if (!runs.length) return;
+    let attempts = 0;
+    const refresh = async () => {
+        attempts += 1;
+        await Promise.all(runs.map(async (run) => {
+            const url = run.dataset.statusUrl;
+            if (!url) return;
+            try {
+                const response = await fetch(url, { headers: { Accept: 'application/json' } });
+                if (!response.ok) return;
+                const result = await response.json();
+                if (['completed', 'failed'].includes(result.status)) window.location.reload();
+                run.querySelector('[data-assistant-state]').textContent = result.status === 'running' ? 'Consultando' : 'Na fila';
+            } catch (_) { /* A próxima consulta tentará novamente. */ }
+        }));
+        if (attempts < 20 && runs.some((run) => run.dataset.statusUrl)) window.setTimeout(refresh, 3000);
+    };
+    window.setTimeout(refresh, 2500);
+})();
+</script>
 @endsection

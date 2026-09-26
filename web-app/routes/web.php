@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AiPlanningController;
+use App\Http\Controllers\AiAgentController;
 use App\Http\Controllers\Auth\SessionController;
 use App\Http\Controllers\DemandController;
 use App\Http\Controllers\DemandReviewController;
@@ -25,6 +26,8 @@ Route::middleware(['auth', 'active'])->group(function (): void {
     Route::post('/demandas/{demand}/planejamento-ia', [AiPlanningController::class, 'propose'])->middleware('throttle:3,1')->name('ai-planning.propose');
     Route::post('/demandas/{demand}/planejamento-ia/{run}/aprovar', [AiPlanningController::class, 'approve'])->name('ai-planning.approve');
     Route::delete('/demandas/{demand}/planejamento-ia/{run}', [AiPlanningController::class, 'discard'])->name('ai-planning.discard');
+    Route::post('/demandas/{demand}/assistente', [AiAgentController::class, 'ask'])->middleware('throttle:3,1')->name('ai-agent.ask');
+    Route::get('/demandas/{demand}/assistente/{run}/status', [AiAgentController::class, 'status'])->name('ai-agent.status');
     Route::post('/demandas/{demand}/links-revisao', [DemandReviewController::class, 'store'])->name('demand-reviews.store');
     Route::delete('/demandas/{demand}/links-revisao/{reviewLink}', [DemandReviewController::class, 'revoke'])->name('demand-reviews.revoke');
     Route::get('/demandas/{demand}/links-revisao/{reviewLink}/material', [DemandReviewController::class, 'teamMaterial'])->name('demand-reviews.team-material');

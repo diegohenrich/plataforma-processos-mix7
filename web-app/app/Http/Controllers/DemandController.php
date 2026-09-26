@@ -128,6 +128,7 @@ class DemandController extends Controller
             ->get();
 
         return view('demands.show', [
+            'currentUser' => $user,
             'demand' => $demand->load(['creator:id,name', 'organization:id,name']),
             'tasks' => $tasks,
             'events' => $demand->events()
@@ -145,6 +146,16 @@ class DemandController extends Controller
             'activeTimeTaskId' => $user->activeTimeEntry()->value('task_id'),
             'reviewLinks' => $request->user()->can('manage', $demand) ? $demand->reviewLinks()->with('responses')->get() : collect(),
             'aiPlanningRuns' => $request->user()->can('manage', $demand) ? $demand->aiPlanningRuns()->with(['requester:id,name', 'reviewer:id,name'])->take(5)->get() : collect(),
+            'aiAgentRuns' => $demand->aiAgentRuns()
+                ->with('requester:id,name')
+                ->where(function (Builder $query) use ($request, $demand): void {
+                    $query->where('requested_by', $request->user()->id);
+                    if ($request->user()->can('manage', $demand)) {
+                        $query->orWhere('organization_id', $request->user()->organization_id);
+                    }
+                })
+                ->take(8)
+                ->get(),
         ]);
     }
 

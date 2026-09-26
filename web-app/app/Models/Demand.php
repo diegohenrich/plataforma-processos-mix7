@@ -48,4 +48,9 @@ class Demand extends Model
     {
         return $this->hasMany(AiPlanningRun::class)->latest();
     }
+
+    public function aiAgentRuns(): HasMany
+    {
+        return $this->hasMany(AiAgentRun::class)->latest();
+    }
 }
