@@ -1,5 +1,10 @@
 # Estado atual — Plataforma Mix7 — 2026-09-26
 
+## Busca de demandas relacionadas pelo assistente — 2026-09-26
+- Direção/gerência podem pedir ao assistente de uma demanda que encontre até cinco outras da própria organização por título. A ferramenta retorna etapa, data de atualização e quantidade de tarefas; briefing e dados de cliente ficam fora do contexto enviado. A autorização é restrita a proprietário/gerente e a consulta filtra no banco pela organização atual.
+- Validação local: suíte Laravel passou (96 testes/758 assertions), testes focais de IA (11/62), Pint, `composer validate --no-check-publish` e `git diff --check` passaram. Não houve chamada real a provedor nem alteração de interface.
+- GitHub/Trello pendentes até publicar esta alteração. O cartão #39 segue em Próximas entregas; nesta tentativa seus controles de comentário e descrição não reagiram e nada foi salvo.
+
 ## Ferramenta factual de atividade da equipe para o assistente — 2026-09-26
 - Adicionei ao assistente em demanda uma ferramenta de leitura da equipe para direção/gerência. Ela retorna, por profissional da mesma organização, tarefas abertas por estado, estimativa aberta, conclusões e segundos registrados nos últimos 30 dias; não retorna títulos de tarefas, outras organizações nem interpreta os dados como capacidade/nota/ranking. Profissionais não recebem a ferramenta.
 - Validação local: suíte completa passou (95 testes/752 assertions), Pint, `composer validate --no-check-publish`, `npm run build` e `git diff --check` passaram. Testes cobrem perfil, escopo da organização, estimativas, conclusões e tempo. Não houve chamada a provedor real.

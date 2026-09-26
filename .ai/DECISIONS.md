@@ -1,6 +1,7 @@
 # Decisões vigentes
 
 - 2026-09-26 — A primeira ampliação de ferramentas do assistente interno fora da demanda é uma consulta somente leitura a métricas factuais da própria organização, disponível à direção/gerência: estados e estimativas de tarefas, conclusões e tempo registrado em 30 dias. Não expõe títulos de tarefas, não cruza organizações e não calcula capacidade, nota ou ranking. Rever quando a matriz de acesso e as políticas de IA forem validadas pela Mix7.
+- 2026-09-26 — O assistente da demanda pode buscar até cinco demandas da própria organização por título para direção/gerência, retornando etapa, atualização e contagem de tarefas, sem briefing ou dados de cliente. O limite evita ampliar leitura contextual sem aprovação da matriz de acesso; rever quando os perfis e a política de IA forem validados.
 
 - 2026-09-26 — Evitar tarifa recorrente por token é requisito de direção para IA Mix7. O Laravel aceita provedor OpenAI-compatible; um modelo local é a opção para inferência sem tarifa do provedor, condicionada a máquina/rede/worker disponíveis. Isso ainda não seleciona a topologia do modelo, não autoriza expor endpoint na internet nem enviar briefing real; validar segurança, retenção e operação primeiro. Ver `docs/ARQUITETURA-HOSTINGER-LARAVEL.md`.
 

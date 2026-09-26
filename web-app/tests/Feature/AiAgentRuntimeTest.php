@@ -119,6 +119,27 @@ class AiAgentRuntimeTest extends TestCase
         app(AiAgentTools::class)->execute('summarize_team_activity', [], $professional, $demand);
     }
 
+    public function test_manager_agent_searches_only_organization_demand_titles_and_returns_minimal_summary(): void
+    {
+        [$organization, $manager, , $currentDemand] = $this->workspace();
+        $matchingDemand = Demand::create(['organization_id' => $organization->id, 'created_by' => $manager->id, 'title' => 'Site de campanha', 'brief' => 'Briefing privado que não deve ser retornado.', 'status' => DemandStatus::ClientApproval]);
+        $matchingDemand->tasks()->create(['organization_id' => $organization->id, 'created_by' => $manager->id, 'assigned_to' => $manager->id, 'title' => 'Ajustar chamada', 'status' => TaskStatus::Todo]);
+        $otherOrganization = Organization::create(['name' => 'Outra agência', 'slug' => 'outra-agencia']);
+        $otherManager = User::factory()->create(['organization_id' => $otherOrganization->id, 'role' => UserRole::AgencyOwner, 'is_active' => true]);
+        Demand::create(['organization_id' => $otherOrganization->id, 'created_by' => $otherManager->id, 'title' => 'Site reservado', 'brief' => 'Informação de outra organização.', 'status' => DemandStatus::InProgress]);
+
+        $definitions = collect(app(AiAgentTools::class)->definitions($manager, $currentDemand));
+        $this->assertTrue($definitions->contains(fn ($tool) => $tool['function']['name'] === 'search_organization_demands'));
+
+        $result = app(AiAgentTools::class)->execute('search_organization_demands', ['query' => 'Site'], $manager, $currentDemand);
+        $this->assertEqualsCanonicalizing(['Site institucional', 'Site de campanha'], collect($result['result']['demands'])->pluck('title')->all());
+        $campaign = collect($result['result']['demands'])->firstWhere('title', 'Site de campanha');
+        $this->assertSame('Aprovação do cliente', $campaign['stage']);
+        $this->assertSame(1, $campaign['tasks']);
+        $this->assertArrayNotHasKey('brief', $campaign);
+        $this->assertStringNotContainsString('Site reservado', json_encode($result['result'], JSON_THROW_ON_ERROR));
+    }
+
     public function test_professional_cannot_run_assistant_and_cost_is_unknown_if_not_reported(): void
     {
         [, $manager, $professional, $demand] = $this->workspace();

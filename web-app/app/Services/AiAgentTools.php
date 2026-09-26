@@ -30,6 +30,11 @@ class AiAgentTools
         ];
 
         if ($user->can('manage', $demand)) {
+            $tools[] = $this->tool('search_organization_demands', 'Busca até cinco demandas da própria organização por parte do título e retorna somente etapa, data de atualização e quantidade de tarefas; não retorna briefing nem dados de clientes.', [
+                'type' => 'object',
+                'properties' => ['query' => ['type' => 'string', 'minLength' => 2, 'maxLength' => 180]],
+                'required' => ['query'], 'additionalProperties' => false,
+            ]);
             $tools[] = $this->tool('list_client_feedback', 'Lê comentários e decisões do cliente desta demanda, sem revelar token ou arquivo privado.', [
                 'type' => 'object', 'properties' => new \stdClass, 'required' => [], 'additionalProperties' => false,
             ]);
@@ -54,8 +59,37 @@ class AiAgentTools
             'search_knowledge' => $this->searchKnowledge($arguments, $user),
             'list_client_feedback' => $this->listClientFeedback($user, $demand),
             'summarize_team_activity' => $this->summarizeTeamActivity($user),
+            'search_organization_demands' => $this->searchOrganizationDemands($arguments, $user),
             default => throw ValidationException::withMessages(['ai' => 'A ferramenta solicitada não está autorizada.']),
         };
+    }
+
+    /** @return array{result: array<string, mixed>, receipt: array<string, mixed>} */
+    private function searchOrganizationDemands(array $arguments, User $user): array
+    {
+        abort_unless(in_array($user->role, [UserRole::AgencyOwner, UserRole::MarketingManager], true), 403);
+        $validated = Validator::make($arguments, [
+            'query' => ['required', 'string', 'min:2', 'max:180'],
+        ])->validate();
+        $term = trim($validated['query']);
+        $demands = Demand::query()
+            ->where('organization_id', $user->organization_id)
+            ->where('title', 'like', '%'.$term.'%')
+            ->withCount('tasks')
+            ->orderByDesc('updated_at')
+            ->limit(5)
+            ->get(['id', 'title', 'status', 'updated_at']);
+        $results = $demands->map(fn (Demand $demand) => [
+            'title' => $demand->title,
+            'stage' => $demand->status->label(),
+            'tasks' => (int) $demand->tasks_count,
+            'updated_at' => $demand->updated_at?->toIso8601String(),
+        ])->all();
+
+        return [
+            'result' => ['query' => $term, 'demands' => $results],
+            'receipt' => ['tool' => 'search_organization_demands', 'source' => 'Demandas da organização', 'items' => count($results)],
+        ];
     }
 
     /** @return array{result: array<string, mixed>, receipt: array<string, mixed>} */
