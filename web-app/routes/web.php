@@ -12,6 +12,7 @@ use App\Http\Controllers\DemandTaskController;
 use App\Http\Controllers\KnowledgeController;
 use App\Http\Controllers\PerformanceReviewController;
 use App\Http\Controllers\TeamActivityController;
+use App\Http\Controllers\TeamCapacityController;
 use App\Http\Controllers\TeamInvitationController;
 use App\Http\Controllers\TeamMemberController;
 use Illuminate\Support\Facades\Route;
@@ -68,6 +69,10 @@ Route::middleware(['auth', 'active'])->group(function (): void {
     Route::get('/equipe', [TeamMemberController::class, 'index'])->name('team.index');
     Route::patch('/equipe/{member}/acesso', [TeamMemberController::class, 'updateAccess'])->name('team.members.access');
     Route::get('/equipe/producao', [TeamActivityController::class, 'index'])->name('team.activity');
+    Route::get('/equipe/capacidade', [TeamCapacityController::class, 'index'])->name('team.capacity');
+    Route::post('/equipe/capacidade/disponibilidade', [TeamCapacityController::class, 'setScheduledHours'])->name('team.capacity.schedule');
+    Route::post('/equipe/capacidade/ausencias', [TeamCapacityController::class, 'addAbsence'])->name('team.capacity.absences.store');
+    Route::delete('/equipe/capacidade/ausencias/{absence}', [TeamCapacityController::class, 'removeAbsence'])->name('team.capacity.absences.destroy');
     Route::get('/equipe/avaliacoes', [PerformanceReviewController::class, 'index'])->name('performance-reviews.index');
     Route::post('/equipe/avaliacoes', [PerformanceReviewController::class, 'store'])->name('performance-reviews.store');
     Route::post('/equipe/avaliacoes/{review}/respostas', [PerformanceReviewController::class, 'respond'])->name('performance-reviews.respond');

@@ -16,9 +16,15 @@ Para planejamento, a proposta é calcular a disponibilidade no período a partir
 
 Essa regra é uma proposta, não uma política aprovada. Horários, pausas, feriados, ausências, reuniões, tarefas sem estimativa, distribuição de tarefas longas entre dias, bloqueios externos e tratamento de tarefas paralelas precisam de exemplos reais. O sistema não deve escolher ou redistribuir responsáveis por conta própria; qualquer sugestão da IA exige revisão humana.
 
-### Prévia local em construção
+### Prévia no protótipo local
 
 O protótipo deixa escolher um profissional com tarefas abertas, um período de semana ISO (segunda a domingo), horas previstas de trabalho e ausências em horas por dia. Não há valores iniciais de jornada. Para comparação, soma a estimativa integral de cada tarefa aberta atribuída à pessoa cujo prazo cai na semana; tarefas sem estimativa ou sem prazo aparecem como lacunas. O cronômetro não altera esses totais. Os dados são demonstrativos e ficam apenas neste navegador. A janela semanal e a regra baseada no prazo são escolhas de ensaio, não regras aprovadas pela Mix7.
+
+### Prévia compartilhada no Laravel
+
+A página Disponibilidade grava previsões semanais manuais em banco: horas totais informadas pela direção/gerência, ausências por data e tarefas abertas da pessoa com prazo final na semana. Ausências são descontadas; tarefas sem estimativa e sem prazo aparecem separadas, fora da soma. Alterações criam snapshots com autoria, preservando histórico. Profissionais consultam somente a própria semana; direção/gerência selecionam pessoas ativas da própria organização e registram alterações. Não há jornada padrão, motivo de ausência, distribuição diária, mudança automática de tarefa ou uso do cronômetro no cálculo.
+
+Esta tela reproduz a regra do protótipo como **previsão de planejamento**, não como medição oficial, política de jornada ou decisão de desempenho. A escolha de somar a estimativa inteira pelo prazo da semana permanece sujeita a validação da Mix7. A inspeção visual renderizada desta nova tela ainda está pendente.
 
 ## Relação com calendário e Gantt
 

@@ -65,6 +65,8 @@ O sistema de aprovações deve ser reutilizável em áreas diferentes da agênci
 
 O comportamento de tempo confirmado, a proposta de capacidade e os critérios de aceite estão em [Tempo, disponibilidade e capacidade](TEMPO-E-CAPACIDADE.md). A proposta não fecha as regras de jornada que a Mix7 ainda precisa definir.
 
+O Laravel também oferece uma prévia compartilhada e versionada: gerência informa horas disponíveis por semana e ausências por data; estimativas abertas são atribuídas integralmente à semana da data final. Não há jornada padrão nem distribuição automática, e o resultado segue marcado como preliminar até a Mix7 validar as regras.
+
 ## Decisões confirmadas e escopo da primeira entrega operacional
 
 A primeira versão em uso cobre todas as áreas listadas acima: gestão, aprovações expansíveis, tempo e capacidade, IA revisada por pessoa, avaliação, conhecimento, onboarding, acessos e integração necessária com o ambiente de trabalho. As regras ainda sem resposta continuam como requisitos a validar; não são motivo para retirar essas áreas do escopo. A ordem de construção e as evidências de conclusão estão em [ROADMAP.md](ROADMAP.md).
