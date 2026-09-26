@@ -175,8 +175,15 @@ class DemandReviewController extends Controller
                 'y' => round((float) $point['y'], 1),
             ], json_decode($data['anchor_path'], true))
             : null;
+        $hasAreaAnchor = $data['type'] === 'annotation' && ($data['anchor_type'] ?? null) === 'area';
+        $anchorWidth = $hasAreaAnchor && $request->filled('anchor_width')
+            ? (float) $request->input('anchor_width')
+            : null;
+        $anchorHeight = $hasAreaAnchor && $request->filled('anchor_height')
+            ? (float) $request->input('anchor_height')
+            : null;
 
-        DB::transaction(function () use ($data, $token, $anchorPath): void {
+        DB::transaction(function () use ($data, $token, $anchorPath, $anchorWidth, $anchorHeight): void {
             $reviewLink = $this->findLink($token, lock: true);
             abort_unless($reviewLink->isAvailable(), 410, 'Este link expirou ou não está mais disponível.');
             $hasDecision = $reviewLink->responses()->whereIn('type', ['approved', 'changes_requested'])->exists();
@@ -194,8 +201,8 @@ class DemandReviewController extends Controller
                     'url' => $reviewLink->material_url ?? 'arquivo privado da versão '.$reviewLink->version,
                     'x' => isset($data['anchor_x']) ? (float) $data['anchor_x'] : null,
                     'y' => isset($data['anchor_y']) ? (float) $data['anchor_y'] : null,
-                    'width' => isset($data['anchor_width']) ? (float) $data['anchor_width'] : null,
-                    'height' => isset($data['anchor_height']) ? (float) $data['anchor_height'] : null,
+                    'width' => $anchorWidth,
+                    'height' => $anchorHeight,
                     'path' => $anchorPath,
                     'time' => $data['anchor_time'] ?? null,
                     'page' => isset($data['anchor_page']) ? (int) $data['anchor_page'] : null,
