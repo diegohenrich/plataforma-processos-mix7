@@ -8,6 +8,7 @@ use App\Enums\UserRole;
 use App\Jobs\ProcessAiAgentRun;
 use App\Models\AiAgentRun;
 use App\Models\Demand;
+use App\Models\DemandReviewLink;
 use App\Models\DemandTask;
 use App\Models\KnowledgeItem;
 use App\Models\Organization;
@@ -223,6 +224,28 @@ class AiAgentRuntimeTest extends TestCase
         $this->assertSame(1, $campaign['tasks']);
         $this->assertArrayNotHasKey('brief', $campaign);
         $this->assertStringNotContainsString('Site reservado', json_encode($result['result'], JSON_THROW_ON_ERROR));
+    }
+
+    public function test_ai_client_feedback_is_combined_across_versions_in_chronological_order(): void
+    {
+        [$organization, $manager, , $demand] = $this->workspace();
+        $versionTwo = DemandReviewLink::create([
+            'organization_id' => $organization->id, 'demand_id' => $demand->id, 'created_by' => $manager->id,
+            'version' => 2, 'token_hash' => str_repeat('b', 64), 'material_url' => 'https://preview.example.test/v2', 'expires_at' => now()->addDay(),
+        ]);
+        $versionOne = DemandReviewLink::create([
+            'organization_id' => $organization->id, 'demand_id' => $demand->id, 'created_by' => $manager->id,
+            'version' => 1, 'token_hash' => str_repeat('a', 64), 'material_url' => 'https://preview.example.test/v1', 'expires_at' => now()->addDay(),
+        ]);
+        $versionTwo->responses()->create(['reviewer_name' => 'Cliente', 'type' => 'comment', 'comment' => 'Feedback mais recente na versão 2.', 'created_at' => now()->subMinute()]);
+        $versionOne->responses()->create(['reviewer_name' => 'Cliente', 'type' => 'comment', 'comment' => 'Feedback mais antigo na versão 1.', 'created_at' => now()->subMinutes(5)]);
+
+        $result = app(AiAgentTools::class)->execute('list_client_feedback', [], $manager, $demand);
+        $feedback = $result['result']['feedback'];
+
+        $this->assertSame(['Feedback mais antigo na versão 1.', 'Feedback mais recente na versão 2.'], array_column($feedback, 'comment'));
+        $this->assertSame([1, 2], array_column($feedback, 'version'));
+        $this->assertLessThan($feedback[1]['created_at'], $feedback[0]['created_at']);
     }
 
     public function test_professional_cannot_run_assistant_and_cost_is_unknown_if_not_reported(): void

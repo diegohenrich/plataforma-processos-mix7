@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\TaskStatus;
 use App\Enums\UserRole;
 use App\Models\Demand;
+use App\Models\DemandReviewResponse;
 use App\Models\DemandTask;
 use App\Models\KnowledgeItem;
 use App\Models\TaskTimeEntry;
@@ -236,17 +237,24 @@ class AiAgentTools
     private function listClientFeedback(User $user, Demand $demand): array
     {
         abort_unless($user->can('manage', $demand), 403);
-        $links = $demand->reviewLinks()->with(['responses' => fn ($query) => $query->latest('created_at')])->get();
-        $feedback = $links->flatMap(fn ($link) => $link->responses->map(fn ($response) => [
-            'version' => $link->version,
-            'reviewer_name' => $response->reviewer_name,
-            'reviewer_name_is_self_reported' => true,
-            'type' => $response->type,
-            'comment' => $response->comment,
-            'anchor_type' => $response->anchor_type,
-            'anchor' => $response->anchor_data,
-            'created_at' => $response->created_at?->toIso8601String(),
-        ]))->take(20)->values()->all();
+        $feedback = DemandReviewResponse::query()
+            ->whereHas('reviewLink', fn ($query) => $query->where('demand_id', $demand->id))
+            ->with('reviewLink:id,version')
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->limit(20)
+            ->get()
+            ->reverse()
+            ->map(fn (DemandReviewResponse $response) => [
+                'version' => $response->reviewLink->version,
+                'reviewer_name' => $response->reviewer_name,
+                'reviewer_name_is_self_reported' => true,
+                'type' => $response->type,
+                'comment' => $response->comment,
+                'anchor_type' => $response->anchor_type,
+                'anchor' => $response->anchor_data,
+                'created_at' => $response->created_at?->toIso8601String(),
+            ])->values()->all();
 
         return [
             'result' => ['feedback' => $feedback],
