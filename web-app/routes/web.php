@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AiAgentController;
 use App\Http\Controllers\AiPlanningController;
+use App\Http\Controllers\ApprovalsController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\SessionController;
 use App\Http\Controllers\DemandController;
@@ -34,6 +35,7 @@ Route::middleware(['auth', 'active'])->group(function (): void {
     Route::patch('/demandas/{demand}/etapa', [DemandController::class, 'updateStatus'])->name('demands.status');
     Route::patch('/demandas/{demand}/cliente', [DemandController::class, 'assignClient'])->name('demands.client.assign');
     Route::get('/tarefas/quadro', [DemandTaskController::class, 'board'])->name('demand-tasks.board');
+    Route::get('/aprovacoes', [ApprovalsController::class, 'index'])->name('approvals.index');
     Route::post('/demandas/{demand}/planejamento-ia', [AiPlanningController::class, 'propose'])->middleware('throttle:3,1')->name('ai-planning.propose');
     Route::post('/demandas/{demand}/planejamento-ia/{run}/aprovar', [AiPlanningController::class, 'approve'])->name('ai-planning.approve');
     Route::delete('/demandas/{demand}/planejamento-ia/{run}', [AiPlanningController::class, 'discard'])->name('ai-planning.discard');

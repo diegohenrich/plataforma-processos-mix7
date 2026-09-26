@@ -20,6 +20,11 @@ class DemandReviewLink extends Model
         return $this->belongsTo(Demand::class);
     }
 
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
     public function responses(): HasMany
     {
         return $this->hasMany(DemandReviewResponse::class)->oldest();

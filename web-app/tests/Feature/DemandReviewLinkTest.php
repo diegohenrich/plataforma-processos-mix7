@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Enums\DemandStatus;
 use App\Enums\UserRole;
 use App\Models\Demand;
+use App\Models\DemandTask;
 use App\Models\Organization;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -15,6 +16,104 @@ use Tests\TestCase;
 class DemandReviewLinkTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_team_approval_inbox_shows_versions_and_client_responses(): void
+    {
+        [$organization, $manager, $demand] = $this->setupApproval();
+        $this->createLink($manager, $demand, 'https://preview.example.test/site-v1');
+        $link = $demand->reviewLinks()->firstOrFail();
+        $link->responses()->create([
+            'reviewer_name' => 'Cliente Mix7',
+            'type' => 'comment',
+            'comment' => 'Ajustar o texto do destaque.',
+            'created_at' => now(),
+        ]);
+
+        $this->actingAs($manager)->get(route('approvals.index'))
+            ->assertOk()
+            ->assertSee('Aprovações')
+            ->assertSee('Site institucional')
+            ->assertSee('Versão 1')
+            ->assertSee('Aguardando cliente')
+            ->assertSee('Cliente Mix7')
+            ->assertSee('Ajustar o texto do destaque.')
+            ->assertSee(route('demands.show', $demand), false)
+            ->assertDontSee('Briefing privado do teste');
+    }
+
+    public function test_professional_approval_inbox_only_shows_demands_in_their_work(): void
+    {
+        [$organization, $manager, $demand, $professional] = $this->setupApproval();
+        $this->createLink($manager, $demand, 'https://preview.example.test/assigned');
+        $otherDemand = Demand::create([
+            'organization_id' => $organization->id,
+            'created_by' => $manager->id,
+            'title' => 'Demanda sem atribuição',
+            'brief' => 'Não deve aparecer',
+            'status' => DemandStatus::ClientApproval,
+        ]);
+        $this->createLink($manager, $otherDemand, 'https://preview.example.test/private');
+        DemandTask::create([
+            'organization_id' => $organization->id,
+            'demand_id' => $demand->id,
+            'created_by' => $manager->id,
+            'assigned_to' => $professional->id,
+            'title' => 'Produzir página',
+            'status' => 'todo',
+        ]);
+
+        $this->actingAs($professional)->get(route('approvals.index'))
+            ->assertOk()
+            ->assertSee('Site institucional')
+            ->assertDontSee('Demanda sem atribuição')
+            ->assertDontSee('Não deve aparecer');
+    }
+
+    public function test_approval_inbox_distinguishes_expired_revoked_and_decided_versions(): void
+    {
+        [$organization, $manager, $revokedDemand] = $this->setupApproval();
+        $this->createLink($manager, $revokedDemand, 'https://preview.example.test/revoked');
+        $revokedDemand->reviewLinks()->firstOrFail()->update(['revoked_at' => now()]);
+
+        $expiredDemand = Demand::create([
+            'organization_id' => $organization->id,
+            'created_by' => $manager->id,
+            'title' => 'Versão expirada',
+            'brief' => 'Conteúdo sintético',
+            'status' => DemandStatus::ClientApproval,
+        ]);
+        $this->createLink($manager, $expiredDemand, 'https://preview.example.test/expired');
+        $expiredDemand->reviewLinks()->firstOrFail()->update(['expires_at' => now()->subMinute()]);
+
+        $approvedDemand = Demand::create([
+            'organization_id' => $organization->id,
+            'created_by' => $manager->id,
+            'title' => 'Versão aprovada',
+            'brief' => 'Conteúdo sintético',
+            'status' => DemandStatus::ClientApproval,
+        ]);
+        $this->createLink($manager, $approvedDemand, 'https://preview.example.test/approved');
+        $approvedDemand->update(['status' => DemandStatus::Delivery]);
+        $approvedDemand->reviewLinks()->firstOrFail()->responses()->create([
+            'reviewer_name' => 'Cliente Mix7',
+            'type' => 'approved',
+            'created_at' => now(),
+        ]);
+
+        $this->actingAs($manager)->get(route('approvals.index'))
+            ->assertOk()
+            ->assertSee('Link revogado')
+            ->assertSee('Link expirado')
+            ->assertSee('Aprovado pelo cliente');
+    }
+
+    public function test_client_account_cannot_open_internal_approval_inbox(): void
+    {
+        [$organization, $manager] = $this->setupApproval();
+        $client = User::factory()->create(['organization_id' => $organization->id, 'role' => UserRole::Client, 'is_active' => true]);
+
+        $this->actingAs($client)->get(route('approvals.index'))->assertForbidden();
+    }
 
     public function test_manager_creates_one_time_visible_version_link_without_storing_plain_token(): void
     {
