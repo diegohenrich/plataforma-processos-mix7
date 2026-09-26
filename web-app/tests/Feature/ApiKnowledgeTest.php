@@ -32,6 +32,58 @@ class ApiKnowledgeTest extends TestCase
         $this->actingAs($client)->getJson('/api/v1/knowledge')->assertForbidden();
     }
 
+    public function test_management_can_create_update_archive_and_restore_knowledge_with_audit_identity(): void
+    {
+        [, $owner, , , $manager] = $this->teamWithManager();
+        $payload = ['type' => 'training', 'title' => ' Guia de marca ', 'content' => ' Paleta aprovada ', 'owner_name' => 'Direção', 'audience' => 'Design', 'review_due_at' => '2027-01-15', 'url' => 'https://example.test/brand', 'steps' => [' Revisar cores ', '']];
+
+        $created = $this->actingAs($owner)->postJson('/api/v1/knowledge', $payload)
+            ->assertCreated()->assertJsonPath('data.title', 'Guia de marca')->assertJsonPath('data.steps', ['Revisar cores']);
+        $itemId = $created->json('data.id');
+        $this->assertDatabaseHas('knowledge_items', ['id' => $itemId, 'created_by' => $owner->id, 'updated_by' => $owner->id, 'organization_id' => $owner->organization_id]);
+
+        $this->actingAs($manager)->putJson("/api/v1/knowledge/{$itemId}", [...$payload, 'type' => 'reference', 'title' => 'Guia vigente', 'content' => 'Nova versão'])
+            ->assertOk()->assertJsonPath('data.title', 'Guia vigente')->assertJsonPath('data.steps', null);
+        $this->assertDatabaseHas('knowledge_items', ['id' => $itemId, 'created_by' => $owner->id, 'updated_by' => $manager->id]);
+
+        $this->actingAs($manager)->deleteJson("/api/v1/knowledge/{$itemId}")->assertOk()->assertJsonPath('data.id', $itemId);
+        $this->assertNotNull(KnowledgeItem::findOrFail($itemId)->archived_at);
+        $this->actingAs($owner)->postJson("/api/v1/knowledge/{$itemId}/restore")->assertOk()->assertJsonPath('data.title', 'Guia vigente');
+        $this->assertNull(KnowledgeItem::findOrFail($itemId)->archived_at);
+    }
+
+    public function test_knowledge_management_is_limited_to_management_and_own_organization(): void
+    {
+        [, $owner, $professional] = $this->team();
+        $item = $this->item($owner, 'reference', 'Manual interno');
+        $other = $this->team('outside');
+        $foreignItem = $this->item($other[1], 'reference', 'Outro manual');
+
+        $this->actingAs($professional)->postJson('/api/v1/knowledge', ['type' => 'reference', 'title' => 'Inválido', 'content' => 'x'])->assertForbidden();
+        $this->actingAs($owner)->putJson("/api/v1/knowledge/{$foreignItem->id}", ['type' => 'reference', 'title' => 'Invadido', 'content' => 'x'])->assertForbidden();
+        $this->actingAs($owner)->deleteJson("/api/v1/knowledge/{$foreignItem->id}")->assertForbidden();
+        $this->actingAs($owner)->postJson('/api/v1/knowledge', ['type' => 'onboarding', 'title' => 'Trilha vazia', 'content' => 'Sem etapas', 'steps' => [' ', '']])->assertUnprocessable();
+        $this->assertDatabaseHas('knowledge_items', ['id' => $item->id, 'title' => 'Manual interno']);
+        $this->assertDatabaseHas('knowledge_items', ['id' => $foreignItem->id, 'title' => 'Outro manual']);
+    }
+
+    public function test_management_can_assign_onboarding_only_to_active_professionals_in_organization(): void
+    {
+        [$organization, $owner, $professional] = $this->team();
+        $item = $this->item($owner, 'onboarding', 'Primeiros passos', ['Ler guia', 'Conhecer fluxo']);
+
+        $response = $this->actingAs($owner)->postJson("/api/v1/knowledge/{$item->id}/assignments", ['user_id' => $professional->id])
+            ->assertCreated()->assertJsonPath('data.assigned_to', $professional->id)->assertJsonPath('data.assigned_by', $owner->id)->assertJsonPath('data.total_steps', 2);
+        $assignmentId = $response->json('data.id');
+        $this->assertDatabaseHas('onboarding_assignments', ['id' => $assignmentId, 'organization_id' => $organization->id, 'knowledge_item_id' => $item->id]);
+        $this->assertDatabaseCount('onboarding_assignment_steps', 2);
+
+        $this->actingAs($owner)->postJson("/api/v1/knowledge/{$item->id}/assignments", ['user_id' => $professional->id])->assertUnprocessable();
+        $outside = $this->team('outside');
+        $this->actingAs($owner)->postJson("/api/v1/knowledge/{$item->id}/assignments", ['user_id' => $outside[2]->id])->assertUnprocessable();
+        $this->assertDatabaseCount('onboarding_assignments', 1);
+    }
+
     public function test_professional_can_read_and_update_only_their_own_onboarding_steps(): void
     {
         [, $owner, $professional, $colleague] = $this->team();
@@ -70,6 +122,14 @@ class ApiKnowledgeTest extends TestCase
         $colleague = User::factory()->create(['organization_id' => $organization->id, 'role' => UserRole::Professional, 'is_active' => true]);
 
         return [$organization, $owner, $professional, $colleague];
+    }
+
+    private function teamWithManager(): array
+    {
+        [$organization, $owner, $professional, $colleague] = $this->team();
+        $manager = User::factory()->create(['organization_id' => $organization->id, 'role' => UserRole::MarketingManager, 'is_active' => true]);
+
+        return [$organization, $owner, $professional, $colleague, $manager];
     }
 
     private function item(User $owner, string $type, string $title, ?array $steps = null): KnowledgeItem

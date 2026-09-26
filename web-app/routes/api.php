@@ -35,6 +35,11 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active', 'api.token'])->group(
     Route::get('/demands/{demand}', [DemandController::class, 'show']);
     Route::get('/team/activity', [TeamActivityController::class, 'index']);
     Route::get('/knowledge', [KnowledgeController::class, 'index']);
+    Route::post('/knowledge', [KnowledgeController::class, 'store']);
+    Route::put('/knowledge/{item}', [KnowledgeController::class, 'update']);
+    Route::delete('/knowledge/{item}', [KnowledgeController::class, 'archive']);
+    Route::post('/knowledge/{item}/restore', [KnowledgeController::class, 'restore']);
+    Route::post('/knowledge/{item}/assignments', [KnowledgeController::class, 'assign']);
     Route::get('/onboarding/assignments', [KnowledgeController::class, 'assignments']);
     Route::patch('/onboarding/assignments/{assignment}/steps/{step}', [KnowledgeController::class, 'toggleStep']);
     Route::post('/demands', [WebDemandController::class, 'store']);
