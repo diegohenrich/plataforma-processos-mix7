@@ -82,8 +82,9 @@ class DemandReviewLinkTest extends TestCase
             ->assertSee('Ancorar este comentário em')
             ->assertSee('Trecho de texto')
             ->assertSee('Área da página')
-            ->assertSee('Selecionar área na prévia')
-            ->assertSee('Arraste sobre a prévia para selecionar uma região')
+            ->assertSee('Selecionar retângulo')
+            ->assertSee('Rabiscar livremente')
+            ->assertSee('Marque uma área retangular ou faça um rabisco livre sobre a prévia')
             ->assertSee('name="anchor_width" type="number" data-optional="true"', false)
             ->assertSee('sandbox="allow-scripts allow-forms"', false);
 
@@ -186,6 +187,66 @@ class DemandReviewLinkTest extends TestCase
             'anchor_y' => 50,
             'anchor_width' => 20,
         ])->assertSessionHasErrors('anchor_height');
+        $this->assertDatabaseCount('demand_review_responses', 0);
+    }
+
+    public function test_client_can_send_a_freehand_drawing_attached_to_an_area_comment(): void
+    {
+        [, $manager, $demand] = $this->setupApproval();
+        $token = $this->createLink($manager, $demand, 'https://preview.example.test/site-v1');
+
+        $this->get(route('client-reviews.show', $token))->assertOk()
+            ->assertSee('Rabiscar livremente')
+            ->assertSee('name="anchor_path" type="hidden"', false);
+
+        $path = [
+            ['x' => 12.3, 'y' => 18.4],
+            ['x' => 26.7, 'y' => 33.2],
+            ['x' => 48.9, 'y' => 29.5],
+        ];
+        $this->post(route('client-reviews.respond', $token), [
+            'reviewer_name' => 'Cliente Mix7',
+            'type' => 'annotation',
+            'comment' => 'Circulei o título que precisa de ajuste.',
+            'anchor_type' => 'area',
+            'anchor_x' => 30,
+            'anchor_y' => 26,
+            'anchor_path' => json_encode($path),
+        ])->assertRedirect();
+
+        $response = $demand->reviewLinks()->firstOrFail()->responses()->firstOrFail();
+        $this->assertSame($path, $response->anchor_data['path']);
+        $this->assertSame('https://preview.example.test/site-v1', $response->anchor_data['url']);
+        $this->get(route('client-reviews.show', $token))->assertOk()
+            ->assertSee('Rabiscos ligados aos comentários')
+            ->assertSee('points="12.3,18.4 26.7,33.2 48.9,29.5"', false)
+            ->assertSee('Circulei o título que precisa de ajuste.');
+        $this->actingAs($manager)->get(route('demands.show', $demand))->assertOk()
+            ->assertSee('Rabiscos enviados com comentários')
+            ->assertSee('points="12.3,18.4 26.7,33.2 48.9,29.5"', false)
+            ->assertSee('Circulei o título que precisa de ajuste.');
+    }
+
+    public function test_freehand_path_rejects_malformed_or_out_of_bounds_coordinates(): void
+    {
+        [$organization, $manager, $demand] = $this->setupApproval();
+        $token = $this->createLink($manager, $demand, 'https://preview.example.test/site-v1');
+
+        foreach ([
+            '[not-json]',
+            json_encode([['x' => -1, 'y' => 20], ['x' => 101, 'y' => 120]]),
+        ] as $path) {
+            $this->post(route('client-reviews.respond', $token), [
+                'reviewer_name' => 'Cliente Mix7',
+                'type' => 'annotation',
+                'comment' => 'Marcação inválida.',
+                'anchor_type' => 'area',
+                'anchor_x' => 30,
+                'anchor_y' => 26,
+                'anchor_path' => $path,
+            ])->assertSessionHasErrors('anchor_path');
+        }
+
         $this->assertDatabaseCount('demand_review_responses', 0);
     }
 

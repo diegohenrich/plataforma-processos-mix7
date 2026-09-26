@@ -136,11 +136,47 @@ class DemandReviewController extends Controller
             'anchor_y' => ['nullable', 'numeric', 'between:0,100', 'required_if:anchor_type,area'],
             'anchor_width' => ['exclude_unless:anchor_type,area', 'nullable', 'numeric', 'between:0,100', 'required_with:anchor_height'],
             'anchor_height' => ['exclude_unless:anchor_type,area', 'nullable', 'numeric', 'between:0,100', 'required_with:anchor_width'],
+            'anchor_path' => [
+                'exclude_unless:anchor_type,area',
+                'nullable',
+                'string',
+                'max:16000',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    if ($value === null || $value === '') {
+                        return;
+                    }
+
+                    $points = json_decode($value, true);
+                    if (! is_array($points) || count($points) < 2 || count($points) > 256) {
+                        $fail('O rabisco precisa conter entre 2 e 256 pontos.');
+
+                        return;
+                    }
+
+                    foreach ($points as $point) {
+                        if (! is_array($point) || ! isset($point['x'], $point['y'])
+                            || ! is_numeric($point['x']) || ! is_numeric($point['y'])
+                            || ! is_finite((float) $point['x']) || ! is_finite((float) $point['y'])
+                            || $point['x'] < 0 || $point['x'] > 100 || $point['y'] < 0 || $point['y'] > 100) {
+                            $fail('O rabisco contém coordenadas inválidas.');
+
+                            return;
+                        }
+                    }
+                },
+            ],
             'anchor_time' => ['nullable', 'date_format:H:i:s', 'required_if:anchor_type,time'],
             'anchor_page' => ['nullable', 'integer', 'min:1', 'required_if:anchor_type,page'],
         ]);
 
-        DB::transaction(function () use ($data, $token): void {
+        $anchorPath = isset($data['anchor_path']) && $data['anchor_path'] !== ''
+            ? array_map(fn (array $point): array => [
+                'x' => round((float) $point['x'], 1),
+                'y' => round((float) $point['y'], 1),
+            ], json_decode($data['anchor_path'], true))
+            : null;
+
+        DB::transaction(function () use ($data, $token, $anchorPath): void {
             $reviewLink = $this->findLink($token, lock: true);
             abort_unless($reviewLink->isAvailable(), 410, 'Este link expirou ou não está mais disponível.');
             $hasDecision = $reviewLink->responses()->whereIn('type', ['approved', 'changes_requested'])->exists();
@@ -160,6 +196,7 @@ class DemandReviewController extends Controller
                     'y' => isset($data['anchor_y']) ? (float) $data['anchor_y'] : null,
                     'width' => isset($data['anchor_width']) ? (float) $data['anchor_width'] : null,
                     'height' => isset($data['anchor_height']) ? (float) $data['anchor_height'] : null,
+                    'path' => $anchorPath,
                     'time' => $data['anchor_time'] ?? null,
                     'page' => isset($data['anchor_page']) ? (int) $data['anchor_page'] : null,
                 ], fn ($value) => $value !== null) : null,
