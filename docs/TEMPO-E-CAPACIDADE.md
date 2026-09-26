@@ -37,6 +37,8 @@ O Gantt deve mostrar prazos, duração planejada e dependências registradas. O 
 3. Fechar normalmente e reabrir não conta tempo offline. Após falha abrupta, a pessoa pode encerrar o intervalo atual; o sistema registra a recuperação e a tarefa fica pausada. O período desconhecido requer revisão manual e não deve ser tratado como medida precisa.
 4. Estimativa, tempo realizado e disponibilidade permanecem campos/medidas distintos; corrigir um não reescreve os outros.
 5. A prévia local compara horas semanais inseridas manualmente, ausências registradas e estimativas das tarefas com prazo no período; sobrecarga e tarefas sem estimativa ficam visíveis. A regra operacional só se conclui após a Mix7 aprovar jornada, ausências e alocação.
+
+O especialista de operação/produção da IA pode consultar esses mesmos fatos da semana atual para responder perguntas da direção/gerência. A ferramenta não retorna nomes de tarefas, não cria estimativas nem recomenda redistribuição; qualquer conteúdo enviado a um provedor continua sujeito à política de dados da Mix7, que ainda precisa ser aprovada.
 6. O Gantt respeita prazos e dependências salvos; dados do cronômetro não deslocam o cronograma automaticamente.
 
 ## Perguntas que ainda precisam de resposta
@@ -48,4 +50,4 @@ O Gantt deve mostrar prazos, duração planejada e dependências registradas. O 
 - O que acontece quando uma tarefa fica bloqueada ou muda de escopo? Quem altera estimativa, prazo e capacidade?
 - Quem pode ver tempos individuais e relatórios, por quanto tempo, e qual uso é permitido para avaliação?
 
-Até essas respostas serem validadas, os relatórios de capacidade são protótipo de planejamento, não medição oficial de produtividade nem base automática para avaliação.
+Até essas respostas serem validadas, a prévia semanal é um cálculo manual preliminar, não política oficial de jornada, medição de produtividade ou base automática para avaliação.

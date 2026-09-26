@@ -13,6 +13,7 @@ use App\Models\DemandTask;
 use App\Models\KnowledgeItem;
 use App\Models\Organization;
 use App\Models\TaskTimeEntry;
+use App\Models\TeamCapacitySnapshot;
 use App\Models\User;
 use App\Services\AiAgentRuntime;
 use App\Services\AiAgentTools;
@@ -124,7 +125,7 @@ class AiAgentRuntimeTest extends TestCase
 
         $operationsTools = collect(app(AiAgentTools::class)->definitions($manager, null, 'operations_assistant'))
             ->pluck('function.name')->all();
-        $this->assertSame(['summarize_team_activity'], $operationsTools);
+        $this->assertSame(['summarize_team_activity', 'summarize_weekly_capacity'], $operationsTools);
     }
 
     public function test_organization_specialist_rejects_unknown_selection(): void
@@ -261,6 +262,51 @@ class AiAgentRuntimeTest extends TestCase
         $this->assertDatabaseHas('demand_tasks', ['id' => $task->id, 'status' => TaskStatus::Todo->value]);
     }
 
+    public function test_operations_specialist_reads_only_manual_current_week_capacity_facts(): void
+    {
+        [$organization, $manager, $professional, $demand] = $this->workspace();
+        $colleague = User::factory()->create(['organization_id' => $organization->id, 'role' => UserRole::Professional, 'is_active' => true, 'name' => 'Colega sem previsão']);
+        $weekStart = now()->startOfWeek()->toDateString();
+        $dueThisWeek = now()->startOfWeek()->addDays(2)->toDateString();
+        TeamCapacitySnapshot::create([
+            'organization_id' => $organization->id,
+            'professional_id' => $professional->id,
+            'recorded_by' => $manager->id,
+            'week_start' => $weekStart,
+            'scheduled_minutes' => 2400,
+            'absences' => [['id' => 'absence-1', 'date' => $dueThisWeek, 'minutes' => 240]],
+            'change_type' => 'availability_set',
+        ]);
+        $dated = $demand->tasks()->create(['organization_id' => $organization->id, 'created_by' => $manager->id, 'assigned_to' => $professional->id, 'title' => 'Título confidencial de uma tarefa', 'status' => TaskStatus::Todo, 'estimate_minutes' => 90, 'planned_due_on' => $dueThisWeek]);
+        $demand->tasks()->create(['organization_id' => $organization->id, 'created_by' => $manager->id, 'assigned_to' => $professional->id, 'title' => 'Sem estimativa', 'status' => TaskStatus::Todo, 'planned_due_on' => $dueThisWeek]);
+        $demand->tasks()->create(['organization_id' => $organization->id, 'created_by' => $manager->id, 'assigned_to' => $professional->id, 'title' => 'Sem prazo', 'status' => TaskStatus::Todo, 'estimate_minutes' => 30]);
+        $demand->tasks()->create(['organization_id' => $organization->id, 'created_by' => $manager->id, 'assigned_to' => $professional->id, 'title' => 'Já concluída', 'status' => TaskStatus::Completed, 'estimate_minutes' => 50, 'planned_due_on' => $dueThisWeek, 'completed_at' => now()]);
+        $otherOrganization = Organization::create(['name' => 'Outra agência', 'slug' => 'capacidade-outra-agencia']);
+        $otherOwner = User::factory()->create(['organization_id' => $otherOrganization->id, 'role' => UserRole::AgencyOwner, 'is_active' => true]);
+        User::factory()->create(['organization_id' => $otherOrganization->id, 'role' => UserRole::Professional, 'is_active' => true, 'name' => 'Pessoa externa']);
+
+        $definitions = collect(app(AiAgentTools::class)->definitions($manager, null, 'operations_assistant'));
+        $this->assertTrue($definitions->contains(fn ($tool) => $tool['function']['name'] === 'summarize_weekly_capacity'));
+        $this->assertFalse(collect(app(AiAgentTools::class)->definitions($manager, null, 'organization_assistant'))
+            ->contains(fn ($tool) => $tool['function']['name'] === 'summarize_weekly_capacity'));
+
+        $result = app(AiAgentTools::class)->execute('summarize_weekly_capacity', [], $manager, null);
+        $people = collect($result['result']['professionals'])->keyBy('professional');
+        $person = $people->get($professional->name);
+        $this->assertSame(2160, $person['available_minutes_after_absences']);
+        $this->assertSame(90, $person['open_estimate_minutes_due_this_week']);
+        $this->assertSame(2, $person['dated_open_tasks_due_this_week']);
+        $this->assertSame(1, $person['dated_tasks_missing_estimate']);
+        $this->assertSame(1, $person['open_tasks_without_due_date']);
+        $this->assertTrue($person['capacity_recorded']);
+        $this->assertFalse($people->get($colleague->name)['capacity_recorded']);
+        $this->assertFalse($people->has('Pessoa externa'));
+        $this->assertStringNotContainsString('Título confidencial de uma tarefa', json_encode($result['result'], JSON_THROW_ON_ERROR));
+        $this->assertSame('summarize_weekly_capacity', $result['receipt']['tool']);
+        $this->assertDatabaseHas('demand_tasks', ['id' => $dated->id, 'title' => 'Título confidencial de uma tarefa']);
+        $this->assertDatabaseHas('users', ['id' => $otherOwner->id, 'organization_id' => $otherOrganization->id]);
+    }
+
     public function test_professional_agent_definitions_do_not_include_team_activity_tool(): void
     {
         [, $manager, $professional, $demand] = $this->workspace();
@@ -269,8 +315,17 @@ class AiAgentRuntimeTest extends TestCase
         $definitions = collect(app(AiAgentTools::class)->definitions($professional, $demand));
 
         $this->assertFalse($definitions->contains(fn ($tool) => $tool['function']['name'] === 'summarize_team_activity'));
+        $this->assertFalse($definitions->contains(fn ($tool) => $tool['function']['name'] === 'summarize_weekly_capacity'));
         $this->expectException(HttpException::class);
         app(AiAgentTools::class)->execute('summarize_team_activity', [], $professional, $demand);
+    }
+
+    public function test_professional_cannot_directly_execute_weekly_capacity_tool(): void
+    {
+        [, , $professional] = $this->workspace();
+
+        $this->expectException(HttpException::class);
+        app(AiAgentTools::class)->execute('summarize_weekly_capacity', [], $professional, null);
     }
 
     public function test_manager_agent_searches_only_organization_demand_titles_and_returns_minimal_summary(): void

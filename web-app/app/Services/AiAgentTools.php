@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\DemandStatus;
 use App\Enums\TaskStatus;
 use App\Enums\UserRole;
 use App\Models\Demand;
@@ -9,6 +10,7 @@ use App\Models\DemandReviewResponse;
 use App\Models\DemandTask;
 use App\Models\KnowledgeItem;
 use App\Models\TaskTimeEntry;
+use App\Models\TeamCapacitySnapshot;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Validator;
@@ -59,6 +61,12 @@ class AiAgentTools
             ]);
         }
 
+        if (in_array($user->role, [UserRole::AgencyOwner, UserRole::MarketingManager], true) && $agent === 'operations_assistant') {
+            $tools[] = $this->tool('summarize_weekly_capacity', 'Consulta a prévia manual da semana ISO atual: horas registradas, ausências descontadas, estimativas abertas com prazo na semana e itens sem dados. Não revela títulos de tarefas nem sugere redistribuição.', [
+                'type' => 'object', 'properties' => new \stdClass, 'required' => [], 'additionalProperties' => false,
+            ]);
+        }
+
         return $tools;
     }
 
@@ -72,6 +80,7 @@ class AiAgentTools
             'search_knowledge' => $this->searchKnowledge($arguments, $user),
             'list_client_feedback' => $demand ? $this->listClientFeedback($user, $demand) : throw ValidationException::withMessages(['ai' => 'Não há demanda ativa nesta consulta.']),
             'summarize_team_activity' => $this->summarizeTeamActivity($user),
+            'summarize_weekly_capacity' => $this->summarizeWeeklyCapacity($user),
             'search_organization_demands' => $this->searchOrganizationDemands($arguments, $user),
             default => throw ValidationException::withMessages(['ai' => 'A ferramenta solicitada não está autorizada.']),
         };
@@ -165,6 +174,73 @@ class AiAgentTools
         return [
             'result' => ['period_days' => 30, 'professionals' => $rows, 'interpretation' => 'São registros operacionais, não avaliação, ranking ou cálculo de disponibilidade/capacidade.'],
             'receipt' => ['tool' => 'summarize_team_activity', 'source' => 'Atividade da equipe da organização', 'items' => count($rows)],
+        ];
+    }
+
+    /** @return array{result: array<string, mixed>, receipt: array<string, mixed>} */
+    private function summarizeWeeklyCapacity(User $user): array
+    {
+        abort_unless($user->is_active && $user->organization_id !== null
+            && in_array($user->role, [UserRole::AgencyOwner, UserRole::MarketingManager], true), 403);
+
+        $now = CarbonImmutable::now();
+        $weekStart = $now->startOfWeek(CarbonImmutable::MONDAY)->startOfDay();
+        $weekEnd = $weekStart->addDays(6)->endOfDay();
+        $professionals = User::query()
+            ->where('organization_id', $user->organization_id)
+            ->where('role', UserRole::Professional->value)
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name']);
+        $professionalIds = $professionals->modelKeys();
+        $snapshots = TeamCapacitySnapshot::query()
+            ->where('organization_id', $user->organization_id)
+            ->whereIn('professional_id', $professionalIds)
+            ->whereDate('week_start', $weekStart->toDateString())
+            ->orderByDesc('id')
+            ->get(['professional_id', 'scheduled_minutes', 'absences'])
+            ->unique('professional_id')
+            ->keyBy('professional_id');
+        $tasksByProfessional = DemandTask::query()
+            ->where('organization_id', $user->organization_id)
+            ->whereIn('assigned_to', $professionalIds)
+            ->where('status', '!=', TaskStatus::Completed->value)
+            ->whereHas('demand', fn ($query) => $query->where('status', '!=', DemandStatus::Completed->value))
+            ->get(['id', 'assigned_to', 'estimate_minutes', 'planned_due_on'])
+            ->groupBy('assigned_to');
+
+        $rows = $professionals->map(function (User $professional) use ($snapshots, $tasksByProfessional, $weekStart, $weekEnd): array {
+            $snapshot = $snapshots->get($professional->id);
+            $tasks = $tasksByProfessional->get($professional->id, collect());
+            $datedTasks = $tasks->filter(fn (DemandTask $task) => $task->planned_due_on
+                && $task->planned_due_on->betweenIncluded($weekStart, $weekEnd));
+            $absenceMinutes = (int) collect($snapshot?->absences ?? [])->sum('minutes');
+            $availableMinutes = $snapshot?->scheduled_minutes === null
+                ? null
+                : max(0, (int) $snapshot->scheduled_minutes - $absenceMinutes);
+            $estimatedMinutes = (int) $datedTasks->sum(fn (DemandTask $task) => max(0, (int) $task->estimate_minutes));
+
+            return [
+                'professional' => $professional->name,
+                'week' => $weekStart->format('o-\\WW'),
+                'scheduled_minutes_recorded' => $snapshot?->scheduled_minutes,
+                'absence_minutes_recorded' => $absenceMinutes,
+                'available_minutes_after_absences' => $availableMinutes,
+                'open_estimate_minutes_due_this_week' => $estimatedMinutes,
+                'dated_open_tasks_due_this_week' => $datedTasks->count(),
+                'dated_tasks_missing_estimate' => $datedTasks->filter(fn (DemandTask $task) => ! $task->estimate_minutes || $task->estimate_minutes < 1)->count(),
+                'open_tasks_without_due_date' => $tasks->whereNull('planned_due_on')->count(),
+                'capacity_recorded' => $snapshot !== null && $snapshot->scheduled_minutes !== null,
+            ];
+        })->all();
+
+        return [
+            'result' => [
+                'week' => $weekStart->format('o-\\WW'),
+                'professionals' => $rows,
+                'interpretation' => 'Dados da prévia manual atual. Horas e ausências foram registradas pela gestão; estimativas são integrais por prazo, não distribuição diária. Não representam regra oficial de jornada, avaliação ou recomendação de alocação.',
+            ],
+            'receipt' => ['tool' => 'summarize_weekly_capacity', 'source' => 'Prévia semanal manual da equipe', 'items' => count($rows)],
         ];
     }
 

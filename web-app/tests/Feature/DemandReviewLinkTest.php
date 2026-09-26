@@ -219,7 +219,9 @@ class DemandReviewLinkTest extends TestCase
             'anchor_y' => 47,
         ])->assertRedirect();
 
-        $areaAnnotation = $demand->reviewLinks()->firstOrFail()->responses()->latest('id')->firstOrFail();
+        $areaAnnotation = $demand->reviewLinks()->firstOrFail()->responses()
+            ->where('comment', 'Mover o botão para o canto.')
+            ->firstOrFail();
         $this->assertSame(82.5, $areaAnnotation->anchor_data['x']);
         $this->assertEquals(47, $areaAnnotation->anchor_data['y']);
         $this->assertDatabaseCount('demand_review_responses', 2);
