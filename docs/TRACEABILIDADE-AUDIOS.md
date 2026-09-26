@@ -1,5 +1,7 @@
 # Rastreabilidade dos três áudios
 
+> **Estado atualizado em 26/09/2026:** esta tabela registra evidências do protótipo e também tem observações históricas que antecedem a fundação Laravel. Para a cobertura atual por papel, separação entre implementação local e prontidão para uso, e roteiro de validação, consulte [Auditoria funcional por perfil](AUDITORIA-FUNCIONAL-POR-PERFIL.md). Uma rota ou teste Laravel não significa implantação ou validação operacional pela Mix7.
+
 ## Conferência das fontes
 
 Os três arquivos OGG originais fornecidos foram encontrados no Downloads e lidos localmente. `ffprobe` confirmou durações de 69,93 s, 66,09 s e 247,35 s, compatíveis com as transcrições anexadas (01:09, 01:06 e 04:08). Uma transcrição automática local em português confirmou os temas centrais; houve erros em nomes próprios e termos como Kanban/Trello. Por isso, a transcrição manual anexada permanece a referência textual, e o áudio foi usado para conferir cobertura e contexto. Áudios e transcrição não foram copiados para o repositório.

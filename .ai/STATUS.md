@@ -1,5 +1,11 @@
 # Estado atual — Plataforma Mix7 — 2026-09-26
 
+## Auditoria funcional por perfil — 2026-09-26
+- Criei `docs/AUDITORIA-FUNCIONAL-POR-PERFIL.md`, comparando ações de direção, gerência, profissional, cliente com conta e aprovador externo com o Laravel existente; diferencia código local, protótipo e requisitos ainda sem decisão/validação. Inclui roteiro manual fictício para demonstrar cada perfil e lacunas que impedem declarar o produto pronto.
+- O resultado é que existe fundação Laravel para as áreas centrais, mas não há comprovação de que o produto cumpra integralmente seu propósito em uso: sem implantação, testes compartilhados ou conteúdo real, e com pendências de permissão, operação, disponibilidade/avaliação, IA e publicação.
+- README e rastreabilidade apontam para a auditoria. `.ai/CONTEXT.md` esclarece que a pasta CRM-MIX7-RENEW é referência exclusivamente visual autorizada: sem alteração/migração de persistência e sem tocar serviço publicado; não apagar banco sem necessidade para obter layout. Caminho local foi confirmado pelo usuário.
+- Validação: `php artisan test` passou 82 testes/668 assertions; `git diff --check` e conferência dos nomes de rotas/políticas passaram. A auditoria documenta como usar dados sintéticos e separar pendências que bloqueiam somente o uso real, sem parar implementação/testes locais. Inspeção visual do CRM Mix7 local continua como próxima fase, sem alterar o banco.
+
 ## Reatribuir tarefa de profissional inativo — 2026-09-26
 - Direção/gerência pode mover uma tarefa não concluída para profissional ativo da mesma organização. O registro guarda quem transferiu e responsáveis anterior/novo; tarefa em execução e cronômetro são pausados antes da troca. A tela identifica responsável inativo e preserva o histórico.
 - Validação local: `php artisan test` passou 82 testes/668 assertions; Pint nos quatro arquivos PHP alterados passou; `composer validate --no-check-publish`, `npm run build` e `git diff --check` passaram. O Pint global ainda aponta seis arquivos preexistentes e fora desta alteração. Fluxo conferido no navegador com dados fictícios em desktop e 390 px, incluindo transferência e histórico.
