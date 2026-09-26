@@ -21,8 +21,11 @@ class AiAgentRuntime
         $oidcToken = (string) config('services.ai_gateway.oidc_token');
         $baseUrl = rtrim((string) config('services.ai_gateway.base_url'), '/');
         $model = (string) config('services.ai_gateway.model');
+        $provider = (string) config('services.ai_gateway.provider');
+        $allowUnauthenticated = $provider === 'openai-compatible'
+            && config('services.ai_gateway.allow_unauthenticated') === true;
 
-        if (($apiKey === '' && $oidcToken === '') || $baseUrl === '' || $model === '') {
+        if (($apiKey === '' && $oidcToken === '' && ! $allowUnauthenticated) || $baseUrl === '' || $model === '') {
             throw new RuntimeException('O agente ainda não está configurado. Nenhuma chamada foi enviada.');
         }
 
@@ -56,7 +59,10 @@ class AiAgentRuntime
 
             try {
                 $request = Http::baseUrl($baseUrl)->acceptJson()->asJson()->connectTimeout(5)->timeout(25);
-                $request = $apiKey !== '' ? $request->withToken($apiKey) : $request->withToken($oidcToken);
+                $token = $apiKey !== '' ? $apiKey : $oidcToken;
+                if ($token !== '') {
+                    $request = $request->withToken($token);
+                }
                 $response = $request->post('/chat/completions', $payload)->throw();
             } catch (ConnectionException $exception) {
                 throw new RuntimeException('O serviço de IA não respondeu. Nenhuma alteração foi feita.', previous: $exception);

@@ -37,7 +37,7 @@ class AiPlanningController extends Controller
                 'organization_id' => $demand->organization_id,
                 'demand_id' => $demand->id,
                 'requested_by' => $request->user()->id,
-                'provider' => 'vercel-ai-gateway',
+                'provider' => (string) config('services.ai_gateway.provider'),
                 'model' => (string) config('services.ai_gateway.model'),
                 'input_hash' => $result['input_hash'],
                 'input_characters' => $result['input_characters'],

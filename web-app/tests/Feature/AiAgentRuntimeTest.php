@@ -111,6 +111,54 @@ class AiAgentRuntimeTest extends TestCase
         Http::assertNothingSent();
     }
 
+    public function test_assistant_can_call_a_local_openai_compatible_model_without_credentials(): void
+    {
+        [, $manager, , $demand] = $this->workspace();
+        config([
+            'services.ai_gateway.provider' => 'openai-compatible',
+            'services.ai_gateway.key' => '',
+            'services.ai_gateway.oidc_token' => '',
+            'services.ai_gateway.base_url' => 'http://127.0.0.1:11434/v1',
+            'services.ai_gateway.model' => 'qwen2.5:3b',
+            'services.ai_gateway.allow_unauthenticated' => true,
+        ]);
+        Http::fake(['http://127.0.0.1:11434/v1/chat/completions' => Http::response($this->answerResponse('Resposta local.'), 200)]);
+
+        $result = app(AiAgentRuntime::class)->run($demand, $manager, 'Resuma a demanda.');
+
+        $this->assertSame('Resposta local.', $result['answer']);
+        Http::assertSent(fn ($request) => $request->url() === 'http://127.0.0.1:11434/v1/chat/completions'
+            && $request['model'] === 'qwen2.5:3b'
+            && ! $request->hasHeader('Authorization'));
+    }
+
+    public function test_local_provider_without_key_enables_both_ai_flows_and_queues_assistant(): void
+    {
+        [, $manager, , $demand] = $this->workspace();
+        config([
+            'services.ai_gateway.provider' => 'openai-compatible',
+            'services.ai_gateway.key' => '',
+            'services.ai_gateway.oidc_token' => '',
+            'services.ai_gateway.base_url' => 'http://127.0.0.1:11434/v1',
+            'services.ai_gateway.model' => 'qwen2.5:3b',
+            'services.ai_gateway.allow_unauthenticated' => true,
+        ]);
+        Bus::fake();
+        Http::fake();
+
+        $this->actingAs($manager)->get(route('demands.show', $demand))
+            ->assertOk()
+            ->assertSee('Perguntar ao assistente')
+            ->assertSee('Gerar proposta a partir do briefing')
+            ->assertDontSee('Assistente ainda não configurado');
+        $this->post(route('ai-agent.ask', $demand), ['question' => 'Quais tarefas faltam?'])
+            ->assertRedirect()->assertSessionHasNoErrors();
+
+        $this->assertSame('openai-compatible', AiAgentRun::firstOrFail()->provider);
+        Bus::assertDispatched(ProcessAiAgentRun::class);
+        Http::assertNothingSent();
+    }
+
     public function test_professional_cannot_read_another_users_run_status(): void
     {
         [, $manager, $professional, $demand] = $this->workspace();

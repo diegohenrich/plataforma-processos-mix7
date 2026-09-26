@@ -133,6 +133,27 @@ class AiPlanningTest extends TestCase
         $this->assertSame(0, DemandTask::count());
     }
 
+    public function test_openai_compatible_local_model_can_generate_a_proposal_without_api_key(): void
+    {
+        [, $manager, , $demand] = $this->workspace();
+        config([
+            'services.ai_gateway.provider' => 'openai-compatible',
+            'services.ai_gateway.key' => '',
+            'services.ai_gateway.oidc_token' => '',
+            'services.ai_gateway.base_url' => 'http://127.0.0.1:11434/v1',
+            'services.ai_gateway.model' => 'qwen2.5:3b',
+            'services.ai_gateway.allow_unauthenticated' => true,
+        ]);
+        Http::fake(['http://127.0.0.1:11434/v1/chat/completions' => Http::response($this->providerResponse(), 200)]);
+
+        $this->actingAs($manager)->post(route('ai-planning.propose', $demand))->assertRedirect()->assertSessionHasNoErrors();
+
+        $this->assertSame('openai-compatible', AiPlanningRun::firstOrFail()->provider);
+        Http::assertSent(fn ($request) => $request->url() === 'http://127.0.0.1:11434/v1/chat/completions'
+            && $request['model'] === 'qwen2.5:3b'
+            && ! $request->hasHeader('Authorization'));
+    }
+
     public function test_discard_keeps_audit_and_creates_no_tasks(): void
     {
         [, $manager, , $demand] = $this->workspace();

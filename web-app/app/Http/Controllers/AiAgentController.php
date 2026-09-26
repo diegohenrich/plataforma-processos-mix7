@@ -25,17 +25,20 @@ class AiAgentController extends Controller
         ]);
 
         $model = (string) config('services.ai_gateway.model');
-        if ($model === '' || (! config('services.ai_gateway.key') && ! config('services.ai_gateway.oidc_token'))) {
+        $provider = (string) config('services.ai_gateway.provider');
+        $allowUnauthenticated = $provider === 'openai-compatible'
+            && config('services.ai_gateway.allow_unauthenticated') === true;
+        if ($model === '' || (! config('services.ai_gateway.key') && ! config('services.ai_gateway.oidc_token') && ! $allowUnauthenticated)) {
             return back()->withErrors(['assistant' => 'O agente ainda não está configurado. Nenhuma chamada foi enviada.']);
         }
 
-        $run = DB::transaction(function () use ($request, $demand, $data, $model): AiAgentRun {
+        $run = DB::transaction(function () use ($request, $demand, $data, $model, $provider): AiAgentRun {
             $run = AiAgentRun::create([
                 'organization_id' => $demand->organization_id,
                 'demand_id' => $demand->id,
                 'requested_by' => $request->user()->id,
                 'agent' => 'demand_assistant',
-                'provider' => 'vercel-ai-gateway',
+                'provider' => $provider,
                 'model' => $model,
                 'input_hash' => hash('sha256', $data['question']),
                 'input_characters' => mb_strlen($data['question']),

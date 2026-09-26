@@ -36,10 +36,12 @@ return [
     ],
 
     'ai_gateway' => [
-        'key' => env('AI_GATEWAY_API_KEY'),
+        'provider' => env('AI_PROVIDER', 'vercel-ai-gateway'),
+        'key' => env('AI_API_KEY') ?: env('AI_GATEWAY_API_KEY'),
         'oidc_token' => $_SERVER['VERCEL_OIDC_TOKEN'] ?? $_ENV['VERCEL_OIDC_TOKEN'] ?? null,
-        'base_url' => 'https://ai-gateway.vercel.sh/v1',
-        'model' => env('AI_PLANNING_MODEL'),
+        'base_url' => env('AI_BASE_URL', 'https://ai-gateway.vercel.sh/v1'),
+        'model' => env('AI_MODEL') ?: env('AI_PLANNING_MODEL'),
+        'allow_unauthenticated' => (bool) env('AI_ALLOW_UNAUTHENTICATED', false),
     ],
 
 ];
