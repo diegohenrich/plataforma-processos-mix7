@@ -211,13 +211,14 @@ class DemandTaskController extends Controller
         $this->authorize('updateSchedule', $task);
         $data = $request->validate([
             'planned_start_on' => ['nullable', 'date_format:Y-m-d'],
-            'planned_due_on' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:planned_start_on'],
-        ], [
-            'planned_due_on.after_or_equal' => 'O prazo precisa ser igual ou posterior ao início.',
+            'planned_due_on' => ['nullable', 'date_format:Y-m-d'],
         ]);
 
         $start = $data['planned_start_on'] ?? null;
         $due = $data['planned_due_on'] ?? null;
+        if ($start && $due && $due < $start) {
+            return back()->withErrors(['planned_due_on' => 'O prazo precisa ser igual ou posterior ao início.'])->withInput();
+        }
         $oldStart = $task->planned_start_on?->format('Y-m-d');
         $oldDue = $task->planned_due_on?->format('Y-m-d');
 
