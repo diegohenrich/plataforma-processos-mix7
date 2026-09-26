@@ -1,3 +1,7 @@
+## Alinhamento da rastreabilidade com o Laravel atual — 2026-09-26
+- Corrigi a tabela de rastreabilidade dos áudios, que ainda descrevia avaliação, contas/permissões, link de aprovação, assistentes de IA e conhecimento como ausentes. Agora distingue fundação Laravel local das decisões e validações que continuam pendentes; atualizei também a referência do dashboard CRM e a lista de próximas lacunas.
+- `git diff --check` passou; conferi as linhas atualizadas contra `docs/AUDITORIA-FUNCIONAL-POR-PERFIL.md` e `docs/ROADMAP.md`. Mudança documental: testes de produto não se aplicam. Sincronização GitHub e CI estão pendentes para este commit; atualizar o Trello segue aguardando confirmação específica para comentário.
+
 ## Correção de dimensões nas anotações de aprovação — 2026-09-26
 - A CI da PR #11 revelou que uma anotação de área podia ser redirecionada por validação e o teste interpretar isso como sucesso; corrigi a persistência para preservar largura/altura já validadas e tornei o teste explícito sobre erro de validação e comentário efetivamente salvo.
 - Validação local após o ajuste: Laravel 117 testes/932 assertions; Pint nos arquivos alterados, build Vite, Composer validate e `git diff --check` passaram. Commit `3a1f0d9f7c630d4ddf64ecf23e4141e6d4a5ba93` está publicado em `codex/fundacao-compartilhada`, SHA remoto conferido igual. Checks push/PR da PR #11 passaram nos runs `36271668656` e `36271670492`.
