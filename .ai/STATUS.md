@@ -1,7 +1,7 @@
 ## Criar e revogar links de aprovação pela API — 2026-09-26
 - Acrescentei operações autenticadas para direção/gerência gerar uma versão na etapa de aprovação e revogar links. O token em texto puro só aparece uma vez na URL de resposta, não é persistido; o banco guarda o hash. Versões anteriores são revogadas pelo fluxo existente.
 - Validação local: 139 testes/1.121 assertions, Pint nos arquivos PHP afetados, `composer validate --no-check-publish`, `npm run build`, `route:list` (17 rotas) e `git diff --check` passaram. `DemandReviewLinkTest` cobre escopo por papel, segredo em hash, leitura pública após criação e bloqueio após revogação.
-- Atualizei contrato API, arquitetura, roadmap e contexto. Sem interface nova; inspeção visual não se aplica. GitHub e CI pendentes; confirmação para registrar o cartão combinado de aprovação via API no Trello ainda pendente.
+- Atualizei contrato API, arquitetura, roadmap e contexto. Sem interface nova; inspeção visual não se aplica. Commit `13ee6c04890def8b9d9dbb724d579585b6294e21` publicado na branch `codex/fundacao-compartilhada`, SHA local/remoto igual; os checks do push e da PR #11 passaram ([push](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36276148938), [PR](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36276151713)). Confirmação para registrar o cartão combinado de aprovação via API no Trello ainda pendente.
 
 ## Aprovação externa por link na API — 2026-09-26
 - A API pública oferece leitura da versão compartilhada e envio de comentário/anotação/aprovação/pedido de ajustes sem conta. Reutiliza o mesmo token temporário, revogável e de uso limitado do fluxo web; não devolve briefing nem tarefas internas. A decisão gera transição e evento existentes.
