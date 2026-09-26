@@ -43,6 +43,49 @@ class TeamInvitationTest extends TestCase
         ])->assertSessionHasErrors('role');
     }
 
+    public function test_owner_can_issue_a_hashed_manual_invitation_link_without_email_and_revoke_it(): void
+    {
+        Notification::fake();
+        [$organization, $owner] = $this->workspace();
+        $manager = User::factory()->create([
+            'organization_id' => $organization->id,
+            'role' => UserRole::MarketingManager,
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($manager)->postJson('/api/v1/team/invitations', [
+            'name' => 'Pessoa não autorizada',
+            'email' => 'negado@example.test',
+            'role' => UserRole::Professional->value,
+        ])->assertForbidden();
+
+        $creation = $this->actingAs($owner)->postJson('/api/v1/team/invitations', [
+            'name' => 'Nova profissional',
+            'email' => ' NOVA@EXEMPLO.COM ',
+            'role' => UserRole::Professional->value,
+        ])->assertCreated()
+            ->assertJsonPath('data.email', 'nova@exemplo.com')
+            ->assertJsonPath('message', 'Convite criado. Nenhum e-mail foi enviado; compartilhe a URL por um canal seguro.')
+            ->assertHeader('Cache-Control', 'no-store, private')
+            ->assertHeader('Referrer-Policy', 'no-referrer');
+
+        $url = $creation->json('data.invitation_url');
+        $token = basename(parse_url($url, PHP_URL_PATH));
+        $invitation = TeamInvitation::query()->firstOrFail();
+        $this->assertSame(64, strlen($token));
+        $this->assertSame(hash('sha256', $token), $invitation->token_hash);
+        $this->assertSame($owner->id, $invitation->invited_by);
+        $this->assertTrue($invitation->expires_at->between(now()->addHours(71)->addMinutes(59), now()->addHours(72)->addSeconds(1)));
+        $this->assertDatabaseMissing('users', ['email' => 'nova@exemplo.com']);
+        Notification::assertNothingSent();
+        $this->get(route('team-invitations.show', $token))->assertOk()->assertSee('Crie sua senha');
+
+        $this->actingAs($owner)->deleteJson('/api/v1/team/invitations/'.$invitation->id)
+            ->assertOk()
+            ->assertJsonPath('data.id', $invitation->id);
+        $this->get(route('team-invitations.show', $token))->assertOk()->assertSee('Este convite não está disponível');
+    }
+
     public function test_invitation_link_expires_after_seventy_two_hours(): void
     {
         Notification::fake();

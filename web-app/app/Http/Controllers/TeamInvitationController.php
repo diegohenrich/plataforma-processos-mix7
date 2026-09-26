@@ -6,6 +6,7 @@ use App\Enums\UserRole;
 use App\Models\TeamInvitation;
 use App\Models\User;
 use App\Notifications\TeamInvitationNotification;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -18,7 +19,7 @@ use Illuminate\View\View;
 
 class TeamInvitationController extends Controller
 {
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request): RedirectResponse|JsonResponse
     {
         $this->authorize('create', User::class);
         $request->merge(['email' => mb_strtolower(trim((string) $request->input('email')))]);
@@ -48,6 +49,21 @@ class TeamInvitationController extends Controller
                 'expires_at' => now()->addHours(72),
             ]);
         });
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Convite criado. Nenhum e-mail foi enviado; compartilhe a URL por um canal seguro.',
+                'data' => [
+                    'id' => $invitation->id,
+                    'name' => $invitation->name,
+                    'email' => $invitation->email,
+                    'role' => $invitation->role->value,
+                    'expires_at' => $invitation->expires_at->toISOString(),
+                    'invitation_url' => route('team-invitations.show', ['token' => $token]),
+                ],
+            ], 201)->header('Cache-Control', 'private, no-store')
+                ->header('Referrer-Policy', 'no-referrer');
+        }
 
         Notification::route('mail', $invitation->email)->notify(new TeamInvitationNotification($invitation, $token));
 
@@ -101,13 +117,20 @@ class TeamInvitationController extends Controller
         return redirect()->route('dashboard')->with('success', 'Conta ativada. Você já pode acessar a plataforma.');
     }
 
-    public function revoke(Request $request, TeamInvitation $invitation): RedirectResponse
+    public function revoke(Request $request, TeamInvitation $invitation): RedirectResponse|JsonResponse
     {
         $this->authorize('create', User::class);
         abort_unless($invitation->organization_id === $request->user()->organization_id, 404);
 
         if ($invitation->isPending()) {
             $invitation->forceFill(['revoked_at' => now()])->save();
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Convite cancelado. O link não pode mais ser usado.',
+                'data' => ['id' => $invitation->id, 'revoked_at' => $invitation->fresh()->revoked_at?->toISOString()],
+            ])->header('Cache-Control', 'private, no-store');
         }
 
         return redirect()->route('team.index')->with('success', 'Convite cancelado. O link não pode mais ser usado.');

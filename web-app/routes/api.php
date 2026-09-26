@@ -5,6 +5,7 @@ use App\Http\Controllers\DemandController as WebDemandController;
 use App\Http\Controllers\DemandDeliveryEvidenceController;
 use App\Http\Controllers\DemandReviewController;
 use App\Http\Controllers\DemandTaskController;
+use App\Http\Controllers\TeamInvitationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -35,6 +36,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active'])->group(function (): 
     Route::post('/demands/{demand}/delivery-evidences', [DemandDeliveryEvidenceController::class, 'store']);
     Route::post('/demands/{demand}/review-links', [DemandReviewController::class, 'store']);
     Route::delete('/demands/{demand}/review-links/{reviewLink}', [DemandReviewController::class, 'revoke']);
+    Route::post('/team/invitations', [TeamInvitationController::class, 'store'])->middleware('throttle:10,1');
+    Route::delete('/team/invitations/{invitation}', [TeamInvitationController::class, 'revoke']);
     Route::patch('/tasks/{task}/status', [DemandTaskController::class, 'updateStatus']);
     Route::post('/tasks/{task}/timer/start', [DemandTaskController::class, 'startTimer']);
     Route::post('/tasks/{task}/timer/pause', [DemandTaskController::class, 'pauseTimer']);

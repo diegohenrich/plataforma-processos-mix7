@@ -15,10 +15,14 @@ A API pertence à aplicação Laravel e usa o mesmo banco, políticas e históri
 | `POST /demands/{demand}/delivery-evidences` | `{"outcome":"published","evidence_url":"https://…"}` ou observação `details` | Direção/gerência na etapa Entrega ou depois; registra autoria e histórico sem publicar conteúdo nem mover a etapa |
 | `POST /demands/{demand}/review-links` | `material_url` ou `material_file`, mais `expires_at` | Direção/gerência na Aprovação do cliente; cria versão, revoga versões abertas anteriores e retorna a URL secreta somente uma vez |
 | `DELETE /demands/{demand}/review-links/{reviewLink}` | Vazio | Direção/gerência da mesma organização; revoga o link imediatamente |
+| `POST /team/invitations` | `name`, `email`, `role` (`professional` ou `client`) | Somente direção; cria link de ativação por 72 horas sem enviar e-mail; retorna URL secreta uma vez |
+| `DELETE /team/invitations/{invitation}` | Vazio | Somente direção da mesma organização; cancela o link pendente |
 
 ## Aprovação externa por link
 
 O link é uma credencial: qualquer pessoa que o possua pode ver somente o material daquela versão e responder em nome informado. A gerência pode criar e revogar links pela API autenticada, como descrito na tabela de demandas; a criação devolve a URL secreta em uma única resposta. O token não deve ser incluído em logs, analytics ou links de terceiros. Leitura e resposta têm limites de 30 e 10 requisições por minuto por origem.
+
+O link de convite também é uma credencial e deve ser compartilhado em canal seguro. A API informa que não enviou e-mail; a pessoa convidada acessa a página web de ativação e cria a própria senha. O token expira em 72 horas, é armazenado somente como hash e pode ser revogado pela direção. O endpoint de criação tem limite de 10 chamadas por minuto.
 
 | Método e rota | Uso | Comportamento |
 | --- | --- | --- |
@@ -64,4 +68,4 @@ Erros de validação e transição de tarefa não permitida usam HTTP `422`; con
 
 ## Limites atuais
 
-A escrita cobre criação de demanda e tarefas, transições de etapa/tarefa, cronograma, transferência de responsável, cronômetro, registro de evidência pós-aprovação e o ciclo de links de revisão. Gestão interna de conhecimento/equipe e provisionamento de tokens Sanctum ainda não têm endpoints de API nesta versão. Não existe aplicação Windows nesta entrega; o contrato fica documentado para esse cliente futuro. A matriz de perfis e a operação compartilhada ainda precisam de validação da Mix7 antes do uso com dados reais.
+A escrita cobre criação de demanda e tarefas, transições de etapa/tarefa, cronograma, transferência de responsável, cronômetro, registro de evidência pós-aprovação, ciclo de links de revisão e convite/cancelamento de profissionais e clientes. Gestão de acesso de contas, conhecimento e provisionamento de tokens Sanctum ainda não têm endpoints de API nesta versão. Não existe aplicação Windows nesta entrega; o contrato fica documentado para esse cliente futuro. A matriz de perfis e a operação compartilhada ainda precisam de validação da Mix7 antes do uso com dados reais.
