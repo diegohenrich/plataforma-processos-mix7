@@ -1,7 +1,7 @@
 ## Avaliação e resposta pela API — 2026-09-26
 - Direção/gerência podem registrar avaliações de prazo/qualidade, evidências e fatores externos em tarefas concluídas; o sistema conserva peso 2/1 já definido para o papel. Somente a pessoa avaliada pode responder e a resposta fica no histórico. Não há nota calculada nem ranking.
 - Validação local: 141 testes/1.154 assertions, Pint nos arquivos PHP afetados, `composer validate --no-check-publish`, `npm run build`, `route:list` (21 rotas) e `git diff --check` passaram. `TeamActivityTest` cobre pesos, duplicidade por avaliador, papel de quem responde e negação a colega/cliente.
-- Contrato API, arquitetura, roadmap e contexto atualizados. Sem interface nova; inspeção visual não se aplica. GitHub/CI pendentes; registro no Trello depende da confirmação solicitada.
+- Contrato API, arquitetura, roadmap e contexto atualizados. Sem interface nova; inspeção visual não se aplica. Commit `ea0a61336c34402712454435b6d5619d59cd76d8` publicado na branch `codex/fundacao-compartilhada`, SHA local/remoto igual; checks do push e da PR #11 passaram ([push](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36276741026), [PR](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36276743405)). Registro no Trello depende da confirmação solicitada.
 
 ## Convites de conta pela API sem SMTP — 2026-09-26
 - Direção pode emitir convite de profissional/cliente pela API e copiar link temporário sem enviar e-mail; o endpoint retorna a URL apenas na criação. A pessoa continua definindo sua própria senha. Direção também pode cancelar convites pendentes; hash do token, validade de 72 horas e escopo organizacional reaproveitam o fluxo web.
