@@ -207,10 +207,17 @@ class DemandTaskController extends Controller
         return $this->actionSuccess($request, $entry->task, 'Cronômetro encerrado agora e tarefa pausada. O intervalo anterior permanece registrado; revise o tempo se o fechamento foi abrupto.', $entry);
     }
 
-    public function store(Request $request, Demand $demand): RedirectResponse
+    public function store(Request $request, Demand $demand): RedirectResponse|JsonResponse
     {
         $this->authorize('manage', $demand);
         if (in_array($demand->status, [DemandStatus::ClientApproval, DemandStatus::Delivery, DemandStatus::Completed], true)) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Não é possível adicionar tarefas nesta etapa da demanda.',
+                    'errors' => ['title' => ['Não é possível adicionar tarefas nesta etapa da demanda.']],
+                ], 409);
+            }
+
             return back()->withErrors(['title' => 'Não é possível adicionar tarefas nesta etapa da demanda.']);
         }
         $data = $request->validate([
@@ -226,7 +233,7 @@ class DemandTaskController extends Controller
             'estimate_minutes' => ['nullable', 'integer', 'min:1', 'max:100000'],
         ]);
 
-        DB::transaction(function () use ($data, $demand, $request): void {
+        $task = DB::transaction(function () use ($data, $demand, $request): DemandTask {
             $task = $demand->tasks()->create([
                 'organization_id' => $demand->organization_id,
                 'created_by' => $request->user()->id,
@@ -244,7 +251,25 @@ class DemandTaskController extends Controller
                 'event_type' => 'task_assigned',
                 'summary' => 'Tarefa "'.$task->title.'" atribuída a '.$task->assignee()->value('name'),
             ]);
+
+            return $task;
         });
+
+        if ($request->expectsJson()) {
+            $task->load('assignee:id,name');
+
+            return response()->json([
+                'message' => 'Tarefa adicionada à demanda.',
+                'data' => [
+                    'id' => $task->id,
+                    'demand_id' => $task->demand_id,
+                    'title' => $task->title,
+                    'status' => $task->status->value,
+                    'estimate_minutes' => $task->estimate_minutes,
+                    'assignee' => ['id' => $task->assignee->id, 'name' => $task->assignee->name],
+                ],
+            ], 201);
+        }
 
         return back()->with('success', 'Tarefa adicionada à demanda.');
     }

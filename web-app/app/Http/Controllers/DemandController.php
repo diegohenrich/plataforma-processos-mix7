@@ -9,6 +9,7 @@ use App\Models\Demand;
 use App\Models\DemandEvent;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -75,7 +76,7 @@ class DemandController extends Controller
         return view('demands.create', compact('professionals', 'clients'));
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request): RedirectResponse|JsonResponse
     {
         $this->authorize('create', Demand::class);
         $organizationId = $request->user()->organization_id;
@@ -154,6 +155,26 @@ class DemandController extends Controller
 
             return $demand;
         });
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Demanda criada e tarefas atribuídas.',
+                'data' => [
+                    'id' => $demand->id,
+                    'title' => $demand->title,
+                    'status' => $demand->status->value,
+                    'status_label' => $demand->status->label(),
+                    'client_user_id' => $demand->client_user_id,
+                    'tasks' => $demand->tasks()->with('assignee:id,name')->get()->map(fn ($task) => [
+                        'id' => $task->id,
+                        'title' => $task->title,
+                        'status' => $task->status->value,
+                        'estimate_minutes' => $task->estimate_minutes,
+                        'assignee' => ['id' => $task->assignee->id, 'name' => $task->assignee->name],
+                    ]),
+                ],
+            ], 201);
+        }
 
         return redirect()->route('demands.show', $demand)->with('success', 'Demanda criada e tarefas atribuídas.');
     }
@@ -247,7 +268,7 @@ class DemandController extends Controller
         return back()->with('success', 'Vínculo do cliente atualizado.');
     }
 
-    public function updateStatus(Request $request, Demand $demand): RedirectResponse
+    public function updateStatus(Request $request, Demand $demand): RedirectResponse|JsonResponse
     {
         $this->authorize('manage', $demand);
         $data = $request->validate([
@@ -257,11 +278,11 @@ class DemandController extends Controller
         $to = DemandStatus::from($data['status']);
 
         if (! in_array($to, $from->next(), true)) {
-            return back()->withErrors(['status' => 'Essa etapa não pode vir depois do estado atual.']);
+            return $this->workflowFailure($request, 'Essa etapa não pode vir depois do estado atual.');
         }
 
         if ($to === DemandStatus::InternalReview && $demand->tasks()->where('status', '!=', TaskStatus::Completed->value)->exists()) {
-            return back()->withErrors(['status' => 'Conclua todas as tarefas antes da revisão interna.']);
+            return $this->workflowFailure($request, 'Conclua todas as tarefas antes da revisão interna.');
         }
 
         DB::transaction(function () use ($demand, $from, $to, $request): void {
@@ -277,6 +298,26 @@ class DemandController extends Controller
             ]);
         });
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Etapa da demanda atualizada.',
+                'data' => [
+                    'id' => $demand->id,
+                    'status' => $demand->fresh()->status->value,
+                    'status_label' => $demand->fresh()->status->label(),
+                ],
+            ]);
+        }
+
         return back()->with('success', 'Etapa da demanda atualizada.');
+    }
+
+    private function workflowFailure(Request $request, string $message): RedirectResponse|JsonResponse
+    {
+        if (! $request->expectsJson()) {
+            return back()->withErrors(['status' => $message]);
+        }
+
+        return response()->json(['message' => $message, 'errors' => ['status' => [$message]]], 409);
     }
 }

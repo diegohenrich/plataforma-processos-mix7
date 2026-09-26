@@ -9,6 +9,9 @@ A API pertence à aplicação Laravel e usa o mesmo banco, políticas e históri
 | `GET /me` | Identidade, papel e organização da conta autenticada | Qualquer perfil ativo |
 | `GET /demands` | Até 100 demandas recentes visíveis à pessoa | Dados reduzidos para clientes e tarefas atribuídas filtradas para profissionais |
 | `GET /demands/{demand}` | Detalhe autorizado da demanda | Cliente vê título, etapa e atualização; profissional vê suas tarefas; gestão vê o detalhe da organização |
+| `POST /demands` | Cria demanda e de 1 a 20 tarefas iniciais em uma transação | Direção/gerência; cliente opcional e profissionais ativos devem pertencer à mesma organização |
+| `POST /demands/{demand}/tasks` | Acrescenta uma tarefa atribuída à demanda | Direção/gerência da organização, exceto durante aprovação do cliente, entrega ou conclusão |
+| `PATCH /demands/{demand}/status` | `{"status":"planning"}` | Direção/gerência; transições do fluxo são validadas e revisão interna exige todas as tarefas concluídas |
 
 ## Tarefas e cronômetro
 
@@ -41,8 +44,8 @@ Exemplo de sucesso:
 }
 ```
 
-Erros de validação usam HTTP `422`; conflito de timer ou regra de fluxo usa `409`; conta sem autorização usa `403`; token ausente/inválido usa `401`. Erros de regra incluem `message` e `errors`, indexados pelo campo. O cliente deve tratar o estado do servidor como fonte de verdade e não presumir que seu relógio local registra tempo.
+Erros de validação e transição de tarefa não permitida usam HTTP `422`; conflito de timer ou bloqueio de fluxo da demanda usa `409`; conta sem autorização usa `403`; token ausente/inválido usa `401`. Criações bem-sucedidas retornam HTTP `201`. Erros de regra incluem `message` e `errors`, indexados pelo campo. O cliente deve tratar o estado do servidor como fonte de verdade e não presumir que seu relógio local registra tempo.
 
 ## Limites atuais
 
-A escrita existente cobre estado de tarefa e cronômetro, reutilizando ações já disponíveis no site. Criar demanda/tarefa, transferir responsável, editar cronograma, gerir conhecimento/equipe, aprovação, anexos e configuração de tokens ainda não têm endpoints de escrita nesta versão. Não existe aplicação Windows nesta entrega; o contrato fica documentado para esse cliente futuro. A matriz de perfis e a operação compartilhada ainda precisam de validação da Mix7 antes do uso com dados reais.
+A escrita cobre criação de demanda e tarefas, transições de etapa/tarefa e cronômetro, reutilizando regras já aplicadas pelo site. Transferir responsável, editar cronograma, gerir conhecimento/equipe, aprovação, anexos e configuração de tokens ainda não têm endpoints de escrita nesta versão. Não existe aplicação Windows nesta entrega; o contrato fica documentado para esse cliente futuro. A matriz de perfis e a operação compartilhada ainda precisam de validação da Mix7 antes do uso com dados reais.
