@@ -1,7 +1,7 @@
 ## Convites de conta pela API sem SMTP — 2026-09-26
 - Direção pode emitir convite de profissional/cliente pela API e copiar link temporário sem enviar e-mail; o endpoint retorna a URL apenas na criação. A pessoa continua definindo sua própria senha. Direção também pode cancelar convites pendentes; hash do token, validade de 72 horas e escopo organizacional reaproveitam o fluxo web.
 - Validação local: 140 testes/1.141 assertions, Pint nos arquivos PHP afetados, `composer validate --no-check-publish`, `npm run build`, `route:list` (19 rotas) e `git diff --check` passaram. `TeamInvitationTest` cobre papel autorizado, ausência de e-mail, token em hash, expiração, ativação web e revogação.
-- Contrato API, arquitetura, roadmap e contexto atualizados. Sem tela nova; inspeção visual não se aplica. GitHub/CI e registro no Trello ainda pendentes.
+- Contrato API, arquitetura, roadmap e contexto atualizados. Sem tela nova; inspeção visual não se aplica. Commit `11fe302fddec336d01781a9efa62412cf4e262e2` publicado na branch `codex/fundacao-compartilhada`, SHA local/remoto igual; checks do push e PR #11 passaram ([push](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36276448064), [PR](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36276451196)). Registro no Trello depende da confirmação solicitada.
 
 ## Criar e revogar links de aprovação pela API — 2026-09-26
 - Acrescentei operações autenticadas para direção/gerência gerar uma versão na etapa de aprovação e revogar links. O token em texto puro só aparece uma vez na URL de resposta, não é persistido; o banco guarda o hash. Versões anteriores são revogadas pelo fluxo existente.
