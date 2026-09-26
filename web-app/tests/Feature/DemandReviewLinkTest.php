@@ -158,6 +158,23 @@ class DemandReviewLinkTest extends TestCase
         $this->assertDatabaseCount('demand_review_responses', 0);
     }
 
+    public function test_video_review_offers_a_control_to_copy_the_paused_timestamp_into_annotation(): void
+    {
+        Storage::fake('local');
+        [$organization, $manager, $demand] = $this->setupApproval();
+        $response = $this->actingAs($manager)->post(route('demand-reviews.store', $demand), [
+            'material_file' => UploadedFile::fake()->create('criativo.mp4', 120, 'video/mp4'),
+            'expires_at' => now()->addDays(3)->toIso8601String(),
+        ])->assertRedirect();
+
+        $token = basename(parse_url($response->getSession()->get('review_link_url'), PHP_URL_PATH));
+        $this->get(route('client-reviews.show', $token))->assertOk()
+            ->assertSee('id="review-video"', false)
+            ->assertSee('id="use-video-time"', false)
+            ->assertSee('Usar instante pausado')
+            ->assertSee('Pause o vídeo no ponto desejado');
+    }
+
     public function test_expired_revoked_and_previous_version_links_cannot_be_opened_or_answered(): void
     {
         [$organization, $manager, $demand] = $this->setupApproval();

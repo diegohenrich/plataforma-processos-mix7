@@ -9,6 +9,9 @@
     <style>
         .attachment-preview{margin:14px 0 18px;padding:18px;border:1px solid #deeaeb;border-radius:14px;background:#fff}.attachment-preview h2{font-size:16px;margin:0 0 12px;color:#202e35}.attachment-preview iframe,.attachment-preview video,.attachment-preview img{display:block;width:100%;max-height:680px;border:1px solid #e3e9e8;border-radius:10px;background:#f5f6f5}.attachment-preview iframe{height:620px}.attachment-preview video{height:auto}.attachment-preview img{height:auto;object-fit:contain}.attachment-preview p{font-size:12px;line-height:1.5;color:#718087;margin:10px 0 0}.attachment-preview a{color:#326c82}@media(max-width:560px){.attachment-preview{padding:13px}.attachment-preview iframe{height:62vh;min-height:380px}}
     </style>
+    <style>
+        .timestamp-button{margin-top:10px;min-height:42px;padding:10px 13px;border:1px solid #d6e0e1;border-radius:10px;background:#fff;color:#38515b;font:inherit;font-size:13px;font-weight:700;cursor:pointer}.timestamp-button:focus-visible{outline:3px solid #8ecde288;outline-offset:2px}
+    </style>
 </head>
 <body>
 <header class="top">MIX7 <span>· revisão do cliente</span></header>
@@ -27,7 +30,7 @@
                 @if (str_starts_with((string) $reviewLink->material_mime, 'image/'))
                     <img src="{{ $materialUrl }}" alt="{{ $reviewLink->material_file_name }}">
                 @elseif (str_starts_with((string) $reviewLink->material_mime, 'video/'))
-                    <video controls preload="metadata" aria-label="{{ $reviewLink->material_file_name }}"><source src="{{ $materialUrl }}" type="{{ $reviewLink->material_mime }}">Seu navegador não reproduz este vídeo. <a href="{{ $materialUrl }}">Abrir material</a>.</video>
+                    <video id="review-video" controls preload="metadata" aria-label="{{ $reviewLink->material_file_name }}"><source src="{{ $materialUrl }}" type="{{ $reviewLink->material_mime }}">Seu navegador não reproduz este vídeo. <a href="{{ $materialUrl }}">Abrir material</a>.</video>
                 @elseif ($reviewLink->material_mime === 'application/pdf')
                     @include('components.pdf-preview', ['pdfUrl' => $materialUrl, 'pdfName' => $reviewLink->material_file_name])
                 @else
@@ -47,7 +50,7 @@
                 <fieldset style="border:0;padding:0;margin:0"><legend class="field">Ancorar este comentário em</legend><label class="field"><span style="position:absolute;left:-9999px">Tipo de referência</span><select id="anchor-type" name="anchor_type"><option value="">Sem localização específica</option><option value="text" @selected(old('anchor_type') === 'text')>Trecho de texto</option><option value="area" @selected(old('anchor_type') === 'area')>Área da página (posição %)</option><option value="time" @selected(old('anchor_type') === 'time')>Instante de vídeo</option><option value="page" @selected(old('anchor_type') === 'page')>Página do material</option></select></label>
                     <div class="anchor-fields" data-anchor="text" hidden><label class="field">Trecho do material<textarea name="anchor_text" maxlength="1000" placeholder="Cole o texto exato ao qual o comentário se refere">{{ old('anchor_text') }}</textarea></label></div>
                     <div class="anchor-fields" data-anchor="area" hidden><p class="muted">@if ($reviewLink->material_mime === 'application/pdf')Informe as coordenadas do ponto desejado. Para localizar uma página do PDF, escolha “Página do material”.@else Marque o ponto na prévia ou informe as coordenadas. Role a página antes de ativar a marcação. Se o site bloquear a prévia, abra o material em outra guia.@endif</p>@if ($reviewLink->material_mime !== 'application/pdf')<div class="preview-controls"><button id="toggle-area-marker" type="button" aria-pressed="false">Marcar área na prévia</button><span id="preview-status" class="preview-status" aria-live="polite"></span></div><div id="material-preview" class="material-preview" hidden><iframe src="{{ $materialUrl }}" title="Prévia do material para marcar uma área" sandbox="allow-scripts allow-forms" referrerpolicy="no-referrer" loading="lazy"></iframe><div id="area-marker" class="area-marker" role="button" tabindex="0" aria-label="Clique na posição que deseja comentar" hidden></div></div><p class="preview-note">A incorporação depende das regras do site revisado. A tela não injeta código na página; as coordenadas registradas se referem à área visível da prévia.</p>@endif<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><label class="field">Horizontal (%)<input name="anchor_x" type="number" min="0" max="100" step="0.1" value="{{ old('anchor_x') }}"></label><label class="field">Vertical (%)<input name="anchor_y" type="number" min="0" max="100" step="0.1" value="{{ old('anchor_y') }}"></label></div></div>
-                    <div class="anchor-fields" data-anchor="time" hidden><label class="field">Instante do vídeo (HH:MM:SS)<input name="anchor_time" type="text" inputmode="numeric" pattern="[0-9]{2}:[0-5][0-9]:[0-5][0-9]" placeholder="00:01:25" value="{{ old('anchor_time') }}"></label></div>
+                    <div class="anchor-fields" data-anchor="time" hidden><label class="field">Instante do vídeo (HH:MM:SS)<input name="anchor_time" type="text" inputmode="numeric" pattern="[0-9]{2}:[0-5][0-9]:[0-5][0-9]" placeholder="00:01:25" value="{{ old('anchor_time') }}"></label>@if ($reviewLink->material_file_path && str_starts_with((string) $reviewLink->material_mime, 'video/'))<button id="use-video-time" class="timestamp-button" type="button">Usar instante pausado</button><p class="preview-note" id="video-time-status" aria-live="polite">Pause o vídeo no ponto desejado e use este botão para preencher o instante.</p>@endif</div>
                     <div class="anchor-fields" data-anchor="page" hidden><label class="field">Página do material<input name="anchor_page" type="number" min="1" step="1" placeholder="1" value="{{ old('anchor_page') }}"></label></div>
                 </fieldset>
                 @error('reviewer_name')<span class="error-text">{{ $message }}</span>@enderror @error('comment')<span class="error-text">{{ $message }}</span>@enderror @error('type')<span class="error-text">{{ $message }}</span>@enderror @error('anchor_type')<span class="error-text">{{ $message }}</span>@enderror
@@ -70,10 +73,15 @@
         const preview = document.getElementById('material-preview');
         const marker = document.getElementById('area-marker');
         const markerButton = document.getElementById('toggle-area-marker');
+        const videoTimeButton = document.getElementById('use-video-time');
+        const reviewVideo = document.getElementById('review-video');
+        const videoTimeInput = document.querySelector('[name="anchor_time"]');
+        const videoTimeStatus = document.getElementById('video-time-status');
         const status = document.getElementById('preview-status');
         const xInput = document.querySelector('[name="anchor_x"]');
         const yInput = document.querySelector('[name="anchor_y"]');
         const setMarking = (enabled) => {
+            if (!marker || !markerButton || !preview) return;
             marker.hidden = !enabled;
             markerButton.setAttribute('aria-pressed', String(enabled));
             markerButton.textContent = enabled ? 'Cancelar marcação' : 'Marcar área na prévia';
@@ -102,18 +110,42 @@
                 button.disabled = Boolean(select.value);
             });
             select.closest('form').querySelector('[data-annotation-action]').hidden = !select.value;
-            preview.hidden = select.value !== 'area';
-            if (select.value !== 'area') setMarking(false);
+            if (preview) preview.hidden = select.value !== 'area';
+            if (select.value !== 'area' && marker && markerButton) setMarking(false);
         };
         select.addEventListener('change', sync);
-        markerButton.addEventListener('click', () => setMarking(marker.hidden));
-        marker.addEventListener('click', savePoint);
-        marker.addEventListener('keydown', (event) => {
-            if (event.key === 'Enter' || event.key === ' ') {
-                event.preventDefault();
-                const bounds = marker.getBoundingClientRect();
-                savePoint({clientX: bounds.left + bounds.width / 2, clientY: bounds.top + bounds.height / 2});
+        if (marker && markerButton) {
+            markerButton.addEventListener('click', () => setMarking(marker.hidden));
+            marker.addEventListener('click', savePoint);
+            marker.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    const bounds = marker.getBoundingClientRect();
+                    savePoint({clientX: bounds.left + bounds.width / 2, clientY: bounds.top + bounds.height / 2});
+                }
+            });
+        }
+        videoTimeButton?.addEventListener('click', () => {
+            if (!reviewVideo || !Number.isFinite(reviewVideo.currentTime)) {
+                videoTimeStatus.textContent = 'O vídeo ainda não informou a posição atual. Tente novamente.';
+                return;
             }
+            if (!reviewVideo.paused) {
+                videoTimeStatus.textContent = 'Pause o vídeo no ponto desejado antes de capturar o instante.';
+                return;
+            }
+
+            const totalSeconds = Math.floor(reviewVideo.currentTime);
+            const hours = Math.floor(totalSeconds / 3600);
+            if (hours > 23) {
+                videoTimeStatus.textContent = 'Este campo aceita vídeos com até 23:59:59 para localizar o instante.';
+                return;
+            }
+
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+            videoTimeInput.value = [hours, minutes, seconds].map((part) => String(part).padStart(2, '0')).join(':');
+            videoTimeStatus.textContent = `Instante preenchido: ${videoTimeInput.value}.`;
         });
         sync();
     })();
