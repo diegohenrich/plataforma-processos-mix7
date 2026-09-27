@@ -10,12 +10,14 @@ use App\Models\DemandReviewLink;
 use App\Models\DemandReviewResponse;
 use App\Models\DemandTask;
 use App\Models\User;
+use App\Notifications\ClientReviewLinkNotification;
 use App\Notifications\DemandReviewActivityNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -35,7 +37,14 @@ class DemandReviewController extends Controller
             'material_url' => ['nullable', 'required_without:material_file', 'url:http,https', 'max:2048'],
             'material_file' => ['nullable', 'required_without:material_url', 'file', 'max:20480', 'mimes:pdf,jpg,jpeg,png,webp,mp4,webm'],
             'expires_at' => ['required', 'date', 'after:now'],
+            'send_to_email' => ['nullable', 'email', 'max:254'],
         ]);
+        if (! empty($data['send_to_email']) && $request->expectsJson()) {
+            throw ValidationException::withMessages(['send_to_email' => 'O envio por e-mail deve ser iniciado pela interface web, com confirmação da pessoa responsável.']);
+        }
+        if (! empty($data['send_to_email']) && in_array(config('mail.default'), ['log', 'array'], true)) {
+            throw ValidationException::withMessages(['send_to_email' => 'Configure um transporte real de e-mail antes de enviar o link. O link ainda pode ser copiado e compartilhado por um canal aprovado.']);
+        }
         if ($request->filled('material_url') && $request->hasFile('material_file')) {
             throw ValidationException::withMessages(['material_file' => 'Envie um link ou um arquivo por versão, não os dois.']);
         }
@@ -77,6 +86,31 @@ class DemandReviewController extends Controller
         }
 
         $reviewUrl = route('client-reviews.show', ['token' => $plainToken]);
+        $emailSent = false;
+        if (! empty($data['send_to_email'])) {
+            try {
+                Notification::route('mail', $data['send_to_email'])->notify(new ClientReviewLinkNotification($demand, $link, $reviewUrl));
+                $emailSent = true;
+            } catch (Throwable $exception) {
+                report($exception);
+            }
+
+            if ($emailSent) {
+                try {
+                    DemandEvent::create([
+                        'organization_id' => $demand->organization_id,
+                        'demand_id' => $demand->id,
+                        'actor_id' => $request->user()->id,
+                        'event_type' => 'client_review_link_emailed',
+                        'summary' => $request->user()->name.' enviou o link da versão '.$link->version.' por e-mail.',
+                        'to_status' => DemandStatus::ClientApproval->value,
+                    ]);
+                } catch (Throwable $exception) {
+                    report($exception);
+                }
+            }
+        }
+
         if ($request->expectsJson()) {
             return response()->json([
                 'message' => 'Link da versão criado. Envie-o ao cliente por um canal aprovado.',
@@ -91,9 +125,16 @@ class DemandReviewController extends Controller
                 ->header('Referrer-Policy', 'no-referrer');
         }
 
-        return back()->with('review_link_url', $reviewUrl)
+        $flash = $emailSent
+            ? ['success', 'Link da versão '.$link->version.' criado e enviado por e-mail.']
+            : (! empty($data['send_to_email'])
+                ? ['warning', 'O link da versão '.$link->version.' foi criado, mas o e-mail não foi enviado. Copie o link abaixo ou tente novamente com o transporte configurado.']
+                : ['success', 'Link da versão '.$link->version.' criado. Copie-o agora para enviar ao cliente.']);
+
+        return back()->with('review_link_emailed', $emailSent)
+            ->with('review_link_url', $reviewUrl)
             ->with('review_link_id', $link->id)
-            ->with('success', 'Link da versão '.$link->version.' criado. Copie-o agora para enviar ao cliente.');
+            ->with($flash[0], $flash[1]);
     }
 
     public function revoke(Request $request, Demand $demand, DemandReviewLink $reviewLink): RedirectResponse|JsonResponse

@@ -53,6 +53,8 @@ O link de convite também é uma credencial e deve ser compartilhado em canal se
 | `GET /public/reviews/{token}` | Lê título da demanda, versão, validade, material e respostas ligadas à versão | Sem login; token expirado, revogado ou indisponível retorna `410`; resposta é privada e não armazenável em cache |
 | `POST /public/reviews/{token}/responses` | Usa os mesmos campos `reviewer_name`, `type`, `comment` e âncoras da revisão web | `comment`, `annotation`, `approved` ou `changes_requested`; decisão final move a etapa e não pode ser repetida |
 
+O envio opcional do link por e-mail está disponível somente na tela web de criação da versão, por ação explícita da direção/gerência e com endereço informado. A mensagem contém o link temporário e informa que o cliente não precisa de conta. A API não envia mensagens; em `log`/`array`, a tela explica que o envio está desabilitado e permite copiar o link. Um transporte real ainda precisa ser configurado e validado no ambiente de operação.
+
 Arquivos privados continuam disponíveis pela URL de material que o `GET` retorna e passam pela mesma checagem do link. Aprovação e pedido de ajustes registram o evento da demanda; comentários e anotações permanecem ligados à versão. Os links públicos não expõem briefing nem tarefas internas.
 
 Anexos de trabalho são separados do material enviado para aprovação. A API autentica cada leitura/transferência e oculta anexos internos dos clientes; um arquivo só aparece para o aprovador externo quando a equipe o seleciona em uma nova versão de revisão. Os limites locais são os descritos acima; Hostinger ainda precisa confirmar limite PHP, espaço e tráfego.

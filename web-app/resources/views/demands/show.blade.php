@@ -24,15 +24,16 @@
                     <div class="section-heading"><div><h2>Revisão do cliente por link</h2><p>O briefing e as tarefas internas ficam privados. As respostas de todas as versões permanecem registradas aqui.</p></div></div>
                     @if ($demand->status === App\Enums\DemandStatus::ClientApproval)
                         @if (session('review_link_url'))
-                            <div class="notice notice-success"><strong>Link da versão {{ $reviewLinks->firstWhere('id', session('review_link_id'))?->version }} criado.</strong><p>Copie e envie ao cliente. Por segurança, o link completo aparece somente nesta confirmação.</p><a href="{{ session('review_link_url') }}" target="_blank" rel="noopener noreferrer">{{ session('review_link_url') }}</a></div>
+                            <div class="notice notice-success"><strong>Link da versão {{ $reviewLinks->firstWhere('id', session('review_link_id'))?->version }} criado.</strong><p>{{ session('review_link_emailed') ? 'O link foi enviado ao endereço informado. Você também pode copiá-lo abaixo.' : 'Copie e envie ao cliente. Por segurança, o link completo aparece somente nesta confirmação.' }}</p><a href="{{ session('review_link_url') }}" target="_blank" rel="noopener noreferrer">{{ session('review_link_url') }}</a></div>
                         @endif
                         <form method="post" enctype="multipart/form-data" action="{{ route('demand-reviews.store', $demand) }}" class="review-link-form">@csrf
                             <label class="field">Link do material (opcional se anexar arquivo)<input type="url" name="material_url" maxlength="2048" placeholder="https://..." value="{{ old('material_url') }}"></label>
                             <label class="field">Ou anexe PDF, imagem ou vídeo (máx. 20 MB)<input type="file" name="material_file" accept=".pdf,.jpg,.jpeg,.png,.webp,.mp4,.webm,application/pdf,image/jpeg,image/png,image/webp,video/mp4,video/webm"></label>
                             <label class="field">Link válido até (horário local deste dispositivo)<input id="review-expires-local" type="datetime-local" required value="{{ old('expires_at_local') }}"></label><input id="review-expires-utc" type="hidden" name="expires_at" value="{{ old('expires_at') }}">
+                            @if (in_array(config('mail.default'), ['log', 'array'], true))<p class="empty-inline">Envio por e-mail indisponível até configurar um serviço de e-mail. Você ainda poderá copiar e compartilhar o link.</p>@else<label class="field">Enviar o link por e-mail (opcional)<input type="email" name="send_to_email" maxlength="254" autocomplete="email" placeholder="cliente@empresa.com" value="{{ old('send_to_email') }}"><small>Ao preencher, o link será enviado para esse endereço quando você criar a versão. O cliente não precisa entrar no sistema.</small></label>@endif
                             <button class="primary-button" type="submit">Criar link de revisão</button>
                         </form>
-                        @error('material_url')<span class="error">{{ $message }}</span>@enderror @error('material_file')<span class="error">{{ $message }}</span>@enderror @error('expires_at')<span class="error">{{ $message }}</span>@enderror
+                        @error('material_url')<span class="error">{{ $message }}</span>@enderror @error('material_file')<span class="error">{{ $message }}</span>@enderror @error('expires_at')<span class="error">{{ $message }}</span>@enderror @error('send_to_email')<span class="error">{{ $message }}</span>@enderror
                     @else
                         <p class="empty-inline">Para enviar uma nova versão, avance a demanda para Aprovação do cliente.</p>
                     @endif

@@ -8,8 +8,11 @@ use App\Models\Demand;
 use App\Models\DemandTask;
 use App\Models\Organization;
 use App\Models\User;
+use App\Notifications\ClientReviewLinkNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Notifications\AnonymousNotifiable;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -145,6 +148,70 @@ class DemandReviewLinkTest extends TestCase
             ->assertDontSee('R$ 9.999');
         $this->getJson('/api/v1/public/reviews/'.$token)
             ->assertOk()->assertJsonMissingPath('data.module_fields')->assertJsonMissing(['R$ 9.999']);
+    }
+
+    public function test_manager_can_send_review_link_by_email_without_requiring_client_account(): void
+    {
+        Notification::fake();
+        config(['mail.default' => 'smtp']);
+        [$organization, $manager, $demand] = $this->setupApproval();
+        $this->actingAs($manager)->get(route('demands.show', $demand))
+            ->assertOk()->assertSee('Enviar o link por e-mail')->assertSee('name="send_to_email"', false);
+
+        $response = $this->actingAs($manager)->from(route('demands.show', $demand))->post(route('demand-reviews.store', $demand), [
+            'material_url' => 'https://preview.example.test/site-v1',
+            'expires_at' => now()->addDays(3)->toIso8601String(),
+            'send_to_email' => 'cliente@example.test',
+        ])->assertRedirect();
+
+        Notification::assertSentTimes(ClientReviewLinkNotification::class, 1);
+
+        $this->assertTrue($response->getSession()->get('review_link_emailed'));
+        $link = $demand->reviewLinks()->firstOrFail();
+        $mail = (new ClientReviewLinkNotification($demand, $link, $response->getSession()->get('review_link_url')))
+            ->toMail(new AnonymousNotifiable);
+        $this->assertSame($response->getSession()->get('review_link_url'), $mail->actionUrl);
+        $this->assertStringContainsString('sem criar uma conta', implode(' ', [...$mail->introLines, ...$mail->outroLines]));
+        $this->assertDatabaseHas('demand_events', [
+            'demand_id' => $demand->id,
+            'actor_id' => $manager->id,
+            'event_type' => 'client_review_link_emailed',
+        ]);
+        $this->assertDatabaseMissing('demand_events', ['summary' => 'cliente@example.test']);
+    }
+
+    public function test_review_link_email_is_refused_when_only_log_transport_is_configured(): void
+    {
+        Notification::fake();
+        config(['mail.default' => 'log']);
+        [, $manager, $demand] = $this->setupApproval();
+        $this->actingAs($manager)->get(route('demands.show', $demand))
+            ->assertOk()->assertSee('Envio por e-mail indisponível')->assertDontSee('name="send_to_email"', false);
+
+        $this->actingAs($manager)->from(route('demands.show', $demand))->post(route('demand-reviews.store', $demand), [
+            'material_url' => 'https://preview.example.test/site-v1',
+            'expires_at' => now()->addDays(3)->toIso8601String(),
+            'send_to_email' => 'cliente@example.test',
+        ])->assertSessionHasErrors('send_to_email');
+
+        Notification::assertNothingSent();
+        $this->assertDatabaseCount('demand_review_links', 0);
+    }
+
+    public function test_review_link_email_cannot_be_started_through_the_json_api(): void
+    {
+        Notification::fake();
+        config(['mail.default' => 'smtp']);
+        [, $manager, $demand] = $this->setupApproval();
+
+        $this->actingAs($manager)->postJson('/api/v1/demands/'.$demand->id.'/review-links', [
+            'material_url' => 'https://preview.example.test/site-v1',
+            'expires_at' => now()->addDays(3)->toIso8601String(),
+            'send_to_email' => 'cliente@example.test',
+        ])->assertUnprocessable()->assertJsonValidationErrors('send_to_email');
+
+        Notification::assertNothingSent();
+        $this->assertDatabaseCount('demand_review_links', 0);
     }
 
     public function test_client_can_comment_then_request_changes_and_demand_enters_adjustments(): void
