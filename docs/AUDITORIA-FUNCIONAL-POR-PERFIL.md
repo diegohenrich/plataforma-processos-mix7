@@ -80,3 +80,7 @@ Uma decisão pendente não deve parar o projeto inteiro. Ela bloqueia somente a 
 ## Evidência de implementação consultada
 
 Fontes do projeto: `web-app/routes/web.php`, políticas `DemandPolicy`, `DemandTaskPolicy`, `TeamMemberPolicy` e `KnowledgePolicy`, controladores de demandas, revisão, equipe, tarefas, conhecimento e IA; testes em `web-app/tests/Feature/`. Para requisitos e limites, consulte [requisitos](REQUIREMENTS.md), [rastreabilidade dos áudios](TRACEABILIDADE-AUDIOS.md), [arquitetura Laravel](ARQUITETURA-HOSTINGER-LARAVEL.md), [tempo e capacidade](TEMPO-E-CAPACIDADE.md) e [roadmap](ROADMAP.md).
+
+## Avisos de atribuição de tarefas — 27/09/2026
+
+Quando a gestão atribui uma tarefa nova, cria uma tarefa dentro de uma demanda ou aprova tarefas de um plano de IA, a pessoa profissional ativa recebe uma notificação interna privada. Ao transferir a tarefa, a notificação vai à nova pessoa responsável; a pessoa anterior não recebe link que já poderia perder acesso. O aviso identifica quem atribuiu, a tarefa e a demanda; abri-lo marca como lido e usa a autorização existente da demanda. A notificação é transacional no banco, não envia e-mail e não é mostrada a outros profissionais ou clientes. Testes cobrem criação web/API, plano de IA, transferência, abertura autorizada e não exposição a pessoa não atribuída.

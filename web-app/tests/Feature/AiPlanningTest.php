@@ -419,6 +419,7 @@ class AiPlanningTest extends TestCase
         $this->assertSame('Resumo revisto pela gestão: site dividido em briefing e estrutura.', $demand->fresh()->ai_summary);
         $this->assertSame('Mapa do site revisado', $run->fresh()->reviewed_tasks['tasks'][1]['title']);
         $this->assertDatabaseHas('demand_events', ['demand_id' => $demand->id, 'actor_id' => $manager->id, 'event_type' => 'ai_planning_approved']);
+        $this->assertSame(2, $professional->notifications()->where('data->type', 'task_assigned')->count());
         $this->actingAs($manager)->get(route('demands.index'))->assertSee('Resumo revisto pela gestão: site dividido em briefing e estrutura.');
         $token = $manager->createToken('summary-api')->plainTextToken;
         $this->withToken($token)->getJson('/api/v1/demands')->assertOk()->assertJsonPath('data.0.summary', 'Resumo revisto pela gestão: site dividido em briefing e estrutura.');

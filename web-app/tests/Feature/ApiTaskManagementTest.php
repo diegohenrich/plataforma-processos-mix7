@@ -62,6 +62,11 @@ class ApiTaskManagementTest extends TestCase
             'actor_id' => $manager->id,
             'event_type' => 'task_reassigned',
         ]);
+        $assignmentNotification = $nextProfessional->notifications()->firstOrFail();
+        $this->assertSame('task_reassigned', $assignmentNotification->data['type']);
+        $this->assertSame($task->id, $assignmentNotification->data['task_id']);
+        $this->assertStringContainsString('transferiu a tarefa', $assignmentNotification->data['message']);
+        $this->assertSame(0, $professional->notifications()->count());
     }
 
     public function test_task_schedule_and_assignment_reject_wrong_roles_invalid_dates_and_external_people(): void

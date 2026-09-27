@@ -9,12 +9,12 @@
         @include('layouts.topbar')
         <div class="content narrow-content notification-page">
             <p class="eyebrow">Acompanhamento</p>
-            <div class="page-heading"><div><h1 class="heading">Notificações</h1><p class="subheading">Comentários e decisões recentes dos clientes nas demandas da equipe.</p></div>
+            <div class="page-heading"><div><h1 class="heading">Notificações</h1><p class="subheading">Atribuições de tarefas, comentários e decisões recentes nas demandas da equipe.</p></div>
                 @if ($unreadCount > 0)<form method="post" action="{{ route('notifications.read-all') }}">@csrf<button class="secondary-button" type="submit">Marcar todas como lidas</button></form>@endif
             </div>
             @include('partials.flash')
             @if ($notifications->isEmpty())
-                <section class="empty-state"><span class="empty-icon" aria-hidden="true">✓</span><h2>Nenhuma notificação ainda</h2><p>Quando um cliente comentar, aprovar ou pedir ajustes, a equipe responsável verá o aviso aqui.</p></section>
+                <section class="empty-state"><span class="empty-icon" aria-hidden="true">✓</span><h2>Nenhuma notificação ainda</h2><p>Quando uma tarefa for atribuída a você ou houver comentário, aprovação ou pedido de ajustes, o aviso aparecerá aqui.</p></section>
             @else
                 <section class="notification-list" aria-label="Avisos recebidos">
                     @foreach ($notifications as $notification)

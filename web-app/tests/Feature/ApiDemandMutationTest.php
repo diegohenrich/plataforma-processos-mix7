@@ -79,6 +79,7 @@ class ApiDemandMutationTest extends TestCase
             'event_type' => 'demand_client_assigned',
         ]);
         $this->assertSame(2, DemandTask::query()->where('demand_id', $demand->id)->count());
+        $this->assertSame(2, $professional->notifications()->where('data->type', 'task_assigned')->count());
     }
 
     public function test_demand_creation_rejects_brief_author_outside_active_internal_team(): void
@@ -165,6 +166,7 @@ class ApiDemandMutationTest extends TestCase
             ->assertJsonPath('data.assigned_by.id', $manager->id)
             ->assertJsonPath('data.assigned_by.name', $manager->name);
         $taskId = $taskResponse->json('data.id');
+        $this->assertSame(1, $professional->notifications()->where('data->type', 'task_assigned')->count());
 
         $this->patchJson("/api/v1/demands/{$demand->id}/status", ['status' => DemandStatus::Planning->value])
             ->assertOk()

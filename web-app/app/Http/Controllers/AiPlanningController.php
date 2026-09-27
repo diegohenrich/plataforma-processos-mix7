@@ -12,6 +12,7 @@ use App\Models\DemandTask;
 use App\Models\TeamCapacitySnapshot;
 use App\Models\User;
 use App\Services\PlanningAgent;
+use App\Services\TaskAssignmentNotifier;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -185,7 +186,7 @@ class AiPlanningController extends Controller
         return [$candidates, $localMap];
     }
 
-    public function approve(Request $request, Demand $demand, AiPlanningRun $run): RedirectResponse
+    public function approve(Request $request, Demand $demand, AiPlanningRun $run, TaskAssignmentNotifier $taskAssignmentNotifier): RedirectResponse
     {
         $this->authorize('manage', $demand);
         abort_unless($run->demand_id === $demand->id && $run->organization_id === $request->user()->organization_id, 404);
@@ -242,7 +243,7 @@ class AiPlanningController extends Controller
             return back()->withErrors(['ai' => 'A etapa mudou. Volte ao planejamento para aplicar esta proposta.']);
         }
 
-        $reviewed = DB::transaction(function () use ($data, $selectedTasks, $demand, $request, $run): bool {
+        $reviewed = DB::transaction(function () use ($data, $selectedTasks, $demand, $request, $run, $taskAssignmentNotifier): bool {
             $locked = AiPlanningRun::query()->whereKey($run->id)->lockForUpdate()->firstOrFail();
             if ($locked->status !== 'pending') {
                 return false;
@@ -291,6 +292,7 @@ class AiPlanningController extends Controller
                     'event_type' => 'task_assigned',
                     'summary' => $request->user()->name.' aprovou a proposta de IA e atribuiu "'.$task->title.'" a '.$task->assignee()->value('name').'.',
                 ]);
+                $taskAssignmentNotifier->notify($task, $request->user());
             }
 
             $reviewedSummary = trim((string) ($data['summary'] ?? ''));

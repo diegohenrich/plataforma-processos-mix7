@@ -10,6 +10,7 @@ use App\Models\Demand;
 use App\Models\DemandEvent;
 use App\Models\DemandModuleDefinition;
 use App\Models\User;
+use App\Services\TaskAssignmentNotifier;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -96,7 +97,7 @@ class DemandController extends Controller
         return view('demands.create', compact('professionals', 'clients', 'briefAuthors', 'modules'));
     }
 
-    public function store(Request $request): RedirectResponse|JsonResponse
+    public function store(Request $request, TaskAssignmentNotifier $taskAssignmentNotifier): RedirectResponse|JsonResponse
     {
         $this->authorize('create', Demand::class);
         $organizationId = $request->user()->organization_id;
@@ -138,7 +139,7 @@ class DemandController extends Controller
             'tasks.*.estimate_minutes' => ['nullable', 'integer', 'min:1', 'max:100000'],
         ]);
 
-        $demand = DB::transaction(function () use ($data, $request, $organizationId): Demand {
+        $demand = DB::transaction(function () use ($data, $request, $organizationId, $taskAssignmentNotifier): Demand {
             $builtInModule = DemandModule::tryFrom($data['module_key']);
             $customModule = $builtInModule ? null : DemandModuleDefinition::query()
                 ->where('organization_id', $organizationId)
@@ -211,6 +212,7 @@ class DemandController extends Controller
                     'event_type' => 'task_assigned',
                     'summary' => 'Tarefa "'.$task->title.'" atribuída a '.$task->assignee()->value('name'),
                 ]);
+                $taskAssignmentNotifier->notify($task, $request->user());
             }
 
             return $demand;

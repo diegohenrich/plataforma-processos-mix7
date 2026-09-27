@@ -10,6 +10,7 @@ use App\Models\DemandEvent;
 use App\Models\DemandTask;
 use App\Models\TaskTimeEntry;
 use App\Models\User;
+use App\Services\TaskAssignmentNotifier;
 use App\Services\TaskTimerHeartbeat;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
@@ -216,7 +217,7 @@ class DemandTaskController extends Controller
         return response()->json(['data' => ['active' => $heartbeat->touch($request->user())]]);
     }
 
-    public function store(Request $request, Demand $demand): RedirectResponse|JsonResponse
+    public function store(Request $request, Demand $demand, TaskAssignmentNotifier $taskAssignmentNotifier): RedirectResponse|JsonResponse
     {
         $this->authorize('manage', $demand);
         if (in_array($demand->status, [DemandStatus::ClientApproval, DemandStatus::Delivery, DemandStatus::Completed], true)) {
@@ -242,7 +243,7 @@ class DemandTaskController extends Controller
             'estimate_minutes' => ['nullable', 'integer', 'min:1', 'max:100000'],
         ]);
 
-        $task = DB::transaction(function () use ($data, $demand, $request): DemandTask {
+        $task = DB::transaction(function () use ($data, $demand, $request, $taskAssignmentNotifier): DemandTask {
             $task = $demand->tasks()->create([
                 'organization_id' => $demand->organization_id,
                 'created_by' => $request->user()->id,
@@ -260,6 +261,7 @@ class DemandTaskController extends Controller
                 'event_type' => 'task_assigned',
                 'summary' => 'Tarefa "'.$task->title.'" atribuída a '.$task->assignee()->value('name'),
             ]);
+            $taskAssignmentNotifier->notify($task, $request->user());
 
             return $task;
         });
@@ -369,7 +371,7 @@ class DemandTaskController extends Controller
         return $this->actionSuccess($request, $task, 'Datas planejadas salvas no cronograma.');
     }
 
-    public function updateAssignee(Request $request, DemandTask $task): RedirectResponse|JsonResponse
+    public function updateAssignee(Request $request, DemandTask $task, TaskAssignmentNotifier $taskAssignmentNotifier): RedirectResponse|JsonResponse
     {
         $this->authorize('updateAssignee', $task);
         $organizationId = $request->user()->organization_id;
@@ -384,7 +386,7 @@ class DemandTaskController extends Controller
             ],
         ]);
 
-        $result = DB::transaction(function () use ($data, $organizationId, $request, $task): ?string {
+        $result = DB::transaction(function () use ($data, $organizationId, $request, $task, $taskAssignmentNotifier): ?string {
             $lockedTask = DemandTask::query()->whereKey($task->id)->lockForUpdate()->firstOrFail();
             if ($lockedTask->status === TaskStatus::Completed) {
                 return 'Tarefas concluídas mantêm o responsável do registro histórico.';
@@ -453,6 +455,7 @@ class DemandTaskController extends Controller
                 'event_type' => 'task_reassigned',
                 'summary' => $actor->name.' reatribuiu "'.$lockedTask->title.'" de '.$previousAssignee->name.' para '.$nextAssignee->name,
             ]);
+            $taskAssignmentNotifier->notify($lockedTask, $actor, reassigned: true);
 
             return null;
         });
