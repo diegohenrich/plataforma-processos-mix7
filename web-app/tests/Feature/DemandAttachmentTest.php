@@ -53,7 +53,8 @@ class DemandAttachmentTest extends TestCase
             ->assertOk()
             ->assertHeader('Content-Disposition', 'attachment; filename=brief.pdf');
 
-        $this->actingAs($owner)->get(route('demands.show', $demand))
+        $uploadPage = $this->actingAs($owner)->get(route('demands.show', $demand));
+        $uploadPage
             ->assertOk()
             ->assertSee('Arquivos da equipe')
             ->assertSee('brief.pdf')
@@ -62,7 +63,12 @@ class DemandAttachmentTest extends TestCase
             ->assertSee('data-pdf-preview', false)
             ->assertSee('Abrir PDF em outra guia')
             ->assertSee('Baixar PDF')
-            ->assertSee('Anexar à demanda');
+            ->assertSee('Anexar à demanda')
+            ->assertSee('Limite deste servidor:')
+            ->assertSee('data-attachment-upload', false)
+            ->assertSee('data-server-file-limit="'.ini_parse_quantity((string) ini_get('upload_max_filesize')).'"', false)
+            ->assertSee('data-server-post-limit="'.ini_parse_quantity((string) ini_get('post_max_size')).'"', false)
+            ->assertSee('data-app-file-limit="20971520"', false);
 
         $this->actingAs($professional)->get(route('demands.show', $demand))
             ->assertOk()

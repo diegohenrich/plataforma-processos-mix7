@@ -55,7 +55,11 @@
 
             <section class="panel demand-attachments" aria-labelledby="attachments-heading">
                 <div class="section-heading"><div><h2 id="attachments-heading">Arquivos da equipe <span class="count-badge">{{ $demand->attachments->count() }}</span></h2><p>Materiais de trabalho privados. Só a equipe desta demanda consegue abrir estes arquivos.</p></div></div>
-                <form method="post" enctype="multipart/form-data" action="{{ route('demand-attachments.store', $demand) }}" class="attachment-upload" data-attachment-upload>
+                @php
+                    $phpUploadLimitBytes = ini_parse_quantity((string) ini_get('upload_max_filesize'));
+                    $phpPostLimitBytes = ini_parse_quantity((string) ini_get('post_max_size'));
+                @endphp
+                <form method="post" enctype="multipart/form-data" action="{{ route('demand-attachments.store', $demand) }}" class="attachment-upload" data-attachment-upload data-server-file-limit="{{ $phpUploadLimitBytes }}" data-server-post-limit="{{ $phpPostLimitBytes }}" data-app-file-limit="{{ 20 * 1024 * 1024 }}" data-app-file-count="10">
                     @csrf
                     <label class="attachment-drop" data-attachment-drop>
                         <span class="attachment-drop-icon" aria-hidden="true">＋</span>
@@ -63,7 +67,9 @@
                         <span>PDF, imagens, vídeo e documentos · até 20 MB cada · máximo 10 por envio</span>
                         <input type="file" name="files[]" accept=".pdf,.jpg,.jpeg,.png,.webp,.gif,.mp4,.webm,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip" multiple required data-attachment-input>
                     </label>
+                    <p class="field-help" data-server-upload-limits>Limite deste servidor: {{ number_format($phpUploadLimitBytes / 1024 / 1024, 0, ',', '.') }} MB por arquivo e {{ $phpPostLimitBytes > 0 ? number_format($phpPostLimitBytes / 1024 / 1024, 0, ',', '.') . ' MB por envio' : 'envio sem limite total' }}. A aplicação aceita até 20 MB por arquivo.</p>
                     <div class="attachment-upload-footer"><span class="field-help" data-attachment-names aria-live="polite">Nenhum arquivo selecionado.</span><button class="primary-button" type="submit">Anexar à demanda</button></div>
+                    <p class="error" data-attachment-upload-error role="alert" hidden></p>
                     @error('files')<span class="error">{{ $message }}</span>@enderror
                     @error('files.*')<span class="error">{{ $message }}</span>@enderror
                 </form>
@@ -272,9 +278,28 @@ document.querySelectorAll('[data-attachment-upload]').forEach((form) => {
     const input = form.querySelector('[data-attachment-input]');
     const drop = form.querySelector('[data-attachment-drop]');
     const names = form.querySelector('[data-attachment-names]');
+    const error = form.querySelector('[data-attachment-upload-error]');
+    const serverFileLimit = Number(form.dataset.serverFileLimit);
+    const serverPostLimit = Number(form.dataset.serverPostLimit);
+    const appFileLimit = Number(form.dataset.appFileLimit);
+    const fileCountLimit = Number(form.dataset.appFileCount);
+    const fileLimit = Math.min(serverFileLimit || appFileLimit, appFileLimit);
+    const postLimit = serverPostLimit > 0 ? serverPostLimit : Infinity;
     const updateNames = () => {
         const files = [...input.files];
         names.textContent = files.length ? files.map((file) => file.name).join(', ') : 'Nenhum arquivo selecionado.';
+        const oversized = files.find((file) => file.size > fileLimit);
+        const totalBytes = files.reduce((total, file) => total + file.size, 0);
+        let message = '';
+        if (files.length > fileCountLimit) {
+            message = `Escolha no máximo ${fileCountLimit} arquivos por envio.`;
+        } else if (oversized) {
+            message = `${oversized.name} excede o limite efetivo de ${Math.floor(fileLimit / 1024 / 1024)} MB por arquivo neste servidor.`;
+        } else if (totalBytes > postLimit - 262144) {
+            message = `O conjunto de arquivos excede o limite de envio do servidor (${Math.floor(postLimit / 1024 / 1024)} MB). Envie menos arquivos por vez.`;
+        }
+        error.textContent = message;
+        error.hidden = message === '';
     };
     input.addEventListener('change', updateNames);
     ['dragenter', 'dragover'].forEach((eventName) => drop.addEventListener(eventName, (event) => {
@@ -288,6 +313,13 @@ document.querySelectorAll('[data-attachment-upload]').forEach((form) => {
     drop.addEventListener('drop', (event) => {
         input.files = event.dataTransfer.files;
         updateNames();
+    });
+    form.addEventListener('submit', (event) => {
+        updateNames();
+        if (!error.hidden) {
+            event.preventDefault();
+            error.scrollIntoView({behavior: 'smooth', block: 'center'});
+        }
     });
 });
 </script>
