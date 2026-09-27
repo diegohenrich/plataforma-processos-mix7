@@ -39,6 +39,8 @@ O Gantt deve mostrar prazos, duração planejada e dependências registradas. O 
 5. A prévia local compara horas semanais inseridas manualmente, ausências registradas e estimativas das tarefas com prazo no período; sobrecarga e tarefas sem estimativa ficam visíveis. A regra operacional só se conclui após a Mix7 aprovar jornada, ausências e alocação.
 
 O especialista de operação/produção da IA pode consultar esses mesmos fatos da semana atual para responder perguntas da direção/gerência. A ferramenta não retorna nomes de tarefas, não cria estimativas nem recomenda redistribuição; qualquer conteúdo enviado a um provedor continua sujeito à política de dados da Mix7, que ainda precisa ser aprovada.
+
+No planejamento estruturado, direção/gerência também pode marcar uma opção para enviar ao agente somente os totais agregados da semana escolhida: profissionais ativos, quantos têm capacidade registrada, minutos disponíveis após ausências, estimativas em tarefas com prazo e lacunas. A entrada não inclui nomes, títulos de tarefas nem identificadores individuais. A revisão da proposta mostra os mesmos totais enviados. O agente pode usá-los como alerta preliminar de esforço, sem selecionar, comparar ou avaliar pessoas. A gestão ainda escolhe cada responsável e aprova as tarefas. A opção desmarcada não envia dados de capacidade; marcá-la não substitui a aprovação da política de dados da Mix7.
 6. O Gantt respeita prazos e dependências salvos; dados do cronômetro não deslocam o cronograma automaticamente.
 
 ## Perguntas que ainda precisam de resposta

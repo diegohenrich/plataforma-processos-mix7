@@ -11,7 +11,9 @@ use App\Models\DemandReviewLink;
 use App\Models\DemandReviewResponse;
 use App\Models\DemandTask;
 use App\Models\Organization;
+use App\Models\TeamCapacitySnapshot;
 use App\Models\User;
+use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
@@ -48,6 +50,8 @@ class AiPlanningTest extends TestCase
         $this->assertNull($demand->fresh()->ai_summary);
         $this->assertSame(64, strlen($run->input_hash));
         $this->assertDatabaseHas('demand_events', ['demand_id' => $demand->id, 'actor_id' => $manager->id, 'event_type' => 'ai_planning_proposed']);
+        $input = json_decode(Http::recorded()->first()[0]['messages'][1]['content'], true, 32, JSON_THROW_ON_ERROR);
+        $this->assertSame([], $input['team_capacity']);
         Http::assertSent(fn ($request) => $request['messages'][1]['content'] !== ''
             && str_contains($request['messages'][1]['content'], 'Briefing sintético')
             && $request['response_format']['type'] === 'json_schema');
@@ -121,6 +125,106 @@ class AiPlanningTest extends TestCase
         $task = $demand->tasks()->firstOrFail();
         $this->assertStringContainsString('Feedback do cliente: versão 2, resposta #'.$feedback->id, $task->description);
         $this->assertSame([$feedback->id], $run->fresh()->reviewed_tasks['tasks'][0]['feedback_refs']);
+    }
+
+    public function test_manager_can_opt_in_to_send_only_aggregated_weekly_capacity_to_planning_agent(): void
+    {
+        [$organization, $manager, $professional, $demand] = $this->workspace();
+        $secondProfessional = User::factory()->create([
+            'organization_id' => $organization->id,
+            'role' => UserRole::Professional,
+            'is_active' => true,
+        ]);
+        $week = now()->format('o-\\WW');
+        [$year, $weekNumber] = array_map('intval', explode('-W', $week));
+        $weekStart = CarbonImmutable::now()->setISODate($year, $weekNumber)->startOfWeek()->startOfDay();
+        TeamCapacitySnapshot::create([
+            'organization_id' => $organization->id,
+            'professional_id' => $professional->id,
+            'recorded_by' => $manager->id,
+            'week_start' => $weekStart->toDateString(),
+            'scheduled_minutes' => 2400,
+            'absences' => [['id' => 'absence-1', 'date' => $weekStart->toDateString(), 'minutes' => 60]],
+            'change_type' => 'schedule_updated',
+        ]);
+        $otherDemand = Demand::create([
+            'organization_id' => $organization->id,
+            'created_by' => $manager->id,
+            'title' => 'Demanda reservada de outro cliente',
+            'brief' => 'Não enviar detalhes desta demanda.',
+            'status' => DemandStatus::InProgress,
+        ]);
+        $otherDemand->tasks()->create([
+            'organization_id' => $organization->id,
+            'created_by' => $manager->id,
+            'assigned_to' => $professional->id,
+            'title' => 'Título confidencial de tarefa alheia',
+            'status' => TaskStatus::Todo,
+            'estimate_minutes' => 90,
+            'planned_due_on' => $weekStart->addDays(2)->toDateString(),
+        ]);
+        $otherDemand->tasks()->create([
+            'organization_id' => $organization->id,
+            'created_by' => $manager->id,
+            'assigned_to' => $secondProfessional->id,
+            'title' => 'Tarefa sem prazo',
+            'status' => TaskStatus::Todo,
+            'estimate_minutes' => 30,
+        ]);
+
+        Http::fake(['https://ai-gateway.vercel.sh/v1/chat/completions' => Http::response($this->providerResponse(), 200)]);
+        $page = $this->actingAs($manager)->get(route('demands.show', $demand))->assertOk();
+        $page->assertSee('Considerar a capacidade semanal registrada pela gestão');
+        preg_match('/<input[^>]*name="include_team_capacity"[^>]*>/', $page->getContent(), $checkbox);
+        $this->assertNotEmpty($checkbox);
+        $this->assertStringNotContainsString('checked', $checkbox[0]);
+
+        $this->post(route('ai-planning.propose', $demand), [
+            'include_team_capacity' => 1,
+            'capacity_week' => $week,
+        ])->assertRedirect()->assertSessionHasNoErrors();
+
+        $requestBody = Http::recorded()->first()[0]->data();
+        $input = json_decode($requestBody['messages'][1]['content'], true, 32, JSON_THROW_ON_ERROR);
+        $this->assertSame([
+            'week' => $week,
+            'active_professionals' => 2,
+            'professionals_with_recorded_capacity' => 1,
+            'professionals_without_recorded_capacity' => 1,
+            'recorded_available_minutes' => 2340,
+            'recorded_absence_minutes' => 60,
+            'open_estimate_minutes_due_this_week' => 90,
+            'dated_open_tasks_due_this_week' => 1,
+            'dated_tasks_missing_estimate' => 0,
+            'open_tasks_without_due_date' => 1,
+        ], $input['team_capacity']);
+        $this->assertStringNotContainsString('Título confidencial de tarefa alheia', $requestBody['messages'][1]['content']);
+        $this->assertStringNotContainsString($professional->name, $requestBody['messages'][1]['content']);
+        $this->assertStringNotContainsString($secondProfessional->name, $requestBody['messages'][1]['content']);
+        $run = AiPlanningRun::firstOrFail();
+        $this->assertTrue($run->proposal['_source']['team_capacity_included']);
+        $this->assertSame($week, $run->proposal['_source']['team_capacity']['week']);
+        $this->get(route('demands.show', $demand))
+            ->assertOk()
+            ->assertSee('Ver totais de capacidade enviados')
+            ->assertSee('1 de 2 profissionais com capacidade informada')
+            ->assertSee('39,00 h após 1,00 h de ausências');
+        $this->assertSame(0, DemandTask::query()->where('demand_id', $demand->id)->count());
+    }
+
+    public function test_invalid_capacity_week_is_rejected_before_calling_provider(): void
+    {
+        [, $manager, , $demand] = $this->workspace();
+        Http::fake();
+
+        $this->actingAs($manager)->from(route('demands.show', $demand))
+            ->post(route('ai-planning.propose', $demand), [
+                'include_team_capacity' => 1,
+                'capacity_week' => '2026-W99',
+            ])->assertSessionHasErrors('capacity_week');
+
+        Http::assertNothingSent();
+        $this->assertSame(0, AiPlanningRun::count());
     }
 
     public function test_manager_edits_and_approves_proposal_with_real_dependency_and_audit(): void

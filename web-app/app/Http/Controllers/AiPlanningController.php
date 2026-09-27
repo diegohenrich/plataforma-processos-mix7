@@ -8,12 +8,17 @@ use App\Enums\UserRole;
 use App\Models\AiPlanningRun;
 use App\Models\Demand;
 use App\Models\DemandEvent;
+use App\Models\DemandTask;
+use App\Models\TeamCapacitySnapshot;
+use App\Models\User;
 use App\Services\PlanningAgent;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use JsonException;
 use RuntimeException;
 
@@ -26,11 +31,26 @@ class AiPlanningController extends Controller
             return back()->withErrors(['ai' => 'A proposta de IA só pode ser gerada durante o planejamento.']);
         }
 
-        $data = $request->validate(['include_client_feedback' => ['sometimes', 'boolean']]);
+        $data = $request->validate([
+            'include_client_feedback' => ['sometimes', 'boolean'],
+            'include_team_capacity' => ['sometimes', 'boolean'],
+            'capacity_week' => ['required_if:include_team_capacity,1', 'nullable', 'regex:/^\d{4}-W\d{2}$/', function (string $attribute, mixed $value, \Closure $fail): void {
+                if (! is_string($value) || ! preg_match('/^\d{4}-W\d{2}$/', $value)) {
+                    return;
+                }
+                [$year, $weekNumber] = array_map('intval', explode('-W', $value));
+                if ($weekNumber < 1 || $weekNumber > 53 || CarbonImmutable::now()->setISODate($year, $weekNumber)->format('o-\\WW') !== $value) {
+                    $fail('Escolha uma semana válida.');
+                }
+            }],
+        ]);
         $feedback = ($data['include_client_feedback'] ?? false) ? $this->clientFeedback($demand) : [];
+        $teamCapacity = ($data['include_team_capacity'] ?? false)
+            ? $this->teamCapacity($demand, $data['capacity_week'])
+            : [];
 
         try {
-            $result = $agent->propose($demand, $feedback);
+            $result = $agent->propose($demand, $feedback, $teamCapacity);
         } catch (RuntimeException|JsonException $exception) {
             return back()->withErrors(['ai' => $exception->getMessage()]);
         }
@@ -39,6 +59,8 @@ class AiPlanningController extends Controller
             'client_feedback_included' => $feedback !== [],
             'feedback_response_ids' => array_column($feedback, 'response_id'),
             'feedback_versions' => array_column($feedback, 'version', 'response_id'),
+            'team_capacity_included' => $teamCapacity !== [],
+            'team_capacity' => $teamCapacity,
         ];
 
         $run = DB::transaction(function () use ($demand, $request, $result): AiPlanningRun {
@@ -69,6 +91,54 @@ class AiPlanningController extends Controller
 
         return back()->with('success', 'A proposta foi gerada. Revise e escolha os responsáveis antes de aplicar.')
             ->with('ai_planning_run_id', $run->id);
+    }
+
+    /** @return array<string, int|string> */
+    private function teamCapacity(Demand $demand, string $week): array
+    {
+        [$year, $weekNumber] = array_map('intval', explode('-W', $week));
+        $weekStart = CarbonImmutable::now()->setISODate($year, $weekNumber)->startOfWeek()->startOfDay();
+        if ($weekStart->format('o-\\WW') !== $week) {
+            throw ValidationException::withMessages(['capacity_week' => 'Escolha uma semana válida.']);
+        }
+        $weekEnd = $weekStart->addDays(6)->endOfDay();
+        $professionalIds = User::query()
+            ->where('organization_id', $demand->organization_id)
+            ->where('role', UserRole::Professional->value)
+            ->where('is_active', true)
+            ->pluck('id');
+        $snapshots = TeamCapacitySnapshot::query()
+            ->where('organization_id', $demand->organization_id)
+            ->whereIn('professional_id', $professionalIds)
+            ->whereDate('week_start', $weekStart->toDateString())
+            ->orderByDesc('id')
+            ->get(['professional_id', 'scheduled_minutes', 'absences'])
+            ->unique('professional_id')
+            ->keyBy('professional_id');
+        $scheduledSnapshots = $snapshots->filter(fn (TeamCapacitySnapshot $snapshot) => $snapshot->scheduled_minutes !== null);
+        $absenceMinutes = (int) $scheduledSnapshots->sum(fn (TeamCapacitySnapshot $snapshot) => collect($snapshot->absences ?? [])->sum('minutes'));
+        $availableMinutes = (int) $scheduledSnapshots->sum(fn (TeamCapacitySnapshot $snapshot) => max(0, (int) $snapshot->scheduled_minutes - (int) collect($snapshot->absences ?? [])->sum('minutes')));
+        $openTasks = DemandTask::query()
+            ->where('organization_id', $demand->organization_id)
+            ->whereIn('assigned_to', $professionalIds)
+            ->where('status', '!=', TaskStatus::Completed->value)
+            ->whereHas('demand', fn ($query) => $query->where('status', '!=', DemandStatus::Completed->value))
+            ->get(['estimate_minutes', 'planned_due_on']);
+        $dueTasks = $openTasks->filter(fn (DemandTask $task) => $task->planned_due_on
+            && $task->planned_due_on->betweenIncluded($weekStart, $weekEnd));
+
+        return [
+            'week' => $weekStart->format('o-\\WW'),
+            'active_professionals' => $professionalIds->count(),
+            'professionals_with_recorded_capacity' => $scheduledSnapshots->count(),
+            'professionals_without_recorded_capacity' => max(0, $professionalIds->count() - $scheduledSnapshots->count()),
+            'recorded_available_minutes' => $availableMinutes,
+            'recorded_absence_minutes' => $absenceMinutes,
+            'open_estimate_minutes_due_this_week' => (int) $dueTasks->sum(fn (DemandTask $task) => max(0, (int) $task->estimate_minutes)),
+            'dated_open_tasks_due_this_week' => $dueTasks->count(),
+            'dated_tasks_missing_estimate' => $dueTasks->filter(fn (DemandTask $task) => ! $task->estimate_minutes || $task->estimate_minutes < 1)->count(),
+            'open_tasks_without_due_date' => $openTasks->whereNull('planned_due_on')->count(),
+        ];
     }
 
     public function approve(Request $request, Demand $demand, AiPlanningRun $run): RedirectResponse
