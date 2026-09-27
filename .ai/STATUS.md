@@ -25,7 +25,8 @@
 ## Correção da auditoria sobre anexos privados — 2026-09-27
 - Revisei a auditoria por perfil e o roadmap após a entrega dos anexos privados pelo site e API. Os documentos agora distinguem o que já existe no código (armazenamento privado, autorização, prévia/download no site e API) do que continua sem validação (inspeção visual autenticada e limites reais de upload, espaço e tráfego na Hostinger).
 - Validação: conferência das rotas/testes de anexos e revisão das frases relacionadas; `git diff --check` passou. Mudança documental, sem alteração de aplicação; testes de produto não se aplicam.
-- GitHub e Trello ainda não sincronizados para esta correção. O protocolo do plugin de uso do computador exige confirmação no momento de cada escrita externa; a solicitação de confirmação já enviada para atualizações de Trello anteriores continua sem resposta. Não publiquei comentário no Trello sem essa confirmação.
+- GitHub: correção publicada no commit `c6c35644d1d9922d934559f72b43cade4cf69a77`; `git ls-remote` confirmou SHA local/remoto igual. Checks de push e PR #11 estão pendentes nesta consulta ([push](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36285211064), [PR](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36285213602)).
+- Trello: comentário com resultado e commit ainda não publicado; a confirmação pontual para escrita no cartão não foi recebida. Não alterei o Trello sem essa confirmação.
 
 ## Catálogo expansível de tipos de aprovação — 2026-09-27
 - Direção/gerência podem cadastrar tipos adicionais por organização com nome, descrição e chave técnica; desativar/reativar sem apagar ou reclassificar demandas antigas. Formulário de demanda e API usam o catálogo ativo; API lista tipos disponíveis e preserva chave, rótulo e versão.
