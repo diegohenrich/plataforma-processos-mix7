@@ -37,6 +37,15 @@ class TeamActivityTest extends TestCase
             'started_at' => CarbonImmutable::now()->subMinutes(45),
             'ended_at' => CarbonImmutable::now()->subMinutes(15),
         ]);
+        $previousWeekTask = $this->task($demand, $professional, 'Fechamento da semana passada', TaskStatus::Completed);
+        $previousWeekTask->update(['completed_at' => CarbonImmutable::now()->startOfWeek()->subDay()]);
+        TaskTimeEntry::create([
+            'organization_id' => $organization->id,
+            'task_id' => $previousWeekTask->id,
+            'user_id' => $professional->id,
+            'started_at' => CarbonImmutable::now()->startOfWeek()->subDay()->setTime(9, 0),
+            'ended_at' => CarbonImmutable::now()->startOfWeek()->subDay()->setTime(10, 0),
+        ]);
         [$outsideOrganization] = $this->workspace('outside');
         $outsideProfessional = User::factory()->create(['organization_id' => $outsideOrganization->id, 'role' => UserRole::Professional, 'is_active' => true]);
         $outsideDemand = $this->demand($outsideOrganization, $outsideProfessional);
@@ -45,6 +54,7 @@ class TeamActivityTest extends TestCase
         $this->actingAs($manager)->get(route('team.activity'))
             ->assertOk()->assertSee('Produção da equipe')->assertSee($professional->name)
             ->assertSee('2,0 h')->assertSee('0,5 h')->assertSee('concluídas em 30 dias')
+            ->assertSee('Ver evolução semanal')->assertSee('Concluídas')->assertSee('Tempo registrado')
             ->assertSee('não são nota, ranking')->assertSee($colleague->name)->assertDontSee('Tarefa da colega')->assertDontSee($outsideProfessional->name);
         $this->get(route('dashboard'))->assertOk()->assertSee('Produção da equipe')
             ->assertSee(route('approvals.index'), false)->assertSee(route('performance-reviews.index'), false)
@@ -74,12 +84,14 @@ class TeamActivityTest extends TestCase
         $demand = $this->demand($organization, $owner);
         $ownTask = $this->task($demand, $professional, 'Minha tarefa privada', TaskStatus::InProgress, 45);
         $this->task($demand, $colleague, 'Tarefa privada da colega', TaskStatus::Todo, 90);
+        $completedTask = $this->task($demand, $professional, 'Entrega concluída', TaskStatus::Completed);
+        $completedTask->update(['completed_at' => CarbonImmutable::now()->startOfWeek()->subDay()]);
         TaskTimeEntry::create([
             'organization_id' => $organization->id,
-            'task_id' => $ownTask->id,
+            'task_id' => $completedTask->id,
             'user_id' => $professional->id,
-            'started_at' => CarbonImmutable::now()->subMinutes(10),
-            'ended_at' => null,
+            'started_at' => CarbonImmutable::now()->startOfWeek()->subDay()->setTime(9, 0),
+            'ended_at' => CarbonImmutable::now()->startOfWeek()->subDay()->setTime(10, 0),
         ]);
 
         $managementResponse = $this->actingAs($manager)->getJson('/api/v1/team/activity')
@@ -92,6 +104,9 @@ class TeamActivityTest extends TestCase
         $this->assertNotNull($managerProfessional);
         $this->assertSame(1, $managerProfessional['tasks']['in_progress']);
         $this->assertSame(45, $managerProfessional['estimate_minutes']);
+        $this->assertNotEmpty($managerProfessional['weekly_trend']);
+        $this->assertSame(1, collect($managerProfessional['weekly_trend'])->firstWhere('week', CarbonImmutable::now()->startOfWeek()->subWeek()->format('d/m').'–'.CarbonImmutable::now()->startOfWeek()->subWeek()->endOfWeek()->format('d/m'))['completed']);
+        $this->assertSame(3600, collect($managerProfessional['weekly_trend'])->firstWhere('week', CarbonImmutable::now()->startOfWeek()->subWeek()->format('d/m').'–'.CarbonImmutable::now()->startOfWeek()->subWeek()->endOfWeek()->format('d/m'))['recorded_seconds']);
         $this->assertStringNotContainsString('Minha tarefa privada', $managementResponse->getContent());
         $this->assertStringNotContainsString('Tarefa privada da colega', $managementResponse->getContent());
 
@@ -101,7 +116,8 @@ class TeamActivityTest extends TestCase
             ->assertJsonPath('data.professionals.0.id', $professional->id)
             ->assertJsonPath('data.my_tasks.0.id', $ownTask->id)
             ->assertJsonPath('data.my_tasks.0.title', 'Minha tarefa privada')
-            ->assertJsonPath('data.active_timer.task_id', $ownTask->id);
+            ->assertJsonPath('data.active_timer', null);
+        $this->assertNotEmpty($personalResponse->json('data.professionals.0.weekly_trend'));
         $this->assertStringNotContainsString('Tarefa privada da colega', $personalResponse->getContent());
 
         $this->actingAs($client)->getJson('/api/v1/team/activity')->assertForbidden();

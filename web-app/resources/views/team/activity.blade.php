@@ -37,6 +37,18 @@
                             <span><strong>{{ $row['todo'] }}</strong> A fazer</span><span><strong>{{ $row['in_progress'] }}</strong> Em andamento</span><span><strong>{{ $row['paused'] }}</strong> Pausadas</span><span><strong>{{ $row['blocked'] }}</strong> Impedidas</span>
                         </div>
                         <div class="activity-measures"><div><strong>{{ $row['completed_30d'] }}</strong><span>concluídas em 30 dias</span></div><div><strong>{{ $hours }} h</strong><span>registradas em 30 dias</span></div><div><strong>{{ $estimateHours }} h</strong><span>estimadas nas tarefas abertas</span></div></div>
+                        <details class="activity-weekly-trend">
+                            <summary>Ver evolução semanal</summary>
+                            <p>Semanas dentro do período móvel de 30 dias. A primeira e a última podem ser parciais. Os números mostram registros, sem nota ou comparação entre pessoas.</p>
+                            <div class="table-scroll"><table>
+                                <thead><tr><th>Semana</th><th>Concluídas</th><th>Tempo registrado</th></tr></thead>
+                                <tbody>
+                                    @foreach ($row['weekly_trend'] as $week)
+                                        <tr><th>{{ $week['week'] }} @if ($week['partial'])<span class="pill">parcial</span>@endif</th><td>{{ $week['completed'] }}</td><td>{{ number_format($week['recorded_seconds'] / 3600, 1, ',', '.') }} h</td></tr>
+                                    @endforeach
+                                </tbody>
+                            </table></div>
+                        </details>
                     </article>
                 @endforeach
                 @endif

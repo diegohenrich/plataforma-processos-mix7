@@ -51,6 +51,34 @@ class TeamActivityController extends Controller
             ->groupBy('assigned_to')
             ->pluck('task_count', 'assigned_to');
 
+        $weekStarts = [];
+        $firstWeek = $periodStart->startOfWeek();
+        for ($week = $firstWeek; $week->lessThanOrEqualTo($now); $week = $week->addWeek()) {
+            $weekStarts[$week->toDateString()] = $week;
+        }
+        $weekly = [];
+        foreach ($professionalIds as $professionalId) {
+            foreach ($weekStarts as $weekKey => $weekStart) {
+                $weekly[$professionalId][$weekKey] = ['completed' => 0, 'recorded_seconds' => 0];
+            }
+        }
+
+        DemandTask::query()
+            ->where('organization_id', $viewer->organization_id)
+            ->whereIn('assigned_to', $professionalIds)
+            ->where('status', TaskStatus::Completed->value)
+            ->where('completed_at', '>=', $periodStart)
+            ->orderBy('id')
+            ->cursor()
+            ->each(function (DemandTask $task) use (&$weekly): void {
+                if ($task->completed_at) {
+                    $weekKey = $task->completed_at->startOfWeek()->toDateString();
+                    if (isset($weekly[$task->assigned_to][$weekKey])) {
+                        $weekly[$task->assigned_to][$weekKey]['completed']++;
+                    }
+                }
+            });
+
         $recordedSeconds = array_fill_keys($professionalIds, 0);
         TaskTimeEntry::query()
             ->where('organization_id', $viewer->organization_id)
@@ -58,12 +86,17 @@ class TeamActivityController extends Controller
             ->where('started_at', '>=', $periodStart)
             ->orderBy('id')
             ->cursor()
-            ->each(function (TaskTimeEntry $entry) use (&$recordedSeconds, $now): void {
+            ->each(function (TaskTimeEntry $entry) use (&$recordedSeconds, &$weekly, $now): void {
                 $end = $entry->ended_at ?? $now;
-                $recordedSeconds[$entry->user_id] += $entry->started_at->diffInSeconds($end);
+                $seconds = $entry->started_at->diffInSeconds($end);
+                $recordedSeconds[$entry->user_id] += $seconds;
+                $weekKey = $entry->started_at->startOfWeek()->toDateString();
+                if (isset($weekly[$entry->user_id][$weekKey])) {
+                    $weekly[$entry->user_id][$weekKey]['recorded_seconds'] += $seconds;
+                }
             });
 
-        $rows = $professionals->map(function (User $professional) use ($taskGroups, $completedCounts, $recordedSeconds): array {
+        $rows = $professionals->map(function (User $professional) use ($taskGroups, $completedCounts, $recordedSeconds, $weekly, $weekStarts, $periodStart, $now): array {
             $byStatus = $taskGroups->get($professional->id, collect())->keyBy('status');
             $count = fn (TaskStatus $status): int => (int) ($byStatus->get($status->value)->task_count ?? 0);
             $estimateMinutes = (int) $byStatus->sum('open_estimate_minutes');
@@ -79,6 +112,17 @@ class TeamActivityController extends Controller
                 'estimate_minutes' => $estimateMinutes,
                 'completed_30d' => (int) ($completedCounts[$professional->id] ?? 0),
                 'recorded_seconds_30d' => $recordedSeconds[$professional->id] ?? 0,
+                'weekly_trend' => collect($weekStarts)->map(function (CarbonImmutable $weekStart) use ($weekly, $professional, $periodStart, $now): array {
+                    $weekKey = $weekStart->toDateString();
+                    $weekEnd = $weekStart->endOfWeek();
+
+                    return [
+                        'week' => $weekStart->format('d/m').'–'.$weekEnd->format('d/m'),
+                        'partial' => $weekStart->lessThan($periodStart) || $weekEnd->greaterThan($now),
+                        'completed' => $weekly[$professional->id][$weekKey]['completed'] ?? 0,
+                        'recorded_seconds' => $weekly[$professional->id][$weekKey]['recorded_seconds'] ?? 0,
+                    ];
+                })->values()->all(),
             ];
         });
 
@@ -111,6 +155,7 @@ class TeamActivityController extends Controller
                 'estimate_minutes' => $row['estimate_minutes'],
                 'completed_last_30_days' => $row['completed_30d'],
                 'recorded_seconds_last_30_days' => $row['recorded_seconds_30d'],
+                'weekly_trend' => $row['weekly_trend'],
             ])->values();
             $personalTasks = $personal
                 ? $myTasks->getCollection()->map(fn (DemandTask $task): array => [
