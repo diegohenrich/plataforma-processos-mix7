@@ -118,7 +118,11 @@ class DemandReviewLinkTest extends TestCase
     public function test_manager_creates_one_time_visible_version_link_without_storing_plain_token(): void
     {
         [$organization, $manager, $demand] = $this->setupApproval();
-        $demand->update(['ai_summary' => 'Resumo de planejamento reservado à equipe']);
+        $demand->update([
+            'ai_summary' => 'Resumo de planejamento reservado à equipe',
+            'module_fields_schema' => [['key' => 'orcamento_interno', 'label' => 'Orçamento interno', 'type' => 'text', 'required' => false, 'options' => []]],
+            'module_fields_data' => ['orcamento_interno' => 'R$ 9.999'],
+        ]);
         $response = $this->actingAs($manager)->post(route('demand-reviews.store', $demand), [
             'material_url' => 'https://preview.example.test/site-v1',
             'expires_at' => now()->addDays(3)->toIso8601String(),
@@ -136,7 +140,11 @@ class DemandReviewLinkTest extends TestCase
             ->assertSee('Site institucional')
             ->assertSee('https://preview.example.test/site-v1')
             ->assertDontSee('Briefing privado do teste')
-            ->assertDontSee('Resumo de planejamento reservado à equipe');
+            ->assertDontSee('Resumo de planejamento reservado à equipe')
+            ->assertDontSee('Orçamento interno')
+            ->assertDontSee('R$ 9.999');
+        $this->getJson('/api/v1/public/reviews/'.$token)
+            ->assertOk()->assertJsonMissingPath('data.module_fields')->assertJsonMissing(['R$ 9.999']);
     }
 
     public function test_client_can_comment_then_request_changes_and_demand_enters_adjustments(): void

@@ -63,7 +63,7 @@ Direção e gerência podem registrar uma avaliação para tarefa concluída atr
 
 Essa entrega documenta avaliações qualitativas, mas não calcula pontos ou nota. A escala, a fórmula, a combinação dos pesos, período, contestação e finalidade dos resultados permanecem pendentes de decisão da Mix7; até lá não há ranking ou consequência automática de pessoal.
 
-O sistema de aprovações deve ser reutilizável em áreas diferentes da agência. Criativos de redes sociais são o primeiro módulo conhecido; a Mix7 ainda precisa indicar os demais tipos concretos. Requisitos e critérios estão em [Aprovações por módulos](MODULOS-DE-APROVACAO.md).
+O sistema de aprovações deve ser reutilizável em áreas diferentes da agência. Criativos de redes sociais são o primeiro módulo conhecido; a Mix7 ainda precisa indicar os demais tipos concretos. O catálogo já permite campos internos por tipo, versionados e restritos à equipe. Etapas, aprovadores, validações e evidências específicas ainda dependem dos casos concretos. Requisitos e critérios estão em [Aprovações por módulos](MODULOS-DE-APROVACAO.md).
 
 O comportamento de tempo confirmado, a proposta de capacidade e os critérios de aceite estão em [Tempo, disponibilidade e capacidade](TEMPO-E-CAPACIDADE.md). A proposta não fecha as regras de jornada que a Mix7 ainda precisa definir.
 

@@ -9,6 +9,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class DemandModuleController extends Controller
@@ -21,17 +22,19 @@ class DemandModuleController extends Controller
             'label' => $module->label(),
             'version' => $module->version(),
             'description' => null,
+            'fields' => [],
         ]);
         $customModules = DemandModuleDefinition::query()
             ->where('organization_id', $request->user()->organization_id)
             ->where('is_active', true)
             ->orderBy('label')
-            ->get(['key', 'label', 'description'])
+            ->get(['key', 'label', 'description', 'config_version', 'fields'])
             ->map(fn (DemandModuleDefinition $module): array => [
                 'key' => $module->key,
                 'label' => $module->label,
-                'version' => 1,
+                'version' => $module->config_version,
                 'description' => $module->description,
+                'fields' => $module->fields ?? [],
             ]);
 
         return response()->json(['data' => $builtInModules->concat($customModules)->values()]);
@@ -46,6 +49,8 @@ class DemandModuleController extends Controller
             'description' => 'Tipo padrão da plataforma.',
             'is_active' => true,
             'built_in' => true,
+            'version' => $module->version(),
+            'fields' => [],
         ]);
         $customModules = DemandModuleDefinition::query()
             ->where('organization_id', $request->user()->organization_id)
@@ -61,6 +66,8 @@ class DemandModuleController extends Controller
                 'updated_by_name' => $module->updater?->name,
                 'built_in' => false,
                 'id' => $module->id,
+                'version' => $module->config_version,
+                'fields' => $module->fields ?? [],
             ]);
 
         return view('approval-modules.index', ['modules' => $builtInModules->concat($customModules)]);
@@ -78,6 +85,12 @@ class DemandModuleController extends Controller
         $data = $request->validate([
             'label' => ['required', 'string', 'min:2', 'max:120'],
             'description' => ['required', 'string', 'min:3', 'max:500'],
+            'fields' => ['sometimes', 'array', 'max:20'],
+            'fields.*.key' => ['required', 'string', 'min:2', 'max:40', 'regex:/^[a-z][a-z0-9_]*$/', 'distinct:strict'],
+            'fields.*.label' => ['required', 'string', 'min:2', 'max:80'],
+            'fields.*.type' => ['required', 'string', Rule::in(['text', 'textarea', 'date', 'url', 'select'])],
+            'fields.*.required' => ['nullable', 'boolean'],
+            'fields.*.options' => ['nullable', 'string', 'max:1000', 'required_if:fields.*.type,select'],
             'key' => [
                 'nullable', 'string', 'min:2', 'max:60', 'regex:/^[a-z][a-z0-9_]*$/',
                 Rule::notIn($reservedKeys),
@@ -86,16 +99,41 @@ class DemandModuleController extends Controller
         ]);
 
         $key = $data['key'] ?? $this->makeKey($data['label'], (int) $request->user()->organization_id);
+        $fields = $this->normalizeFields($data['fields'] ?? []);
         DemandModuleDefinition::create([
             'organization_id' => $request->user()->organization_id,
             'created_by' => $request->user()->id,
             'key' => $key,
             'label' => trim($data['label']),
             'description' => trim($data['description']),
+            'config_version' => 1,
+            'fields' => $fields,
             'is_active' => true,
         ]);
 
-        return to_route('approval-modules.index')->with('success', 'Tipo de aprovação criado. Ele já pode ser usado em novas demandas pelo fluxo compartilhado.');
+        return to_route('approval-modules.index')->with('success', 'Tipo de aprovação criado com seus campos internos. Novas demandas guardarão a versão de configuração usada.');
+    }
+
+    public function updateFields(Request $request, DemandModuleDefinition $module): RedirectResponse
+    {
+        $this->authorize('create', Demand::class);
+        abort_unless($module->organization_id === $request->user()->organization_id, 404);
+        $data = $request->validate([
+            'fields' => ['present', 'array', 'max:20'],
+            'fields.*.key' => ['required', 'string', 'min:2', 'max:40', 'regex:/^[a-z][a-z0-9_]*$/', 'distinct:strict'],
+            'fields.*.label' => ['required', 'string', 'min:2', 'max:80'],
+            'fields.*.type' => ['required', 'string', Rule::in(['text', 'textarea', 'date', 'url', 'select'])],
+            'fields.*.required' => ['nullable', 'boolean'],
+            'fields.*.options' => ['nullable', 'string', 'max:1000', 'required_if:fields.*.type,select'],
+        ]);
+
+        $module->update([
+            'fields' => $this->normalizeFields($data['fields']),
+            'config_version' => $module->config_version + 1,
+            'updated_by' => $request->user()->id,
+        ]);
+
+        return to_route('approval-modules.index')->with('success', 'Campos atualizados. Demandas novas usarão a versão '.$module->fresh()->config_version.'; as antigas mantêm o formulário original.');
     }
 
     public function toggle(Request $request, DemandModuleDefinition $module): RedirectResponse
@@ -121,5 +159,26 @@ class DemandModuleController extends Controller
         }
 
         return $key;
+    }
+
+    private function normalizeFields(array $fields): array
+    {
+        return collect($fields)->map(function (array $field, int $index): array {
+            $options = ($field['type'] ?? null) === 'select'
+                ? collect(preg_split('/\r\n|\r|\n/', (string) ($field['options'] ?? '')))->map(fn ($option) => trim($option))->filter()->unique()->values()->all()
+                : [];
+
+            if (($field['type'] ?? null) === 'select' && count($options) < 1) {
+                throw ValidationException::withMessages(["fields.$index.options" => 'Inclua ao menos uma opção para este campo de seleção.']);
+            }
+
+            return [
+                'key' => $field['key'],
+                'label' => trim($field['label']),
+                'type' => $field['type'],
+                'required' => filter_var($field['required'] ?? false, FILTER_VALIDATE_BOOL),
+                'options' => $options,
+            ];
+        })->values()->all();
     }
 }

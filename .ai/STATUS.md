@@ -1,3 +1,9 @@
+## Campos configuráveis em tipos de aprovação — 2026-09-27
+- Direção/gerência podem criar ou revisar até 20 campos internos por tipo adicional: texto curto/longo, data, link ou seleção com opções. A criação de demanda mostra os campos do tipo, valida os obrigatórios/valores e guarda schema, valores e versão usados. Alterar a definição só afeta demandas novas; equipe autorizada vê os valores no detalhe e API interna. Portal/API de cliente e link público de aprovação não recebem esses dados.
+- Validação: `DemandModuleTest` passou (6 testes/91 assertions), cobrindo CRUD de configuração, tipos de campo, versão antiga preservada, valores inválidos/injetados, permissão e isolamento; `DemandReviewLinkTest` passou (23 testes/243 assertions), inclusive privacidade dos campos internos no link/API públicos. Suíte completa: 176 testes/1.531 assertions. Pint focalizado, compilação/limpeza Blade, `composer validate --no-check-publish`, `npm run build` e `git diff --check` passaram.
+- Inspeção visual no navegador autenticado ainda pendente; os testes exercitam renderização e comportamento HTTP, sem automatizar login. Etapas, aprovadores e evidências diferentes por tipo continuam pendentes de exemplos reais validados pela Mix7.
+- GitHub e Trello aguardam a sincronização desta tarefa. Comentário Trello requer confirmação pontual imediatamente antes de publicar.
+
 ## Anexos privados em demandas — 2026-09-26
 - Adicionei envio por seleção ou arrastar/soltar de até 10 arquivos por envio, 20 MB cada; lista com nome, tamanho, remetente e data; prévia autenticada no navegador e download. Formatos aceitos: PDF, imagens comuns, MP4/WebM, arquivos Office, texto, CSV e ZIP.
 - Os arquivos ficam no disco privado sob escopo da organização/demanda; o histórico registra quem anexou. Clientes não veem nem baixam os anexos; a equipe precisa ter acesso já autorizado à demanda. Só se envia ao cliente por uma versão de revisão separada.

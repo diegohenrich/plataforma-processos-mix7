@@ -15,6 +15,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -78,12 +79,13 @@ class DemandController extends Controller
         $modules = collect(DemandModule::cases())->map(fn (DemandModule $module): array => [
             'key' => $module->value,
             'label' => $module->label(),
+            'fields' => [],
         ])->concat(DemandModuleDefinition::query()
             ->where('organization_id', $request->user()->organization_id)
             ->where('is_active', true)
             ->orderBy('label')
-            ->get(['key', 'label'])
-            ->map(fn (DemandModuleDefinition $module): array => ['key' => $module->key, 'label' => $module->label]));
+            ->get(['key', 'label', 'fields'])
+            ->map(fn (DemandModuleDefinition $module): array => ['key' => $module->key, 'label' => $module->label, 'fields' => $module->fields ?? []]));
 
         return view('demands.create', compact('professionals', 'clients', 'modules'));
     }
@@ -129,6 +131,8 @@ class DemandController extends Controller
                 ->where('is_active', true)
                 ->lockForUpdate()
                 ->firstOrFail();
+            $moduleFields = $customModule?->fields ?? [];
+            $moduleFieldsData = $this->validateModuleFields($request, $moduleFields);
             $demand = Demand::create([
                 'organization_id' => $organizationId,
                 'created_by' => $request->user()->id,
@@ -136,8 +140,10 @@ class DemandController extends Controller
                 'title' => $data['title'],
                 'brief' => $data['brief'],
                 'module_key' => $data['module_key'],
-                'module_version' => $builtInModule?->version() ?? 1,
+                'module_version' => $builtInModule?->version() ?? $customModule->config_version,
                 'module_label' => $builtInModule?->label() ?? $customModule->label,
+                'module_fields_schema' => $moduleFields,
+                'module_fields_data' => $moduleFieldsData,
                 'status' => DemandStatus::Received,
             ]);
 
@@ -190,6 +196,7 @@ class DemandController extends Controller
                     'id' => $demand->id,
                     'title' => $demand->title,
                     'module' => ['key' => $demand->module_key, 'label' => $demand->moduleDisplayLabel(), 'version' => $demand->module_version],
+                    'module_fields' => ['schema' => $demand->module_fields_schema ?? [], 'data' => $demand->module_fields_data ?? []],
                     'status' => $demand->status->value,
                     'status_label' => $demand->status->label(),
                     'client_user_id' => $demand->client_user_id,
@@ -347,5 +354,36 @@ class DemandController extends Controller
         }
 
         return response()->json(['message' => $message, 'errors' => ['status' => [$message]]], 409);
+    }
+
+    private function validateModuleFields(Request $request, array $fields): array
+    {
+        $input = $request->input('module_fields_data', []);
+        if (! is_array($input)) {
+            Validator::make(['module_fields_data' => $input], ['module_fields_data' => ['array']])->validate();
+        }
+
+        $keys = array_column($fields, 'key');
+        if ($keys === [] && $input !== []) {
+            Validator::make(['module_fields_data' => $input], ['module_fields_data' => ['array', 'size:0']])->validate();
+        }
+        $rules = ['module_fields_data' => $keys === [] ? ['array'] : ['array:'.implode(',', $keys)]];
+        foreach ($fields as $field) {
+            $key = 'module_fields_data.'.$field['key'];
+            $typeRules = match ($field['type']) {
+                'textarea' => ['string', 'max:4000'],
+                'date' => ['date'],
+                'url' => ['url', 'max:2048'],
+                'select' => [Rule::in($field['options'] ?? [])],
+                default => ['string', 'max:1000'],
+            };
+            $rules[$key] = array_merge([($field['required'] ?? false) ? 'required' : 'nullable'], $typeRules);
+        }
+
+        $validated = Validator::make(['module_fields_data' => $input], $rules)->validate();
+
+        return collect($validated['module_fields_data'] ?? [])
+            ->filter(fn ($value) => $value !== null && $value !== '')
+            ->all();
     }
 }

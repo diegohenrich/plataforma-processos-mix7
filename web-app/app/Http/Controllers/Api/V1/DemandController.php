@@ -50,6 +50,7 @@ class DemandController extends Controller
                     'brief' => $demand->brief,
                     'summary' => $demand->ai_summary,
                     'module' => $this->moduleData($demand),
+                    'module_fields' => ['schema' => $demand->module_fields_schema ?? [], 'data' => $demand->module_fields_data ?? []],
                     'status' => ['value' => $demand->status->value, 'label' => $demand->status->label()],
                     'created_at' => $demand->created_at?->toISOString(),
                     'created_by' => ['id' => $demand->creator->id, 'name' => $demand->creator->name],
@@ -91,6 +92,7 @@ class DemandController extends Controller
                 'brief' => $demand->brief,
                 'summary' => $demand->ai_summary,
                 'module' => $this->moduleData($demand),
+                'module_fields' => ['schema' => $demand->module_fields_schema ?? [], 'data' => $demand->module_fields_data ?? []],
                 'status' => ['value' => $demand->status->value, 'label' => $demand->status->label()],
                 'tasks' => $tasks->map(fn ($task) => [
                     'id' => $task->id,

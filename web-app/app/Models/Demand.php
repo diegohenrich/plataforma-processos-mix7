@@ -13,11 +13,15 @@ class Demand extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['organization_id', 'created_by', 'client_user_id', 'title', 'brief', 'ai_summary', 'module_key', 'module_version', 'module_label', 'status'];
+    protected $fillable = ['organization_id', 'created_by', 'client_user_id', 'title', 'brief', 'ai_summary', 'module_key', 'module_version', 'module_label', 'module_fields_schema', 'module_fields_data', 'status'];
 
     protected function casts(): array
     {
-        return ['status' => DemandStatus::class];
+        return [
+            'status' => DemandStatus::class,
+            'module_fields_schema' => 'array',
+            'module_fields_data' => 'array',
+        ];
     }
 
     public function moduleDisplayLabel(): ?string

@@ -7,11 +7,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class DemandModuleDefinition extends Model
 {
-    protected $fillable = ['organization_id', 'created_by', 'updated_by', 'key', 'label', 'description', 'is_active'];
+    protected $fillable = ['organization_id', 'created_by', 'updated_by', 'key', 'label', 'description', 'config_version', 'fields', 'is_active'];
 
     protected function casts(): array
     {
-        return ['is_active' => 'boolean'];
+        return ['is_active' => 'boolean', 'config_version' => 'integer', 'fields' => 'array'];
     }
 
     public function organization(): BelongsTo

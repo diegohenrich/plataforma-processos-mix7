@@ -15,6 +15,9 @@
             @if ($canManage)
                 <section class="workflow-card"><div class="section-heading"><div><h2>Etapa do trabalho</h2><p>Avance conforme o trabalho e as decisões forem registrados.</p></div></div><ol class="stage-track">@foreach (App\Enums\DemandStatus::cases() as $stage)<li class="{{ $stage === $demand->status ? 'current' : (array_search($stage, App\Enums\DemandStatus::cases(), true) < array_search($demand->status, App\Enums\DemandStatus::cases(), true) ? 'past' : '') }}"><span class="stage-dot"></span><span>{{ $stage->label() }}</span></li>@endforeach</ol>@if ($nextStatuses)<div class="stage-actions"><span>Próxima ação:</span>@foreach ($nextStatuses as $next)<form method="post" action="{{ route('demands.status', $demand) }}">@csrf @method('PATCH')<input type="hidden" name="status" value="{{ $next->value }}"><button class="secondary-button" type="submit">{{ $next->label() }}</button></form>@endforeach</div>@else<span class="notice-inline">Demanda concluída.</span>@endif</section>
             @endif
+            @if (!empty($demand->module_fields_schema))
+                <section class="panel module-data-panel"><div class="section-heading"><div><h2>Informações de {{ $demand->moduleDisplayLabel() }}</h2><p>Campos internos · configuração v{{ $demand->module_version }}</p></div></div><dl class="module-data-list">@foreach ($demand->module_fields_schema as $field)@php $value = $demand->module_fields_data[$field['key']] ?? null; @endphp @if ($value !== null && $value !== '')<div><dt>{{ $field['label'] }}</dt><dd>{{ $value }}</dd></div>@endif @endforeach</dl></section>
+            @endif
 
             @if ($canManage)
                 <section class="panel review-link-panel">

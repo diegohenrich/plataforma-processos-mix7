@@ -40,6 +40,7 @@ Route::middleware(['auth', 'active'])->group(function (): void {
     Route::resource('demandas', DemandController::class)->only(['index', 'create', 'store', 'show'])->names('demands')->parameters(['demandas' => 'demand']);
     Route::get('/tipos-aprovacao', [DemandModuleController::class, 'index'])->name('approval-modules.index');
     Route::post('/tipos-aprovacao', [DemandModuleController::class, 'store'])->name('approval-modules.store');
+    Route::put('/tipos-aprovacao/{module}/campos', [DemandModuleController::class, 'updateFields'])->name('approval-modules.fields');
     Route::patch('/tipos-aprovacao/{module}/status', [DemandModuleController::class, 'toggle'])->name('approval-modules.toggle');
     Route::patch('/demandas/{demand}/etapa', [DemandController::class, 'updateStatus'])->name('demands.status');
     Route::post('/demandas/{demand}/evidencias-entrega', [DemandDeliveryEvidenceController::class, 'store'])->name('demands.delivery-evidence.store');
