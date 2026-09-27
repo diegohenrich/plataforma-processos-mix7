@@ -566,6 +566,39 @@ class DemandWorkflowTest extends TestCase
         $this->assertDatabaseHas('task_time_entries', ['task_id' => $task->id, 'user_id' => $professional->id, 'ended_at' => null]);
     }
 
+    public function test_floating_task_window_can_control_timer_and_completion_through_json(): void
+    {
+        Date::setTestNow(CarbonImmutable::parse('2026-09-27 12:00:00'));
+        [$organization, $manager, $professional] = $this->team();
+        $demand = $this->demand($organization, $manager);
+        $task = $this->task($demand, $professional, $manager, 'Tarefa da janela flutuante');
+
+        $this->actingAs($professional)
+            ->postJson(route('demand-tasks.timer.start', $task))
+            ->assertOk()
+            ->assertJsonPath('data.task_id', $task->id)
+            ->assertJsonPath('data.timer.ended_at', null);
+
+        $this->travel(35)->seconds();
+        $this->postJson(route('demand-tasks.timer.heartbeat'))->assertOk()->assertJsonPath('data.active', true);
+        $this->postJson(route('demand-tasks.timer.pause', $task))
+            ->assertOk()
+            ->assertJsonPath('data.status', TaskStatus::Paused->value)
+            ->assertJsonPath('data.timer.duration_seconds', 35);
+
+        $this->postJson(route('demand-tasks.timer.start', $task))->assertOk();
+        $this->travel(20)->seconds();
+        $this->patchJson(route('demand-tasks.status', $task), ['status' => TaskStatus::Completed->value])
+            ->assertOk()
+            ->assertJsonPath('data.status', TaskStatus::Completed->value)
+            ->assertJsonPath('data.timer', null);
+
+        $this->assertDatabaseCount('task_time_entries', 2);
+        $this->assertDatabaseMissing('task_time_entries', ['task_id' => $task->id, 'ended_at' => null]);
+        $this->assertSame(TaskStatus::Completed, $task->fresh()->status);
+        Date::setTestNow();
+    }
+
     public function test_professional_cannot_run_two_timers_or_track_a_colleagues_task(): void
     {
         [$organization, $manager, $professional, $colleague] = $this->team();
@@ -673,8 +706,11 @@ class DemandWorkflowTest extends TestCase
         $this->actingAs($professional)->get(route('demands.index'))
             ->assertOk()
             ->assertSee('Minhas tarefas')
+            ->assertSee('Janela flutuante')
+            ->assertSee('data-task-tray-floating-state', false)
             ->assertSee('Minha tarefa do tray')
             ->assertSee('Outra tarefa minha')
+            ->assertSee('"demandUrl"', false)
             ->assertSee(route('demand-tasks.timer.start', $ownTask), false)
             ->assertSee('Bloqueada')
             ->assertDontSee('Tarefa privada do colega');

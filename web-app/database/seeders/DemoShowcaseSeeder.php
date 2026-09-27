@@ -33,6 +33,14 @@ use Illuminate\Support\Str;
 
 class DemoShowcaseSeeder
 {
+    private const MANAGER_COUNT = 20;
+
+    private const PROFESSIONAL_COUNT = 100;
+
+    private const CLIENT_COUNT = 100;
+
+    private const DEMANDS_PER_STAGE = 50;
+
     /** @return array{users: int, demands: int, tasks: int, review_links: array<int, array{title: string, token: string}>} */
     public function seed(Organization $organization, array $corePeople, string $password): array
     {
@@ -46,7 +54,7 @@ class DemoShowcaseSeeder
         $baseClient = $corePeople['client'];
 
         $managers = [$baseManager];
-        foreach (range(2, 12) as $number) {
+        foreach (range(2, self::MANAGER_COUNT) as $number) {
             $managers[] = $this->upsertUser($organization, $password, sprintf('Gerência de demonstração %02d', $number), sprintf('gerencia%02d@mix7-demo.test', $number), UserRole::MarketingManager);
         }
 
@@ -56,7 +64,7 @@ class DemoShowcaseSeeder
             ['Vídeo', 'Edição'], ['Mídia paga', 'Campanhas'], ['Social', 'Planejamento'],
             ['Design', 'Apresentações'], ['Conteúdo', 'Revisão'], ['Desenvolvimento', 'Integrações'],
         ];
-        foreach (range(2, 40) as $number) {
+        foreach (range(2, self::PROFESSIONAL_COUNT) as $number) {
             $professionals[] = $this->upsertUser(
                 $organization,
                 $password,
@@ -77,7 +85,7 @@ class DemoShowcaseSeeder
         );
 
         $clients = [$baseClient];
-        foreach (range(2, 40) as $number) {
+        foreach (range(2, self::CLIENT_COUNT) as $number) {
             $clients[] = $this->upsertUser($organization, $password, sprintf('Cliente de demonstração %02d', $number), sprintf('cliente%02d@mix7-demo.test', $number), UserRole::Client);
         }
 
@@ -106,13 +114,15 @@ class DemoShowcaseSeeder
         $weekStart = CarbonImmutable::now()->startOfWeek()->startOfDay();
 
         foreach ($statuses as $stageIndex => $status) {
-            foreach (range(1, 20) as $sample) {
-                // Preserve identifiers already used by the 6-per-stage dataset; append the larger set after it.
-                $sequence = $sample <= 4
-                    ? ($stageIndex * 4) + $sample
-                    : ($sample <= 6
-                        ? 32 + ($stageIndex * 2) + ($sample - 4)
-                        : 48 + ($stageIndex * 14) + ($sample - 6));
+            foreach (range(1, self::DEMANDS_PER_STAGE) as $sample) {
+                // Preserve the identifiers of the original 20-per-stage dataset and append new examples after it.
+                $sequence = $sample <= 20
+                    ? ($sample <= 4
+                        ? ($stageIndex * 4) + $sample
+                        : ($sample <= 6
+                            ? 32 + ($stageIndex * 2) + ($sample - 4)
+                            : 48 + ($stageIndex * 14) + ($sample - 6)))
+                    : 161 + ($stageIndex * (self::DEMANDS_PER_STAGE - 20)) + ($sample - 21);
                 $service = $services[($sequence - 1) % count($services)];
                 $manager = $managers[($sequence - 1) % count($managers)];
                 $client = $clients[($sequence - 1) % count($clients)];
@@ -215,7 +225,7 @@ class DemoShowcaseSeeder
 
         return [
             'users' => 1 + count($managers) + count($professionals) + 1 + count($clients),
-            'demands' => count($statuses) * 20,
+            'demands' => count($statuses) * self::DEMANDS_PER_STAGE,
             'tasks' => $tasksCreated,
             'review_links' => $reviewLinks,
             'inactive_user' => $inactiveProfessional->email,

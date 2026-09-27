@@ -4,8 +4,8 @@ A demonstração permite explorar os papéis e áreas principais usando somente 
 
 ## Carga disponível
 
-- 94 contas: 1 direção, 12 gerências, 40 profissionais ativos, 1 profissional inativo e 40 clientes.
-- 164 demandas distribuídas pelas oito etapas (20 geradas em cada etapa, além de quatro exemplos principais), com 484 tarefas, responsáveis, estimativas, prazos, dependências, histórico e registros de tempo. Uma tarefa da conta profissional principal começa com o cronômetro ativo para mostrar a bandeja de trabalho.
+- 222 contas: 1 direção, 20 gerências, 100 profissionais ativos, 1 profissional inativo e 100 clientes.
+- 404 demandas distribuídas pelas oito etapas (50 geradas em cada etapa, além de quatro exemplos principais), com 1.204 tarefas, responsáveis, estimativas, prazos, dependências, histórico e registros de tempo. Uma tarefa da conta profissional principal começa com o cronômetro ativo para mostrar a bandeja de trabalho.
 - 3 tipos adicionais de aprovação, além dos tipos padrão, com links públicos em demandas de exemplo para testar versões, comentários e decisões; o seeder imprime links novos a cada execução.
 - Anexo PDF interno e materiais públicos de exemplo, evidências de entrega, avaliações e respostas, capacidade, biblioteca, trilhas de onboarding, catálogo de acessos e convite pendente.
 
@@ -13,7 +13,7 @@ Demandas, tarefas e itens da biblioteca começam com `[DEMO]`. Briefings, coment
 
 ## Entrar
 
-O e-mail principal da direção é `direcao@mix7-demo.test`. Também existem `gerencia@mix7-demo.test`, `profissional@mix7-demo.test` e `cliente@mix7-demo.test`. As contas adicionais seguem os padrões `gerencia02` a `gerencia12`, `profissional02` a `profissional40` e `cliente02` a `cliente40`, todas no domínio `@mix7-demo.test`.
+O e-mail principal da direção é `direcao@mix7-demo.test`. Também existem `gerencia@mix7-demo.test`, `profissional@mix7-demo.test` e `cliente@mix7-demo.test`. As contas adicionais seguem os padrões `gerencia02` a `gerencia20`, `profissional02` a `profissional100` e `cliente02` a `cliente100`, todas no domínio `@mix7-demo.test`.
 
 O seeder cria uma senha temporária aleatória e a imprime no terminal. Ela é igual para as contas criadas naquela execução e muda sempre que a carga é executada; não deve ser registrada no repositório ou usada fora desta instalação local. A conta `profissional-inativo@mix7-demo.test` serve para conferir bloqueio de acesso e não pode entrar.
 
