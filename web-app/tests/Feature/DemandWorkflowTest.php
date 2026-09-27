@@ -49,7 +49,11 @@ class DemandWorkflowTest extends TestCase
         $this->assertSame(2, $demand->tasks()->count());
         $this->assertSame(3, $demand->events()->count());
         $this->assertDatabaseHas('demand_events', ['demand_id' => $demand->id, 'actor_id' => $manager->id, 'event_type' => 'task_assigned']);
-        $this->get(route('demands.show', $demand))->assertOk()->assertSee('Tipo: Revisão de site')->assertSee('configuração v1');
+        $response = $this->get(route('demands.show', $demand))->assertOk()->assertSee('Tipo: Revisão de site')->assertSee('configuração v1');
+        $response->assertSee('<details class="panel history-panel">', false)
+            ->assertSee('3 registros')
+            ->assertSee($demand->events()->firstOrFail()->summary)
+            ->assertDontSee('<details class="panel history-panel" open>', false);
     }
 
     public function test_manager_sees_all_demand_stages_in_kanban_and_can_switch_to_paginated_list(): void
