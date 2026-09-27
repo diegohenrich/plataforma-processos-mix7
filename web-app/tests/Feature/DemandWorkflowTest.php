@@ -67,7 +67,10 @@ class DemandWorkflowTest extends TestCase
             ->assertSee('Aprovação do cliente')
             ->assertSee('1 tarefa')
             ->assertSee('kanban-move', false)
-            ->assertSee('Mover para');
+            ->assertSee('Mover para')
+            ->assertSee('<details class="kanban-move-panel">', false)
+            ->assertSee('<summary>Mover demanda</summary>', false)
+            ->assertDontSee('<details class="kanban-move-panel" open>', false);
 
         $this->get(route('demands.index', ['view' => 'list']))
             ->assertOk()

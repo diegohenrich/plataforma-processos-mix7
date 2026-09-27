@@ -28,6 +28,12 @@
 - GitHub: correção publicada no commit `c6c35644d1d9922d934559f72b43cade4cf69a77`; `git ls-remote` confirmou SHA local/remoto igual. Checks de push e PR #11 estão pendentes nesta consulta ([push](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36285211064), [PR](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36285213602)).
 - Trello: comentário com resultado e commit ainda não publicado; a confirmação pontual para escrita no cartão não foi recebida. Não alterei o Trello sem essa confirmação.
 
+## Cartões mais compactos no quadro de demandas — 2026-09-27
+- Reduzi o trecho visível do briefing a duas linhas e passei o controle “Mover demanda” para um painel expansível fechado por padrão. O acesso ao detalhe, as contagens/responsáveis, o seletor de etapa, a validação do servidor e o arraste existente foram preservados. Os testes garantem que o seletor segue disponível dentro do painel recolhido. O texto exibido é um recorte, ainda não um resumo semântico gerado por IA.
+- Validação local: `DemandWorkflowTest` passou (26 testes/195 assertions); suíte completa passou (174 testes/1.457 assertions); `npm run build`, `php artisan view:cache` e `view:clear`, `composer validate --no-check-publish` e `git diff --check` passaram.
+- Inspeção visual final ainda pendente. A skill [computer-use](C:/Users/anony/.codex/plugins/cache/openai-bundled/computer-use/26.924.22138/skills/computer-use/SKILL.md) determina “Do not automate user authentication”; sem sessão autenticada reutilizável, não automatizei entrada para conferir o Kanban renderizado. Não afirmo equivalência visual validada.
+- GitHub: aguardando commit/push e checks desta alteração. Trello: aguardando confirmação pontual para publicar o resultado no cartão correspondente.
+
 ## Catálogo expansível de tipos de aprovação — 2026-09-27
 - Direção/gerência podem cadastrar tipos adicionais por organização com nome, descrição e chave técnica; desativar/reativar sem apagar ou reclassificar demandas antigas. Formulário de demanda e API usam o catálogo ativo; API lista tipos disponíveis e preserva chave, rótulo e versão.
 - Segurança validada por testes de papel, agência, chave duplicada/reservada, desativação, uso web/API e tentativa de seleção por outra agência. Tipos extras ainda compartilham campos e etapas; não há criador de campos ou regras específicas, pois a Mix7 não forneceu exemplos validados para essas variações.
