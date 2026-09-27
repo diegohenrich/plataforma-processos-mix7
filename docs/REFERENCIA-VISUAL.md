@@ -6,7 +6,7 @@ O CRM-MIX7-RENEW foi executado em ambiente local. Em 26/09/2026, o dashboard aut
 
 O CSS define corpo de 16 px, títulos de 32–46 px, navegação de 15 px, lateral de 252 px (230 px até 1399 px), recuos de conteúdo de 38 px (28 px até 1399 px), cartões de raio 24 px e botões com altura mínima de 44 px. Define também a lateral em degradê `#243943` → `#10252f`, item ativo `#e8f3f8` e as cores `#202e35` (texto), `#204b61` (azul-petróleo), `#8ecde2` (azul-claro), `#f5f6f5` (fundo) e branco (superfícies).
 
-Após o pedido recente do usuário para aproximar mais a plataforma do CRM, sua navegação usa o degradê escuro, textos claros, item ativo azul-claro e as larguras confirmadas de 252/230 px. O conteúdo segue em superfícies brancas e fundo claro, com os azuis do CRM nas ações e destaques. Os cartões de resumo e de demandas foram ajustados para raios maiores. Nenhum arquivo ou asset do CRM foi copiado.
+Após o pedido recente do usuário para aproximar mais a plataforma do CRM, sua navegação usa o degradê escuro, textos claros, item ativo azul-claro e as larguras confirmadas de 252/230 px. O conteúdo segue em superfícies brancas e fundo claro, com os azuis do CRM nas ações e destaques. Os cartões de resumo e de demandas foram ajustados para raios maiores.
 
 ## Inspeção renderizada
 
@@ -16,8 +16,8 @@ A plataforma tem uma sessão local de demonstração aberta em outra aba com um 
 
 ## Pendências vigentes
 
-- Renderizar o dashboard do CRM em desktop amplo e comparar diretamente cabeçalho, hierarquia, proporções e distribuição com a plataforma; a sessão de 26/09 tinha viewport disponível de 664 × 880.
-- Aplicar à plataforma apenas diferenças confirmadas nessa comparação. Nenhum arquivo do CRM foi alterado.
+- Renderizar o dashboard do CRM em desktop amplo e comparar diretamente cabeçalho, hierarquia, proporções e distribuição com a plataforma; a sessão autenticada mais recente teve viewport disponível de 664 × 880 e conteúdo sintético vazio.
+- Conferir o resultado após a mudança do cabeçalho da plataforma também em desktop amplo. Nenhum arquivo do CRM foi alterado.
 
 ## Reinspeção solicitada — 25/09/2026
 
@@ -79,3 +79,9 @@ A plataforma tem uma sessão local de demonstração aberta em outra aba com um 
 - Na captura autenticada, os módulos de métricas e contatos aparecem carregados; os dados permanecem no navegador local e não foram reproduzidos neste documento. A captura não foi guardada no repositório porque contém registros pessoais do banco importado. O tamanho de desktop amplo continua sem comprovação renderizada nesta sessão; os valores do CSS não substituem essa validação.
 - Durante uma primeira tentativa, a configuração temporária deixou o leitor local do Google Ads desligado enquanto foi selecionada uma empresa com conta vinculada; o fluxo do dashboard acionou consultas pelo provedor direto. O servidor foi parado assim que isso foi percebido, mas não há evidência suficiente para confirmar se houve tráfego externo. Na inspeção retomada, o leitor de dados armazenados ficou habilitado, sem chamadas diretas ao provedor pelo dashboard. Para novas verificações, manter esse modo local e escolher apenas dados que não acionem integrações desnecessárias.
 - O banco publicado e os arquivos do CRM de referência não foram alterados. O clone conserva o usuário fictício e os dados locais do SQL importado. Essa validação conclui a observação autenticada do painel e deixa pendente comparar desktop amplo, registrar a evidência sem dados pessoais e aplicar somente os ajustes visuais comprovados à plataforma.
+
+## Reaplicação da marca e confirmação em base sintética — 27/09/2026
+
+- Para limitar a inspeção a dados fictícios, o CRM de referência foi iniciado com um clone SQLite isolado e uma conta sintética, sem importar ou acessar o banco oficial enviado. A página autenticada abriu em uma janela de 664 × 880, mostrando o cabeçalho do CRM, o menu lateral com avatar/perfil no topo e a área clara do dashboard; sem registros de métricas sintéticos, não foi possível comparar a distribuição detalhada dos gráficos.
+- A plataforma foi ajustada para usar a imagem oficial redonda `public/images/logo-redonda.png` (copiada para `web-app/public/images/mix7-logo-round.png`) no menu lateral desktop, na navegação compacta e nas telas de entrada, recuperação e redefinição de senha. O painel do CRM apresentou a imagem Mix7 junto ao nome do perfil; no viewport estreito disponível, a marca Mix7 apareceu no topo da navegação móvel da plataforma sem sair da área visível. A tela de login foi inspecionada visualmente antes da mudança, mas não foi renderizada novamente depois porque a sessão do navegador permaneceu autenticada; sua nova captura segue pendente.
+- A cópia local do CRM permaneceu intacta; não foi alterado o SQL enviado nem a persistência publicada. Os arquivos temporários sintéticos ficam sob `%LOCALAPPDATA%\\Temp\\Mix7-CRM-Layout-QA-c0f97cb0d0c54fafb8cc8db96c8b8d0d` e `%LOCALAPPDATA%\\Temp\\Mix7-Platform-Visual-QA-b121651347eb4c128e1b701eb2eaad2e`; encerrar os servidores temporários após validação. Comparação de conteúdo em desktop amplo permanece pendente.

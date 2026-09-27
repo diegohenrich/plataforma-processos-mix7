@@ -5,7 +5,7 @@
 @section('body')
 <main class="login-page">
     <section class="login-card" aria-labelledby="password-reset-title">
-        <div class="brand login-brand"><span class="brand-mark" aria-hidden="true">M</span><span>Mix7 <span style="font-weight:450;color:#6b8188">| Processos</span></span></div>
+        <div class="brand login-brand"><img class="login-brand-image" src="{{ asset('images/mix7-logo-round.png') }}" alt="Logotipo Mix7 Marketing"><span>Mix7 <span style="font-weight:450;color:#6b8188">| Processos</span></span></div>
         <p class="eyebrow" style="margin-top:30px">Recuperação de acesso</p>
         <h1 class="login-title" id="password-reset-title">Crie uma nova senha</h1>
         <p class="subheading">Use uma senha com pelo menos 12 caracteres. O link pode ser usado uma única vez.</p>

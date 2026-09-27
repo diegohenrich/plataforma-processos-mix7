@@ -1,5 +1,18 @@
+<style>
+    .sidebar .brand{flex-direction:column;gap:12px;padding:8px 10px 26px;margin-bottom:0;border-bottom:1px solid #ffffff14;text-align:center}
+    .brand-image{display:block;width:76px;height:76px;flex:none;object-fit:cover;border:1px solid #ffffff32;border-radius:50%;box-shadow:0 8px 18px #00000030}
+    .brand-copy{display:grid;gap:6px;min-width:0}
+    .brand-copy strong{color:#fff;font-size:15px;line-height:1.4;overflow-wrap:anywhere}
+    .brand-copy small{color:#bed4dc;font-size:13px;line-height:1.5;overflow-wrap:anywhere}
+    .mobile-nav .brand-image{width:38px;height:38px;border-radius:50%}
+    .mobile-nav .brand-copy{display:block;color:#fff;font-size:16px;font-weight:750}
+    @media(max-width:650px){.mobile-nav .brand{gap:10px;padding:0}.mobile-nav .brand-copy small{display:none}}
+</style>
 <aside class="sidebar" aria-label="Navegação principal">
-    <div class="brand"><span class="brand-mark" aria-hidden="true">M</span><span>Mix7 <span style="font-weight:450;color:#bed4dc">| Processos</span></span></div>
+    <div class="brand">
+        <img class="brand-image" src="{{ asset('images/mix7-logo-round.png') }}" alt="Logotipo Mix7 Marketing">
+        <span class="brand-copy"><strong>{{ auth()->user()->name }}</strong><small>{{ auth()->user()->organization->name }}</small></span>
+    </div>
     <div>
         <p class="nav-label">Espaço de trabalho</p>
         <a class="nav-item {{ $active === 'dashboard' ? 'active' : '' }}" href="{{ route('dashboard') }}"><span aria-hidden="true">▦</span> Visão geral</a>
@@ -22,7 +35,10 @@
     <div class="sidebar-note">A plataforma reúne o trabalho da agência e mantém cada etapa registrada.</div>
 </aside>
 <nav class="mobile-nav" aria-label="Navegação para celular">
-    <div class="brand"><span class="brand-mark" aria-hidden="true">M</span><span>Mix7 | Processos</span></div>
+    <div class="brand">
+        <img class="brand-image" src="{{ asset('images/mix7-logo-round.png') }}" alt="Logotipo Mix7 Marketing">
+        <span class="brand-copy">Mix7 <small>| Processos</small></span>
+    </div>
     <div class="mobile-nav-actions">
         <a href="{{ route('dashboard') }}">Início</a>
         <a href="{{ route('demands.index') }}">{{ auth()->user()->role === App\Enums\UserRole::Client ? 'Minhas demandas' : 'Demandas' }}</a>
