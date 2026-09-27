@@ -9,13 +9,14 @@ use App\Models\User;
 use App\Services\TeamMemberAccessManager;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class TeamMemberController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request): View|Response
     {
         $this->authorize('viewAny', User::class);
         $managers = User::query()
@@ -49,7 +50,15 @@ class TeamMemberController extends Controller
             ->limit(50)
             ->get();
 
-        return view('team.index', compact('managers', 'professionals', 'clients', 'invitations', 'accessEvents'));
+        $viewData = compact('managers', 'professionals', 'clients', 'invitations', 'accessEvents');
+
+        if (session()->has('invitation_url')) {
+            return response()->view('team.index', $viewData)
+                ->header('Cache-Control', 'private, no-store')
+                ->header('Referrer-Policy', 'no-referrer');
+        }
+
+        return view('team.index', $viewData);
     }
 
     public function updateAccess(Request $request, User $member, TeamMemberAccessManager $accessManager): RedirectResponse

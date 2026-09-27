@@ -13,6 +13,31 @@
             <p class="subheading">Envie um convite; cada pessoa cria a própria senha para acessar seu espaço.</p>
             @include('partials.flash')
             @error('invitation')<p class="error" role="alert">{{ $message }}</p>@enderror
+            @if (session('invitation_url'))
+                <section class="panel team-panel" aria-labelledby="local-invitation-title">
+                    <div class="section-heading"><div><h2 id="local-invitation-title">Link do convite para teste local</h2><p>Este link vale por 72 horas e pode ser usado uma única vez.</p></div></div>
+                    <label class="field" for="local-invitation-url">Copie e compartilhe por um canal seguro<input id="local-invitation-url" type="url" value="{{ session('invitation_url') }}" readonly autocomplete="off" spellcheck="false"></label>
+                    <div class="form-actions"><button class="secondary-button" id="copy-local-invitation-url" type="button">Copiar link</button><a class="secondary-button" href="{{ session('invitation_url') }}" target="_blank" rel="noopener noreferrer">Abrir convite</a></div>
+                    <p class="field-help" id="local-invitation-copy-status" role="status" aria-live="polite">O ambiente local não enviou e-mail. Use o link acima para ativar a conta de demonstração.</p>
+                </section>
+                <script>
+                    (() => {
+                        const field = document.getElementById('local-invitation-url');
+                        const button = document.getElementById('copy-local-invitation-url');
+                        const status = document.getElementById('local-invitation-copy-status');
+                        button?.addEventListener('click', async () => {
+                            try {
+                                await navigator.clipboard.writeText(field.value);
+                                status.textContent = 'Link copiado. Ele expira em 72 horas e só pode ser usado uma vez.';
+                            } catch {
+                                field.focus();
+                                field.select();
+                                status.textContent = 'Selecione o link e copie com Ctrl+C.';
+                            }
+                        });
+                    })();
+                </script>
+            @endif
 
             <section class="panel team-panel">
                 <div class="section-heading"><div><h2>Adicionar profissional</h2><p>A conta será vinculada à Mix7 e poderá receber tarefas.</p></div></div>

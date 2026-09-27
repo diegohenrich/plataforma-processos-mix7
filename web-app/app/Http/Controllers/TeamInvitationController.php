@@ -69,6 +69,12 @@ class TeamInvitationController extends Controller
                 ->header('Referrer-Policy', 'no-referrer');
         }
 
+        if (config('app.env') === 'local' && in_array(config('mail.default'), ['log', 'array'], true)) {
+            return redirect()->route('team.index')
+                ->with('warning', 'Convite criado para teste local. Nenhum e-mail foi enviado; copie o link temporário abaixo e compartilhe por um canal seguro.')
+                ->with('invitation_url', route('team-invitations.show', ['token' => $token]));
+        }
+
         Notification::route('mail', $invitation->email)->notify(new TeamInvitationNotification($invitation, $token));
 
         return redirect()->route('team.index')->with('success', 'Convite enviado. A pessoa criará a própria senha pelo link temporário.');

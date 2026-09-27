@@ -51,6 +51,50 @@ class TeamInvitationTest extends TestCase
         ])->assertSessionHasErrors('role');
     }
 
+    public function test_local_web_invitation_displays_a_manual_link_when_email_transport_is_not_configured(): void
+    {
+        Notification::fake();
+        config(['app.env' => 'local', 'mail.default' => 'log']);
+        [, $owner] = $this->workspace();
+
+        $response = $this->actingAs($owner)->followingRedirects()->post(route('team-invitations.store'), [
+            'name' => 'Profissional para teste local',
+            'email' => 'teste-local@example.test',
+            'role' => UserRole::Professional->value,
+        ]);
+
+        $invitation = TeamInvitation::query()->where('email', 'teste-local@example.test')->firstOrFail();
+        $html = $response->assertOk()
+            ->assertSee('Link do convite para teste local')
+            ->assertSee('O ambiente local não enviou e-mail.')
+            ->assertHeader('Cache-Control', 'no-store, private')
+            ->assertHeader('Referrer-Policy', 'no-referrer')
+            ->getContent();
+        preg_match('/value="([^"]*\/convite\/([A-Za-z0-9]+))"/', $html, $matches);
+
+        $this->assertNotEmpty($matches[2] ?? null);
+        $this->assertSame(hash('sha256', $matches[2]), $invitation->token_hash);
+        $this->assertSame(64, strlen($matches[2]));
+        Notification::assertNothingSent();
+        $this->get(route('team-invitations.show', $matches[2]))->assertOk()->assertSee('Crie sua senha');
+    }
+
+    public function test_web_invitation_keeps_the_email_flow_outside_local_manual_mode(): void
+    {
+        Notification::fake();
+        config(['app.env' => 'production', 'mail.default' => 'smtp']);
+        [, $owner] = $this->workspace();
+
+        $response = $this->actingAs($owner)->post(route('team-invitations.store'), [
+            'name' => 'Profissional por e-mail',
+            'email' => 'por-email@example.test',
+            'role' => UserRole::Professional->value,
+        ]);
+
+        $response->assertRedirect(route('team.index'))->assertSessionMissing('invitation_url');
+        Notification::assertSentOnDemand(TeamInvitationNotification::class);
+    }
+
     public function test_invited_manager_activates_an_account_with_the_manager_role(): void
     {
         Notification::fake();
