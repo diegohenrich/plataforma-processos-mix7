@@ -7,6 +7,8 @@ use App\Enums\TaskStatus;
 use App\Enums\UserRole;
 use App\Models\AiPlanningRun;
 use App\Models\Demand;
+use App\Models\DemandReviewLink;
+use App\Models\DemandReviewResponse;
 use App\Models\DemandTask;
 use App\Models\Organization;
 use App\Models\User;
@@ -49,6 +51,56 @@ class AiPlanningTest extends TestCase
         Http::assertSent(fn ($request) => $request['messages'][1]['content'] !== ''
             && str_contains($request['messages'][1]['content'], 'Briefing sintético')
             && $request['response_format']['type'] === 'json_schema');
+    }
+
+    public function test_manager_can_explicitly_include_only_this_demands_versioned_client_feedback(): void
+    {
+        [, $manager, , $demand] = $this->workspace();
+        [, $otherManager, , $otherDemand] = $this->workspace('other');
+        $link = $this->reviewLink($demand, $manager, 2);
+        $feedback = DemandReviewResponse::create([
+            'demand_review_link_id' => $link->id,
+            'reviewer_name' => 'Nome privado do cliente',
+            'type' => 'changes_requested',
+            'comment' => 'Ajustar o título principal conforme combinado.',
+            'anchor_type' => 'text',
+            'anchor_data' => ['text' => 'Título inicial', 'url' => 'https://preview.example.test/privado'],
+            'created_at' => now(),
+        ]);
+        $otherLink = $this->reviewLink($otherDemand, $otherManager, 1);
+        DemandReviewResponse::create([
+            'demand_review_link_id' => $otherLink->id,
+            'reviewer_name' => 'Outro cliente',
+            'type' => 'annotation',
+            'comment' => 'Não deve sair da outra demanda.',
+            'created_at' => now(),
+        ]);
+        Http::fake(['https://ai-gateway.vercel.sh/v1/chat/completions' => Http::response($this->providerResponse(), 200)]);
+
+        $page = $this->actingAs($manager)->get(route('demands.show', $demand))
+            ->assertOk()->assertSee('Incluir até 20 comentários e anotações do cliente');
+        preg_match('/<input[^>]*name="include_client_feedback"[^>]*>/', $page->getContent(), $checkbox);
+        $this->assertNotEmpty($checkbox);
+        $this->assertStringNotContainsString('checked', $checkbox[0]);
+
+        $this->actingAs($manager)->post(route('ai-planning.propose', $demand), ['include_client_feedback' => 1])
+            ->assertRedirect()->assertSessionHasNoErrors();
+
+        $requestBody = Http::recorded()->first()[0]->data();
+        $input = json_decode($requestBody['messages'][1]['content'], true, 32, JSON_THROW_ON_ERROR);
+        $this->assertCount(1, $input['client_feedback']);
+        $this->assertSame($feedback->id, $input['client_feedback'][0]['response_id']);
+        $this->assertSame(2, $input['client_feedback'][0]['version']);
+        $this->assertSame('Ajustar o título principal conforme combinado.', $input['client_feedback'][0]['comment']);
+        $this->assertSame(['text' => 'Título inicial'], $input['client_feedback'][0]['anchor']);
+        $this->assertArrayNotHasKey('reviewer_name', $input['client_feedback'][0]);
+        $this->assertArrayNotHasKey('url', $input['client_feedback'][0]['anchor']);
+        $this->assertStringNotContainsString('Nome privado do cliente', $requestBody['messages'][1]['content']);
+        $this->assertStringNotContainsString('Não deve sair da outra demanda.', $requestBody['messages'][1]['content']);
+        $run = AiPlanningRun::firstOrFail();
+        $this->assertTrue($run->proposal['_source']['client_feedback_included']);
+        $this->assertSame([$feedback->id], $run->proposal['_source']['feedback_response_ids']);
+        $this->assertSame(0, DemandTask::count());
     }
 
     public function test_manager_edits_and_approves_proposal_with_real_dependency_and_audit(): void
@@ -280,5 +332,18 @@ class AiPlanningTest extends TestCase
             ], JSON_THROW_ON_ERROR)]]],
             'usage' => ['prompt_tokens' => 123, 'completion_tokens' => 45],
         ];
+    }
+
+    private function reviewLink(Demand $demand, User $manager, int $version): DemandReviewLink
+    {
+        return DemandReviewLink::create([
+            'organization_id' => $demand->organization_id,
+            'demand_id' => $demand->id,
+            'created_by' => $manager->id,
+            'version' => $version,
+            'token_hash' => hash('sha256', $demand->id.'-'.$version),
+            'material_url' => 'https://preview.example.test/version-'.$version,
+            'expires_at' => now()->addDays(7),
+        ]);
     }
 }

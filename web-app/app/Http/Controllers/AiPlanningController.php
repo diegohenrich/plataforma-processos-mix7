@@ -26,11 +26,19 @@ class AiPlanningController extends Controller
             return back()->withErrors(['ai' => 'A proposta de IA só pode ser gerada durante o planejamento.']);
         }
 
+        $data = $request->validate(['include_client_feedback' => ['sometimes', 'boolean']]);
+        $feedback = ($data['include_client_feedback'] ?? false) ? $this->clientFeedback($demand) : [];
+
         try {
-            $result = $agent->propose($demand);
+            $result = $agent->propose($demand, $feedback);
         } catch (RuntimeException|JsonException $exception) {
             return back()->withErrors(['ai' => $exception->getMessage()]);
         }
+
+        $result['proposal']['_source'] = [
+            'client_feedback_included' => $feedback !== [],
+            'feedback_response_ids' => array_column($feedback, 'response_id'),
+        ];
 
         $run = DB::transaction(function () use ($demand, $request, $result): AiPlanningRun {
             $run = AiPlanningRun::create([
@@ -226,6 +234,30 @@ class AiPlanningController extends Controller
         }
 
         return array_map('intval', array_keys($resolved));
+    }
+
+    /** @return list<array{response_id: int, version: int, type: string, comment: string, anchor_type: ?string, anchor: array<string, int|float|string>, created_at: string}> */
+    private function clientFeedback(Demand $demand): array
+    {
+        return $demand->reviewLinks()
+            ->with(['responses' => fn ($query) => $query->orderBy('created_at')->orderBy('id')])
+            ->orderBy('version')
+            ->get(['id', 'version'])
+            ->flatMap(fn ($link) => $link->responses->map(fn ($response) => [
+                'response_id' => $response->id,
+                'version' => $link->version,
+                'type' => $response->type,
+                'comment' => mb_substr((string) $response->comment, 0, 2000),
+                'anchor_type' => $response->anchor_type,
+                'anchor' => collect($response->anchor_data ?? [])
+                    ->only(['text', 'time', 'page', 'x', 'y', 'width', 'height', 'path'])
+                    ->all(),
+                'created_at' => $response->created_at->toISOString(),
+            ]))
+            ->sortBy(fn (array $item) => [$item['created_at'], $item['response_id']])
+            ->take(20)
+            ->values()
+            ->all();
     }
 
     public function discard(Request $request, Demand $demand, AiPlanningRun $run): RedirectResponse
