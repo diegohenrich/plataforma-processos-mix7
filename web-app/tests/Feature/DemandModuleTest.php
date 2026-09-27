@@ -110,6 +110,27 @@ class DemandModuleTest extends TestCase
         $this->assertSame(1, DemandModuleDefinition::query()->count());
     }
 
+    public function test_marketing_manager_can_manage_their_organizations_module_catalog(): void
+    {
+        [$organization] = $this->workspace();
+        $marketingManager = User::factory()->create([
+            'organization_id' => $organization->id,
+            'role' => UserRole::MarketingManager,
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($marketingManager)->post(route('approval-modules.store'), [
+            'label' => 'Materiais comerciais',
+            'description' => 'Revisão de materiais comerciais.',
+        ])->assertRedirect(route('approval-modules.index'))->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('demand_module_definitions', [
+            'organization_id' => $organization->id,
+            'created_by' => $marketingManager->id,
+            'key' => 'materiais_comerciais',
+        ]);
+    }
+
     public function test_api_demand_creation_uses_a_custom_module_with_its_saved_label(): void
     {
         [$organization, $manager, $professional] = $this->workspace();
