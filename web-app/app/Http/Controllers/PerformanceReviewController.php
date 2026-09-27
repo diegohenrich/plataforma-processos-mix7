@@ -13,6 +13,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class PerformanceReviewController extends Controller
@@ -24,8 +25,13 @@ class PerformanceReviewController extends Controller
         $management = in_array($user->role, [UserRole::AgencyOwner, UserRole::MarketingManager], true);
         $filters = $request->validate([
             'from' => ['nullable', 'date_format:Y-m-d'],
-            'to' => ['nullable', 'date_format:Y-m-d', Rule::when($request->filled('from'), ['after_or_equal:from'])],
+            'to' => ['nullable', 'date_format:Y-m-d'],
         ]);
+        if (($filters['from'] ?? null) && ($filters['to'] ?? null) && $filters['to'] < $filters['from']) {
+            throw ValidationException::withMessages([
+                'to' => 'A data final precisa ser igual ou posterior à data inicial.',
+            ]);
+        }
 
         $reviews = PerformanceReview::query()
             ->where('organization_id', $user->organization_id)
