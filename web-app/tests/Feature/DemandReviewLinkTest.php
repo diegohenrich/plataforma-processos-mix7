@@ -432,6 +432,18 @@ class DemandReviewLinkTest extends TestCase
             ->assertOk()->assertSee('largura 26.5%, altura 14%');
     }
 
+    public function test_public_review_exposes_keyboard_accessible_area_marker(): void
+    {
+        [$organization, $manager, $demand] = $this->setupApproval();
+        $token = $this->createLink($manager, $demand, 'https://preview.example.test/site-v1');
+
+        $this->get(route('client-reviews.show', $token))
+            ->assertOk()
+            ->assertSee('Pressione Enter para marcar o centro')
+            ->assertSee('saveArea({x: 50, y: 50, width: 0, height: 0})')
+            ->assertSee('saveDrawing([{x: 50, y: 50}])');
+    }
+
     public function test_annotation_anchor_values_are_validated(): void
     {
         [$organization, $manager, $demand] = $this->setupApproval();

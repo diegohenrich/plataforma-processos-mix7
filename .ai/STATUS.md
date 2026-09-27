@@ -551,3 +551,7 @@ Histórico operacional anterior preservado em [docs/VALIDACOES-HISTORICAS.md](..
 - `git diff --check` passou. Alteração documental; nenhum código de aplicação mudou. Commit, CI e registro Trello desta correção ainda pendentes.
 
 - Os checks do commit documental 2b4826f7e111137b09e5fcf8e481ce4376f68c0c passaram: push [36297202531](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36297202531) e PR #11 [36297204492](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36297204492). SHA remoto corresponde ao local. Trello segue sem comentário novo nesta atualização.
+## Regressão de navegação por teclado na revisão pública — 2026-09-27
+- A auditoria da aprovação por link confirmou que o marcador de área já suporta Enter e Espaço: o modo retângulo registra o centro da prévia e o modo rabisco cria um traço central. Acrescentei um teste de regressão que verifica as duas ações renderizadas e o texto acessível do controle; nenhuma lógica de produto foi alterada.
+- `DemandReviewLinkTest` passou (27 testes, 270 assertions); suíte completa `php artisan test` passou (196 testes, 1.789 assertions); Pint focal, `composer validate --no-check-publish` e `git diff --check` passaram. Não houve mudança de interface visual; QA de navegador segue pendente.
+- GitHub e Trello ainda pendentes nesta atualização; relacionar ao cartão #35 — Aprovar entregas do cliente por link seguro no Laravel.
