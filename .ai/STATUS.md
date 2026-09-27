@@ -12,7 +12,8 @@
 - Seleção automática dentro de página de outra origem segue inviável por isolamento de navegador; a tarefa reduz os passos do fluxo, não contorna essa proteção.
 - Validação local: `php artisan test` passou (171 testes, 1.421 assertions); `DemandReviewLinkTest` passou (23 testes, 237 assertions), Pint focalizado, `composer validate --no-check-publish`, build Vite, sintaxe do JavaScript inline e `git diff --check` passaram.
 - Inspeção visual pública no navegador segue pendente; a página foi testada via renderização HTTP e código, sem sessão visual.
-- Trello e GitHub desta tarefa ainda serão sincronizados; Trello depende da confirmação pontual solicitada.
+- GitHub: commit `f1bd54fe58cb4346921acba70be63369c8b6a24e` publicado na branch `codex/fundacao-compartilhada`; push e PR #11 passaram ([push](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36284387392), [PR](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36284389512)).
+- Trello: atualização pendente da confirmação pontual já solicitada; sem ação externa ainda.
 
 ## Catálogo expansível de tipos de aprovação — 2026-09-27
 - Direção/gerência podem cadastrar tipos adicionais por organização com nome, descrição e chave técnica; desativar/reativar sem apagar ou reclassificar demandas antigas. Formulário de demanda e API usam o catálogo ativo; API lista tipos disponíveis e preserva chave, rótulo e versão.
