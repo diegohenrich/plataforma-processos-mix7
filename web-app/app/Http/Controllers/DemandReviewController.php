@@ -3,10 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Enums\DemandStatus;
+use App\Enums\UserRole;
 use App\Models\Demand;
 use App\Models\DemandEvent;
 use App\Models\DemandReviewLink;
 use App\Models\DemandReviewResponse;
+use App\Models\DemandTask;
+use App\Models\User;
+use App\Notifications\DemandReviewActivityNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -277,6 +281,8 @@ class DemandReviewController extends Controller
                 ]);
             }
 
+            $this->notifyDemandTeam($reviewLink->demand, $reviewLink, $response);
+
             return $response;
         });
 
@@ -304,6 +310,33 @@ class DemandReviewController extends Controller
         }
 
         return $query->firstOrFail();
+    }
+
+    private function notifyDemandTeam(Demand $demand, DemandReviewLink $reviewLink, DemandReviewResponse $response): void
+    {
+        $professionalIds = DemandTask::query()->where('demand_id', $demand->id)->distinct()->pluck('assigned_to');
+        $recipients = User::query()
+            ->where('organization_id', $demand->organization_id)
+            ->where('is_active', true)
+            ->where(function ($query) use ($demand, $professionalIds): void {
+                $query->whereKey($demand->created_by)
+                    ->orWhereIn('role', [UserRole::AgencyOwner->value, UserRole::MarketingManager->value])
+                    ->orWhereIn('id', $professionalIds);
+            })
+            ->get();
+
+        $notification = new DemandReviewActivityNotification(
+            $demand->id,
+            $demand->title,
+            $reviewLink->version,
+            $response->reviewer_name,
+            $response->type,
+            $response->comment,
+        );
+
+        foreach ($recipients as $recipient) {
+            $recipient->notify($notification);
+        }
     }
 
     private function streamPrivateMaterial(DemandReviewLink $reviewLink, bool $download = false): BinaryFileResponse

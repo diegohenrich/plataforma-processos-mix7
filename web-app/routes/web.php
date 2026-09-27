@@ -18,6 +18,7 @@ use App\Http\Controllers\TeamActivityController;
 use App\Http\Controllers\TeamCapacityController;
 use App\Http\Controllers\TeamInvitationController;
 use App\Http\Controllers\TeamMemberController;
+use App\Http\Controllers\UserNotificationController;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/painel');
@@ -37,6 +38,9 @@ Route::middleware('guest')->group(function (): void {
 
 Route::middleware(['auth', 'active'])->group(function (): void {
     Route::get('/painel', fn () => view('dashboard'))->name('dashboard');
+    Route::get('/notificacoes', [UserNotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/notificacoes/ler-todas', [UserNotificationController::class, 'markAllRead'])->name('notifications.read-all');
+    Route::get('/notificacoes/{notification}', [UserNotificationController::class, 'open'])->name('notifications.open');
     Route::resource('demandas', DemandController::class)->only(['index', 'create', 'store', 'show'])->names('demands')->parameters(['demandas' => 'demand']);
     Route::get('/tipos-aprovacao', [DemandModuleController::class, 'index'])->name('approval-modules.index');
     Route::post('/tipos-aprovacao', [DemandModuleController::class, 'store'])->name('approval-modules.store');

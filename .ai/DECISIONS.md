@@ -1,6 +1,8 @@
 - 2026-09-26 — Implementar avaliações humanas por tarefa concluída: prazo e qualidade, evidências e fatores externos; direção tem peso 2 e gerência peso 1 conforme os áudios, armazenados junto do papel do avaliador; profissional pode responder com histórico. Não calcular nota até Mix7 definir escala, fórmula, combinação dos pesos, período, contestação e finalidade. Rever com a matriz de acesso antes do piloto.
 # Decisões vigentes
 
+- 2026-09-27 — Comentários, anotações e decisões do cliente por link geram aviso interno no banco, sem envio de e-mail, para direção/gerência ativas, criador ativo e profissionais atribuídos à demanda. A notificação não concede acesso: cada conta recebe somente aviso de demanda que já pode consultar, e a rota revalida a autorização ao abrir. Rever destinatários quando a matriz final de papéis for validada.
+
 - 2026-09-27 — A síntese do cartão reutiliza a saída do planejador de IA, sem uma chamada separada. Direção/gerência podem editar ou remover o texto (até 280 caracteres) e ele só é salvo/exibido internamente ao aprovar a proposta; sem síntese, o quadro usa um trecho do briefing. Clientes e links externos não recebem a síntese. Rever se a Mix7 quiser uma ação de resumo independente do planejamento.
 
 - 2026-09-26 — Arquivos de trabalho são anexos privados da demanda, acessíveis apenas pela equipe autenticada que já pode ver essa demanda; clientes recebem materiais somente quando a equipe os seleciona para um link de revisão. Limite de aplicação: até 10 arquivos por envio, 20 MB cada, com allowlist de formatos comuns de agência. Rever formatos/limites após validar os requisitos do plano Hostinger e a necessidade operacional da Mix7.

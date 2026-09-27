@@ -2,6 +2,8 @@
 
 A API pertence à aplicação Laravel e usa o mesmo banco, políticas e histórico do site. Rotas internas sob `/api/v1` exigem token Sanctum no cabeçalho `Authorization: Bearer …`, conta ativa e acesso autorizado. As duas rotas públicas de aprovação usam o token secreto, temporário e revogável do próprio link; não exigem conta. Respostas usam JSON.
 
+Na aplicação web, comentários, anotações e decisões do link de revisão geram notificações armazenadas no banco para a direção/gerência ativa da organização, a pessoa criadora ativa da demanda e profissionais ativos atribuídos às tarefas daquela demanda. Cada usuário lê e abre somente suas próprias notificações; a abertura confere novamente a permissão da demanda. Esses avisos não enviam e-mail.
+
 Usuários internos ativos podem emitir e revogar seus próprios tokens em `/integracoes/tokens`. A emissão exige a senha atual, nome e validade fixa de 7, 30 ou 90 dias; cada conta mantém no máximo 10 tokens não expirados. O segredo é mostrado uma única vez em resposta privada sem cache e o banco armazena somente seu hash. Tokens têm a permissão `api`, enquanto cada endpoint continua sujeito às regras de papel, organização e recurso. Clientes não podem emitir tokens internos; a revisão externa segue por link.
 
 ## Identidade e leitura

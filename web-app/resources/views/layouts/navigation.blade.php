@@ -4,6 +4,7 @@
         <p class="nav-label">Espaço de trabalho</p>
         <a class="nav-item {{ $active === 'dashboard' ? 'active' : '' }}" href="{{ route('dashboard') }}"><span aria-hidden="true">▦</span> Visão geral</a>
         <a class="nav-item {{ $active === 'demands' ? 'active' : '' }}" href="{{ route('demands.index') }}"><span aria-hidden="true">◷</span> {{ auth()->user()->role === App\Enums\UserRole::Client ? 'Minhas demandas' : 'Demandas' }}</a>
+        <a class="nav-item {{ $active === 'notifications' ? 'active' : '' }}" href="{{ route('notifications.index') }}"><span aria-hidden="true">♧</span> Notificações</a>
         @if (auth()->user()->role !== App\Enums\UserRole::Client)
             @if (in_array(auth()->user()->role, [App\Enums\UserRole::AgencyOwner, App\Enums\UserRole::MarketingManager], true))<a class="nav-item {{ $active === 'organization-assistant' ? 'active' : '' }}" href="{{ route('organization-assistant.index') }}"><span aria-hidden="true">✦</span> Assistente da agência</a>@endif
             <a class="nav-item {{ $active === 'task-board' ? 'active' : '' }}" href="{{ route('demand-tasks.board') }}"><span aria-hidden="true">▦</span> Quadro de tarefas</a>
@@ -24,6 +25,7 @@
     <div class="mobile-nav-actions">
         <a href="{{ route('dashboard') }}">Início</a>
         <a href="{{ route('demands.index') }}">{{ auth()->user()->role === App\Enums\UserRole::Client ? 'Minhas demandas' : 'Demandas' }}</a>
+        <a href="{{ route('notifications.index') }}">Notificações</a>
         @if (auth()->user()->role !== App\Enums\UserRole::Client)@if (in_array(auth()->user()->role, [App\Enums\UserRole::AgencyOwner, App\Enums\UserRole::MarketingManager], true))<a href="{{ route('organization-assistant.index') }}">Assistente da agência</a>@endif<a href="{{ route('demand-tasks.board') }}">Quadro de tarefas</a><a href="{{ route('approvals.index') }}">Aprovações</a>@can('create', App\Models\Demand::class)<a href="{{ route('approval-modules.index') }}">Tipos de aprovação</a>@endcan @endif
         @can('viewActivity', App\Models\User::class)<a href="{{ route('team.activity') }}">{{ auth()->user()->role === App\Enums\UserRole::Professional ? 'Meu trabalho' : 'Produção' }}</a>@endcan
         <a href="{{ route('team.capacity') }}">Disponibilidade</a>
