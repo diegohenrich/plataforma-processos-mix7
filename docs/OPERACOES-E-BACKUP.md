@@ -13,10 +13,13 @@ Mesmo quando a cópia automática existe, exporte o MariaDB pelo phpMyAdmin ante
 ## Antes de publicar uma mudança
 
 1. Registre o SHA do commit que será publicado e confirme que ele está no GitHub.
-2. Verifique no hPanel que há uma cópia recuperável recente de arquivos e banco. Se o plano oferecer backup manual, crie-o antes da migração.
-3. Em **Databases → Management → phpMyAdmin**, selecione apenas o banco da plataforma e use **Export** para baixar uma cópia SQL. Confira o nome do banco e o horário do arquivo.
-4. Se a mudança envolve anexos ou armazenamento, obtenha também uma cópia dos arquivos privados Laravel. Não os mova para `public_html`.
-5. Execute migrations versionadas e registre o resultado junto do SHA. Não importe um dump em banco compartilhado sem confirmar o banco selecionado.
+2. Rode `php artisan mix7:deploy:check` com o `.env` real do ambiente. O comando confere ambiente de produção, debug, chave presente, URL HTTPS, MariaDB selecionado e acessível, anexos fora da pasta pública, diretórios graváveis e cookie de sessão seguro; nunca imprime o conteúdo da chave ou outros segredos. Avisos sobre transporte de e-mail e fila indicam funções que não estarão operacionais.
+3. Verifique no hPanel que há uma cópia recuperável recente de arquivos e banco. Se o plano oferecer backup manual, crie-o antes da migração.
+4. Em **Databases → Management → phpMyAdmin**, selecione apenas o banco da plataforma e use **Export** para baixar uma cópia SQL. Confira o nome do banco e o horário do arquivo.
+5. Se a mudança envolve anexos ou armazenamento, obtenha também uma cópia dos arquivos privados Laravel. Não os mova para `public_html`.
+6. Execute migrations versionadas e registre o resultado junto do SHA. Não importe um dump em banco compartilhado sem confirmar o banco selecionado.
+
+O comando é uma pré-verificação, não um deploy, não verifica o Cron do hPanel nem prova a entrega de e-mail. Execute migrations, agende o Cron e valide essas integrações separadamente. Se o plano não oferecer acesso ao Artisan, não ignore os requisitos: valide a configuração por procedimento controlado antes de liberar dados reais.
 
 ## Exercício de restauração
 
