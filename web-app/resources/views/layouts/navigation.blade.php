@@ -8,6 +8,25 @@
     .mobile-nav .brand-copy{display:block;color:#fff;font-size:16px;font-weight:750}
     @media(max-width:650px){.mobile-nav .brand{gap:10px;padding:0}.mobile-nav .brand-copy small{display:none}}
 </style>
+@php
+    $navigationRole = auth()->user()->role;
+    $navigationItems = [
+        ['label' => 'Visão geral', 'icon' => '▦', 'route' => 'dashboard', 'active' => 'dashboard', 'show' => true],
+        ['label' => $navigationRole === App\Enums\UserRole::Client ? 'Minhas demandas' : 'Demandas', 'icon' => '◷', 'route' => 'demands.index', 'active' => 'demands', 'show' => true],
+        ['label' => 'Notificações', 'icon' => '♧', 'route' => 'notifications.index', 'active' => 'notifications', 'show' => true],
+        ['label' => 'Assistente da agência', 'icon' => '✦', 'route' => 'organization-assistant.index', 'active' => 'organization-assistant', 'show' => in_array($navigationRole, [App\Enums\UserRole::AgencyOwner, App\Enums\UserRole::MarketingManager], true)],
+        ['label' => 'Quadro de tarefas', 'icon' => '▦', 'route' => 'demand-tasks.board', 'active' => 'task-board', 'show' => $navigationRole !== App\Enums\UserRole::Client],
+        ['label' => 'Aprovações', 'icon' => '✓', 'route' => 'approvals.index', 'active' => 'approvals', 'show' => $navigationRole !== App\Enums\UserRole::Client],
+        ['label' => 'Tipos de aprovação', 'icon' => '＋', 'route' => 'approval-modules.index', 'active' => 'approval-modules', 'show' => auth()->user()->can('create', App\Models\Demand::class)],
+        ['label' => $navigationRole === App\Enums\UserRole::Professional ? 'Meu trabalho' : 'Produção da equipe', 'mobile_label' => $navigationRole === App\Enums\UserRole::Professional ? 'Meu trabalho' : 'Produção', 'icon' => '◷', 'route' => 'team.activity', 'active' => 'activity', 'show' => auth()->user()->can('viewActivity', App\Models\User::class)],
+        ['label' => 'Disponibilidade', 'icon' => '◫', 'route' => 'team.capacity', 'active' => 'capacity', 'show' => $navigationRole !== App\Enums\UserRole::Client],
+        ['label' => 'Avaliações', 'icon' => '◎', 'route' => 'performance-reviews.index', 'active' => 'performance-reviews', 'show' => in_array($navigationRole, [App\Enums\UserRole::AgencyOwner, App\Enums\UserRole::MarketingManager, App\Enums\UserRole::Professional], true)],
+        ['label' => 'Equipe', 'icon' => '♧', 'route' => 'team.index', 'active' => 'team', 'show' => auth()->user()->can('viewAny', App\Models\User::class)],
+        ['label' => 'Acessos de serviços', 'icon' => '⌑', 'route' => 'service-access.index', 'active' => 'service-access', 'show' => $navigationRole !== App\Enums\UserRole::Client],
+        ['label' => 'Conhecimento', 'icon' => '▤', 'route' => 'knowledge.index', 'active' => 'knowledge', 'show' => auth()->user()->can('viewAny', App\Models\KnowledgeItem::class)],
+        ['label' => 'Acessos da API', 'icon' => '⌘', 'route' => 'api-tokens.index', 'active' => 'integrations', 'show' => $navigationRole !== App\Enums\UserRole::Client],
+    ];
+@endphp
 <aside class="sidebar" aria-label="Navegação principal">
     <div class="brand">
         <img class="brand-image" src="{{ asset('images/mix7-logo-round.png') }}" alt="Logotipo Mix7 Marketing">
@@ -15,22 +34,9 @@
     </div>
     <div>
         <p class="nav-label">Espaço de trabalho</p>
-        <a class="nav-item {{ $active === 'dashboard' ? 'active' : '' }}" href="{{ route('dashboard') }}"><span aria-hidden="true">▦</span> Visão geral</a>
-        <a class="nav-item {{ $active === 'demands' ? 'active' : '' }}" href="{{ route('demands.index') }}"><span aria-hidden="true">◷</span> {{ auth()->user()->role === App\Enums\UserRole::Client ? 'Minhas demandas' : 'Demandas' }}</a>
-        <a class="nav-item {{ $active === 'notifications' ? 'active' : '' }}" href="{{ route('notifications.index') }}"><span aria-hidden="true">♧</span> Notificações</a>
-        @if (auth()->user()->role !== App\Enums\UserRole::Client)
-            @if (in_array(auth()->user()->role, [App\Enums\UserRole::AgencyOwner, App\Enums\UserRole::MarketingManager], true))<a class="nav-item {{ $active === 'organization-assistant' ? 'active' : '' }}" href="{{ route('organization-assistant.index') }}"><span aria-hidden="true">✦</span> Assistente da agência</a>@endif
-            <a class="nav-item {{ $active === 'task-board' ? 'active' : '' }}" href="{{ route('demand-tasks.board') }}"><span aria-hidden="true">▦</span> Quadro de tarefas</a>
-            <a class="nav-item {{ $active === 'approvals' ? 'active' : '' }}" href="{{ route('approvals.index') }}"><span aria-hidden="true">✓</span> Aprovações</a>
-            @can('create', App\Models\Demand::class)<a class="nav-item {{ $active === 'approval-modules' ? 'active' : '' }}" href="{{ route('approval-modules.index') }}"><span aria-hidden="true">＋</span> Tipos de aprovação</a>@endcan
-            @can('viewActivity', App\Models\User::class)<a class="nav-item {{ $active === 'activity' ? 'active' : '' }}" href="{{ route('team.activity') }}"><span aria-hidden="true">◷</span> {{ auth()->user()->role === App\Enums\UserRole::Professional ? 'Meu trabalho' : 'Produção da equipe' }}</a>@endcan
-            <a class="nav-item {{ $active === 'capacity' ? 'active' : '' }}" href="{{ route('team.capacity') }}"><span aria-hidden="true">◫</span> Disponibilidade</a>
-            @if (in_array(auth()->user()->role, [App\Enums\UserRole::AgencyOwner, App\Enums\UserRole::MarketingManager, App\Enums\UserRole::Professional], true))<a class="nav-item {{ $active === 'performance-reviews' ? 'active' : '' }}" href="{{ route('performance-reviews.index') }}"><span aria-hidden="true">◎</span> Avaliações</a>@endif
-            @can('viewAny', App\Models\User::class)<a class="nav-item {{ $active === 'team' ? 'active' : '' }}" href="{{ route('team.index') }}"><span aria-hidden="true">♧</span> Equipe</a>@endcan
-            <a class="nav-item {{ $active === 'service-access' ? 'active' : '' }}" href="{{ route('service-access.index') }}"><span aria-hidden="true">⌑</span> Acessos de serviços</a>
-        @endif
-        @can('viewAny', App\Models\KnowledgeItem::class)<a class="nav-item {{ $active === 'knowledge' ? 'active' : '' }}" href="{{ route('knowledge.index') }}"><span aria-hidden="true">▤</span> Conhecimento</a>@endcan
-        @if (auth()->user()->role !== App\Enums\UserRole::Client)<a class="nav-item {{ $active === 'integrations' ? 'active' : '' }}" href="{{ route('api-tokens.index') }}"><span aria-hidden="true">⌘</span> Acessos da API</a>@endif
+        @foreach ($navigationItems as $item)
+            @if ($item['show'])<a class="nav-item {{ $active === $item['active'] ? 'active' : '' }}" href="{{ route($item['route']) }}"><span aria-hidden="true">{{ $item['icon'] }}</span> {{ $item['label'] }}</a>@endif
+        @endforeach
     </div>
     <div class="sidebar-note">A plataforma reúne o trabalho da agência e mantém cada etapa registrada.</div>
 </aside>
@@ -40,16 +46,8 @@
         <span class="brand-copy">Mix7 <small>| Processos</small></span>
     </div>
     <div class="mobile-nav-actions">
-        <a href="{{ route('dashboard') }}">Início</a>
-        <a href="{{ route('demands.index') }}">{{ auth()->user()->role === App\Enums\UserRole::Client ? 'Minhas demandas' : 'Demandas' }}</a>
-        <a href="{{ route('notifications.index') }}">Notificações</a>
-        @if (auth()->user()->role !== App\Enums\UserRole::Client)@if (in_array(auth()->user()->role, [App\Enums\UserRole::AgencyOwner, App\Enums\UserRole::MarketingManager], true))<a href="{{ route('organization-assistant.index') }}">Assistente da agência</a>@endif<a href="{{ route('demand-tasks.board') }}">Quadro de tarefas</a><a href="{{ route('approvals.index') }}">Aprovações</a>@can('create', App\Models\Demand::class)<a href="{{ route('approval-modules.index') }}">Tipos de aprovação</a>@endcan @endif
-        @can('viewActivity', App\Models\User::class)<a href="{{ route('team.activity') }}">{{ auth()->user()->role === App\Enums\UserRole::Professional ? 'Meu trabalho' : 'Produção' }}</a>@endcan
-        <a href="{{ route('team.capacity') }}">Disponibilidade</a>
-        @if (in_array(auth()->user()->role, [App\Enums\UserRole::AgencyOwner, App\Enums\UserRole::MarketingManager, App\Enums\UserRole::Professional], true))<a href="{{ route('performance-reviews.index') }}">Avaliações</a>@endif
-        @can('viewAny', App\Models\User::class)<a href="{{ route('team.index') }}">Equipe</a>@endcan
-        @if (auth()->user()->role !== App\Enums\UserRole::Client)<a href="{{ route('service-access.index') }}">Acessos de serviços</a>@endif
-        @can('viewAny', App\Models\KnowledgeItem::class)<a href="{{ route('knowledge.index') }}">Conhecimento</a>@endcan
-        @if (auth()->user()->role !== App\Enums\UserRole::Client)<a href="{{ route('api-tokens.index') }}">Acessos da API</a>@endif
+        @foreach ($navigationItems as $item)
+            @if ($item['show'])<a href="{{ route($item['route']) }}">{{ $item['mobile_label'] ?? $item['label'] }}</a>@endif
+        @endforeach
     </div>
 </nav>
