@@ -19,7 +19,8 @@
 - A API v1 oferece listar, enviar e abrir/baixar anexos da demanda para a futura interface Windows. Usa o mesmo armazenamento privado, limite, auditoria e autorização do site; o JSON nunca revela o caminho do arquivo. Cliente não recebe rota de anexos e o link de aprovação permanece limitado ao material da versão.
 - Validação local: `php artisan test` passou (174 testes, 1.454 assertions); `ApiDemandAttachmentTest` passou (3 testes, 33 assertions), Pint focalizado, `composer validate --no-check-publish`, rotas API conferidas e `git diff --check` passaram.
 - Sem nova tela nesta etapa; a validação visual não se aplica à implementação da API.
-- GitHub/Trello desta entrega ainda serão sincronizados. Atualização do Trello depende da confirmação pontual solicitada.
+- GitHub: commit `01264e05805e2c258162cd8e520b050989f29d44` publicado na branch `codex/fundacao-compartilhada`; SHA local/remoto igual. Checks de push e PR #11 passaram ([push](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36284898443), [PR](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36284901690)).
+- Trello: a tarefa ainda aguarda a confirmação pontual solicitada antes da publicação externa.
 
 ## Catálogo expansível de tipos de aprovação — 2026-09-27
 - Direção/gerência podem cadastrar tipos adicionais por organização com nome, descrição e chave técnica; desativar/reativar sem apagar ou reclassificar demandas antigas. Formulário de demanda e API usam o catálogo ativo; API lista tipos disponíveis e preserva chave, rótulo e versão.
