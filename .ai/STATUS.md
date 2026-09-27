@@ -4,6 +4,11 @@
 - Encerrei o servidor local 127.0.0.1:4210 e removi o banco, o script e o PDF temporários. O banco demo existente e a cópia do CRM Mix7 foram preservados. Não alterei código nesta inspeção.
 - Trello permanece pendente: a atualização de interface foi bloqueada pela política do navegador e não há conector disponível nesta sessão; não marcar como sincronizado.
 
+## Verificação funcional da bandeja do profissional — 2026-09-27
+- Os testes existentes confirmam que a bandeja lista só tarefas atribuídas e abertas, impede iniciar uma tarefa bloqueada ou em paralelo, exibe cronômetro e heartbeat e permite pausar/concluir; concluir fecha o intervalo. Testes focados: 3 testes/31 assertions aprovados.
+- A inspeção visual do painel fixo em desktop e celular continua pendente; o teste automatizado não substitui a conferência renderizada. Nenhuma alteração de código foi necessária nesta verificação.
+- Trello pendente pelo bloqueio da interface já registrado; não alegar sincronização.
+
 ## Encerramento agendado de cronômetros sem sinal — 2026-09-27
 - Corrigi o fluxo para que o fechamento do aplicativo não dependa de alguém abrir depois o painel de atividade. `mix7:timers:expire-stale` chama a rotina existente, encerra sessões sem heartbeat há 180 segundos no último sinal registrado e pausa as tarefas; roda a cada minuto no scheduler. O Cron da hospedagem precisa executar `schedule:run` para a proteção funcionar fora das requisições do usuário.
 - A prova de fluxo cria duas sessões: após 181 segundos, a sessão sem sinal é fechada e pausada, mas a outra, que enviou heartbeat aos 120 segundos, continua em execução. Testes focados passaram (3 testes/24 assertions); suíte completa passou (205 testes/1.913 assertions); Pint focal, Composer validate, `npm test` (3 testes), build Vite, cache/limpeza Blade, `schedule:list` e `git diff --check` passaram.
