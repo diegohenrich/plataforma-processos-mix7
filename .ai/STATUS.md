@@ -4,7 +4,8 @@
 - Validação local: `php artisan test` passou (171 testes, 1.419 assertions); 4 testes focados cobrem upload, prévia/download, auditoria, formatos/tamanho inválidos, acesso do cliente e isolamento entre organizações. Pint focalizado, `composer validate --no-check-publish`, build Vite, cache/limpeza Blade, rotas novas e `git diff --check` passaram.
 - Inspeção visual autenticada continua pendente: esta mudança exige sessão de equipe e não havia sessão local utilizável. Testes confirmam HTML/rota, mas não substituem conferência visual no navegador.
 - Hostinger não verificada: tamanho máximo de upload PHP, espaço e tráfego ainda precisam ser comparados ao limite local antes de compartilhar dados reais.
-- GitHub/Trello desta entrega ainda serão sincronizados após revisar o diff. A atualização no Trello requer confirmação pontual antes de publicar o cartão/comentário.
+- GitHub: commit `724d39490542095f060ff0ab2691c4b57965e3be` foi enviado à branch `codex/fundacao-compartilhada`; SHA local/remoto igual. Checks de push e PR #11 passaram ([push](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36284031185), [PR](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36284033449)).
+- Trello: atualização pendente de confirmação pontual para publicar a tarefa e seu resultado; sem ação externa ainda.
 
 ## Catálogo expansível de tipos de aprovação — 2026-09-27
 - Direção/gerência podem cadastrar tipos adicionais por organização com nome, descrição e chave técnica; desativar/reativar sem apagar ou reclassificar demandas antigas. Formulário de demanda e API usam o catálogo ativo; API lista tipos disponíveis e preserva chave, rótulo e versão.
