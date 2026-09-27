@@ -46,7 +46,7 @@ class DemoShowcaseSeeder
         $baseClient = $corePeople['client'];
 
         $managers = [$baseManager];
-        foreach (range(2, 4) as $number) {
+        foreach (range(2, 6) as $number) {
             $managers[] = $this->upsertUser($organization, $password, sprintf('Gerência de demonstração %02d', $number), sprintf('gerencia%02d@mix7-demo.test', $number), UserRole::MarketingManager);
         }
 
@@ -56,14 +56,14 @@ class DemoShowcaseSeeder
             ['Vídeo', 'Edição'], ['Mídia paga', 'Campanhas'], ['Social', 'Planejamento'],
             ['Design', 'Apresentações'], ['Conteúdo', 'Revisão'], ['Desenvolvimento', 'Integrações'],
         ];
-        foreach (range(2, 10) as $number) {
+        foreach (range(2, 14) as $number) {
             $professionals[] = $this->upsertUser(
                 $organization,
                 $password,
                 sprintf('Profissional de demonstração %02d', $number),
                 sprintf('profissional%02d@mix7-demo.test', $number),
                 UserRole::Professional,
-                $specialties[$number - 2],
+                $specialties[($number - 2) % count($specialties)],
             );
         }
         $inactiveProfessional = $this->upsertUser(
@@ -77,7 +77,7 @@ class DemoShowcaseSeeder
         );
 
         $clients = [$baseClient];
-        foreach (range(2, 8) as $number) {
+        foreach (range(2, 12) as $number) {
             $clients[] = $this->upsertUser($organization, $password, sprintf('Cliente de demonstração %02d', $number), sprintf('cliente%02d@mix7-demo.test', $number), UserRole::Client);
         }
 
@@ -106,8 +106,11 @@ class DemoShowcaseSeeder
         $weekStart = CarbonImmutable::now()->startOfWeek()->startOfDay();
 
         foreach ($statuses as $stageIndex => $status) {
-            foreach (range(1, 4) as $sample) {
-                $sequence = ($stageIndex * 4) + $sample;
+            foreach (range(1, 6) as $sample) {
+                // Preserve identifiers from the existing 4-per-stage dataset; append new examples after it.
+                $sequence = $sample <= 4
+                    ? ($stageIndex * 4) + $sample
+                    : 32 + ($stageIndex * 2) + ($sample - 4);
                 $service = $services[($sequence - 1) % count($services)];
                 $manager = $managers[($sequence - 1) % count($managers)];
                 $client = $clients[($sequence - 1) % count($clients)];
@@ -201,6 +204,7 @@ class DemoShowcaseSeeder
             }
         }
 
+        $this->seedActiveTimer($organization, $this->findDemand($organization, '[DEMO] Campanha de lançamento'), $baseProfessional);
         $this->seedInternalPdf($organization, $owner, $this->findDemand($organization, '[DEMO] Site institucional'));
         $this->seedCapacity($organization, $baseManager, $professionals);
         $this->seedKnowledge($organization, $baseManager, $professionals);
@@ -209,7 +213,7 @@ class DemoShowcaseSeeder
 
         return [
             'users' => 1 + count($managers) + count($professionals) + 1 + count($clients),
-            'demands' => count($statuses) * 4,
+            'demands' => count($statuses) * 6,
             'tasks' => $tasksCreated,
             'review_links' => $reviewLinks,
             'inactive_user' => $inactiveProfessional->email,
@@ -377,6 +381,38 @@ class DemoShowcaseSeeder
                 'ended_at' => $endedAt,
             ],
         );
+    }
+
+    private function seedActiveTimer(Organization $organization, Demand $demand, User $professional): void
+    {
+        $task = DemandTask::query()
+            ->where('demand_id', $demand->id)
+            ->where('assigned_to', $professional->id)
+            ->where('status', TaskStatus::InProgress)
+            ->firstOrFail();
+        $entry = TaskTimeEntry::query()
+            ->where('task_id', $task->id)
+            ->where('user_id', $professional->id)
+            ->whereNull('ended_at')
+            ->first();
+        $values = [
+            'organization_id' => $organization->id,
+            'started_at' => now()->subMinutes(4),
+            'last_heartbeat_at' => now(),
+            'ended_at' => null,
+        ];
+
+        if ($entry) {
+            $entry->update($values);
+
+            return;
+        }
+
+        TaskTimeEntry::create([
+            'task_id' => $task->id,
+            'user_id' => $professional->id,
+            ...$values,
+        ]);
     }
 
     private function seedReviewVersions(Organization $organization, Demand $demand, User $manager, User $client, int $sequence, int $index): array

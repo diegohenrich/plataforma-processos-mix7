@@ -21,6 +21,17 @@ Mesmo quando a cópia automática existe, exporte o MariaDB pelo phpMyAdmin ante
 
 O comando é uma pré-verificação, não um deploy, não verifica o Cron do hPanel nem prova a entrega de e-mail. Execute migrations, agende o Cron e valide essas integrações separadamente. Se o plano não oferecer acesso ao Artisan, não ignore os requisitos: valide a configuração por procedimento controlado antes de liberar dados reais.
 
+## Cópia local criptografada
+
+A aplicação oferece `php artisan mix7:backup:create` para criar um ZIP criptografado com snapshot SQLite ou exportação lógica MySQL/MariaDB e arquivos do disco privado Laravel. O arquivo fica em `storage/app/backups` por padrão, fora da pasta pública. O índice não revela nomes de anexos. O `.env` e a `APP_KEY` não entram no arquivo; a chave é derivada da `APP_KEY`, que precisa ser preservada separadamente em local seguro. Perder ou trocar essa chave impede abrir o ZIP.
+
+```powershell
+php artisan mix7:backup:create
+php artisan mix7:backup:restore "storage/app/backups/mix7-backup-AAAAmmdd-HHmmss-id.zip" --destination="storage/app/restore-local-2026-09-27"
+```
+
+A restauração recusa uma pasta já existente ou dentro de `public/` e valida o manifesto, checksums e integridade SQLite sem substituir a conexão ativa. O MySQL/MariaDB restaurado é um `.sql` para importação manual em uma base de teste vazia pelo phpMyAdmin; confira cuidadosamente o banco selecionado. A cópia restaurada dos arquivos também deve permanecer fora da pasta pública. O ciclo automatizado local foi testado com SQLite sintético; o exportador MariaDB ainda precisa ser exercitado contra um servidor MariaDB compatível e não substitui o procedimento do hPanel.
+
 ## Exercício de restauração
 
 Até existir ambiente de teste na hospedagem, use somente dados sintéticos. Para o exercício compartilhado futuro:
