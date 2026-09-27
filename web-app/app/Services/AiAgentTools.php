@@ -247,9 +247,10 @@ class AiAgentTools
     /** @return array{result: array<string, mixed>, receipt: array<string, mixed>} */
     private function readDemandContext(User $user, Demand $demand): array
     {
-        abort_unless($user->can('manage', $demand), 403);
+        abort_unless($user->can('view', $demand), 403);
 
         $tasks = $demand->tasks()
+            ->when($user->role === UserRole::Professional, fn ($query) => $query->where('assigned_to', $user->id))
             ->orderBy('id')
             ->get(['id', 'title', 'description', 'status', 'estimate_minutes'])
             ->map(fn ($task) => [

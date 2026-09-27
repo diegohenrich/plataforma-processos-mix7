@@ -91,17 +91,17 @@
             <div class="detail-grid">
                 <div class="detail-main">
                     <section class="panel"><div class="section-heading"><div><h2>Briefing</h2><p>O pedido original fica guardado na demanda.</p></div></div><div class="brief-text">{{ $demand->brief }}</div></section>
-                    @if ($canManage)
+                    @if (auth()->user()->role !== App\Enums\UserRole::Client)
                         @php $assistantConfigured = (config('services.ai_gateway.key') || config('services.ai_gateway.oidc_token') || (config('services.ai_gateway.provider') === 'openai-compatible' && config('services.ai_gateway.allow_unauthenticated'))) && config('services.ai_gateway.model'); @endphp
                         <section class="panel ai-assistant-panel" aria-labelledby="ai-assistant-heading">
-                            <div class="section-heading"><div><h2 id="ai-assistant-heading">Assistente da demanda</h2><p>Escolha ajuda geral ou organização do feedback de aprovação desta demanda.</p></div><span class="assistant-badge">Somente leitura</span></div>
-                            <p class="assistant-privacy">Quando habilitado, sua pergunta e os trechos de contexto consultados serão enviados ao provedor de IA configurado. Não inclua senhas, dados pessoais desnecessários ou informações que a Mix7 não autorizou compartilhar. O assistente não cria tarefas nem altera etapas.</p>
+                            <div class="section-heading"><div><h2 id="ai-assistant-heading">Assistente da demanda</h2><p>{{ $canManage ? 'Escolha ajuda geral ou organização do feedback de aprovação desta demanda.' : 'Peça ajuda sobre o briefing e suas tarefas atribuídas nesta demanda.' }}</p></div><span class="assistant-badge">Somente leitura</span></div>
+                            <p class="assistant-privacy">Ao enviar uma pergunta, o texto e os trechos de contexto consultados vão ao provedor de IA configurado. Para profissionais, o contexto se limita ao briefing visível e às próprias tarefas; dados de cliente, feedback de aprovação e tarefas de colegas não são enviados. Não inclua senhas nem dados pessoais desnecessários. O assistente não cria tarefas nem altera etapas.</p>
                             @if ($assistantConfigured)
                                 <form method="post" action="{{ route('ai-agent.ask', $demand) }}" class="assistant-form">@csrf
                                     <label class="field" for="assistant-specialist">Área de ajuda</label>
                                     <select id="assistant-specialist" name="specialist">
                                         <option value="demand_assistant" @selected(old('specialist', 'demand_assistant') === 'demand_assistant')>Ajuda geral da demanda</option>
-                                        <option value="approval_assistant" @selected(old('specialist') === 'approval_assistant')>Organizar feedback de aprovação</option>
+                                        @if ($canManage)<option value="approval_assistant" @selected(old('specialist') === 'approval_assistant')>Organizar feedback de aprovação</option>@endif
                                     </select>
                                     <label class="field" for="assistant-question">O que você precisa entender?</label>
                                     <textarea id="assistant-question" name="question" rows="3" minlength="3" maxlength="3000" required placeholder="Ex.: Quais tarefas ainda faltam e quais referências se aplicam?">{{ old('question') }}</textarea>

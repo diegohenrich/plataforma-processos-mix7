@@ -31,7 +31,9 @@ class AiAgentRuntime
         }
 
         if ($demand) {
-            abort_unless($user->organization_id === $demand->organization_id && $user->can('manage', $demand), 403);
+            abort_unless($user->organization_id === $demand->organization_id
+                && $user->can('view', $demand)
+                && ($agent !== 'approval_assistant' || $user->can('manage', $demand)), 403);
         } else {
             abort_unless($user->is_active && $user->organization_id !== null && in_array($user->role, [UserRole::AgencyOwner, UserRole::MarketingManager], true), 403);
         }

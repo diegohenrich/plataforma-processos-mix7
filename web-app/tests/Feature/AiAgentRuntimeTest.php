@@ -373,23 +373,42 @@ class AiAgentRuntimeTest extends TestCase
         $this->assertLessThan($feedback[1]['created_at'], $feedback[0]['created_at']);
     }
 
-    public function test_professional_cannot_run_assistant_and_cost_is_unknown_if_not_reported(): void
+    public function test_professional_can_use_read_only_demand_assistant_with_only_their_own_tasks(): void
     {
-        [, $manager, $professional, $demand] = $this->workspace();
-        $demand->tasks()->create(['organization_id' => $demand->organization_id, 'created_by' => $manager->id, 'assigned_to' => $professional->id, 'title' => 'Tarefa do profissional', 'status' => TaskStatus::Todo]);
-        Http::fake(['https://ai-gateway.vercel.sh/v1/chat/completions' => Http::response($this->answerResponse('Sem consultas necessárias.'), 200)]);
+        [$organization, $manager, $professional, $demand] = $this->workspace();
+        $ownTask = $demand->tasks()->create(['organization_id' => $organization->id, 'created_by' => $manager->id, 'assigned_to' => $professional->id, 'title' => 'Tarefa atribuída ao profissional', 'description' => 'Detalhe da tarefa individual.', 'status' => TaskStatus::Todo]);
+        $colleague = User::factory()->create(['organization_id' => $organization->id, 'role' => UserRole::Professional, 'is_active' => true]);
+        $demand->tasks()->create(['organization_id' => $organization->id, 'created_by' => $manager->id, 'assigned_to' => $colleague->id, 'title' => 'Tarefa privada de colega', 'description' => 'Não deve sair para o provedor.', 'status' => TaskStatus::Todo]);
+        Bus::fake();
+        Http::fakeSequence()
+            ->push($this->toolResponse([['id' => 'context', 'function' => ['name' => 'read_demand_context', 'arguments' => '{}']]]), 200)
+            ->push($this->answerResponse('A tarefa atribuída está a fazer.'), 200);
 
-        try {
-            app(AiAgentRuntime::class)->run($demand, $professional, 'Resuma a demanda.');
-            $this->fail('O profissional não deve usar o agente nesta primeira versão.');
-        } catch (HttpException $exception) {
-            $this->assertSame(403, $exception->getStatusCode());
-        }
-        Http::assertNothingSent();
-        $result = app(AiAgentRuntime::class)->run($demand, $manager, 'Resuma a demanda.');
+        $this->actingAs($professional)->get(route('demands.show', $demand))
+            ->assertOk()->assertSee('Assistente da demanda')->assertSee('suas tarefas atribuídas')->assertDontSee('Organizar feedback de aprovação');
+        $this->post(route('ai-agent.ask', $demand), ['specialist' => 'demand_assistant', 'question' => 'O que preciso fazer?'])
+            ->assertRedirect()->assertSessionHasNoErrors();
+        $run = AiAgentRun::where('requested_by', $professional->id)->firstOrFail();
+        $this->assertSame('queued', $run->status);
+        Bus::assertDispatched(ProcessAiAgentRun::class);
 
-        $this->assertNull($result['provider_cost']);
-        Http::assertSent(fn ($request) => collect($request['tools'])->contains(fn ($tool) => $tool['function']['name'] === 'list_client_feedback'));
+        $result = app(AiAgentRuntime::class)->run($demand, $professional, 'O que preciso fazer?');
+        $this->assertSame('A tarefa atribuída está a fazer.', $result['answer']);
+        $this->assertSame(['read_demand_context', 'search_knowledge'], collect(app(AiAgentTools::class)->definitions($professional, $demand, 'demand_assistant'))->pluck('function.name')->all());
+        $messages = collect(Http::recorded())->flatMap(fn ($record) => $record[0]['messages'] ?? [])->pluck('content')->implode(' ');
+        $this->assertStringContainsString($ownTask->title, $messages);
+        $this->assertStringNotContainsString('Tarefa privada de colega', $messages);
+        $this->assertStringNotContainsString('Não deve sair para o provedor', $messages);
+        $this->assertStringNotContainsString('list_client_feedback', $messages);
+        $this->assertDatabaseHas('demand_tasks', ['id' => $ownTask->id, 'status' => TaskStatus::Todo->value]);
+
+        $this->actingAs($professional)->from(route('demands.show', $demand))
+            ->post(route('ai-agent.ask', $demand), ['specialist' => 'approval_assistant', 'question' => 'Organize os comentários.'])
+            ->assertForbidden();
+        Http::assertSent(fn ($request) => collect($request['tools'] ?? [])->pluck('function.name')->all() === ['read_demand_context', 'search_knowledge']);
+
+        $otherDemand = Demand::create(['organization_id' => $organization->id, 'created_by' => $manager->id, 'title' => 'Demanda de outra equipe', 'brief' => 'Privado', 'status' => DemandStatus::InProgress]);
+        $this->post(route('ai-agent.ask', $otherDemand), ['question' => 'O que falta?'])->assertForbidden();
         config(['services.ai_gateway.key' => '', 'services.ai_gateway.oidc_token' => '']);
         $this->actingAs($manager)->get(route('demands.show', $demand))->assertOk()->assertSee('Assistente da demanda')->assertSee('Assistente ainda não configurado');
     }
@@ -460,6 +479,17 @@ class AiAgentRuntimeTest extends TestCase
         $run = AiAgentRun::create(['organization_id' => $demand->organization_id, 'demand_id' => $demand->id, 'requested_by' => $manager->id, 'agent' => 'demand_assistant', 'provider' => 'vercel-ai-gateway', 'model' => 'test-provider/test-model', 'input_hash' => hash('sha256', 'question'), 'input_characters' => 8, 'status' => 'queued']);
 
         $this->actingAs($professional)->getJson(route('ai-agent.status', [$demand, $run]))->assertForbidden();
+    }
+
+    public function test_manager_cannot_read_or_see_another_users_demand_assistant_run(): void
+    {
+        [$organization, $manager, , $demand] = $this->workspace();
+        $otherManager = User::factory()->create(['organization_id' => $organization->id, 'role' => UserRole::MarketingManager, 'is_active' => true]);
+        $run = AiAgentRun::create(['organization_id' => $organization->id, 'demand_id' => $demand->id, 'requested_by' => $otherManager->id, 'agent' => 'demand_assistant', 'provider' => 'vercel-ai-gateway', 'model' => 'test-provider/test-model', 'input_hash' => hash('sha256', 'question'), 'input_characters' => 8, 'status' => 'completed', 'answer' => 'Resposta privada do outro solicitante.']);
+
+        $this->actingAs($manager)->getJson(route('ai-agent.status', [$demand, $run]))->assertNotFound();
+        $this->actingAs($manager)->get(route('demands.show', $demand))
+            ->assertOk()->assertDontSee('Resposta privada do outro solicitante.');
     }
 
     public function test_job_records_answer_and_never_claims_unreported_provider_cost(): void

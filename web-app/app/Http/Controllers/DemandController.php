@@ -270,12 +270,7 @@ class DemandController extends Controller
             'aiPlanningRuns' => $request->user()->can('manage', $demand) ? $demand->aiPlanningRuns()->with(['requester:id,name', 'reviewer:id,name'])->take(5)->get() : collect(),
             'aiAgentRuns' => $demand->aiAgentRuns()
                 ->with('requester:id,name')
-                ->where(function (Builder $query) use ($request, $demand): void {
-                    $query->where('requested_by', $request->user()->id);
-                    if ($request->user()->can('manage', $demand)) {
-                        $query->orWhere('organization_id', $request->user()->organization_id);
-                    }
-                })
+                ->where('requested_by', $request->user()->id)
                 ->take(8)
                 ->get(),
         ]);

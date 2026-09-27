@@ -78,13 +78,15 @@ class AiAgentController extends Controller
 
     public function ask(Request $request, Demand $demand): RedirectResponse
     {
-        $this->authorize('manage', $demand);
-        abort_if($request->user()->role === UserRole::Client, 403);
+        $user = $request->user();
+        $this->authorize('view', $demand);
+        abort_if($user->role === UserRole::Client, 403);
 
         $data = $request->validate([
             'question' => ['required', 'string', 'min:3', 'max:3000'],
             'specialist' => ['nullable', 'string', 'in:demand_assistant,approval_assistant'],
         ]);
+        abort_if(($data['specialist'] ?? 'demand_assistant') === 'approval_assistant' && ! $user->can('manage', $demand), 403);
 
         $model = (string) config('services.ai_gateway.model');
         $provider = (string) config('services.ai_gateway.provider');
@@ -137,7 +139,7 @@ class AiAgentController extends Controller
     {
         $this->authorize('view', $demand);
         abort_unless($run->demand_id === $demand->id && $run->organization_id === $request->user()->organization_id, 404);
-        abort_unless($run->requested_by === $request->user()->id || $request->user()->can('manage', $demand), 404);
+        abort_unless($run->requested_by === $request->user()->id, 404);
 
         return response()->json(['status' => $run->status]);
     }
