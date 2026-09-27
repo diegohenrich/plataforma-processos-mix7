@@ -617,6 +617,26 @@ class DemandWorkflowTest extends TestCase
             ->assertOk()->assertDontSee('Minhas tarefas');
     }
 
+    public function test_professional_can_complete_active_task_from_tray_and_timer_stops(): void
+    {
+        [$organization, $manager, $professional] = $this->team();
+        $demand = $this->demand($organization, $manager);
+        $task = $this->task($demand, $professional, $manager, 'Concluir pelo painel fixo');
+        $this->actingAs($professional)->post(route('demand-tasks.timer.start', $task))->assertRedirect();
+
+        $this->get(route('demands.index'))
+            ->assertOk()
+            ->assertSee('aria-label="Concluir tarefa Concluir pelo painel fixo"', false)
+            ->assertSee(route('demand-tasks.status', $task), false);
+
+        $this->travel(30)->seconds();
+        $this->patch(route('demand-tasks.status', $task), ['status' => TaskStatus::Completed->value])->assertRedirect();
+
+        $this->assertSame(TaskStatus::Completed, $task->fresh()->status);
+        $this->assertNotNull($task->fresh()->completed_at);
+        $this->assertNotNull(TaskTimeEntry::query()->where('task_id', $task->id)->firstOrFail()->ended_at);
+    }
+
     public function test_non_professional_cannot_recover_another_persons_timer(): void
     {
         [, $owner, $professional] = $this->team();
