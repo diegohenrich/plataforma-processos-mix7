@@ -8,6 +8,7 @@ use App\Enums\TaskStatus;
 use App\Enums\UserRole;
 use App\Models\Demand;
 use App\Models\DemandEvent;
+use App\Models\DemandModuleDefinition;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -74,7 +75,15 @@ class DemandController extends Controller
             ->orderBy('name')
             ->get(['id', 'name']);
 
-        $modules = DemandModule::cases();
+        $modules = collect(DemandModule::cases())->map(fn (DemandModule $module): array => [
+            'key' => $module->value,
+            'label' => $module->label(),
+        ])->concat(DemandModuleDefinition::query()
+            ->where('organization_id', $request->user()->organization_id)
+            ->where('is_active', true)
+            ->orderBy('label')
+            ->get(['key', 'label'])
+            ->map(fn (DemandModuleDefinition $module): array => ['key' => $module->key, 'label' => $module->label]));
 
         return view('demands.create', compact('professionals', 'clients', 'modules'));
     }
@@ -83,10 +92,14 @@ class DemandController extends Controller
     {
         $this->authorize('create', Demand::class);
         $organizationId = $request->user()->organization_id;
+        $allowedModuleKeys = array_merge(
+            array_map(fn (DemandModule $module): string => $module->value, DemandModule::cases()),
+            DemandModuleDefinition::query()->where('organization_id', $organizationId)->where('is_active', true)->pluck('key')->all(),
+        );
         $data = $request->validate([
             'title' => ['required', 'string', 'max:180'],
             'brief' => ['required', 'string', 'max:12000'],
-            'module_key' => ['required', Rule::enum(DemandModule::class)],
+            'module_key' => ['required', 'string', Rule::in($allowedModuleKeys)],
             'client_user_id' => [
                 'nullable',
                 'integer',
@@ -109,14 +122,22 @@ class DemandController extends Controller
         ]);
 
         $demand = DB::transaction(function () use ($data, $request, $organizationId): Demand {
+            $builtInModule = DemandModule::tryFrom($data['module_key']);
+            $customModule = $builtInModule ? null : DemandModuleDefinition::query()
+                ->where('organization_id', $organizationId)
+                ->where('key', $data['module_key'])
+                ->where('is_active', true)
+                ->lockForUpdate()
+                ->firstOrFail();
             $demand = Demand::create([
                 'organization_id' => $organizationId,
                 'created_by' => $request->user()->id,
                 'client_user_id' => $data['client_user_id'] ?? null,
                 'title' => $data['title'],
                 'brief' => $data['brief'],
-                'module_key' => DemandModule::from($data['module_key']),
-                'module_version' => DemandModule::from($data['module_key'])->version(),
+                'module_key' => $data['module_key'],
+                'module_version' => $builtInModule?->version() ?? 1,
+                'module_label' => $builtInModule?->label() ?? $customModule->label,
                 'status' => DemandStatus::Received,
             ]);
 
@@ -168,7 +189,7 @@ class DemandController extends Controller
                 'data' => [
                     'id' => $demand->id,
                     'title' => $demand->title,
-                    'module' => ['key' => $demand->module_key->value, 'label' => $demand->module_key->label(), 'version' => $demand->module_version],
+                    'module' => ['key' => $demand->module_key, 'label' => $demand->moduleDisplayLabel(), 'version' => $demand->module_version],
                     'status' => $demand->status->value,
                     'status_label' => $demand->status->label(),
                     'client_user_id' => $demand->client_user_id,

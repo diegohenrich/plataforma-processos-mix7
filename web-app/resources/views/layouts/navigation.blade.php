@@ -8,6 +8,7 @@
             @if (in_array(auth()->user()->role, [App\Enums\UserRole::AgencyOwner, App\Enums\UserRole::MarketingManager], true))<a class="nav-item {{ $active === 'organization-assistant' ? 'active' : '' }}" href="{{ route('organization-assistant.index') }}"><span aria-hidden="true">✦</span> Assistente da agência</a>@endif
             <a class="nav-item {{ $active === 'task-board' ? 'active' : '' }}" href="{{ route('demand-tasks.board') }}"><span aria-hidden="true">▦</span> Quadro de tarefas</a>
             <a class="nav-item {{ $active === 'approvals' ? 'active' : '' }}" href="{{ route('approvals.index') }}"><span aria-hidden="true">✓</span> Aprovações</a>
+            @can('create', App\Models\Demand::class)<a class="nav-item {{ $active === 'approval-modules' ? 'active' : '' }}" href="{{ route('approval-modules.index') }}"><span aria-hidden="true">＋</span> Tipos de aprovação</a>@endcan
             @can('viewActivity', App\Models\User::class)<a class="nav-item {{ $active === 'activity' ? 'active' : '' }}" href="{{ route('team.activity') }}"><span aria-hidden="true">◷</span> {{ auth()->user()->role === App\Enums\UserRole::Professional ? 'Meu trabalho' : 'Produção da equipe' }}</a>@endcan
             <a class="nav-item {{ $active === 'capacity' ? 'active' : '' }}" href="{{ route('team.capacity') }}"><span aria-hidden="true">◫</span> Disponibilidade</a>
             @if (in_array(auth()->user()->role, [App\Enums\UserRole::AgencyOwner, App\Enums\UserRole::MarketingManager, App\Enums\UserRole::Professional], true))<a class="nav-item {{ $active === 'performance-reviews' ? 'active' : '' }}" href="{{ route('performance-reviews.index') }}"><span aria-hidden="true">◎</span> Avaliações</a>@endif
@@ -23,7 +24,7 @@
     <div class="mobile-nav-actions">
         <a href="{{ route('dashboard') }}">Início</a>
         <a href="{{ route('demands.index') }}">{{ auth()->user()->role === App\Enums\UserRole::Client ? 'Minhas demandas' : 'Demandas' }}</a>
-        @if (auth()->user()->role !== App\Enums\UserRole::Client)@if (in_array(auth()->user()->role, [App\Enums\UserRole::AgencyOwner, App\Enums\UserRole::MarketingManager], true))<a href="{{ route('organization-assistant.index') }}">Assistente da agência</a>@endif<a href="{{ route('demand-tasks.board') }}">Quadro de tarefas</a><a href="{{ route('approvals.index') }}">Aprovações</a>@endif
+        @if (auth()->user()->role !== App\Enums\UserRole::Client)@if (in_array(auth()->user()->role, [App\Enums\UserRole::AgencyOwner, App\Enums\UserRole::MarketingManager], true))<a href="{{ route('organization-assistant.index') }}">Assistente da agência</a>@endif<a href="{{ route('demand-tasks.board') }}">Quadro de tarefas</a><a href="{{ route('approvals.index') }}">Aprovações</a>@can('create', App\Models\Demand::class)<a href="{{ route('approval-modules.index') }}">Tipos de aprovação</a>@endcan @endif
         @can('viewActivity', App\Models\User::class)<a href="{{ route('team.activity') }}">{{ auth()->user()->role === App\Enums\UserRole::Professional ? 'Meu trabalho' : 'Produção' }}</a>@endcan
         <a href="{{ route('team.capacity') }}">Disponibilidade</a>
         @if (in_array(auth()->user()->role, [App\Enums\UserRole::AgencyOwner, App\Enums\UserRole::MarketingManager, App\Enums\UserRole::Professional], true))<a href="{{ route('performance-reviews.index') }}">Avaliações</a>@endif

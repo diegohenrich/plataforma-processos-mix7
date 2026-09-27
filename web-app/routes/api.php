@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\V1\KnowledgeController;
 use App\Http\Controllers\Api\V1\TeamMemberController as ApiTeamMemberController;
 use App\Http\Controllers\DemandController as WebDemandController;
 use App\Http\Controllers\DemandDeliveryEvidenceController;
+use App\Http\Controllers\DemandModuleController;
 use App\Http\Controllers\DemandReviewController;
 use App\Http\Controllers\DemandTaskController;
 use App\Http\Controllers\PerformanceReviewController;
@@ -34,6 +35,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active', 'api.token'])->group(
     });
     Route::get('/demands', [DemandController::class, 'index']);
     Route::get('/demands/{demand}', [DemandController::class, 'show']);
+    Route::get('/approval-modules', [DemandModuleController::class, 'indexApi']);
     Route::get('/team/activity', [TeamActivityController::class, 'index']);
     Route::get('/team/members', [ApiTeamMemberController::class, 'index']);
     Route::get('/team/invitations', [ApiTeamMemberController::class, 'invitations']);

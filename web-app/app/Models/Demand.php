@@ -13,11 +13,22 @@ class Demand extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['organization_id', 'created_by', 'client_user_id', 'title', 'brief', 'module_key', 'module_version', 'status'];
+    protected $fillable = ['organization_id', 'created_by', 'client_user_id', 'title', 'brief', 'module_key', 'module_version', 'module_label', 'status'];
 
     protected function casts(): array
     {
-        return ['status' => DemandStatus::class, 'module_key' => DemandModule::class];
+        return ['status' => DemandStatus::class];
+    }
+
+    public function moduleDisplayLabel(): ?string
+    {
+        if (! $this->module_key) {
+            return null;
+        }
+
+        return $this->module_label
+            ?? DemandModule::tryFrom($this->module_key)?->label()
+            ?? $this->module_key;
     }
 
     public function organization(): BelongsTo

@@ -47,7 +47,7 @@ class ApiDemandMutationTest extends TestCase
         $demand = Demand::query()->firstOrFail();
         $this->assertSame($organization->id, $demand->organization_id);
         $this->assertSame($owner->id, $demand->created_by);
-        $this->assertSame('website_review', $demand->module_key->value);
+        $this->assertSame('website_review', $demand->module_key);
         $this->assertSame(1, $demand->module_version);
         $this->authenticate($token)->getJson("/api/v1/demands/{$demand->id}")
             ->assertOk()->assertJsonPath('data.module.key', 'website_review')->assertJsonPath('data.module.version', 1);

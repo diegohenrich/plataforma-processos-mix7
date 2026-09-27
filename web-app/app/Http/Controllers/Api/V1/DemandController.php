@@ -107,6 +107,6 @@ class DemandController extends Controller
             return null;
         }
 
-        return ['key' => $demand->module_key->value, 'label' => $demand->module_key->label(), 'version' => $demand->module_version];
+        return ['key' => $demand->module_key, 'label' => $demand->moduleDisplayLabel(), 'version' => $demand->module_version];
     }
 }
