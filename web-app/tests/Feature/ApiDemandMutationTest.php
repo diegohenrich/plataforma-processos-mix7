@@ -183,6 +183,20 @@ class ApiDemandMutationTest extends TestCase
         $this->patchJson("/api/v1/demands/{$demand->id}/status", ['status' => DemandStatus::InternalReview->value])
             ->assertOk()
             ->assertJsonPath('data.status', DemandStatus::InternalReview->value);
+        $this->patchJson("/api/v1/demands/{$demand->id}/status", ['status' => DemandStatus::InProgress->value])
+            ->assertOk()
+            ->assertJsonPath('data.status', DemandStatus::InProgress->value);
+        $this->assertDatabaseHas('demand_events', [
+            'demand_id' => $demand->id,
+            'actor_id' => $manager->id,
+            'event_type' => 'demand_status_changed',
+            'from_status' => DemandStatus::InternalReview->value,
+            'to_status' => DemandStatus::InProgress->value,
+            'summary' => $manager->name.' devolveu a demanda para execução após a revisão interna',
+        ]);
+        $this->patchJson("/api/v1/demands/{$demand->id}/status", ['status' => DemandStatus::InternalReview->value])
+            ->assertOk()
+            ->assertJsonPath('data.status', DemandStatus::InternalReview->value);
         $this->patchJson("/api/v1/demands/{$demand->id}/status", ['status' => DemandStatus::ClientApproval->value])
             ->assertOk()
             ->assertJsonPath('data.status', DemandStatus::ClientApproval->value);
