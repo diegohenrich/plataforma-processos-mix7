@@ -2,6 +2,7 @@
 - Renderizei o link de revisão com um banco SQLite isolado e demanda inteiramente sintética; a página abriu sem login, mostrou a versão, o material, campos de nome/comentário, opções de âncora e ações de comentar, pedir ajustes e aprovar. Inspecionei a tela em desktop pelo navegador integrado.
 - Tentei submeter um comentário sintético, mas a interface não mostrou confirmação nem mudança de estado; considero a interação pendente, não validada. Não testei aprovação, pedido de ajustes, abertura do material fictício ou viewport móvel nesta execução. Os testes automatizados existentes continuam sendo a evidência para o comportamento de servidor.
 - Encerrei o servidor `127.0.0.1:4211` iniciado para esta checagem e removi apenas `web-app/database/browser-qa.sqlite`, criado para ela. Banco demo, CRM de referência e dados reais não foram alterados.
+- Trello #35 foi identificado como cartão correspondente; a descrição já estava em estado Alterações não salvas ao abrir. Preservei o rascunho e não publiquei comentário; a sincronização deste registro fica pendente para quando o cartão não tiver edição não salva.
 ## Rastreabilidade entre proposta de IA e feedback de origem — 2026-09-27
 - Cada tarefa estruturada agora declara IDs de feedback de origem. O serviço rejeita referências que não estavam no contexto enviado; a tela de revisão exibe versão e trecho, e a tarefa aprovada guarda versão/ID na descrição e no snapshot de revisão.
 - Atualizei os contratos de requisitos, rastreabilidade, roadmap, contexto e decisão vigentes. Não foi feita chamada real ao provedor.
