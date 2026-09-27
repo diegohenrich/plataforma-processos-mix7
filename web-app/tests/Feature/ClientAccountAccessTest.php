@@ -72,6 +72,8 @@ class ClientAccountAccessTest extends TestCase
 
         $this->actingAs($client)->get(route('demands.index'))
             ->assertOk()->assertSee('Site institucional')->assertDontSee('Demanda de outra conta')->assertDontSee('Demanda interna sem vínculo')->assertDontSee('Briefing estritamente interno')->assertDontSee('Resumo interno da equipe');
+        $this->get(route('dashboard'))->assertOk()->assertSee('Minhas demandas')
+            ->assertDontSee(route('approvals.index'), false)->assertDontSee(route('performance-reviews.index'), false);
         $this->get(route('demands.show', $ownDemand))->assertOk()
             ->assertSee('Etapa atual')->assertSee('Planejamento')
             ->assertDontSee('Briefing estritamente interno')->assertDontSee('Resumo interno da equipe')->assertDontSee('Tarefa estritamente interna')->assertDontSee('Detalhe confidencial')->assertDontSee($owner->name);

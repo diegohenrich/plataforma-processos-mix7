@@ -46,7 +46,9 @@ class TeamActivityTest extends TestCase
             ->assertOk()->assertSee('Produção da equipe')->assertSee($professional->name)
             ->assertSee('2,0 h')->assertSee('0,5 h')->assertSee('concluídas em 30 dias')
             ->assertSee('não são nota, ranking')->assertSee($colleague->name)->assertDontSee('Tarefa da colega')->assertDontSee($outsideProfessional->name);
-        $this->get(route('dashboard'))->assertOk()->assertSee('Produção da equipe');
+        $this->get(route('dashboard'))->assertOk()->assertSee('Produção da equipe')
+            ->assertSee(route('approvals.index'), false)->assertSee(route('performance-reviews.index'), false)
+            ->assertDontSee('Em construção')->assertSee('nota automática não está disponível');
         $this->actingAs($owner)->get(route('team.activity'))->assertOk();
         $this->actingAs($manager)->get(route('team.index'))->assertForbidden();
     }
@@ -60,7 +62,9 @@ class TeamActivityTest extends TestCase
 
         $this->actingAs($professional)->get(route('team.activity'))
             ->assertOk()->assertSee('Meu trabalho')->assertSee('Minha tarefa')->assertSee('Iniciar tempo')->assertDontSee('Tarefa privada da colega');
-        $this->get(route('dashboard'))->assertOk()->assertSee('Meu trabalho')->assertSee('Abrir minhas tarefas');
+        $this->get(route('dashboard'))->assertOk()->assertSee('Meu trabalho')->assertSee('Abrir minhas tarefas')
+            ->assertSee(route('approvals.index'), false)->assertSee(route('performance-reviews.index'), false)
+            ->assertDontSee('Em construção');
         $this->actingAs($professional)->get(route('team.index'))->assertForbidden();
     }
 
