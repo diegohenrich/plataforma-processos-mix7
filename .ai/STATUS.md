@@ -1,3 +1,11 @@
+## Anexos privados em demandas — 2026-09-26
+- Adicionei envio por seleção ou arrastar/soltar de até 10 arquivos por envio, 20 MB cada; lista com nome, tamanho, remetente e data; prévia autenticada no navegador e download. Formatos aceitos: PDF, imagens comuns, MP4/WebM, arquivos Office, texto, CSV e ZIP.
+- Os arquivos ficam no disco privado sob escopo da organização/demanda; o histórico registra quem anexou. Clientes não veem nem baixam os anexos; a equipe precisa ter acesso já autorizado à demanda. Só se envia ao cliente por uma versão de revisão separada.
+- Validação local: `php artisan test` passou (171 testes, 1.419 assertions); 4 testes focados cobrem upload, prévia/download, auditoria, formatos/tamanho inválidos, acesso do cliente e isolamento entre organizações. Pint focalizado, `composer validate --no-check-publish`, build Vite, cache/limpeza Blade, rotas novas e `git diff --check` passaram.
+- Inspeção visual autenticada continua pendente: esta mudança exige sessão de equipe e não havia sessão local utilizável. Testes confirmam HTML/rota, mas não substituem conferência visual no navegador.
+- Hostinger não verificada: tamanho máximo de upload PHP, espaço e tráfego ainda precisam ser comparados ao limite local antes de compartilhar dados reais.
+- GitHub/Trello desta entrega ainda serão sincronizados após revisar o diff. A atualização no Trello requer confirmação pontual antes de publicar o cartão/comentário.
+
 ## Catálogo expansível de tipos de aprovação — 2026-09-27
 - Direção/gerência podem cadastrar tipos adicionais por organização com nome, descrição e chave técnica; desativar/reativar sem apagar ou reclassificar demandas antigas. Formulário de demanda e API usam o catálogo ativo; API lista tipos disponíveis e preserva chave, rótulo e versão.
 - Segurança validada por testes de papel, agência, chave duplicada/reservada, desativação, uso web/API e tentativa de seleção por outra agência. Tipos extras ainda compartilham campos e etapas; não há criador de campos ou regras específicas, pois a Mix7 não forneceu exemplos validados para essas variações.

@@ -61,6 +61,11 @@ class Demand extends Model
         return $this->hasMany(DemandDeliveryEvidence::class)->orderByDesc('created_at')->orderByDesc('id');
     }
 
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(DemandAttachment::class)->orderByDesc('created_at')->orderByDesc('id');
+    }
+
     public function reviewLinks(): HasMany
     {
         return $this->hasMany(DemandReviewLink::class)->orderByDesc('version');

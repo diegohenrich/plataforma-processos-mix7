@@ -222,7 +222,7 @@ class DemandController extends Controller
 
         return view('demands.show', [
             'currentUser' => $user,
-            'demand' => $demand->load(['creator:id,name', 'organization:id,name', 'client:id,name,email']),
+            'demand' => $demand->load(['creator:id,name', 'organization:id,name', 'client:id,name,email', 'attachments.uploader:id,name']),
             'tasks' => $tasks,
             'scheduledTasks' => $tasks->filter(fn ($task) => $task->planned_start_on || $task->planned_due_on)->values(),
             'unscheduledTaskCount' => $tasks->filter(fn ($task) => ! $task->planned_start_on && ! $task->planned_due_on)->count(),

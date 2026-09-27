@@ -52,6 +52,32 @@
                 <section class="panel client-assignment-panel"><div class="section-heading"><div><h2>Cliente desta demanda</h2><p>O cliente vinculado verá somente o nome e a etapa atual. O material de aprovação continua sendo enviado por link.</p></div></div><form method="post" action="{{ route('demands.client.assign', $demand) }}" class="client-assignment-form">@csrf @method('PATCH')<label class="field">Conta de cliente<select name="client_user_id"><option value="">Nenhum cliente vinculado</option>@foreach ($clients as $client)<option value="{{ $client->id }}" @selected($demand->client_user_id === $client->id)>{{ $client->name }} · {{ $client->email }}</option>@endforeach</select></label><button class="secondary-button" type="submit">Salvar vínculo</button></form>@error('client_user_id')<div class="notice notice-error">{{ $message }}</div>@enderror</section>
             @endif
 
+            <section class="panel demand-attachments" aria-labelledby="attachments-heading">
+                <div class="section-heading"><div><h2 id="attachments-heading">Arquivos da equipe <span class="count-badge">{{ $demand->attachments->count() }}</span></h2><p>Materiais de trabalho privados. Só a equipe desta demanda consegue abrir estes arquivos.</p></div></div>
+                <form method="post" enctype="multipart/form-data" action="{{ route('demand-attachments.store', $demand) }}" class="attachment-upload" data-attachment-upload>
+                    @csrf
+                    <label class="attachment-drop" data-attachment-drop>
+                        <span class="attachment-drop-icon" aria-hidden="true">＋</span>
+                        <strong>Arraste arquivos aqui ou escolha do computador</strong>
+                        <span>PDF, imagens, vídeo e documentos · até 20 MB cada · máximo 10 por envio</span>
+                        <input type="file" name="files[]" accept=".pdf,.jpg,.jpeg,.png,.webp,.gif,.mp4,.webm,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip" multiple required data-attachment-input>
+                    </label>
+                    <div class="attachment-upload-footer"><span class="field-help" data-attachment-names aria-live="polite">Nenhum arquivo selecionado.</span><button class="primary-button" type="submit">Anexar à demanda</button></div>
+                    @error('files')<span class="error">{{ $message }}</span>@enderror
+                    @error('files.*')<span class="error">{{ $message }}</span>@enderror
+                </form>
+                @if ($demand->attachments->isNotEmpty())
+                    <ul class="attachment-list">
+                        @foreach ($demand->attachments as $attachment)
+                            @php $attachmentUrl = route('demand-attachments.show', [$demand, $attachment]); @endphp
+                            <li class="attachment-item"><div class="attachment-file-icon" aria-hidden="true">{{ str($attachment->original_name)->afterLast('.')->upper()->limit(4, '') }}</div><div class="attachment-file-info"><a href="{{ $attachmentUrl }}" target="_blank" rel="noopener noreferrer">{{ $attachment->original_name }}</a><span>{{ number_format($attachment->file_size / 1024 / 1024, 2, ',', '.') }} MB · enviado por {{ $attachment->uploader->name }} em {{ $attachment->created_at->format('d/m/Y H:i') }}</span>@if ($attachment->mime_type === 'application/pdf')<details class="attachment-preview"><summary>Ver PDF nesta tela</summary><iframe src="{{ $attachmentUrl }}" title="Prévia de {{ $attachment->original_name }}" loading="lazy"></iframe></details>@elseif (str_starts_with($attachment->mime_type, 'image/'))<details class="attachment-preview"><summary>Ver imagem nesta tela</summary><img src="{{ $attachmentUrl }}" alt="{{ $attachment->original_name }}" loading="lazy"></details>@elseif (str_starts_with($attachment->mime_type, 'video/'))<details class="attachment-preview"><summary>Ver vídeo nesta tela</summary><video controls preload="metadata"><source src="{{ $attachmentUrl }}" type="{{ $attachment->mime_type }}">Seu navegador não reproduz este vídeo.</video></details>@endif</div><a class="secondary-button attachment-download" href="{{ $attachmentUrl }}?download=1" download>Baixar</a></li>
+                        @endforeach
+                    </ul>
+                @else
+                    <p class="empty-inline attachment-empty">Nenhum arquivo foi anexado a esta demanda.</p>
+                @endif
+            </section>
+
             <div class="detail-grid">
                 <div class="detail-main">
                     <section class="panel"><div class="section-heading"><div><h2>Briefing</h2><p>O pedido original fica guardado na demanda.</p></div></div><div class="brief-text">{{ $demand->brief }}</div></section>
@@ -219,6 +245,9 @@
 .client-assignment-panel{margin:0 0 18px}.client-assignment-form{display:flex;align-items:end;gap:12px}.client-assignment-form .field{flex:1;margin:0}.client-assignment-form .secondary-button{min-height:44px}@media(max-width:700px){.client-assignment-form{align-items:stretch;flex-direction:column}}
 .drawing-responses{margin-top:16px;padding:14px;border:1px solid #dcebee;border-radius:12px;background:#f5fbfc}.drawing-responses h3{margin:0;font-size:13px}.drawing-responses article{margin-top:10px;padding:12px;background:white;border-radius:10px}.drawing-responses article strong{font-size:12px;color:#204b61}.drawing-responses article p{margin:6px 0;color:#52666e;font-size:12px;line-height:1.5}
 </style>
+<style>
+.demand-attachments{margin:18px 0}.attachment-upload{margin-top:14px}.attachment-drop{display:grid;justify-items:center;gap:7px;padding:24px;border:1px dashed #9fc8d4;border-radius:14px;background:#f7fbfc;text-align:center;color:#204b61;cursor:pointer;transition:background .15s,border-color .15s}.attachment-drop:hover,.attachment-drop.is-dragging{border-color:#39758b;background:#eaf6fa}.attachment-drop strong{font-size:13px}.attachment-drop>span:last-of-type{color:#718087;font-size:11px}.attachment-drop-icon{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:#e3f3f8;color:#326c82;font-size:22px}.attachment-drop input{max-width:100%;margin-top:6px;color:#52666e;font:inherit;font-size:11px}.attachment-upload-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:11px}.attachment-list{list-style:none;padding:0;margin:16px 0 0}.attachment-item{display:flex;align-items:center;gap:12px;padding:11px 0;border-top:1px solid #edf0ef}.attachment-file-icon{display:grid;place-items:center;flex:0 0 38px;height:38px;border-radius:10px;background:#eaf6fa;color:#326c82;font-size:9px;font-weight:800}.attachment-file-info{display:grid;gap:4px;min-width:0;flex:1}.attachment-file-info>a{overflow:hidden;color:#204b61;text-overflow:ellipsis;white-space:nowrap;font-size:12px;font-weight:700}.attachment-file-info span{color:#718087;font-size:10px}.attachment-download{flex-shrink:0;text-decoration:none}.attachment-empty{margin:16px 0 0}.attachment-preview{margin-top:7px}.attachment-preview summary{width:max-content;max-width:100%;cursor:pointer;color:#326c82;font-size:11px;font-weight:700}.attachment-preview iframe,.attachment-preview img,.attachment-preview video{display:block;width:min(100%,760px);max-height:620px;margin-top:8px;border:1px solid #e3e9e8;border-radius:10px;background:#f5f6f5}.attachment-preview iframe{height:480px}.attachment-preview img,.attachment-preview video{height:auto;object-fit:contain}@media(max-width:650px){.attachment-drop{padding:20px 12px}.attachment-upload-footer{align-items:stretch;flex-direction:column}.attachment-upload-footer .primary-button{align-self:flex-start}.attachment-item{align-items:flex-start;flex-wrap:wrap}.attachment-file-info{min-width:calc(100% - 55px)}.attachment-download{margin-left:50px}.attachment-preview iframe{height:62vh;min-height:360px}}
+</style>
 @if ($canManage)
 <script>
 document.querySelectorAll('[data-ai-include]').forEach((select) => {
@@ -232,6 +261,30 @@ document.querySelectorAll('[data-ai-include]').forEach((select) => {
 });
 </script>
 @endif
+<script>
+document.querySelectorAll('[data-attachment-upload]').forEach((form) => {
+    const input = form.querySelector('[data-attachment-input]');
+    const drop = form.querySelector('[data-attachment-drop]');
+    const names = form.querySelector('[data-attachment-names]');
+    const updateNames = () => {
+        const files = [...input.files];
+        names.textContent = files.length ? files.map((file) => file.name).join(', ') : 'Nenhum arquivo selecionado.';
+    };
+    input.addEventListener('change', updateNames);
+    ['dragenter', 'dragover'].forEach((eventName) => drop.addEventListener(eventName, (event) => {
+        event.preventDefault();
+        drop.classList.add('is-dragging');
+    }));
+    ['dragleave', 'drop'].forEach((eventName) => drop.addEventListener(eventName, (event) => {
+        event.preventDefault();
+        drop.classList.remove('is-dragging');
+    }));
+    drop.addEventListener('drop', (event) => {
+        input.files = event.dataTransfer.files;
+        updateNames();
+    });
+});
+</script>
 <script>
 (() => {
     const runs = [...document.querySelectorAll('[data-assistant-poll] .assistant-run[data-status-url]')];

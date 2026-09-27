@@ -6,6 +6,7 @@ use App\Http\Controllers\ApiTokenController;
 use App\Http\Controllers\ApprovalsController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\SessionController;
+use App\Http\Controllers\DemandAttachmentController;
 use App\Http\Controllers\DemandController;
 use App\Http\Controllers\DemandDeliveryEvidenceController;
 use App\Http\Controllers\DemandModuleController;
@@ -42,6 +43,8 @@ Route::middleware(['auth', 'active'])->group(function (): void {
     Route::patch('/tipos-aprovacao/{module}/status', [DemandModuleController::class, 'toggle'])->name('approval-modules.toggle');
     Route::patch('/demandas/{demand}/etapa', [DemandController::class, 'updateStatus'])->name('demands.status');
     Route::post('/demandas/{demand}/evidencias-entrega', [DemandDeliveryEvidenceController::class, 'store'])->name('demands.delivery-evidence.store');
+    Route::post('/demandas/{demand}/anexos', [DemandAttachmentController::class, 'store'])->name('demand-attachments.store');
+    Route::get('/demandas/{demand}/anexos/{attachment}', [DemandAttachmentController::class, 'show'])->name('demand-attachments.show');
     Route::patch('/demandas/{demand}/cliente', [DemandController::class, 'assignClient'])->name('demands.client.assign');
     Route::get('/tarefas/quadro', [DemandTaskController::class, 'board'])->name('demand-tasks.board');
     Route::get('/aprovacoes', [ApprovalsController::class, 'index'])->name('approvals.index');

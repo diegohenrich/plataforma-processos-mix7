@@ -1,6 +1,8 @@
 - 2026-09-26 — Implementar avaliações humanas por tarefa concluída: prazo e qualidade, evidências e fatores externos; direção tem peso 2 e gerência peso 1 conforme os áudios, armazenados junto do papel do avaliador; profissional pode responder com histórico. Não calcular nota até Mix7 definir escala, fórmula, combinação dos pesos, período, contestação e finalidade. Rever com a matriz de acesso antes do piloto.
 # Decisões vigentes
 
+- 2026-09-26 — Arquivos de trabalho são anexos privados da demanda, acessíveis apenas pela equipe autenticada que já pode ver essa demanda; clientes recebem materiais somente quando a equipe os seleciona para um link de revisão. Limite de aplicação: até 10 arquivos por envio, 20 MB cada, com allowlist de formatos comuns de agência. Rever formatos/limites após validar os requisitos do plano Hostinger e a necessidade operacional da Mix7.
+
 - 2026-09-27 — Tipos adicionais de aprovação podem ser cadastrados pela direção/gerência dentro da própria organização e usam o núcleo e fluxo compartilhados até que a Mix7 forneça exemplos para campos, etapas, aprovadores e evidências particulares. Desativar um tipo impede novas demandas sem reclassificar as antigas. Rever a estrutura especializada quando os serviços e suas regras forem validados.
 
 - 2026-09-26 — A primeira ampliação de ferramentas do assistente interno fora da demanda é uma consulta somente leitura a métricas factuais da própria organização, disponível à direção/gerência: estados e estimativas de tarefas, conclusões e tempo registrado em 30 dias. Não expõe títulos de tarefas, não cruza organizações e não calcula capacidade, nota ou ranking. Rever quando a matriz de acesso e as políticas de IA forem validadas pela Mix7.
