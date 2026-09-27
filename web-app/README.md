@@ -30,6 +30,7 @@ Se já existir um `.env`, preserve-o e confirme `APP_ENV=local`, `APP_URL=http:/
 php artisan test --compact
 vendor/bin/pint --test
 composer validate --no-check-publish
+npm test
 npm run build
 ```
 
