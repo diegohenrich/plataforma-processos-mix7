@@ -640,3 +640,7 @@ Histórico operacional anterior preservado em [docs/VALIDACOES-HISTORICAS.md](..
 - A inspeção autenticada do navegador ainda não foi possível nesta sessão; os HTMLs autenticados foram verificados pelos testes HTTP. Política de dados, provedor, modelo e custo continuam pendentes da Mix7.
 - GitHub: commit `31ad9cb0b62107ba21f225742d4966d2008141c8` publicado em `codex/fundacao-compartilhada`; SHA local/remoto confirmado. Checks de push [36307109730](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36307109730) e PR #11 [36307112223](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36307112223) passaram.
 - Trello desta extensão segue pendente: a aba existente continua com rascunho não salvo no cartão #35; preservei o conteúdo e não há conector Trello direto nesta sessão.
+
+## Auditoria de atribuição sugerida pela IA — 2026-09-27
+- Conferindo a matriz funcional com o código, vi que o planejador sugere perfil de responsabilidade, estimativa e tarefas; o nome do profissional continua sendo escolhido pela gestão. Atualizei `docs/AUDITORIA-FUNCIONAL-POR-PERFIL.md` para não descrever essa função como recomendação nominal já implementada. Os dados atuais não incluem competências por pessoa e a política de envio de dados à IA não está aprovada, então não vou inferir um critério de escolha.
+- A auditoria funcional automatizada ainda não foi testada no navegador. A atualização precisa ser publicada e vinculada ao Trello; o rascunho aberto no cartão #35 continua preservado.
