@@ -104,11 +104,12 @@ class DemandWorkflowTest extends TestCase
         $this->assertNotFalse($morePosition);
         $this->assertSame(8, substr_count($html, '<article class="kanban-card"'));
         $this->assertSame(8, substr_count($html, 'aria-label="Abrir demanda:'));
-        $this->assertLessThan($morePosition, strpos($html, 'Volume de demonstração 06'));
-        $this->assertGreaterThan($morePosition, strpos($html, 'Volume de demonstração 07'));
+        $this->assertTrue(strpos($html, 'Volume de demonstração 06') < $morePosition);
+        $this->assertTrue(strpos($html, 'Volume de demonstração 07') > $morePosition);
         $response->assertSee('<summary>Mostrar 2 demandas</summary>', false)
             ->assertSee('data-kanban-expand-all', false)
             ->assertSee('data-kanban-collapse-all', false)
+            ->assertSee("addEventListener('toggle', syncButtons)", false)
             ->assertSee('document.querySelectorAll', false)
             ->assertSee('Expandir todas as etapas')
             ->assertSee('Recolher todas as etapas');

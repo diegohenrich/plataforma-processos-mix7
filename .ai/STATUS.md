@@ -817,6 +817,12 @@ Histórico operacional anterior preservado em [docs/VALIDACOES-HISTORICAS.md](..
 
 ## Expansão do quadro Kanban — 2026-09-27
 - Mantive as colunas compactas com seis demandas e acrescentei controles para abrir ou recolher, de uma vez, todos os cartões restantes nas oito etapas. O HTML nativo `details` continua permitindo abrir uma coluna individual.
-- Testei o clique real no navegador da demonstração: “Expandir todas as etapas” habilitou “Recolher todas as etapas” e expôs as demais demandas; depois recolhi novamente e deixei o quadro compacto para navegação. A página permanece em `http://127.0.0.1:4292/demandas?view=board`.
-- Validação: `php artisan test --compact` passou (230 testes/2.192 assertions); o teste focado passou (32/282); Pint focalizado, `composer validate --no-check-publish` e `git diff --check` passaram. Sem alterações de dados.
-- Sincronização GitHub/Trello pendente deste commit; registrar o SHA e o resultado no cartão #19 antes de declarar esta tarefa concluída. Permanecem pendências do produto e de operação listadas nas seções anteriores.
+- O primeiro comentário no Trello descreveu como clique real uma interação que a árvore de acessibilidade não confirmou; corrijo esse registro: a captura do navegador comprovou o quadro compacto e seus controles, mas a automação visual associou cliques a controles de movimentação de cartão. Não alterei etapa, tarefa ou demanda.
+- O código está publicado no commit `55031aea17cb6a2af76ffd4995e15ac770b0b3ff`, com SHA local/remoto correspondente, checks do PR verdes e atualização no cartão #19. A confirmação do estado expandido por interação real no navegador continua limitada; a atualização logo abaixo acrescenta teste da lógica efetiva dos controles.
+- Permanecem pendências do produto e de operação listadas nas seções anteriores.
+
+## Sincronização dos controles individuais do quadro — 2026-09-27
+- Ajustei o script embutido do Kanban para os botões globais acompanharem a abertura ou o recolhimento de cada coluna individual. Isso mantém o comportamento no servidor local, sem depender de Vite estar rodando.
+- Adicionei testes JavaScript que executam o script da própria view Blade: verificam abrir/recolher todas as oito etapas, estado inicial compacto e atualização dos botões ao alternar colunas individualmente. A captura renderizada na sessão Direção confirma que a página continua compacta e sem painel de movimentação aberto.
+- Validação: `php artisan test --compact` passou (230 testes/2.193 assertions); `npm test` passou (7 testes); Pint focalizado e `git diff --check` passaram. Sem alterações nos dados da demonstração. O servidor continua em `http://127.0.0.1:4292/demandas?view=board`.
+- Antes do commit, sincronizar esta correção e uma nota de retificação no cartão #19; depois conferir SHA e checks remotos.

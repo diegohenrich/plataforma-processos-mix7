@@ -33,8 +33,8 @@
             @elseif ($isBoard)
                 @if ($canMoveDemands)<p class="kanban-hint">Arraste um cartão para uma etapa permitida ou use o controle “Mover para”. A revisão interna só é liberada quando todas as tarefas terminam.</p>@endif
                 <div class="kanban-display-actions" aria-label="Controles de exibição do quadro">
-                    <button type="button" data-kanban-expand-all onclick="document.querySelectorAll('[data-kanban-more]').forEach((column) => { column.open = true; }); this.disabled = true; document.querySelector('[data-kanban-collapse-all]').disabled = false;">Expandir todas as etapas</button>
-                    <button type="button" data-kanban-collapse-all disabled onclick="document.querySelectorAll('[data-kanban-more]').forEach((column) => { column.open = false; }); this.disabled = true; document.querySelector('[data-kanban-expand-all]').disabled = false;">Recolher todas as etapas</button>
+                    <button type="button" data-kanban-expand-all>Expandir todas as etapas</button>
+                    <button type="button" data-kanban-collapse-all>Recolher todas as etapas</button>
                 </div>
                 <section class="kanban-board" aria-label="Quadro de demandas por etapa">
                     @foreach (App\Enums\DemandStatus::cases() as $stage)
@@ -140,6 +140,26 @@
                 form.requestSubmit();
             });
         });
+    </script>
+@endif
+@if ($isBoard)
+    <script>
+        (() => {
+            const columns = [...document.querySelectorAll('[data-kanban-more]')];
+            const expandButton = document.querySelector('[data-kanban-expand-all]');
+            const collapseButton = document.querySelector('[data-kanban-collapse-all]');
+            if (!columns.length || !expandButton || !collapseButton) return;
+
+            const syncButtons = () => {
+                expandButton.disabled = columns.every((column) => column.open);
+                collapseButton.disabled = columns.every((column) => !column.open);
+            };
+
+            expandButton.addEventListener('click', () => columns.forEach((column) => { column.open = true; }));
+            collapseButton.addEventListener('click', () => columns.forEach((column) => { column.open = false; }));
+            columns.forEach((column) => column.addEventListener('toggle', syncButtons));
+            syncButtons();
+        })();
     </script>
 @endif
 @endsection
