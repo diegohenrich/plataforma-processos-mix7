@@ -34,6 +34,8 @@ class DemandWorkflowTest extends TestCase
             ->post(route('demands.store'), [
                 'title' => 'Site institucional',
                 'brief' => 'Apresentar serviços para novos clientes.',
+                'intake_source' => 'WhatsApp',
+                'brief_author_id' => $professional->id,
                 'module_key' => 'website_review',
                 'tasks' => [
                     ['title' => 'Organizar referências', 'assignee_id' => $professional->id, 'estimate_minutes' => '90'],
@@ -45,11 +47,13 @@ class DemandWorkflowTest extends TestCase
         $demand = Demand::firstOrFail();
         $this->assertSame($organization->id, $demand->organization_id);
         $this->assertSame($manager->id, $demand->created_by);
+        $this->assertSame('WhatsApp', $demand->intake_source);
+        $this->assertSame($professional->id, $demand->brief_author_id);
         $this->assertSame(DemandStatus::Received, $demand->status);
         $this->assertSame(2, $demand->tasks()->count());
         $this->assertSame(3, $demand->events()->count());
         $this->assertDatabaseHas('demand_events', ['demand_id' => $demand->id, 'actor_id' => $manager->id, 'event_type' => 'task_assigned']);
-        $response = $this->get(route('demands.show', $demand))->assertOk()->assertSee('Tipo: Revisão de site')->assertSee('configuração v1');
+        $response = $this->get(route('demands.show', $demand))->assertOk()->assertSee('Tipo: Revisão de site')->assertSee('configuração v1')->assertSee('Como o pedido chegou')->assertSee('WhatsApp')->assertSee($professional->name)->assertSee('Quem preparou o briefing');
         $response->assertSee('<details class="panel history-panel">', false)
             ->assertSee('3 registros')
             ->assertSee($demand->events()->firstOrFail()->summary)

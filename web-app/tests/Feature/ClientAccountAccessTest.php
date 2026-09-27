@@ -65,10 +65,12 @@ class ClientAccountAccessTest extends TestCase
         $client = $this->client($organization, 'cliente@example.test');
         $otherClient = $this->client($organization, 'outra@example.test');
         $ownDemand = $this->demand($organization, $owner, ['client_user_id' => $client->id]);
+        $ownDemand->update(['intake_source' => 'WhatsApp', 'brief_author_id' => $this->professional($organization)->id]);
         $ownDemand->update(['ai_summary' => 'Resumo interno da equipe']);
         $this->demand($organization, $owner, ['title' => 'Demanda de outra conta', 'client_user_id' => $otherClient->id]);
         $this->demand($organization, $owner, ['title' => 'Demanda interna sem vínculo']);
         $task = $ownDemand->tasks()->create(['organization_id' => $organization->id, 'created_by' => $owner->id, 'assigned_to' => $this->professional($organization)->id, 'title' => 'Tarefa estritamente interna', 'description' => 'Detalhe confidencial', 'status' => TaskStatus::Todo]);
+        $briefAuthor = User::query()->findOrFail($ownDemand->brief_author_id);
 
         $this->actingAs($client)->get(route('demands.index'))
             ->assertOk()->assertSee('Site institucional')->assertDontSee('Demanda de outra conta')->assertDontSee('Demanda interna sem vínculo')->assertDontSee('Briefing estritamente interno')->assertDontSee('Resumo interno da equipe');
@@ -76,7 +78,7 @@ class ClientAccountAccessTest extends TestCase
             ->assertDontSee(route('approvals.index'), false)->assertDontSee(route('performance-reviews.index'), false);
         $this->get(route('demands.show', $ownDemand))->assertOk()
             ->assertSee('Etapa atual')->assertSee('Planejamento')
-            ->assertDontSee('Briefing estritamente interno')->assertDontSee('Resumo interno da equipe')->assertDontSee('Tarefa estritamente interna')->assertDontSee('Detalhe confidencial')->assertDontSee($owner->name);
+            ->assertDontSee('Briefing estritamente interno')->assertDontSee('Resumo interno da equipe')->assertDontSee('WhatsApp')->assertDontSee($briefAuthor->name)->assertDontSee('Tarefa estritamente interna')->assertDontSee('Detalhe confidencial')->assertDontSee($owner->name);
         $this->get(route('demands.show', $task->demand))->assertOk();
         $this->get(route('demands.show', Demand::query()->where('title', 'Demanda de outra conta')->firstOrFail()))->assertForbidden();
         $this->patch(route('demands.status', $ownDemand), ['status' => DemandStatus::Planning->value])->assertForbidden();
@@ -112,11 +114,13 @@ class ClientAccountAccessTest extends TestCase
         $response = $this->withToken($token)->getJson('/api/v1/demands')->assertOk()->assertJsonCount(1, 'data')
             ->assertJsonPath('data.0.title', 'Site institucional')
             ->assertJsonMissingPath('data.0.brief')
+            ->assertJsonMissingPath('data.0.intake_source')
+            ->assertJsonMissingPath('data.0.brief_author')
             ->assertJsonMissingPath('data.0.summary')
             ->assertJsonMissingPath('data.0.tasks');
         $this->assertStringNotContainsString('Tarefa escondida', $response->getContent());
         $this->assertStringNotContainsString('Privada de outro cliente', $response->getContent());
-        $this->withToken($token)->getJson('/api/v1/demands/'.$ownDemand->id)->assertOk()->assertJsonMissingPath('data.brief')->assertJsonMissingPath('data.summary')->assertJsonMissingPath('data.tasks');
+        $this->withToken($token)->getJson('/api/v1/demands/'.$ownDemand->id)->assertOk()->assertJsonMissingPath('data.brief')->assertJsonMissingPath('data.intake_source')->assertJsonMissingPath('data.brief_author')->assertJsonMissingPath('data.summary')->assertJsonMissingPath('data.tasks');
     }
 
     public function test_management_can_assign_only_active_client_from_same_organization_and_records_event(): void

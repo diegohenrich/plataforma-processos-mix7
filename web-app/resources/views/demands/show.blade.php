@@ -93,7 +93,7 @@
 
             <div class="detail-grid">
                 <div class="detail-main">
-                    <section class="panel"><div class="section-heading"><div><h2>Briefing</h2><p>O pedido original fica guardado na demanda.</p></div></div><div class="brief-text">{{ $demand->brief }}</div></section>
+                    <section class="panel"><div class="section-heading"><div><h2>Briefing</h2><p>O pedido original fica guardado na demanda.</p></div></div><dl class="brief-origin"><div><dt>Como o pedido chegou</dt><dd>{{ $demand->intake_source ?: 'Não informado' }}</dd></div><div><dt>Quem preparou o briefing</dt><dd>{{ $demand->briefAuthor?->name ?? 'Não identificado' }}</dd></div></dl><div class="brief-text">{{ $demand->brief }}</div></section>
                     @if (auth()->user()->role !== App\Enums\UserRole::Client)
                         @php $assistantConfigured = (config('services.ai_gateway.key') || config('services.ai_gateway.oidc_token') || (config('services.ai_gateway.provider') === 'openai-compatible' && config('services.ai_gateway.allow_unauthenticated'))) && config('services.ai_gateway.model'); @endphp
                         <section class="panel ai-assistant-panel" aria-labelledby="ai-assistant-heading">

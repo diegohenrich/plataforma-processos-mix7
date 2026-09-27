@@ -75,6 +75,12 @@ class DemandController extends Controller
             ->where('is_active', true)
             ->orderBy('name')
             ->get(['id', 'name']);
+        $briefAuthors = User::query()
+            ->where('organization_id', $request->user()->organization_id)
+            ->whereIn('role', [UserRole::AgencyOwner->value, UserRole::MarketingManager->value, UserRole::Professional->value])
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name', 'role']);
 
         $modules = collect(DemandModule::cases())->map(fn (DemandModule $module): array => [
             'key' => $module->value,
@@ -87,7 +93,7 @@ class DemandController extends Controller
             ->get(['key', 'label', 'fields', 'workflow_steps'])
             ->map(fn (DemandModuleDefinition $module): array => ['key' => $module->key, 'label' => $module->label, 'fields' => $module->fields ?? [], 'workflow_steps' => $module->workflow_steps ?? []]));
 
-        return view('demands.create', compact('professionals', 'clients', 'modules'));
+        return view('demands.create', compact('professionals', 'clients', 'briefAuthors', 'modules'));
     }
 
     public function store(Request $request): RedirectResponse|JsonResponse
@@ -101,6 +107,15 @@ class DemandController extends Controller
         $data = $request->validate([
             'title' => ['required', 'string', 'max:180'],
             'brief' => ['required', 'string', 'max:12000'],
+            'intake_source' => ['nullable', 'string', 'max:120'],
+            'brief_author_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('users', 'id')->where(fn ($query) => $query
+                    ->where('organization_id', $organizationId)
+                    ->whereIn('role', [UserRole::AgencyOwner->value, UserRole::MarketingManager->value, UserRole::Professional->value])
+                    ->where('is_active', true)),
+            ],
             'module_key' => ['required', 'string', Rule::in($allowedModuleKeys)],
             'client_user_id' => [
                 'nullable',
@@ -140,6 +155,8 @@ class DemandController extends Controller
                 'client_user_id' => $data['client_user_id'] ?? null,
                 'title' => $data['title'],
                 'brief' => $data['brief'],
+                'intake_source' => isset($data['intake_source']) ? trim($data['intake_source']) : null,
+                'brief_author_id' => $data['brief_author_id'] ?? null,
                 'module_key' => $data['module_key'],
                 'module_version' => $builtInModule?->version() ?? $customModule->config_version,
                 'module_label' => $builtInModule?->label() ?? $customModule->label,
@@ -205,6 +222,8 @@ class DemandController extends Controller
                 'data' => [
                     'id' => $demand->id,
                     'title' => $demand->title,
+                    'intake_source' => $demand->intake_source,
+                    'brief_author' => $demand->briefAuthor()->first(['id', 'name'])?->only(['id', 'name']),
                     'module' => ['key' => $demand->module_key, 'label' => $demand->moduleDisplayLabel(), 'version' => $demand->module_version],
                     'module_fields' => ['schema' => $demand->module_fields_schema ?? [], 'data' => $demand->module_fields_data ?? []],
                     'module_steps' => $demand->moduleSteps()->get(['key', 'label', 'position'])->map(fn ($step): array => ['key' => $step->key, 'label' => $step->label, 'position' => $step->position, 'completed' => false]),
@@ -255,7 +274,7 @@ class DemandController extends Controller
 
         return view('demands.show', [
             'currentUser' => $user,
-            'demand' => $demand->load(['creator:id,name', 'organization:id,name', 'client:id,name,email', 'attachments.uploader:id,name']),
+            'demand' => $demand->load(['creator:id,name', 'briefAuthor:id,name', 'organization:id,name', 'client:id,name,email', 'attachments.uploader:id,name']),
             'moduleSteps' => $demand->moduleSteps()->with('completer:id,name')->get(),
             'tasks' => $tasks,
             'scheduledTasks' => $tasks->filter(fn ($task) => $task->planned_start_on || $task->planned_due_on)->values(),

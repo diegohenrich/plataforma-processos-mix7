@@ -1,3 +1,9 @@
+## Origem do pedido e autoria do briefing — 2026-09-27
+- A criação web/API agora registra opcionalmente como o pedido chegou e qual conta interna ativa preparou o briefing, separado de quem cadastrou a demanda. O detalhe interno mostra os dados ou “Não informado/Não identificado”; API da equipe inclui canal e autoria, enquanto telas e API de cliente não recebem os campos. O autor é validado como pessoa interna ativa da mesma organização.
+- Atualizei `REQUIREMENTS.md`, `TRACEABILIDADE-AUDIOS.md`, `AUDITORIA-FUNCIONAL-POR-PERFIL.md`, `API.md` e a memória `.ai/`.
+- Testes focados de criação, autoria válida na organização e privacidade do cliente passaram; suíte completa passou (203 testes/1.867 assertions). `composer validate --no-check-publish`, `npm run build`, `php artisan view:cache`, `view:clear` e Pint nos arquivos PHP alterados passaram. Pint geral reportou apenas 5 arquivos preexistentes fora desta alteração; a inspeção visual autenticada dos novos campos ainda está pendente.
+- GitHub será sincronizado neste fechamento de tarefa. Trello segue pendente: a política do navegador bloqueia a navegação e o cartão #35 com rascunho não salvo permanece preservado.
+
 ## Checklists internos configuráveis por tipo de aprovação — 2026-09-27
 - Direção/gerência podem configurar até 20 etapas de conferência em tipos adicionais. Cada nova demanda guarda uma cópia imutável da lista; marcar/reabrir registra autor, data e evento. A lista fica restrita à equipe autorizada e não altera nem bloqueia o estado principal. Regras de transição, aprovadores, validações e evidências obrigatórias próprias continuam pendentes de exemplos reais da Mix7.
 - Corrigi a auditoria por perfil, que ainda afirmava que não existiam etapas próprias. O documento agora distingue o checklist implementado das regras de transição e aprovação ainda não configuráveis.

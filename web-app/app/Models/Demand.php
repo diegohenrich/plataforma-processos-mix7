@@ -13,7 +13,7 @@ class Demand extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['organization_id', 'created_by', 'client_user_id', 'title', 'brief', 'ai_summary', 'module_key', 'module_version', 'module_label', 'module_fields_schema', 'module_fields_data', 'status'];
+    protected $fillable = ['organization_id', 'created_by', 'client_user_id', 'title', 'brief', 'intake_source', 'brief_author_id', 'ai_summary', 'module_key', 'module_version', 'module_label', 'module_fields_schema', 'module_fields_data', 'status'];
 
     protected function casts(): array
     {
@@ -48,6 +48,11 @@ class Demand extends Model
     public function client(): BelongsTo
     {
         return $this->belongsTo(User::class, 'client_user_id');
+    }
+
+    public function briefAuthor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'brief_author_id');
     }
 
     public function tasks(): HasMany

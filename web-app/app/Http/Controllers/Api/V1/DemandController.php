@@ -26,6 +26,7 @@ class DemandController extends Controller
             ->when($user->role === UserRole::Client, fn (Builder $query) => $query->where('client_user_id', $user->id))
             ->with([
                 'creator:id,name',
+                'briefAuthor:id,name',
                 'moduleSteps.completer:id,name',
                 'tasks' => fn ($tasks) => $tasks
                     ->with('assignee:id,name')
@@ -49,6 +50,8 @@ class DemandController extends Controller
                     'id' => $demand->id,
                     'title' => $demand->title,
                     'brief' => $demand->brief,
+                    'intake_source' => $demand->intake_source,
+                    'brief_author' => $demand->briefAuthor?->only(['id', 'name']),
                     'summary' => $demand->ai_summary,
                     'module' => $this->moduleData($demand),
                     'module_fields' => ['schema' => $demand->module_fields_schema ?? [], 'data' => $demand->module_fields_data ?? []],
@@ -92,6 +95,8 @@ class DemandController extends Controller
                 'id' => $demand->id,
                 'title' => $demand->title,
                 'brief' => $demand->brief,
+                'intake_source' => $demand->intake_source,
+                'brief_author' => $demand->briefAuthor()->first(['id', 'name'])?->only(['id', 'name']),
                 'summary' => $demand->ai_summary,
                 'module' => $this->moduleData($demand),
                 'module_fields' => ['schema' => $demand->module_fields_schema ?? [], 'data' => $demand->module_fields_data ?? []],

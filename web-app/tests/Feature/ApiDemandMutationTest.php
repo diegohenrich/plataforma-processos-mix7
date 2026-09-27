@@ -25,6 +25,8 @@ class ApiDemandMutationTest extends TestCase
             ->postJson('/api/v1/demands', [
                 'title' => 'Site institucional',
                 'brief' => 'Briefing sintético para o site.',
+                'intake_source' => 'E-mail',
+                'brief_author_id' => $professional->id,
                 'module_key' => 'website_review',
                 'client_user_id' => $client->id,
                 'tasks' => [
@@ -35,6 +37,9 @@ class ApiDemandMutationTest extends TestCase
 
         $response->assertCreated()
             ->assertJsonPath('data.title', 'Site institucional')
+            ->assertJsonPath('data.intake_source', 'E-mail')
+            ->assertJsonPath('data.brief_author.id', $professional->id)
+            ->assertJsonPath('data.brief_author.name', $professional->name)
             ->assertJsonPath('data.status', DemandStatus::Received->value)
             ->assertJsonPath('data.module.key', 'website_review')
             ->assertJsonPath('data.module.label', 'Revisão de site')
@@ -50,7 +55,11 @@ class ApiDemandMutationTest extends TestCase
         $this->assertSame('website_review', $demand->module_key);
         $this->assertSame(1, $demand->module_version);
         $this->authenticate($token)->getJson("/api/v1/demands/{$demand->id}")
-            ->assertOk()->assertJsonPath('data.module.key', 'website_review')->assertJsonPath('data.module.version', 1);
+            ->assertOk()
+            ->assertJsonPath('data.module.key', 'website_review')
+            ->assertJsonPath('data.module.version', 1)
+            ->assertJsonPath('data.intake_source', 'E-mail')
+            ->assertJsonPath('data.brief_author.id', $professional->id);
         $this->assertDatabaseHas('demand_events', [
             'demand_id' => $demand->id,
             'actor_id' => $owner->id,
@@ -62,6 +71,28 @@ class ApiDemandMutationTest extends TestCase
             'event_type' => 'demand_client_assigned',
         ]);
         $this->assertSame(2, DemandTask::query()->where('demand_id', $demand->id)->count());
+    }
+
+    public function test_demand_creation_rejects_brief_author_outside_active_internal_team(): void
+    {
+        [, $owner, $professional, , $client] = $this->workspace();
+        [, , $outsideProfessional] = $this->workspace('outside');
+        $base = [
+            'title' => 'Demanda de teste',
+            'brief' => 'Briefing sintético.',
+            'module_key' => 'social_creative',
+            'tasks' => [['title' => 'Criar peça', 'assignee_id' => $professional->id]],
+        ];
+        $token = $owner->createToken('desktop')->plainTextToken;
+
+        foreach ([$outsideProfessional->id, $client->id] as $invalidAuthorId) {
+            $this->authenticate($token)->postJson('/api/v1/demands', [
+                ...$base,
+                'brief_author_id' => $invalidAuthorId,
+            ])->assertUnprocessable()->assertJsonValidationErrors('brief_author_id');
+        }
+
+        $this->assertSame(0, Demand::query()->count());
     }
 
     public function test_demand_creation_rejects_unauthorized_profiles_and_cross_organization_assignments(): void
