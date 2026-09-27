@@ -25,6 +25,16 @@
             </section>
 
             <section class="panel team-panel">
+                <div class="section-heading"><div><h2>Adicionar gerente de marketing</h2><p>A pessoa terá acesso às rotinas de operação autorizadas para a gerência.</p></div></div>
+                <form method="post" action="{{ route('team-invitations.store') }}" class="team-form">@csrf<input type="hidden" name="role" value="marketing_manager">
+                    <label class="field">Nome<input name="name" value="{{ old('name') }}" maxlength="160" required autocomplete="name">@error('name')<span class="error">{{ $message }}</span>@enderror</label>
+                    <label class="field">E-mail de acesso<input name="email" type="email" value="{{ old('email') }}" maxlength="255" required autocomplete="email">@error('email')<span class="error">{{ $message }}</span>@enderror</label>
+                    <p class="field-help">O convite vence em 72 horas. A pessoa cria a própria senha ao ativar a conta.</p>
+                    <div class="form-actions"><button class="primary-button" type="submit">Enviar convite de gerente</button></div>
+                </form>
+            </section>
+
+            <section class="panel team-panel">
                 <div class="section-heading"><div><h2>Adicionar cliente</h2><p>O cliente acompanhará apenas as demandas que a equipe vincular a esta conta.</p></div></div>
                 <form method="post" action="{{ route('team-invitations.store') }}" class="team-form">@csrf<input type="hidden" name="role" value="client">
                     <label class="field">Nome<input name="name" value="{{ old('name') }}" maxlength="160" required autocomplete="name">@error('name')<span class="error">{{ $message }}</span>@enderror</label>
@@ -39,6 +49,14 @@
                 @forelse ($invitations as $invitation)
                     <article class="team-row"><span class="avatar" aria-hidden="true">{{ mb_strtoupper(mb_substr($invitation->name, 0, 1)) }}</span><div><strong>{{ $invitation->name }} · {{ $invitation->role->label() }}</strong><span>{{ $invitation->email }} · expira {{ $invitation->expires_at->format('d/m/Y H:i') }}</span></div><form method="post" action="{{ route('team-invitations.revoke', $invitation) }}">@csrf @method('DELETE')<button class="secondary-button" type="submit">Cancelar convite</button></form></article>
                 @empty<p class="empty-inline">Nenhum convite aguardando ativação.</p>@endforelse
+            </section>
+
+            <section class="panel team-panel">
+                <div class="section-heading"><div><h2>Gerentes cadastrados <span class="count-badge">{{ $managers->total() }}</span></h2><p>Contas de gerência desta organização.</p></div></div>
+                @forelse ($managers as $manager)
+                    <article class="team-row"><span class="avatar" aria-hidden="true">{{ mb_strtoupper(mb_substr($manager->name, 0, 1)) }}</span><div><strong>{{ $manager->name }}</strong><span>{{ $manager->email }}</span></div><span class="pill {{ $manager->is_active ? 'pill-completed' : 'pill-blocked' }}">{{ $manager->is_active ? 'Ativo' : 'Desativado' }}</span><form method="post" action="{{ route('team.members.access', $manager) }}">@csrf @method('PATCH')<button class="secondary-button" type="submit">{{ $manager->is_active ? 'Desativar acesso' : 'Restaurar acesso' }}</button></form></article>
+                @empty<p class="empty-inline">Nenhum gerente cadastrado ainda.</p>@endforelse
+                <div class="pagination-wrap">{{ $managers->links() }}</div>
             </section>
 
             <section class="panel team-panel">
@@ -64,7 +82,7 @@
                 @empty<p class="empty-inline">Nenhuma alteração de acesso registrada.</p>@endforelse
             </section>
 
-            <p class="footnote">Somente a direção pode convidar, desativar e restaurar profissionais e clientes desta organização. Tarefas abertas permanecem atribuídas quando o acesso é desativado; revise e transfira o trabalho antes do desligamento definitivo. Aprovações continuam por link, sem exigir conta.</p>
+            <p class="footnote">Somente a direção pode convidar, desativar e restaurar gerentes, profissionais e clientes desta organização. Tarefas abertas permanecem atribuídas quando o acesso é desativado; revise e transfira o trabalho antes do desligamento definitivo. Aprovações continuam por link, sem exigir conta.</p>
         </div>
     </main>
 </div>

@@ -26,7 +26,11 @@ class TeamInvitationController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:160'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')],
-            'role' => ['required', Rule::in([UserRole::Professional->value, UserRole::Client->value])],
+            'role' => ['required', Rule::in([
+                UserRole::MarketingManager->value,
+                UserRole::Professional->value,
+                UserRole::Client->value,
+            ])],
         ]);
 
         $organizationId = $request->user()->organization_id;

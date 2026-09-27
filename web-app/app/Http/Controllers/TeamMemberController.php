@@ -18,6 +18,11 @@ class TeamMemberController extends Controller
     public function index(Request $request): View
     {
         $this->authorize('viewAny', User::class);
+        $managers = User::query()
+            ->where('organization_id', $request->user()->organization_id)
+            ->where('role', UserRole::MarketingManager->value)
+            ->orderBy('name')
+            ->paginate(20, ['*'], 'managers_page');
         $professionals = User::query()
             ->where('organization_id', $request->user()->organization_id)
             ->where('role', UserRole::Professional->value)
@@ -44,7 +49,7 @@ class TeamMemberController extends Controller
             ->limit(50)
             ->get();
 
-        return view('team.index', compact('professionals', 'clients', 'invitations', 'accessEvents'));
+        return view('team.index', compact('managers', 'professionals', 'clients', 'invitations', 'accessEvents'));
     }
 
     public function updateAccess(Request $request, User $member, TeamMemberAccessManager $accessManager): RedirectResponse

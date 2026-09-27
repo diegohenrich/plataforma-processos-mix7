@@ -15,14 +15,15 @@ class ApiTeamMemberManagementTest extends TestCase
 
     public function test_owner_lists_only_organization_professionals_and_clients_with_access_state(): void
     {
-        [$organization, $owner, $professional, $client] = $this->workspace();
+        [$organization, $owner, $professional, $client, $manager] = $this->workspace();
         $professional->update(['is_active' => false]);
         $this->workspace('outside');
 
         $this->actingAs($owner)->getJson('/api/v1/team/members')
-            ->assertOk()->assertJsonCount(2, 'data')
+            ->assertOk()->assertJsonCount(3, 'data')
             ->assertJsonFragment(['id' => $professional->id, 'role' => 'professional', 'is_active' => false])
             ->assertJsonFragment(['id' => $client->id, 'role' => 'client', 'is_active' => true])
+            ->assertJsonFragment(['id' => $manager->id, 'role' => 'marketing_manager', 'is_active' => true])
             ->assertJsonMissing(['id' => $owner->id]);
         $this->assertSame($organization->id, $professional->fresh()->organization_id);
     }

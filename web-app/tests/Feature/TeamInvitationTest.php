@@ -33,6 +33,14 @@ class TeamInvitationTest extends TestCase
         $this->assertDatabaseMissing('users', ['email' => $invite->email]);
         Notification::assertSentOnDemand(TeamInvitationNotification::class);
 
+        $this->actingAs($owner)->post(route('team-invitations.store'), [
+            'name' => 'Nova Gerente', 'email' => ' GERENTE@EXEMPLO.COM ', 'role' => UserRole::MarketingManager->value,
+        ])->assertRedirect(route('team.index'))->assertSessionHasNoErrors();
+
+        $managerInvitation = TeamInvitation::query()->where('email', 'gerente@exemplo.com')->firstOrFail();
+        $this->assertSame(UserRole::MarketingManager, $managerInvitation->role);
+        $this->assertSame($owner->id, $managerInvitation->invited_by);
+
         $manager = User::factory()->create(['organization_id' => $organization->id, 'role' => UserRole::MarketingManager, 'is_active' => true]);
         $this->actingAs($manager)->post(route('team-invitations.store'), [
             'name' => 'Negado', 'email' => 'negado@example.test', 'role' => UserRole::Client->value,
@@ -41,6 +49,53 @@ class TeamInvitationTest extends TestCase
         $this->actingAs($owner)->post(route('team-invitations.store'), [
             'name' => 'Papel inválido', 'email' => 'bad-role@example.test', 'role' => UserRole::AgencyOwner->value,
         ])->assertSessionHasErrors('role');
+    }
+
+    public function test_invited_manager_activates_an_account_with_the_manager_role(): void
+    {
+        Notification::fake();
+        [, $owner] = $this->workspace();
+
+        $this->actingAs($owner)->post(route('team-invitations.store'), [
+            'name' => 'Gerente Mix7',
+            'email' => 'gerente@example.test',
+            'role' => UserRole::MarketingManager->value,
+        ])->assertRedirect(route('team.index'));
+
+        $token = Notification::sent(new AnonymousNotifiable, TeamInvitationNotification::class)->first()->token;
+        $this->get(route('team-invitations.show', $token))->assertOk()->assertSee('Gerente Mix7');
+        $this->post(route('team-invitations.accept', $token), [
+            'password' => 'senha-gerente-segura',
+            'password_confirmation' => 'senha-gerente-segura',
+        ])->assertRedirect(route('dashboard'));
+
+        $this->assertDatabaseHas('users', [
+            'email' => 'gerente@example.test',
+            'role' => UserRole::MarketingManager->value,
+            'is_active' => true,
+        ]);
+        $this->assertNotNull(TeamInvitation::query()->where('email', 'gerente@example.test')->firstOrFail()->fresh()->accepted_at);
+    }
+
+    public function test_owner_can_issue_a_manager_invitation_link_through_the_api(): void
+    {
+        Notification::fake();
+        [, $owner] = $this->workspace();
+
+        $response = $this->actingAs($owner)->postJson('/api/v1/team/invitations', [
+            'name' => 'Gerente via API',
+            'email' => 'gerente-api@example.test',
+            'role' => UserRole::MarketingManager->value,
+        ])->assertCreated()->assertJsonPath('data.role', UserRole::MarketingManager->value);
+
+        $token = basename(parse_url($response->json('data.invitation_url'), PHP_URL_PATH));
+        $this->assertDatabaseHas('team_invitations', [
+            'email' => 'gerente-api@example.test',
+            'role' => UserRole::MarketingManager->value,
+            'token_hash' => hash('sha256', $token),
+        ]);
+        $this->assertDatabaseMissing('users', ['email' => 'gerente-api@example.test']);
+        Notification::assertNothingSent();
     }
 
     public function test_owner_can_issue_a_hashed_manual_invitation_link_without_email_and_revoke_it(): void

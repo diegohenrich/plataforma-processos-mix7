@@ -42,7 +42,7 @@ class ApiTeamMemberAccessTest extends TestCase
         $this->assertDatabaseHas('team_member_events', ['member_id' => $professional->id, 'actor_id' => $owner->id, 'event_type' => 'access_restored']);
     }
 
-    public function test_only_owner_can_change_access_for_same_organization_professionals_and_clients(): void
+    public function test_only_owner_can_change_access_for_same_organization_members_but_not_self_or_other_organizations(): void
     {
         [$organization, $owner, $professional, $client, $manager] = $this->workspace();
         [, , $outsideProfessional] = $this->workspace('outside');
@@ -50,12 +50,19 @@ class ApiTeamMemberAccessTest extends TestCase
         $this->actingAs($manager)->patchJson("/api/v1/team/members/{$professional->id}/access")->assertForbidden();
         $this->actingAs($professional)->patchJson("/api/v1/team/members/{$client->id}/access")->assertForbidden();
         $this->actingAs($owner)->patchJson("/api/v1/team/members/{$owner->id}/access")->assertForbidden();
-        $this->actingAs($owner)->patchJson("/api/v1/team/members/{$manager->id}/access")->assertForbidden();
+        $this->actingAs($owner)->patchJson("/api/v1/team/members/{$manager->id}/access")
+            ->assertOk()->assertJsonPath('data.is_active', false)->assertJsonPath('data.access', 'revoked');
         $this->actingAs($owner)->patchJson("/api/v1/team/members/{$outsideProfessional->id}/access")->assertNotFound();
 
         $this->assertTrue($professional->fresh()->is_active);
         $this->assertTrue($client->fresh()->is_active);
-        $this->assertSame(0, TeamMemberEvent::query()->count());
+        $this->assertFalse($manager->fresh()->is_active);
+        $this->assertDatabaseHas('team_member_events', [
+            'member_id' => $manager->id,
+            'actor_id' => $owner->id,
+            'event_type' => 'access_revoked',
+        ]);
+        $this->assertSame(1, TeamMemberEvent::query()->count());
     }
 
     private function workspace(string $slug = 'mix7'): array

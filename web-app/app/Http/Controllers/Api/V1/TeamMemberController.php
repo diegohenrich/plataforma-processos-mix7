@@ -17,7 +17,7 @@ class TeamMemberController extends Controller
         $this->authorize('viewAny', User::class);
         $members = User::query()
             ->where('organization_id', $request->user()->organization_id)
-            ->whereIn('role', [UserRole::Professional->value, UserRole::Client->value])
+            ->whereIn('role', [UserRole::MarketingManager->value, UserRole::Professional->value, UserRole::Client->value])
             ->orderBy('role')->orderBy('name')->limit(200)->get(['id', 'name', 'email', 'role', 'is_active', 'created_at']);
 
         return response()->json(['data' => $members->map(fn (User $member) => [

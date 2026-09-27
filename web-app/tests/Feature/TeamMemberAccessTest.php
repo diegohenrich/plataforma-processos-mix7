@@ -81,7 +81,7 @@ class TeamMemberAccessTest extends TestCase
         $this->actingAs($client->fresh())->get(route('dashboard'))->assertRedirect(route('login'));
     }
 
-    public function test_only_owner_can_change_access_for_same_organization_professionals_and_clients(): void
+    public function test_only_owner_can_change_access_for_same_organization_members_but_not_self_or_other_organizations(): void
     {
         [$organization, $owner, $professional, $client, $manager] = $this->workspace();
         [, , $outsideProfessional] = $this->workspace('outside');
@@ -89,11 +89,38 @@ class TeamMemberAccessTest extends TestCase
         $this->actingAs($manager)->patch(route('team.members.access', $professional))->assertForbidden();
         $this->actingAs($owner)->patch(route('team.members.access', $outsideProfessional))->assertNotFound();
         $this->actingAs($owner)->patch(route('team.members.access', $owner))->assertForbidden();
-        $this->actingAs($owner)->patch(route('team.members.access', $manager))->assertForbidden();
 
         $this->assertTrue($professional->fresh()->is_active);
         $this->assertTrue($client->fresh()->is_active);
         $this->assertSame(0, TeamMemberEvent::query()->count());
+    }
+
+    public function test_owner_can_suspend_and_restore_a_manager_with_audit_events(): void
+    {
+        [, $owner, , , $manager] = $this->workspace();
+
+        $this->actingAs($owner)->from(route('team.index'))->patch(route('team.members.access', $manager))
+            ->assertRedirect(route('team.index'));
+
+        $this->assertFalse($manager->fresh()->is_active);
+        $this->assertDatabaseHas('team_member_events', [
+            'member_id' => $manager->id,
+            'actor_id' => $owner->id,
+            'event_type' => 'access_revoked',
+        ]);
+
+        $this->actingAs($owner)->from(route('team.index'))->patch(route('team.members.access', $manager))
+            ->assertRedirect(route('team.index'));
+
+        $this->assertTrue($manager->fresh()->is_active);
+        $this->assertDatabaseHas('team_member_events', [
+            'member_id' => $manager->id,
+            'actor_id' => $owner->id,
+            'event_type' => 'access_restored',
+        ]);
+        $this->actingAs($owner)->get(route('team.index'))->assertOk()
+            ->assertSee('Gerentes cadastrados')
+            ->assertSee($manager->name);
     }
 
     public function test_owner_can_set_professional_specialties_and_other_roles_cannot(): void

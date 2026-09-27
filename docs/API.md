@@ -27,7 +27,7 @@ Usuários internos ativos podem emitir e revogar seus próprios tokens em `/inte
 | `DELETE /team/service-access/requests/{request}` | Vazio | A pessoa retira somente a própria solicitação pendente |
 | `POST /team/service-access/requests/{request}/decision` | `status` (`granted` ou `denied`) | Somente direção da organização decide; a ação deve ser executada também no serviço externo |
 | `POST /team/service-access/requests/{request}/revoke` | Vazio | Direção registra revogação para acesso concedido; revogação no serviço externo continua manual |
-| `GET /team/members` | Lista contas profissionais e clientes da agência, com papel e estado de acesso | Somente direção; no máximo 200 registros, sem contas de direção/gerência ou de outras organizações |
+| `GET /team/members` | Lista contas de gerência, profissionais e clientes da agência, com papel e estado de acesso | Somente direção; no máximo 200 registros, sem contas de direção ou de outras organizações |
 | `GET /team/invitations` | Lista convites pendentes e ainda válidos, sem segredo/token | Somente direção; resposta sem cache e filtrada pela organização |
 | `GET /knowledge` | Lista conteúdo ativo da biblioteca; aceita filtros opcionais `type` e `q` | Direção, gerência e profissionais ativos da própria organização; clientes não têm acesso |
 | `POST /knowledge` | Cria referência, treinamento, contato ou trilha de onboarding | Direção/gerência; conteúdo pertence à própria organização e a trilha exige ao menos uma etapa |
@@ -44,9 +44,9 @@ Usuários internos ativos podem emitir e revogar seus próprios tokens em `/inte
 | `POST /demands/{demand}/delivery-evidences` | `{"outcome":"published","evidence_url":"https://…"}` ou observação `details` | Direção/gerência na etapa Entrega ou depois; registra autoria e histórico sem publicar conteúdo nem mover a etapa |
 | `POST /demands/{demand}/review-links` | `material_url` ou `material_file`, mais `expires_at` | Direção/gerência na Aprovação do cliente; cria versão, revoga versões abertas anteriores e retorna a URL secreta somente uma vez |
 | `DELETE /demands/{demand}/review-links/{reviewLink}` | Vazio | Direção/gerência da mesma organização; revoga o link imediatamente |
-| `POST /team/invitations` | `name`, `email`, `role` (`professional` ou `client`) | Somente direção; cria link de ativação por 72 horas sem enviar e-mail; retorna URL secreta uma vez |
+| `POST /team/invitations` | `name`, `email`, `role` (`marketing_manager`, `professional` ou `client`) | Somente direção; cria link de ativação por 72 horas sem enviar e-mail; retorna URL secreta uma vez |
 | `DELETE /team/invitations/{invitation}` | Vazio | Somente direção da mesma organização; cancela o link pendente |
-| `PATCH /team/members/{member}/access` | Alterna entre desativar e restaurar o acesso | Somente direção da mesma organização para contas profissionais ou clientes; revoga tokens/sessões e encerra timer ao desativar |
+| `PATCH /team/members/{member}/access` | Alterna entre desativar e restaurar o acesso | Somente direção da mesma organização para contas de gerência, profissionais ou clientes; revoga tokens/sessões e encerra timer ao desativar |
 | `POST /team/performance-reviews` | `task_id`, `deadline_assessment`, `quality_assessment`, `evidence?`, `external_factors?` | Direção/gerência registra avaliação de tarefa concluída da organização; o sistema aplica peso 2/1 e impede duplicata do mesmo avaliador (HTTP `409`) |
 | `POST /team/performance-reviews/{review}/responses` | `response` | Só a pessoa profissional avaliada, enquanto ativa e na mesma organização, pode registrar resposta ligada ao histórico |
 
