@@ -140,6 +140,8 @@ class DemandReviewLinkTest extends TestCase
         $this->assertStringNotContainsString($token, $link->token_hash);
 
         $this->get(route('client-reviews.show', $token))->assertOk()
+            ->assertHeader('Cache-Control', 'no-store, private')
+            ->assertHeader('Referrer-Policy', 'no-referrer')
             ->assertSee('Site institucional')
             ->assertSee('https://preview.example.test/site-v1')
             ->assertDontSee('Briefing privado do teste')
@@ -147,7 +149,10 @@ class DemandReviewLinkTest extends TestCase
             ->assertDontSee('Orçamento interno')
             ->assertDontSee('R$ 9.999');
         $this->getJson('/api/v1/public/reviews/'.$token)
-            ->assertOk()->assertJsonMissingPath('data.module_fields')->assertJsonMissing(['R$ 9.999']);
+            ->assertOk()
+            ->assertHeader('Cache-Control', 'no-store, private')
+            ->assertHeader('Referrer-Policy', 'no-referrer')
+            ->assertJsonMissingPath('data.module_fields')->assertJsonMissing(['R$ 9.999']);
     }
 
     public function test_manager_can_send_review_link_by_email_without_requiring_client_account(): void
@@ -564,7 +569,9 @@ class DemandReviewLinkTest extends TestCase
         $firstLink = $demand->reviewLinks()->firstOrFail();
         $secondToken = $this->createLink($manager, $demand, 'https://preview.example.test/v2');
         $this->assertNotNull($firstLink->fresh()->revoked_at);
-        $this->get(route('client-reviews.show', $firstToken))->assertStatus(410);
+        $this->get(route('client-reviews.show', $firstToken))->assertStatus(410)
+            ->assertHeader('Cache-Control', 'no-store, private')
+            ->assertHeader('Referrer-Policy', 'no-referrer');
 
         $secondLink = $demand->reviewLinks()->where('version', 2)->firstOrFail();
         $secondLink->update(['expires_at' => now()->subMinute()]);

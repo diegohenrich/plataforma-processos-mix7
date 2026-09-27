@@ -159,19 +159,22 @@ class DemandReviewController extends Controller
     {
         $reviewLink = $this->findLink($token);
         if ($reviewLink->revoked_at !== null || $reviewLink->expires_at->isPast()) {
-            return response()->view('client-reviews.unavailable', status: 410);
+            return response()->view('client-reviews.unavailable', status: 410)
+                ->withHeaders($this->publicReviewHeaders());
         }
         $reviewLink->load('responses');
         $hasDecision = $reviewLink->responses->contains(fn (DemandReviewResponse $response): bool => in_array($response->type, ['approved', 'changes_requested'], true));
         if ($reviewLink->demand->status !== DemandStatus::ClientApproval && ! $hasDecision) {
-            return response()->view('client-reviews.unavailable', status: 410);
+            return response()->view('client-reviews.unavailable', status: 410)
+                ->withHeaders($this->publicReviewHeaders());
         }
 
         $materialUrl = $reviewLink->material_file_path
             ? route('client-reviews.material', ['token' => $token])
             : $reviewLink->material_url;
 
-        return view('client-reviews.show', compact('reviewLink', 'hasDecision', 'materialUrl'));
+        return response()->view('client-reviews.show', compact('reviewLink', 'hasDecision', 'materialUrl'))
+            ->withHeaders($this->publicReviewHeaders());
     }
 
     public function showApi(string $token): JsonResponse
@@ -200,7 +203,7 @@ class DemandReviewController extends Controller
                     'created_at' => $response->created_at?->toISOString(),
                 ])->values(),
             ],
-        ])->header('Cache-Control', 'private, no-store');
+        ])->withHeaders($this->publicReviewHeaders());
     }
 
     public function material(Request $request, string $token): BinaryFileResponse
@@ -337,7 +340,7 @@ class DemandReviewController extends Controller
                     'anchor_data' => $response->anchor_data,
                     'created_at' => $response->created_at?->toISOString(),
                 ],
-            ], 201)->header('Cache-Control', 'private, no-store');
+            ], 201)->withHeaders($this->publicReviewHeaders());
         }
 
         return back()->with('success', 'Sua resposta foi registrada. Obrigado pela revisão.');
@@ -351,6 +354,15 @@ class DemandReviewController extends Controller
         }
 
         return $query->firstOrFail();
+    }
+
+    /** @return array<string, string> */
+    private function publicReviewHeaders(): array
+    {
+        return [
+            'Cache-Control' => 'private, no-store',
+            'Referrer-Policy' => 'no-referrer',
+        ];
     }
 
     private function notifyDemandTeam(Demand $demand, DemandReviewLink $reviewLink, DemandReviewResponse $response): void

@@ -54,7 +54,7 @@ Cada `fields[]` de um tipo adicional informa `key`, `label`, `type`, `required` 
 
 ## Aprovação externa por link
 
-O link é uma credencial: qualquer pessoa que o possua pode ver somente o material daquela versão e responder em nome informado. A gerência pode criar e revogar links pela API autenticada, como descrito na tabela de demandas; a criação devolve a URL secreta em uma única resposta. O token não deve ser incluído em logs, analytics ou links de terceiros. Leitura e resposta têm limites de 30 e 10 requisições por minuto por origem.
+O link é uma credencial: qualquer pessoa que o possua pode ver somente o material daquela versão e responder em nome informado. A gerência pode criar e revogar links pela API autenticada, como descrito na tabela de demandas; a criação devolve a URL secreta em uma única resposta. O token não deve ser incluído em logs, analytics ou links de terceiros. A página pública e a API de revisão enviam `Cache-Control: private, no-store` e `Referrer-Policy: no-referrer`. Leitura e resposta têm limites de 30 e 10 requisições por minuto por origem.
 
 O link de convite também é uma credencial e deve ser compartilhado em canal seguro. A API informa que não enviou e-mail; a pessoa convidada acessa a página web de ativação e cria a própria senha. O token expira em 72 horas, é armazenado somente como hash e pode ser revogado pela direção. O endpoint de criação tem limite de 10 chamadas por minuto.
 
