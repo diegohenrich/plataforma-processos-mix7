@@ -18,6 +18,9 @@
             @if (!empty($demand->module_fields_schema))
                 <section class="panel module-data-panel"><div class="section-heading"><div><h2>Informações de {{ $demand->moduleDisplayLabel() }}</h2><p>Campos internos · configuração v{{ $demand->module_version }}</p></div></div><dl class="module-data-list">@foreach ($demand->module_fields_schema as $field)@php $value = $demand->module_fields_data[$field['key']] ?? null; @endphp @if ($value !== null && $value !== '')<div><dt>{{ $field['label'] }}</dt><dd>{{ $value }}</dd></div>@endif @endforeach</dl></section>
             @endif
+            @if ($moduleSteps->isNotEmpty())
+                <section class="panel module-steps-panel"><div class="section-heading"><div><h2>Etapas de {{ $demand->moduleDisplayLabel() }}</h2><p>Lista interna desta demanda · configuração v{{ $demand->module_version }}. O andamento principal continua no fluxo acima.</p></div></div><ol class="module-steps-list">@foreach ($moduleSteps as $step)<li class="{{ $step->completed_at ? 'is-complete' : '' }}"><div><strong>{{ $step->label }}</strong>@if ($step->completed_at)<span>Concluída por {{ $step->completer?->name ?? 'conta removida' }} · {{ $step->completed_at->format('d/m/Y H:i') }}</span>@else<span>Pendente</span>@endif</div>@if ($canManage)<form method="post" action="{{ route('demands.module-steps.update', [$demand, $step->key]) }}">@csrf @method('PATCH')<input type="hidden" name="completed" value="{{ $step->completed_at ? '0' : '1' }}"><button class="secondary-button" type="submit">{{ $step->completed_at ? 'Reabrir etapa' : 'Marcar concluída' }}</button></form>@endif</li>@endforeach</ol></section>
+            @endif
 
             @if ($canManage)
                 <section class="panel review-link-panel">

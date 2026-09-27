@@ -70,6 +70,11 @@ class Demand extends Model
         return $this->hasMany(DemandAttachment::class)->orderByDesc('created_at')->orderByDesc('id');
     }
 
+    public function moduleSteps(): HasMany
+    {
+        return $this->hasMany(DemandModuleStep::class)->orderBy('position');
+    }
+
     public function reviewLinks(): HasMany
     {
         return $this->hasMany(DemandReviewLink::class)->orderByDesc('version');

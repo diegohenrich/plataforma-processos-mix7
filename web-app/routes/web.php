@@ -10,6 +10,7 @@ use App\Http\Controllers\DemandAttachmentController;
 use App\Http\Controllers\DemandController;
 use App\Http\Controllers\DemandDeliveryEvidenceController;
 use App\Http\Controllers\DemandModuleController;
+use App\Http\Controllers\DemandModuleStepController;
 use App\Http\Controllers\DemandReviewController;
 use App\Http\Controllers\DemandTaskController;
 use App\Http\Controllers\KnowledgeController;
@@ -48,6 +49,7 @@ Route::middleware(['auth', 'active'])->group(function (): void {
     Route::put('/tipos-aprovacao/{module}/campos', [DemandModuleController::class, 'updateFields'])->name('approval-modules.fields');
     Route::patch('/tipos-aprovacao/{module}/status', [DemandModuleController::class, 'toggle'])->name('approval-modules.toggle');
     Route::patch('/demandas/{demand}/etapa', [DemandController::class, 'updateStatus'])->name('demands.status');
+    Route::patch('/demandas/{demand}/etapas-do-tipo/{stepKey}', [DemandModuleStepController::class, 'update'])->name('demands.module-steps.update');
     Route::post('/demandas/{demand}/evidencias-entrega', [DemandDeliveryEvidenceController::class, 'store'])->name('demands.delivery-evidence.store');
     Route::post('/demandas/{demand}/anexos', [DemandAttachmentController::class, 'store'])->name('demand-attachments.store');
     Route::get('/demandas/{demand}/anexos/{attachment}', [DemandAttachmentController::class, 'show'])->name('demand-attachments.show');

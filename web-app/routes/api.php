@@ -8,6 +8,7 @@ use App\Http\Controllers\DemandAttachmentController;
 use App\Http\Controllers\DemandController as WebDemandController;
 use App\Http\Controllers\DemandDeliveryEvidenceController;
 use App\Http\Controllers\DemandModuleController;
+use App\Http\Controllers\DemandModuleStepController;
 use App\Http\Controllers\DemandReviewController;
 use App\Http\Controllers\DemandTaskController;
 use App\Http\Controllers\PerformanceReviewController;
@@ -54,6 +55,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active', 'api.token'])->group(
     Route::post('/demands/{demand}/attachments', [DemandAttachmentController::class, 'storeApi'])->name('api.v1.demand-attachments.store');
     Route::get('/demands/{demand}/attachments/{attachment}', [DemandAttachmentController::class, 'showApi'])->name('api.v1.demand-attachments.show');
     Route::patch('/demands/{demand}/status', [WebDemandController::class, 'updateStatus']);
+    Route::patch('/demands/{demand}/module-steps/{stepKey}', [DemandModuleStepController::class, 'update']);
     Route::post('/demands/{demand}/tasks', [DemandTaskController::class, 'store']);
     Route::post('/demands/{demand}/delivery-evidences', [DemandDeliveryEvidenceController::class, 'store']);
     Route::post('/demands/{demand}/review-links', [DemandReviewController::class, 'store']);

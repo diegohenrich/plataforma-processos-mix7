@@ -26,6 +26,7 @@ class DemandController extends Controller
             ->when($user->role === UserRole::Client, fn (Builder $query) => $query->where('client_user_id', $user->id))
             ->with([
                 'creator:id,name',
+                'moduleSteps.completer:id,name',
                 'tasks' => fn ($tasks) => $tasks
                     ->with('assignee:id,name')
                     ->when($user->role === UserRole::Professional, fn (Builder $query) => $query->where('assigned_to', $user->id))
@@ -51,6 +52,7 @@ class DemandController extends Controller
                     'summary' => $demand->ai_summary,
                     'module' => $this->moduleData($demand),
                     'module_fields' => ['schema' => $demand->module_fields_schema ?? [], 'data' => $demand->module_fields_data ?? []],
+                    'module_steps' => $this->moduleStepsData($demand),
                     'status' => ['value' => $demand->status->value, 'label' => $demand->status->label()],
                     'created_at' => $demand->created_at?->toISOString(),
                     'created_by' => ['id' => $demand->creator->id, 'name' => $demand->creator->name],
@@ -93,6 +95,7 @@ class DemandController extends Controller
                 'summary' => $demand->ai_summary,
                 'module' => $this->moduleData($demand),
                 'module_fields' => ['schema' => $demand->module_fields_schema ?? [], 'data' => $demand->module_fields_data ?? []],
+                'module_steps' => $this->moduleStepsData($demand),
                 'status' => ['value' => $demand->status->value, 'label' => $demand->status->label()],
                 'tasks' => $tasks->map(fn ($task) => [
                     'id' => $task->id,
@@ -112,5 +115,17 @@ class DemandController extends Controller
         }
 
         return ['key' => $demand->module_key, 'label' => $demand->moduleDisplayLabel(), 'version' => $demand->module_version];
+    }
+
+    private function moduleStepsData(Demand $demand): array
+    {
+        return $demand->moduleSteps()->with('completer:id,name')->get()->map(fn ($step): array => [
+            'key' => $step->key,
+            'label' => $step->label,
+            'position' => $step->position,
+            'completed' => $step->completed_at !== null,
+            'completed_at' => $step->completed_at?->toISOString(),
+            'completed_by' => $step->completer ? ['id' => $step->completer->id, 'name' => $step->completer->name] : null,
+        ])->all();
     }
 }

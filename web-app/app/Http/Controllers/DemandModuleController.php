@@ -23,18 +23,20 @@ class DemandModuleController extends Controller
             'version' => $module->version(),
             'description' => null,
             'fields' => [],
+            'workflow_steps' => [],
         ]);
         $customModules = DemandModuleDefinition::query()
             ->where('organization_id', $request->user()->organization_id)
             ->where('is_active', true)
             ->orderBy('label')
-            ->get(['key', 'label', 'description', 'config_version', 'fields'])
+            ->get(['key', 'label', 'description', 'config_version', 'fields', 'workflow_steps'])
             ->map(fn (DemandModuleDefinition $module): array => [
                 'key' => $module->key,
                 'label' => $module->label,
                 'version' => $module->config_version,
                 'description' => $module->description,
                 'fields' => $module->fields ?? [],
+                'workflow_steps' => $module->workflow_steps ?? [],
             ]);
 
         return response()->json(['data' => $builtInModules->concat($customModules)->values()]);
@@ -51,6 +53,7 @@ class DemandModuleController extends Controller
             'built_in' => true,
             'version' => $module->version(),
             'fields' => [],
+            'workflow_steps' => [],
         ]);
         $customModules = DemandModuleDefinition::query()
             ->where('organization_id', $request->user()->organization_id)
@@ -68,6 +71,7 @@ class DemandModuleController extends Controller
                 'id' => $module->id,
                 'version' => $module->config_version,
                 'fields' => $module->fields ?? [],
+                'workflow_steps' => $module->workflow_steps ?? [],
             ]);
 
         return view('approval-modules.index', ['modules' => $builtInModules->concat($customModules)]);
@@ -91,6 +95,9 @@ class DemandModuleController extends Controller
             'fields.*.type' => ['required', 'string', Rule::in(['text', 'textarea', 'date', 'url', 'select'])],
             'fields.*.required' => ['nullable', 'boolean'],
             'fields.*.options' => ['nullable', 'string', 'max:1000', 'required_if:fields.*.type,select'],
+            'workflow_steps' => ['sometimes', 'array', 'max:20'],
+            'workflow_steps.*.key' => ['required', 'string', 'min:2', 'max:40', 'regex:/^[a-z][a-z0-9_]*$/', 'distinct:strict'],
+            'workflow_steps.*.label' => ['required', 'string', 'min:2', 'max:80'],
             'key' => [
                 'nullable', 'string', 'min:2', 'max:60', 'regex:/^[a-z][a-z0-9_]*$/',
                 Rule::notIn($reservedKeys),
@@ -100,6 +107,7 @@ class DemandModuleController extends Controller
 
         $key = $data['key'] ?? $this->makeKey($data['label'], (int) $request->user()->organization_id);
         $fields = $this->normalizeFields($data['fields'] ?? []);
+        $workflowSteps = $this->normalizeWorkflowSteps($data['workflow_steps'] ?? []);
         DemandModuleDefinition::create([
             'organization_id' => $request->user()->organization_id,
             'created_by' => $request->user()->id,
@@ -108,10 +116,11 @@ class DemandModuleController extends Controller
             'description' => trim($data['description']),
             'config_version' => 1,
             'fields' => $fields,
+            'workflow_steps' => $workflowSteps,
             'is_active' => true,
         ]);
 
-        return to_route('approval-modules.index')->with('success', 'Tipo de aprovação criado com seus campos internos. Novas demandas guardarão a versão de configuração usada.');
+        return to_route('approval-modules.index')->with('success', 'Tipo criado. Novas demandas guardarão a versão dos campos e das etapas de conferência configuradas.');
     }
 
     public function updateFields(Request $request, DemandModuleDefinition $module): RedirectResponse
@@ -119,21 +128,34 @@ class DemandModuleController extends Controller
         $this->authorize('create', Demand::class);
         abort_unless($module->organization_id === $request->user()->organization_id, 404);
         $data = $request->validate([
-            'fields' => ['present', 'array', 'max:20'],
+            'fields' => ['sometimes', 'array', 'max:20'],
             'fields.*.key' => ['required', 'string', 'min:2', 'max:40', 'regex:/^[a-z][a-z0-9_]*$/', 'distinct:strict'],
             'fields.*.label' => ['required', 'string', 'min:2', 'max:80'],
             'fields.*.type' => ['required', 'string', Rule::in(['text', 'textarea', 'date', 'url', 'select'])],
             'fields.*.required' => ['nullable', 'boolean'],
             'fields.*.options' => ['nullable', 'string', 'max:1000', 'required_if:fields.*.type,select'],
+            'workflow_steps' => ['sometimes', 'array', 'max:20'],
+            'workflow_steps.*.key' => ['required', 'string', 'min:2', 'max:40', 'regex:/^[a-z][a-z0-9_]*$/', 'distinct:strict'],
+            'workflow_steps.*.label' => ['required', 'string', 'min:2', 'max:80'],
         ]);
 
-        $module->update([
-            'fields' => $this->normalizeFields($data['fields']),
+        if (! array_key_exists('fields', $data) && ! array_key_exists('workflow_steps', $data)) {
+            throw ValidationException::withMessages(['fields' => 'Envie os campos internos ou as etapas para atualizar a configuração.']);
+        }
+
+        $configuration = [
             'config_version' => $module->config_version + 1,
             'updated_by' => $request->user()->id,
-        ]);
+        ];
+        if (array_key_exists('fields', $data)) {
+            $configuration['fields'] = $this->normalizeFields($data['fields']);
+        }
+        if (array_key_exists('workflow_steps', $data)) {
+            $configuration['workflow_steps'] = $this->normalizeWorkflowSteps($data['workflow_steps']);
+        }
+        $module->update($configuration);
 
-        return to_route('approval-modules.index')->with('success', 'Campos atualizados. Demandas novas usarão a versão '.$module->fresh()->config_version.'; as antigas mantêm o formulário original.');
+        return to_route('approval-modules.index')->with('success', 'Configuração atualizada. Demandas novas usarão a versão '.$module->fresh()->config_version.'; as antigas mantêm seus campos e etapas originais.');
     }
 
     public function toggle(Request $request, DemandModuleDefinition $module): RedirectResponse
@@ -180,5 +202,13 @@ class DemandModuleController extends Controller
                 'options' => $options,
             ];
         })->values()->all();
+    }
+
+    private function normalizeWorkflowSteps(array $steps): array
+    {
+        return collect($steps)->map(fn (array $step): array => [
+            'key' => trim($step['key']),
+            'label' => trim($step['label']),
+        ])->values()->all();
     }
 }

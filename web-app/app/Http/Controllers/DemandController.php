@@ -84,8 +84,8 @@ class DemandController extends Controller
             ->where('organization_id', $request->user()->organization_id)
             ->where('is_active', true)
             ->orderBy('label')
-            ->get(['key', 'label', 'fields'])
-            ->map(fn (DemandModuleDefinition $module): array => ['key' => $module->key, 'label' => $module->label, 'fields' => $module->fields ?? []]));
+            ->get(['key', 'label', 'fields', 'workflow_steps'])
+            ->map(fn (DemandModuleDefinition $module): array => ['key' => $module->key, 'label' => $module->label, 'fields' => $module->fields ?? [], 'workflow_steps' => $module->workflow_steps ?? []]));
 
         return view('demands.create', compact('professionals', 'clients', 'modules'));
     }
@@ -132,6 +132,7 @@ class DemandController extends Controller
                 ->lockForUpdate()
                 ->firstOrFail();
             $moduleFields = $customModule?->fields ?? [];
+            $moduleSteps = $customModule?->workflow_steps ?? [];
             $moduleFieldsData = $this->validateModuleFields($request, $moduleFields);
             $demand = Demand::create([
                 'organization_id' => $organizationId,
@@ -146,6 +147,15 @@ class DemandController extends Controller
                 'module_fields_data' => $moduleFieldsData,
                 'status' => DemandStatus::Received,
             ]);
+
+            foreach ($moduleSteps as $position => $step) {
+                $demand->moduleSteps()->create([
+                    'organization_id' => $organizationId,
+                    'key' => $step['key'],
+                    'label' => $step['label'],
+                    'position' => $position,
+                ]);
+            }
 
             if ($demand->client_user_id) {
                 DemandEvent::create([
@@ -197,6 +207,7 @@ class DemandController extends Controller
                     'title' => $demand->title,
                     'module' => ['key' => $demand->module_key, 'label' => $demand->moduleDisplayLabel(), 'version' => $demand->module_version],
                     'module_fields' => ['schema' => $demand->module_fields_schema ?? [], 'data' => $demand->module_fields_data ?? []],
+                    'module_steps' => $demand->moduleSteps()->get(['key', 'label', 'position'])->map(fn ($step): array => ['key' => $step->key, 'label' => $step->label, 'position' => $step->position, 'completed' => false]),
                     'status' => $demand->status->value,
                     'status_label' => $demand->status->label(),
                     'client_user_id' => $demand->client_user_id,
@@ -245,6 +256,7 @@ class DemandController extends Controller
         return view('demands.show', [
             'currentUser' => $user,
             'demand' => $demand->load(['creator:id,name', 'organization:id,name', 'client:id,name,email', 'attachments.uploader:id,name']),
+            'moduleSteps' => $demand->moduleSteps()->with('completer:id,name')->get(),
             'tasks' => $tasks,
             'scheduledTasks' => $tasks->filter(fn ($task) => $task->planned_start_on || $task->planned_due_on)->values(),
             'unscheduledTaskCount' => $tasks->filter(fn ($task) => ! $task->planned_start_on && ! $task->planned_due_on)->count(),

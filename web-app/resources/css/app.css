@@ -10,3 +10,4 @@
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
+.module-steps-panel{margin-bottom:16px}.module-steps-list{display:grid;gap:8px;list-style:none;padding:0;margin:0}.module-steps-list li{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:11px 12px;border:1px solid #e6eded;border-radius:9px;background:#fbfdfd}.module-steps-list li.is-complete{border-color:#d3e9dc;background:#f5fbf7}.module-steps-list li>div{display:grid;gap:4px}.module-steps-list strong{color:#204b61;font-size:12px}.module-steps-list span{color:#718087;font-size:10px}.module-steps-list form{margin:0;flex:none}.module-steps-list .secondary-button{padding:7px 10px;font-size:10px}@media(max-width:560px){.module-steps-list li{align-items:flex-start;flex-direction:column}.module-steps-list form{align-self:flex-start}}
