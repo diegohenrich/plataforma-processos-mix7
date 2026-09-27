@@ -38,7 +38,7 @@ class DemoWorkspaceSeeder extends Seeder
         $password = Str::random(32);
         $reviewToken = Str::random(64);
 
-        DB::transaction(function () use ($password, $reviewToken): void {
+        $showcase = DB::transaction(function () use ($password, $reviewToken): array {
             $organization = Organization::updateOrCreate(
                 ['slug' => 'mix7-demo-local'],
                 ['name' => 'Mix7 · Demonstração local'],
@@ -154,12 +154,19 @@ class DemoWorkspaceSeeder extends Seeder
                     'steps' => ['Conhecer a biblioteca interna', 'Revisar uma demanda de exemplo', 'Praticar o fluxo de aprovação'],
                 ],
             );
+
+            return app(DemoShowcaseSeeder::class)->seed($organization, $people, $password);
         });
 
         $this->command?->newLine();
         $this->command?->info('Ambiente fictício Mix7 pronto em SQLite local. Contas de demonstração: direcao@mix7-demo.test, gerencia@mix7-demo.test, profissional@mix7-demo.test e cliente@mix7-demo.test.');
         $this->command?->info('Senha temporária desta execução: '.$password);
         $this->command?->info('Link público local de aprovação (versão 1): '.url('/revisao/'.$reviewToken));
+        $this->command?->info('Carga fictícia preparada: '.$showcase['users'].' contas (incluindo uma conta profissional inativa), '.($showcase['demands'] + 4).' demandas e '.($showcase['tasks'] + 4).' tarefas.');
+        $this->command?->info('Contas adicionais: gerencia02–04@mix7-demo.test, profissional02–10@mix7-demo.test e cliente02–08@mix7-demo.test; todas usam a senha temporária desta execução.');
+        foreach ($showcase['review_links'] as $reviewLink) {
+            $this->command?->info('Link público de demonstração — '.$reviewLink['title'].': '.url('/revisao/'.$reviewLink['token']));
+        }
         $this->command?->warn('Não use estes dados nem esta senha em ambiente compartilhado ou de produção.');
     }
 

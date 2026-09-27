@@ -22,6 +22,7 @@ Demanda/briefing → planejamento revisado → execução → revisão interna �
 - [Operação e cópias de segurança](docs/OPERACOES-E-BACKUP.md)
 - [Contrato atual da API versionada](docs/API.md)
 - [Primeira implementação e seus limites](docs/PRIMEIRA-IMPLEMENTACAO.md)
+- [Demonstração local com contas e fluxos fictícios](docs/DEMONSTRACAO-LOCAL.md)
 - [Conhecimento e onboarding: escopo e pendências](docs/CONHECIMENTO-ONBOARDING.md)
 - [Histórico de validações anteriores](docs/VALIDACOES-HISTORICAS.md)
 - [Referência visual validada no CRM Mix7](docs/REFERENCIA-VISUAL.md)

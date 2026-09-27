@@ -40,6 +40,7 @@ class KnowledgeLibraryTest extends TestCase
         $this->from(route('knowledge.index'))->post(route('knowledge.assign', $item), ['user_id' => $professional->id])->assertSessionHasErrors('user_id');
         $this->assertDatabaseCount('onboarding_assignments', 1);
         $assignment = OnboardingAssignment::firstOrFail();
+        $this->actingAs($owner)->get(route('knowledge.index'))->assertOk()->assertSee('Atribuir trilha e ver progresso')->assertSee('Bem-vindo')->assertSee('Pendente');
         $item->update(['steps' => ['Alterada depois']]);
         $this->assertSame(['Bem-vindo', 'Ler processos'], $assignment->fresh()->steps);
         $step = $assignment->steps()->firstOrFail();
