@@ -7,6 +7,13 @@
 - GitHub: commit `724d39490542095f060ff0ab2691c4b57965e3be` foi enviado à branch `codex/fundacao-compartilhada`; SHA local/remoto igual. Checks de push e PR #11 passaram ([push](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36284031185), [PR](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36284033449)).
 - Trello: atualização pendente de confirmação pontual para publicar a tarefa e seu resultado; sem ação externa ainda.
 
+## Colar trecho selecionado do site na revisão — 2026-09-26
+- A etapa do cliente agora oferece um botão para colar o texto que foi copiado da página externa na âncora do comentário. A leitura do clipboard só ocorre após clique; navegadores que bloquearem acesso mantêm a alternativa Ctrl+V e informam isso na tela. O trecho é limitado a 1.000 caracteres, como o campo.
+- Seleção automática dentro de página de outra origem segue inviável por isolamento de navegador; a tarefa reduz os passos do fluxo, não contorna essa proteção.
+- Validação local: `php artisan test` passou (171 testes, 1.421 assertions); `DemandReviewLinkTest` passou (23 testes, 237 assertions), Pint focalizado, `composer validate --no-check-publish`, build Vite, sintaxe do JavaScript inline e `git diff --check` passaram.
+- Inspeção visual pública no navegador segue pendente; a página foi testada via renderização HTTP e código, sem sessão visual.
+- Trello e GitHub desta tarefa ainda serão sincronizados; Trello depende da confirmação pontual solicitada.
+
 ## Catálogo expansível de tipos de aprovação — 2026-09-27
 - Direção/gerência podem cadastrar tipos adicionais por organização com nome, descrição e chave técnica; desativar/reativar sem apagar ou reclassificar demandas antigas. Formulário de demanda e API usam o catálogo ativo; API lista tipos disponíveis e preserva chave, rótulo e versão.
 - Segurança validada por testes de papel, agência, chave duplicada/reservada, desativação, uso web/API e tentativa de seleção por outra agência. Tipos extras ainda compartilham campos e etapas; não há criador de campos ou regras específicas, pois a Mix7 não forneceu exemplos validados para essas variações.
