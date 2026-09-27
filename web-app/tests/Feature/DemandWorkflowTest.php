@@ -99,14 +99,19 @@ class DemandWorkflowTest extends TestCase
 
         $response = $this->actingAs($manager)->get(route('demands.index'))->assertOk();
         $html = $response->getContent();
-        $morePosition = strpos($html, '<details class="kanban-more">');
+        $morePosition = strpos($html, '<details class="kanban-more" data-kanban-more>');
 
         $this->assertNotFalse($morePosition);
         $this->assertSame(8, substr_count($html, '<article class="kanban-card"'));
         $this->assertSame(8, substr_count($html, 'aria-label="Abrir demanda:'));
         $this->assertLessThan($morePosition, strpos($html, 'Volume de demonstração 06'));
         $this->assertGreaterThan($morePosition, strpos($html, 'Volume de demonstração 07'));
-        $response->assertSee('<summary>Mostrar 2 demandas</summary>', false);
+        $response->assertSee('<summary>Mostrar 2 demandas</summary>', false)
+            ->assertSee('data-kanban-expand-all', false)
+            ->assertSee('data-kanban-collapse-all', false)
+            ->assertSee('document.querySelectorAll', false)
+            ->assertSee('Expandir todas as etapas')
+            ->assertSee('Recolher todas as etapas');
     }
 
     public function test_kanban_explains_that_open_tasks_block_internal_review(): void
