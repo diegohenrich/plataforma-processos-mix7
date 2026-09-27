@@ -163,7 +163,7 @@ class DemoWorkspaceSeeder extends Seeder
         $this->command?->info('Senha temporária desta execução: '.$password);
         $this->command?->info('Link público local de aprovação (versão 1): '.url('/revisao/'.$reviewToken));
         $this->command?->info('Carga fictícia preparada: '.$showcase['users'].' contas (incluindo uma conta profissional inativa), '.($showcase['demands'] + 4).' demandas e '.($showcase['tasks'] + 4).' tarefas.');
-        $this->command?->info('Contas adicionais: gerencia02–06@mix7-demo.test, profissional02–14@mix7-demo.test e cliente02–12@mix7-demo.test; todas usam a senha temporária desta execução.');
+        $this->command?->info('Contas adicionais: gerencia02–12@mix7-demo.test, profissional02–40@mix7-demo.test e cliente02–40@mix7-demo.test; todas usam a senha temporária desta execução.');
         foreach ($showcase['review_links'] as $reviewLink) {
             $this->command?->info('Link público de demonstração — '.$reviewLink['title'].': '.url('/revisao/'.$reviewLink['token']));
         }

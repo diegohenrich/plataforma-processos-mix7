@@ -46,7 +46,7 @@ class DemoShowcaseSeeder
         $baseClient = $corePeople['client'];
 
         $managers = [$baseManager];
-        foreach (range(2, 6) as $number) {
+        foreach (range(2, 12) as $number) {
             $managers[] = $this->upsertUser($organization, $password, sprintf('Gerência de demonstração %02d', $number), sprintf('gerencia%02d@mix7-demo.test', $number), UserRole::MarketingManager);
         }
 
@@ -56,7 +56,7 @@ class DemoShowcaseSeeder
             ['Vídeo', 'Edição'], ['Mídia paga', 'Campanhas'], ['Social', 'Planejamento'],
             ['Design', 'Apresentações'], ['Conteúdo', 'Revisão'], ['Desenvolvimento', 'Integrações'],
         ];
-        foreach (range(2, 14) as $number) {
+        foreach (range(2, 40) as $number) {
             $professionals[] = $this->upsertUser(
                 $organization,
                 $password,
@@ -77,7 +77,7 @@ class DemoShowcaseSeeder
         );
 
         $clients = [$baseClient];
-        foreach (range(2, 12) as $number) {
+        foreach (range(2, 40) as $number) {
             $clients[] = $this->upsertUser($organization, $password, sprintf('Cliente de demonstração %02d', $number), sprintf('cliente%02d@mix7-demo.test', $number), UserRole::Client);
         }
 
@@ -106,11 +106,13 @@ class DemoShowcaseSeeder
         $weekStart = CarbonImmutable::now()->startOfWeek()->startOfDay();
 
         foreach ($statuses as $stageIndex => $status) {
-            foreach (range(1, 6) as $sample) {
-                // Preserve identifiers from the existing 4-per-stage dataset; append new examples after it.
+            foreach (range(1, 20) as $sample) {
+                // Preserve identifiers already used by the 6-per-stage dataset; append the larger set after it.
                 $sequence = $sample <= 4
                     ? ($stageIndex * 4) + $sample
-                    : 32 + ($stageIndex * 2) + ($sample - 4);
+                    : ($sample <= 6
+                        ? 32 + ($stageIndex * 2) + ($sample - 4)
+                        : 48 + ($stageIndex * 14) + ($sample - 6));
                 $service = $services[($sequence - 1) % count($services)];
                 $manager = $managers[($sequence - 1) % count($managers)];
                 $client = $clients[($sequence - 1) % count($clients)];
@@ -213,7 +215,7 @@ class DemoShowcaseSeeder
 
         return [
             'users' => 1 + count($managers) + count($professionals) + 1 + count($clients),
-            'demands' => count($statuses) * 6,
+            'demands' => count($statuses) * 20,
             'tasks' => $tasksCreated,
             'review_links' => $reviewLinks,
             'inactive_user' => $inactiveProfessional->email,
