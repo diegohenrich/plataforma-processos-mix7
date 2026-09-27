@@ -369,12 +369,18 @@ class DemandController extends Controller
 
         DB::transaction(function () use ($demand, $from, $to, $request): void {
             $demand->update(['status' => $to]);
+            $actor = $request->user()->name;
+            $summary = match (true) {
+                $from === DemandStatus::InternalReview && $to === DemandStatus::ClientApproval => $actor.' aprovou a revisão interna e enviou a demanda para aprovação do cliente',
+                $from === DemandStatus::InternalReview && $to === DemandStatus::InProgress => $actor.' devolveu a demanda para execução após a revisão interna',
+                default => $actor.' alterou a etapa para '.$to->label(),
+            };
             DemandEvent::create([
                 'organization_id' => $demand->organization_id,
                 'demand_id' => $demand->id,
                 'actor_id' => $request->user()->id,
                 'event_type' => 'demand_status_changed',
-                'summary' => $request->user()->name.' alterou a etapa para '.$to->label(),
+                'summary' => $summary,
                 'from_status' => $from->value,
                 'to_status' => $to->value,
             ]);
