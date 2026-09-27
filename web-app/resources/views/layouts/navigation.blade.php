@@ -14,6 +14,7 @@
             <a class="nav-item {{ $active === 'capacity' ? 'active' : '' }}" href="{{ route('team.capacity') }}"><span aria-hidden="true">◫</span> Disponibilidade</a>
             @if (in_array(auth()->user()->role, [App\Enums\UserRole::AgencyOwner, App\Enums\UserRole::MarketingManager, App\Enums\UserRole::Professional], true))<a class="nav-item {{ $active === 'performance-reviews' ? 'active' : '' }}" href="{{ route('performance-reviews.index') }}"><span aria-hidden="true">◎</span> Avaliações</a>@endif
             @can('viewAny', App\Models\User::class)<a class="nav-item {{ $active === 'team' ? 'active' : '' }}" href="{{ route('team.index') }}"><span aria-hidden="true">♧</span> Equipe</a>@endcan
+            <a class="nav-item {{ $active === 'service-access' ? 'active' : '' }}" href="{{ route('service-access.index') }}"><span aria-hidden="true">⌑</span> Acessos de serviços</a>
         @endif
         @can('viewAny', App\Models\KnowledgeItem::class)<a class="nav-item {{ $active === 'knowledge' ? 'active' : '' }}" href="{{ route('knowledge.index') }}"><span aria-hidden="true">▤</span> Conhecimento</a>@endcan
         @if (auth()->user()->role !== App\Enums\UserRole::Client)<a class="nav-item {{ $active === 'integrations' ? 'active' : '' }}" href="{{ route('api-tokens.index') }}"><span aria-hidden="true">⌘</span> Acessos da API</a>@endif
@@ -31,6 +32,7 @@
         <a href="{{ route('team.capacity') }}">Disponibilidade</a>
         @if (in_array(auth()->user()->role, [App\Enums\UserRole::AgencyOwner, App\Enums\UserRole::MarketingManager, App\Enums\UserRole::Professional], true))<a href="{{ route('performance-reviews.index') }}">Avaliações</a>@endif
         @can('viewAny', App\Models\User::class)<a href="{{ route('team.index') }}">Equipe</a>@endcan
+        @if (auth()->user()->role !== App\Enums\UserRole::Client)<a href="{{ route('service-access.index') }}">Acessos de serviços</a>@endif
         @can('viewAny', App\Models\KnowledgeItem::class)<a href="{{ route('knowledge.index') }}">Conhecimento</a>@endcan
         @if (auth()->user()->role !== App\Enums\UserRole::Client)<a href="{{ route('api-tokens.index') }}">Acessos da API</a>@endif
     </div>

@@ -14,7 +14,7 @@ Fonte: transcrição dos três áudios fornecidos em 24/09/2026 e decisões expl
 | IA | Sugerir decomposição de briefing em tarefas, responsáveis e estimativas; organizar feedbacks cronologicamente. Sugestões passam por revisão humana antes da aplicação. |
 | Avaliação | Medir prazo, produção e qualidade; notas da direção com peso 2 e do gestor com peso 1, conforme fala do áudio. |
 | Conhecimento | Referências, treinamentos, contatos e trilha de onboarding em passos. |
-| Acessos | Matriz por função e possibilidade de usar serviços sem revelar senhas, quando tecnicamente viável. |
+| Acessos | Catálogo por organização com instruções e URL, solicitação individual, decisão/revogação pela direção e histórico; não armazenar senha, token ou chave. O sistema registra a decisão administrativa, mas a concessão/revogação deve ocorrer também no serviço externo. |
 | Experiência | Foco em menos opções que o Notion, inspiração na experiência do Trello e referência visual da Mix7. Preferência da interface: branco e azul claros. |
 | Arquivos e ambiente de trabalho | Soltar imagens/arquivos em uma demanda e mantê-los associados a ela; integração com Windows foi pedida, mas ainda sem comportamento definido. |
 | Construção | Comparar soluções existentes e opções open source antes de decidir o que desenvolver. Avaliar licenças, manutenção e segurança. |

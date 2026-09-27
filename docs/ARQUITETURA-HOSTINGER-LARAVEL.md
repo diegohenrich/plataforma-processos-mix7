@@ -17,6 +17,10 @@ Referências oficiais consultadas em 25/09/2026: [banco de dados na Hostinger](h
 
 ## Estado implementado
 
+### Catálogo e solicitações de acesso a serviços
+
+`service_accesses`, `service_access_requests` e `service_access_events` pertencem à organização. A direção cadastra/edita/arquiva/restaura ferramentas; pessoas internas consultam o catálogo e solicitam o próprio acesso; gerência e profissionais veem apenas seu estado individual. A direção registra concessão, negativa ou revogação; o autor pode retirar uma solicitação pendente. Histórico registra ator e evento. Uma chave única de solicitação ativa impede duplicatas concorrentes. A tela e API não aceitam nem persistem senhas, tokens ou chaves. URL e instruções servem para orientar o acesso por conta individual, convite do provedor, SSO ou gerenciador externo de segredos. A concessão/revogação real precisa ser executada também no serviço do fornecedor e não é automatizada por esta versão.
+
 - Aplicação Laravel em `web-app/`, separada do protótipo browser-only em `prototipo/`.
 - Tela de entrada sem cadastro público, sessão regenerada no login, saída protegida por CSRF e limite de tentativas.
 - Contas possuem organização, estado ativo e um dos quatro papéis citados: direção da agência, gerência de marketing, profissional ou cliente. A matriz completa ainda está em construção; não receber dados reais antes de validar as regras e o fluxo de recuperação de contas.

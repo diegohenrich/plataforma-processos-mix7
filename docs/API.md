@@ -17,6 +17,14 @@ Usuários internos ativos podem emitir e revogar seus próprios tokens em `/inte
 | `POST /demands/{demand}/attachments` | `multipart/form-data` com `files[]`; até 10 arquivos por envio e 20 MB por arquivo. PDF, imagens, vídeos, Office, texto, CSV e ZIP | Mesma autorização do detalhe interno; grava autor e evento. Retorna `201` com nome, tipo, tamanho, autor, data, `preview_url` e `download_url`; nunca retorna o caminho privado de armazenamento |
 | `GET /demands/{demand}/attachments/{attachment}` | Transmite PDF, imagem ou vídeo inline para prévia; acrescente `?download=1` para forçar download | Exige token ativo e autorização da demanda; clientes, outra organização e anexos associados a outra demanda recebem `404` |
 | `GET /team/activity` | Atividade e produção dos últimos 30 dias | Direção/gerência recebem totais agregados sem títulos de tarefas; profissional recebe somente contagem pessoal, suas próprias tarefas abertas e seu cronômetro; cliente não tem acesso |
+| `GET /team/service-access` | Catálogo de serviços e solicitações | Direção vê solicitações da organização; profissional/gerência veem o catálogo e somente o próprio estado; cliente não acessa |
+| `POST /team/service-access` | `name`, `access_method`, `instructions`, `service_url?`, `review_due_on?` | Somente direção cadastra ferramenta; URL aceita HTTP/HTTPS; não há campos para senha, token ou chave |
+| `PUT /team/service-access/{service}` | Campos do catálogo | Somente direção atualiza item da própria organização |
+| `DELETE /team/service-access/{service}` / `POST .../{service}/restore` | Vazio | Direção arquiva/restaura; arquivamento é recusado enquanto há solicitação pendente ou acesso concedido |
+| `POST /team/service-access/{service}/requests` | Vazio | Usuário interno solicita o próprio acesso; cliente não acessa e pedido duplicado pendente/concedido é recusado |
+| `DELETE /team/service-access/requests/{request}` | Vazio | A pessoa retira somente a própria solicitação pendente |
+| `POST /team/service-access/requests/{request}/decision` | `status` (`granted` ou `denied`) | Somente direção da organização decide; a ação deve ser executada também no serviço externo |
+| `POST /team/service-access/requests/{request}/revoke` | Vazio | Direção registra revogação para acesso concedido; revogação no serviço externo continua manual |
 | `GET /team/members` | Lista contas profissionais e clientes da agência, com papel e estado de acesso | Somente direção; no máximo 200 registros, sem contas de direção/gerência ou de outras organizações |
 | `GET /team/invitations` | Lista convites pendentes e ainda válidos, sem segredo/token | Somente direção; resposta sem cache e filtrada pela organização |
 | `GET /knowledge` | Lista conteúdo ativo da biblioteca; aceita filtros opcionais `type` e `q` | Direção, gerência e profissionais ativos da própria organização; clientes não têm acesso |

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\DemandController;
 use App\Http\Controllers\Api\V1\KnowledgeController;
+use App\Http\Controllers\Api\V1\ServiceAccessController as ApiServiceAccessController;
 use App\Http\Controllers\Api\V1\TeamMemberController as ApiTeamMemberController;
 use App\Http\Controllers\DemandAttachmentController;
 use App\Http\Controllers\DemandController as WebDemandController;
@@ -60,6 +61,15 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active', 'api.token'])->group(
     Route::post('/team/invitations', [TeamInvitationController::class, 'store'])->middleware('throttle:10,1');
     Route::delete('/team/invitations/{invitation}', [TeamInvitationController::class, 'revoke']);
     Route::patch('/team/members/{member}/access', [ApiTeamMemberController::class, 'toggleAccess']);
+    Route::get('/team/service-access', [ApiServiceAccessController::class, 'index']);
+    Route::post('/team/service-access', [ApiServiceAccessController::class, 'store']);
+    Route::put('/team/service-access/{service}', [ApiServiceAccessController::class, 'update']);
+    Route::delete('/team/service-access/{service}', [ApiServiceAccessController::class, 'archive']);
+    Route::post('/team/service-access/{service}/restore', [ApiServiceAccessController::class, 'restore']);
+    Route::post('/team/service-access/{service}/requests', [ApiServiceAccessController::class, 'requestAccess']);
+    Route::delete('/team/service-access/requests/{accessRequest}', [ApiServiceAccessController::class, 'withdraw']);
+    Route::post('/team/service-access/requests/{accessRequest}/decision', [ApiServiceAccessController::class, 'decide']);
+    Route::post('/team/service-access/requests/{accessRequest}/revoke', [ApiServiceAccessController::class, 'revoke']);
     Route::post('/team/performance-reviews', [PerformanceReviewController::class, 'store'])->middleware('throttle:10,1');
     Route::post('/team/performance-reviews/{review}/responses', [PerformanceReviewController::class, 'respond'])->middleware('throttle:10,1');
     Route::patch('/tasks/{task}/status', [DemandTaskController::class, 'updateStatus']);
