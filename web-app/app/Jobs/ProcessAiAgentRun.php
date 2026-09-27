@@ -18,6 +18,8 @@ class ProcessAiAgentRun implements ShouldQueue
 
     public int $tries = 1;
 
+    public int $timeout = 100;
+
     public function __construct(
         public int $runId,
         public string $encryptedQuestion,
