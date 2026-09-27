@@ -38,6 +38,7 @@ class AiPlanningController extends Controller
         $result['proposal']['_source'] = [
             'client_feedback_included' => $feedback !== [],
             'feedback_response_ids' => array_column($feedback, 'response_id'),
+            'feedback_versions' => array_column($feedback, 'version', 'response_id'),
         ];
 
         $run = DB::transaction(function () use ($demand, $request, $result): AiPlanningRun {
@@ -141,12 +142,18 @@ class AiPlanningController extends Controller
 
             $createdTasks = [];
             foreach ($selectedTasks as $index => $taskData) {
+                $feedbackRefs = array_values(array_unique(array_map('intval', $original[$index]['feedback_refs'] ?? [])));
+                $feedbackVersions = $run->proposal['_source']['feedback_versions'] ?? [];
+                $feedbackSource = $feedbackRefs === [] ? '' : "\nFeedback do cliente: ".implode(', ', array_map(
+                    fn (int $id): string => 'versão '.($feedbackVersions[$id] ?? $feedbackVersions[(string) $id] ?? '?').', resposta #'.$id,
+                    $feedbackRefs,
+                ));
                 $task = $demand->tasks()->create([
                     'organization_id' => $demand->organization_id,
                     'created_by' => $request->user()->id,
                     'assigned_to' => $taskData['assignee_id'],
                     'title' => trim($taskData['title']),
-                    'description' => 'Perfil: '.trim($taskData['responsibility_profile'])."\nMotivo: ".($original[$index]['rationale'] ?? 'Definido durante a revisão da proposta.'),
+                    'description' => 'Perfil: '.trim($taskData['responsibility_profile'])."\nMotivo: ".($original[$index]['rationale'] ?? 'Definido durante a revisão da proposta.').$feedbackSource,
                     'status' => TaskStatus::Todo,
                     'estimate_minutes' => $taskData['estimate_minutes'],
                 ]);
@@ -180,6 +187,7 @@ class AiPlanningController extends Controller
                             'include' => true,
                             'rationale' => $suggested['rationale'] ?? '',
                             'depends_on' => $selectedTasks[$index]['depends_on'],
+                            'feedback_refs' => $suggested['feedback_refs'] ?? [],
                         ];
                     }, array_keys($original), $original)),
                 ],

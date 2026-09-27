@@ -226,6 +226,21 @@ class DemandController extends Controller
             ->with(['creator:id,name', 'assignee:id,name,is_active', 'timeEntries', 'dependencies:id,title,status'])
             ->when($user->role === UserRole::Professional, fn (Builder $query) => $query->where('assigned_to', $user->id))
             ->get();
+        $reviewLinks = $request->user()->can('manage', $demand)
+            ? $demand->reviewLinks()->with('responses')->get()
+            : collect();
+        $feedbackById = [];
+        foreach ($reviewLinks as $link) {
+            foreach ($link->responses as $response) {
+                $feedbackById[$response->id] = [
+                    'version' => $link->version,
+                    'type' => $response->type,
+                    'comment' => $response->comment,
+                    'anchor_type' => $response->anchor_type,
+                    'anchor_data' => $response->anchor_data ?? [],
+                ];
+            }
+        }
 
         return view('demands.show', [
             'currentUser' => $user,
@@ -249,7 +264,8 @@ class DemandController extends Controller
                 : collect(),
             'nextStatuses' => $demand->status->next(),
             'activeTimeTaskId' => $user->activeTimeEntry()->value('task_id'),
-            'reviewLinks' => $request->user()->can('manage', $demand) ? $demand->reviewLinks()->with('responses')->get() : collect(),
+            'reviewLinks' => $reviewLinks,
+            'feedbackById' => $feedbackById,
             'deliveryEvidences' => $demand->deliveryEvidences()->with('recorder:id,name')->get(),
             'aiPlanningRuns' => $request->user()->can('manage', $demand) ? $demand->aiPlanningRuns()->with(['requester:id,name', 'reviewer:id,name'])->take(5)->get() : collect(),
             'aiAgentRuns' => $demand->aiAgentRuns()

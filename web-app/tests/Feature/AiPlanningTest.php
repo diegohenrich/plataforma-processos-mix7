@@ -55,7 +55,7 @@ class AiPlanningTest extends TestCase
 
     public function test_manager_can_explicitly_include_only_this_demands_versioned_client_feedback(): void
     {
-        [, $manager, , $demand] = $this->workspace();
+        [, $manager, $professional, $demand] = $this->workspace();
         [, $otherManager, , $otherDemand] = $this->workspace('other');
         $link = $this->reviewLink($demand, $manager, 2);
         $feedback = DemandReviewResponse::create([
@@ -75,7 +75,7 @@ class AiPlanningTest extends TestCase
             'comment' => 'Não deve sair da outra demanda.',
             'created_at' => now(),
         ]);
-        Http::fake(['https://ai-gateway.vercel.sh/v1/chat/completions' => Http::response($this->providerResponse(), 200)]);
+        Http::fake(['https://ai-gateway.vercel.sh/v1/chat/completions' => Http::response($this->providerResponse([$feedback->id]), 200)]);
 
         $page = $this->actingAs($manager)->get(route('demands.show', $demand))
             ->assertOk()->assertSee('Incluir até 20 comentários e anotações do cliente');
@@ -100,7 +100,27 @@ class AiPlanningTest extends TestCase
         $run = AiPlanningRun::firstOrFail();
         $this->assertTrue($run->proposal['_source']['client_feedback_included']);
         $this->assertSame([$feedback->id], $run->proposal['_source']['feedback_response_ids']);
+        $this->assertSame(2, $run->proposal['_source']['feedback_versions'][$feedback->id]);
+        $this->assertSame([$feedback->id], $run->proposal['tasks'][0]['feedback_refs']);
+        $proposalPage = $this->get(route('demands.show', $demand))->assertOk();
+        $proposalPage->assertViewHas('feedbackById', fn (array $sources) => isset($sources[$feedback->id]));
+        $this->assertStringContainsString('Feedback ligado a esta tarefa:', $proposalPage->getContent());
+        $this->assertStringContainsString('versão 2', $proposalPage->getContent());
+        $this->assertStringContainsString('Ajustar o título principal conforme combinado.', $proposalPage->getContent());
+        Http::assertSent(fn ($request) => in_array('feedback_refs', $request['response_format']['json_schema']['schema']['properties']['tasks']['items']['required'], true));
         $this->assertSame(0, DemandTask::count());
+
+        $this->post(route('ai-planning.approve', [$demand, $run]), [
+            'summary' => 'Resumo revisado com origem registrada.',
+            'tasks' => [
+                ['include' => 1, 'title' => 'Ajustar título principal', 'responsibility_profile' => 'Design', 'estimate_minutes' => 20, 'assignee_id' => $professional->id],
+                ['include' => 0],
+            ],
+        ])->assertRedirect()->assertSessionHasNoErrors();
+
+        $task = $demand->tasks()->firstOrFail();
+        $this->assertStringContainsString('Feedback do cliente: versão 2, resposta #'.$feedback->id, $task->description);
+        $this->assertSame([$feedback->id], $run->fresh()->reviewed_tasks['tasks'][0]['feedback_refs']);
     }
 
     public function test_manager_edits_and_approves_proposal_with_real_dependency_and_audit(): void
@@ -243,6 +263,18 @@ class AiPlanningTest extends TestCase
         $this->assertSame(0, DemandTask::count());
     }
 
+    public function test_planning_rejects_feedback_references_that_were_not_included(): void
+    {
+        [, $manager, , $demand] = $this->workspace();
+        Http::fake(['https://ai-gateway.vercel.sh/v1/chat/completions' => Http::response($this->providerResponse([999999]), 200)]);
+
+        $this->actingAs($manager)->from(route('demands.show', $demand))
+            ->post(route('ai-planning.propose', $demand))->assertSessionHasErrors('ai');
+
+        $this->assertSame(0, AiPlanningRun::count());
+        $this->assertSame(0, DemandTask::count());
+    }
+
     public function test_manager_can_reject_one_suggestion_and_remaining_dependencies_are_recalculated(): void
     {
         [, $manager, $professional, $demand] = $this->workspace();
@@ -319,15 +351,15 @@ class AiPlanningTest extends TestCase
         return [$organization, $manager, $professional, $demand];
     }
 
-    private function providerResponse(): array
+    private function providerResponse(array $feedbackRefs = []): array
     {
         return [
             'choices' => [['message' => ['content' => json_encode([
                 'summary' => 'Planejar site em duas etapas.',
                 'questions' => ['Qual prazo?'],
                 'tasks' => [
-                    ['title' => 'Organizar briefing', 'rationale' => 'Confirmar objetivo.', 'responsibility_profile' => 'Atendimento', 'estimate_minutes' => 30, 'depends_on' => []],
-                    ['title' => 'Mapear páginas', 'rationale' => 'Preparar estrutura.', 'responsibility_profile' => 'Design', 'estimate_minutes' => 60, 'depends_on' => [0]],
+                    ['title' => 'Organizar briefing', 'rationale' => 'Confirmar objetivo.', 'responsibility_profile' => 'Atendimento', 'estimate_minutes' => 30, 'depends_on' => [], 'feedback_refs' => $feedbackRefs],
+                    ['title' => 'Mapear páginas', 'rationale' => 'Preparar estrutura.', 'responsibility_profile' => 'Design', 'estimate_minutes' => 60, 'depends_on' => [0], 'feedback_refs' => []],
                 ],
             ], JSON_THROW_ON_ERROR)]]],
             'usage' => ['prompt_tokens' => 123, 'completion_tokens' => 45],

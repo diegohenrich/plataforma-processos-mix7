@@ -1,3 +1,10 @@
+## Rastreabilidade entre proposta de IA e feedback de origem — 2026-09-27
+- Cada tarefa estruturada agora declara IDs de feedback de origem. O serviço rejeita referências que não estavam no contexto enviado; a tela de revisão exibe versão e trecho, e a tarefa aprovada guarda versão/ID na descrição e no snapshot de revisão.
+- Atualizei os contratos de requisitos, rastreabilidade, roadmap, contexto e decisão vigentes. Não foi feita chamada real ao provedor.
+- Um teste focalizado encontrou uma perda dos índices numéricos ao achatar a coleção; substituí pelo mapeamento explícito por ID. Validação final: `AiPlanningTest` passou (13 testes/112 assertions), suíte completa `php artisan test` passou (189 testes/1.696 assertions), Pint focalizado, `composer validate --no-check-publish`, `npm run build`, `php artisan view:cache`, `view:clear` e `git diff --check` passaram.
+- Nenhuma chamada real ao provedor foi feita. Inspeção visual autenticada permanece pendente; os testes verificam renderização e vínculo da proposta, mas não substituem a conferência no navegador.
+- GitHub/Trello desta subentrega ainda pendentes.
+
 ## Proposta de tarefas com feedback de cliente opcional — 2026-09-27
 - Conectei o histórico de comentários/anotações por versão ao planejador estruturado. Direção/gerência escolhe explicitamente se inclui até 20 respostas da demanda atual; a IA recebe versão, tipo, comentário e âncora, sem nome do cliente nem URL de prévia. IDs das respostas ficam na proveniência da execução; gerar proposta não cria tarefas e aplicar continua exigindo edição, atribuição e aprovação humanas.
 - Atualizei a interface, os requisitos rastreáveis, o roadmap, a decisão vigente e este status. Nenhuma chamada real foi feita; a política de envio/retenção e credenciais aprovadas continuam pendentes.
