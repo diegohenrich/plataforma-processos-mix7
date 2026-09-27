@@ -582,18 +582,25 @@ class DemandWorkflowTest extends TestCase
     public function test_stale_browser_heartbeat_closes_timer_at_last_confirmed_signal(): void
     {
         Date::setTestNow(CarbonImmutable::parse('2026-09-26 12:00:00'));
-        [$organization, $owner, $professional] = $this->team();
+        [$organization, $owner, $professional, $colleague] = $this->team();
         $demand = $this->demand($organization, $owner);
         $task = $this->task($demand, $professional, $owner, 'Tarefa após fechamento inesperado');
+        $colleagueTask = $this->task($demand, $colleague, $owner, 'Tarefa ainda ativa');
         $this->actingAs($professional)->post(route('demand-tasks.timer.start', $task))->assertRedirect();
+        $this->actingAs($colleague)->post(route('demand-tasks.timer.start', $colleagueTask))->assertRedirect();
         $entry = TaskTimeEntry::query()->firstOrFail();
         $lastHeartbeat = $entry->last_heartbeat_at;
 
-        $this->travel(181)->seconds();
-        $this->actingAs($owner)->get(route('team.activity'))->assertOk();
+        $this->travel(120)->seconds();
+        $this->actingAs($colleague)->post(route('demand-tasks.timer.heartbeat'))->assertOk()->assertJsonPath('data.active', true);
+        $activeEntry = TaskTimeEntry::query()->where('task_id', $colleagueTask->id)->firstOrFail();
+        $this->travel(61)->seconds();
+        $this->artisan('mix7:timers:expire-stale')->assertExitCode(0);
 
         $this->assertSame($lastHeartbeat->toDateTimeString(), $entry->fresh()->ended_at->toDateTimeString());
         $this->assertSame(TaskStatus::Paused, $task->fresh()->status);
+        $this->assertNull($activeEntry->fresh()->ended_at);
+        $this->assertSame(TaskStatus::InProgress, $colleagueTask->fresh()->status);
         $this->assertDatabaseHas('demand_events', [
             'demand_id' => $demand->id,
             'task_id' => $task->id,
