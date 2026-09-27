@@ -48,6 +48,7 @@ class DemandController extends Controller
                     'id' => $demand->id,
                     'title' => $demand->title,
                     'brief' => $demand->brief,
+                    'summary' => $demand->ai_summary,
                     'module' => $this->moduleData($demand),
                     'status' => ['value' => $demand->status->value, 'label' => $demand->status->label()],
                     'created_at' => $demand->created_at?->toISOString(),
@@ -88,6 +89,7 @@ class DemandController extends Controller
                 'id' => $demand->id,
                 'title' => $demand->title,
                 'brief' => $demand->brief,
+                'summary' => $demand->ai_summary,
                 'module' => $this->moduleData($demand),
                 'status' => ['value' => $demand->status->value, 'label' => $demand->status->label()],
                 'tasks' => $tasks->map(fn ($task) => [

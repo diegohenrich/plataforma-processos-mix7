@@ -13,7 +13,7 @@ class Demand extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['organization_id', 'created_by', 'client_user_id', 'title', 'brief', 'module_key', 'module_version', 'module_label', 'status'];
+    protected $fillable = ['organization_id', 'created_by', 'client_user_id', 'title', 'brief', 'ai_summary', 'module_key', 'module_version', 'module_label', 'status'];
 
     protected function casts(): array
     {

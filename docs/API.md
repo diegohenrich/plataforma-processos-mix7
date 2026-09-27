@@ -9,8 +9,8 @@ Usuários internos ativos podem emitir e revogar seus próprios tokens em `/inte
 | Método e rota | Uso | Acesso |
 | --- | --- | --- |
 | `GET /me` | Identidade, papel e organização da conta autenticada | Qualquer perfil ativo |
-| `GET /demands` | Até 100 demandas recentes visíveis à pessoa, incluindo chave e versão do módulo | Dados reduzidos para clientes e tarefas atribuídas filtradas para profissionais |
-| `GET /demands/{demand}` | Detalhe autorizado da demanda, incluindo chave e versão do módulo | Cliente vê título, módulo, etapa e atualização; profissional vê suas tarefas; gestão vê o detalhe da organização |
+| `GET /demands` | Até 100 demandas recentes visíveis à pessoa, incluindo chave e versão do módulo e, se aprovada, a síntese curta interna (`summary`) | Dados reduzidos para clientes e tarefas atribuídas filtradas para profissionais; clientes nunca recebem briefing nem síntese interna |
+| `GET /demands/{demand}` | Detalhe autorizado da demanda, incluindo chave e versão do módulo e a síntese curta aprovada (`summary`) | Cliente vê título, módulo, etapa e atualização; profissional vê suas tarefas; gestão vê o detalhe da organização |
 | `GET /demands/{demand}/attachments` | Lista metadados e URLs autenticadas de prévia/download dos anexos internos | Direção/gerência ou profissional autorizado a ver a demanda; clientes recebem `404` |
 | `POST /demands/{demand}/attachments` | `multipart/form-data` com `files[]`; até 10 arquivos por envio e 20 MB por arquivo. PDF, imagens, vídeos, Office, texto, CSV e ZIP | Mesma autorização do detalhe interno; grava autor e evento. Retorna `201` com nome, tipo, tamanho, autor, data, `preview_url` e `download_url`; nunca retorna o caminho privado de armazenamento |
 | `GET /demands/{demand}/attachments/{attachment}` | Transmite PDF, imagem ou vídeo inline para prévia; acrescente `?download=1` para forçar download | Exige token ativo e autorização da demanda; clientes, outra organização e anexos associados a outra demanda recebem `404` |

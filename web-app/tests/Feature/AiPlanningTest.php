@@ -34,6 +34,7 @@ class AiPlanningTest extends TestCase
         Http::fake(['https://ai-gateway.vercel.sh/v1/chat/completions' => Http::response($this->providerResponse(), 200)]);
 
         $this->actingAs($manager)->post(route('ai-planning.propose', $demand))->assertRedirect();
+        $this->get(route('demands.show', $demand))->assertOk()->assertSee('Resumo curto para o quadro')->assertSee('name="summary"', false);
 
         $run = AiPlanningRun::firstOrFail();
         $this->assertSame($organization->id, $run->organization_id);
@@ -42,6 +43,7 @@ class AiPlanningTest extends TestCase
         $this->assertSame(2, count($run->proposal['tasks']));
         $this->assertSame(0, $run->proposal['tasks'][1]['depends_on'][0]);
         $this->assertSame(0, DemandTask::count());
+        $this->assertNull($demand->fresh()->ai_summary);
         $this->assertSame(64, strlen($run->input_hash));
         $this->assertDatabaseHas('demand_events', ['demand_id' => $demand->id, 'actor_id' => $manager->id, 'event_type' => 'ai_planning_proposed']);
         Http::assertSent(fn ($request) => $request['messages'][1]['content'] !== ''
@@ -57,6 +59,7 @@ class AiPlanningTest extends TestCase
         $run = AiPlanningRun::firstOrFail();
 
         $this->post(route('ai-planning.approve', [$demand, $run]), [
+            'summary' => 'Resumo revisto pela gestão: site dividido em briefing e estrutura.',
             'tasks' => [
                 ['include' => 1, 'title' => 'Briefing revisado', 'responsibility_profile' => 'Atendimento', 'estimate_minutes' => 25, 'assignee_id' => $professional->id],
                 ['include' => 1, 'title' => 'Mapa do site revisado', 'responsibility_profile' => 'Design', 'estimate_minutes' => 65, 'assignee_id' => $professional->id],
@@ -71,8 +74,12 @@ class AiPlanningTest extends TestCase
         $this->assertSame([$tasks[0]->id], $tasks[1]->dependencies()->pluck('demand_tasks.id')->all());
         $this->assertSame('approved', $run->fresh()->status);
         $this->assertSame($manager->id, $run->fresh()->reviewed_by);
+        $this->assertSame('Resumo revisto pela gestão: site dividido em briefing e estrutura.', $demand->fresh()->ai_summary);
         $this->assertSame('Mapa do site revisado', $run->fresh()->reviewed_tasks['tasks'][1]['title']);
         $this->assertDatabaseHas('demand_events', ['demand_id' => $demand->id, 'actor_id' => $manager->id, 'event_type' => 'ai_planning_approved']);
+        $this->actingAs($manager)->get(route('demands.index'))->assertSee('Resumo revisto pela gestão: site dividido em briefing e estrutura.');
+        $token = $manager->createToken('summary-api')->plainTextToken;
+        $this->withToken($token)->getJson('/api/v1/demands')->assertOk()->assertJsonPath('data.0.summary', 'Resumo revisto pela gestão: site dividido em briefing e estrutura.');
 
         $this->actingAs($professional)->post(route('demand-tasks.timer.start', $tasks[1]))->assertSessionHasErrors('timer');
         $tasks[0]->update(['status' => TaskStatus::Completed]);
@@ -87,6 +94,7 @@ class AiPlanningTest extends TestCase
         $this->actingAs($manager)->post(route('ai-planning.propose', $demand));
         $run = AiPlanningRun::firstOrFail();
         $invalid = [
+            'summary' => 'Resumo aprovado.',
             'tasks' => [
                 ['include' => 1, 'title' => 'A', 'responsibility_profile' => 'Design', 'estimate_minutes' => 10, 'assignee_id' => $externalProfessional->id],
                 ['include' => 1, 'title' => 'B', 'responsibility_profile' => 'Design', 'estimate_minutes' => 10, 'assignee_id' => $externalProfessional->id],
@@ -104,6 +112,7 @@ class AiPlanningTest extends TestCase
         $this->post(route('ai-planning.approve', [$demand, $run]), $valid)->assertRedirect()->assertSessionHasNoErrors();
         $this->post(route('ai-planning.approve', [$demand, $run]), $valid)->assertSessionHasErrors('ai');
         $this->assertSame(2, DemandTask::count());
+        $this->assertSame('Resumo aprovado.', $demand->fresh()->ai_summary);
     }
 
     public function test_missing_provider_configuration_and_wrong_roles_do_not_create_runs(): void
@@ -190,6 +199,7 @@ class AiPlanningTest extends TestCase
         $run = AiPlanningRun::firstOrFail();
 
         $this->post(route('ai-planning.approve', [$demand, $run]), [
+            'summary' => 'Planejamento do site revisado.',
             'tasks' => [
                 ['include' => 0],
                 ['include' => 1, 'title' => 'Mapear páginas', 'responsibility_profile' => 'Design', 'estimate_minutes' => 75, 'assignee_id' => $professional->id],
@@ -203,6 +213,28 @@ class AiPlanningTest extends TestCase
         $reviewed = $run->fresh()->reviewed_tasks['tasks'];
         $this->assertFalse($reviewed[0]['include']);
         $this->assertTrue($reviewed[1]['include']);
+    }
+
+    public function test_manager_can_remove_ai_summary_and_keep_the_original_brief_excerpt_on_the_board(): void
+    {
+        [, $manager, $professional, $demand] = $this->workspace();
+        Http::fake(['https://ai-gateway.vercel.sh/v1/chat/completions' => Http::response($this->providerResponse(), 200)]);
+        $this->actingAs($manager)->post(route('ai-planning.propose', $demand));
+        $run = AiPlanningRun::firstOrFail();
+
+        $this->post(route('ai-planning.approve', [$demand, $run]), [
+            'summary' => '',
+            'tasks' => [
+                ['include' => 1, 'title' => 'Organizar briefing', 'responsibility_profile' => 'Atendimento', 'estimate_minutes' => 30, 'assignee_id' => $professional->id],
+                ['include' => 0],
+            ],
+        ])->assertRedirect()->assertSessionHasNoErrors();
+
+        $this->assertNull($demand->fresh()->ai_summary);
+        $this->actingAs($manager)->get(route('demands.index'))
+            ->assertOk()
+            ->assertSee('Briefing sintético de teste.')
+            ->assertDontSee('Planejar site em duas etapas.');
     }
 
     public function test_non_manager_does_not_see_ai_planning_controls(): void

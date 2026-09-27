@@ -72,6 +72,7 @@ class AiPlanningController extends Controller
 
         $organizationId = $request->user()->organization_id;
         $data = Validator::make($request->all(), [
+            'summary' => ['nullable', 'string', 'max:280'],
             'tasks' => ['required', 'array', 'max:20'],
             'tasks.*.include' => ['required', 'boolean'],
             'questions' => ['nullable', 'array', 'max:8'],
@@ -156,9 +157,11 @@ class AiPlanningController extends Controller
                 ]);
             }
 
+            $reviewedSummary = trim((string) ($data['summary'] ?? ''));
+            $demand->update(['ai_summary' => $reviewedSummary !== '' ? $reviewedSummary : null]);
             $locked->update([
                 'reviewed_tasks' => [
-                    'summary' => $locked->proposal['summary'] ?? '',
+                    'summary' => $reviewedSummary,
                     'questions' => $data['questions'] ?? [],
                     'tasks' => array_values(array_map(function (int $index, array $suggested) use ($selectedTasks): array {
                         if (! isset($selectedTasks[$index])) {

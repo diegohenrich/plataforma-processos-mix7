@@ -47,7 +47,7 @@
                                     <article class="kanban-card" data-kanban-card data-next-stages="{{ collect($nextStatuses)->pluck('value')->implode(',') }}" draggable="{{ $canMoveDemands && count($nextStatuses) ? 'true' : 'false' }}">
                                         <a href="{{ route('demands.show', $demand) }}" aria-label="Abrir demanda: {{ $demand->title }}">
                                             <span class="kanban-card-title">{{ $demand->title }}</span>
-                                            <span class="kanban-brief">{{ \Illuminate\Support\Str::limit($demand->brief, 125) }}</span>
+                                            <span class="kanban-brief">{{ $demand->ai_summary ?: \Illuminate\Support\Str::limit($demand->brief, 125) }}</span>
                                         </a>
                                         <div class="kanban-meta">
                                             @if ($demand->module_key)<span>{{ $demand->moduleDisplayLabel() }} · v{{ $demand->module_version }}</span>@endif
@@ -85,7 +85,7 @@
                             @if (auth()->user()->role === App\Enums\UserRole::Client)
                                 <div class="demand-card-main"><div class="demand-title-row"><h2>{{ $demand->title }}</h2><span class="pill">{{ $demand->status->label() }}</span></div><p>Acompanhe a etapa atual. A aprovação de materiais será enviada em um link separado.</p><span class="meta-line">Atualizada em {{ $demand->updated_at->format('d/m/Y') }}</span></div>
                             @else
-                                <div class="demand-card-main"><div class="demand-title-row"><h2>{{ $demand->title }}</h2><span class="pill">{{ $demand->status->label() }}</span></div><p>{{ \Illuminate\Support\Str::limit($demand->brief, 145) }}</p><span class="meta-line">Criada por {{ $demand->creator->name }} · {{ $demand->created_at->format('d/m/Y') }}</span></div>
+                                <div class="demand-card-main"><div class="demand-title-row"><h2>{{ $demand->title }}</h2><span class="pill">{{ $demand->status->label() }}</span></div><p>{{ $demand->ai_summary ?: \Illuminate\Support\Str::limit($demand->brief, 145) }}</p><span class="meta-line">Criada por {{ $demand->creator->name }} · {{ $demand->created_at->format('d/m/Y') }}</span></div>
                                 <div class="demand-card-side"><strong>{{ $demand->tasks->count() }}</strong><span>{{ \Illuminate\Support\Str::plural('tarefa', $demand->tasks->count()) }}</span><span class="task-mini">{{ $demand->tasks->where('status', App\Enums\TaskStatus::Completed)->count() }} concluídas</span></div>
                             @endif
                         </a>

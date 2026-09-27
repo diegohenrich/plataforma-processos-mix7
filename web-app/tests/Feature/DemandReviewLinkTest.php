@@ -118,6 +118,7 @@ class DemandReviewLinkTest extends TestCase
     public function test_manager_creates_one_time_visible_version_link_without_storing_plain_token(): void
     {
         [$organization, $manager, $demand] = $this->setupApproval();
+        $demand->update(['ai_summary' => 'Resumo de planejamento reservado à equipe']);
         $response = $this->actingAs($manager)->post(route('demand-reviews.store', $demand), [
             'material_url' => 'https://preview.example.test/site-v1',
             'expires_at' => now()->addDays(3)->toIso8601String(),
@@ -134,7 +135,8 @@ class DemandReviewLinkTest extends TestCase
         $this->get(route('client-reviews.show', $token))->assertOk()
             ->assertSee('Site institucional')
             ->assertSee('https://preview.example.test/site-v1')
-            ->assertDontSee('Briefing privado do teste');
+            ->assertDontSee('Briefing privado do teste')
+            ->assertDontSee('Resumo de planejamento reservado à equipe');
     }
 
     public function test_client_can_comment_then_request_changes_and_demand_enters_adjustments(): void

@@ -91,7 +91,7 @@ class PlanningAgent
         }
 
         $validator = Validator::make($proposal, [
-            'summary' => ['required', 'string', 'max:1200'],
+            'summary' => ['required', 'string', 'max:280'],
             'questions' => ['present', 'array', 'max:8'],
             'questions.*' => ['required', 'string', 'max:500'],
             'tasks' => ['required', 'array', 'min:1', 'max:20'],
@@ -137,7 +137,7 @@ class PlanningAgent
         return [
             'type' => 'object',
             'properties' => [
-                'summary' => ['type' => 'string'],
+                'summary' => ['type' => 'string', 'maxLength' => 280],
                 'questions' => ['type' => 'array', 'items' => ['type' => 'string']],
                 'tasks' => [
                     'type' => 'array',
