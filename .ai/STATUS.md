@@ -643,4 +643,5 @@ Histórico operacional anterior preservado em [docs/VALIDACOES-HISTORICAS.md](..
 
 ## Auditoria de atribuição sugerida pela IA — 2026-09-27
 - Conferindo a matriz funcional com o código, vi que o planejador sugere perfil de responsabilidade, estimativa e tarefas; o nome do profissional continua sendo escolhido pela gestão. Atualizei `docs/AUDITORIA-FUNCIONAL-POR-PERFIL.md` para não descrever essa função como recomendação nominal já implementada. Os dados atuais não incluem competências por pessoa e a política de envio de dados à IA não está aprovada, então não vou inferir um critério de escolha.
-- A auditoria funcional automatizada ainda não foi testada no navegador. A atualização precisa ser publicada e vinculada ao Trello; o rascunho aberto no cartão #35 continua preservado.
+- A auditoria funcional automatizada ainda não foi testada no navegador. GitHub: commit `b10468e04e150d9ad1e1b18c0e70d54c5ba22844` publicado em `codex/fundacao-compartilhada`, SHA remoto confirmado; checks de push [36307336849](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36307336849) e PR #11 [36307339454](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36307339454) passaram.
+- Trello desta auditoria segue pendente: a aba atual mantém o rascunho não salvo no cartão #35 e não há conector direto nesta sessão.
