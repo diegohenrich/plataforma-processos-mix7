@@ -74,7 +74,7 @@ class TeamMemberAccessTest extends TestCase
         $this->assertTrue($professional->fresh()->is_active);
         $this->assertSame(2, TeamMemberEvent::query()->where('member_id', $professional->id)->count());
         $this->assertDatabaseHas('team_member_events', ['member_id' => $professional->id, 'actor_id' => $owner->id, 'event_type' => 'access_restored']);
-        $this->get(route('team.index'))->assertOk()->assertSee('Histórico de acesso')->assertSee('Acesso restaurado')->assertSee($owner->name);
+        $this->get(route('team.index'))->assertOk()->assertSee('Histórico da equipe')->assertSee('Acesso restaurado')->assertSee($owner->name);
 
         $this->from(route('team.index'))->patch(route('team.members.access', $client))->assertRedirect(route('team.index'));
         $this->assertFalse($client->fresh()->is_active);
@@ -94,6 +94,29 @@ class TeamMemberAccessTest extends TestCase
         $this->assertTrue($professional->fresh()->is_active);
         $this->assertTrue($client->fresh()->is_active);
         $this->assertSame(0, TeamMemberEvent::query()->count());
+    }
+
+    public function test_owner_can_set_professional_specialties_and_other_roles_cannot(): void
+    {
+        [, $owner, $professional, , $manager] = $this->workspace();
+        [, , $outsideProfessional] = $this->workspace('outside');
+
+        $this->actingAs($owner)->patch(route('team.members.specialties', $professional), [
+            'specialties' => ' Design, Edição de vídeo; design ',
+        ])->assertRedirect()->assertSessionHasNoErrors();
+
+        $this->assertSame(['Design', 'Edição de vídeo'], $professional->fresh()->specialties);
+        $this->assertDatabaseHas('team_member_events', [
+            'organization_id' => $professional->organization_id,
+            'member_id' => $professional->id,
+            'actor_id' => $owner->id,
+            'event_type' => 'specialties_updated',
+        ]);
+        $this->actingAs($owner)->get(route('team.index'))->assertOk()->assertSee('Especialidades profissionais atualizadas')->assertSee($owner->name);
+        $this->actingAs($manager)->patch(route('team.members.specialties', $professional), ['specialties' => 'Redação'])->assertForbidden();
+        $this->actingAs($owner)->patch(route('team.members.specialties', $outsideProfessional), ['specialties' => 'Redação'])->assertNotFound();
+        $this->actingAs($owner)->patch(route('team.members.specialties', $professional), ['specialties' => implode(',', range(1, 13))])->assertSessionHasErrors('specialties');
+        $this->assertSame(['Design', 'Edição de vídeo'], $professional->fresh()->specialties);
     }
 
     public function test_management_keeps_inactive_professionals_open_work_visible(): void

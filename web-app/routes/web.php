@@ -97,6 +97,7 @@ Route::middleware(['auth', 'active'])->group(function (): void {
     Route::post('/integracoes/tokens', [ApiTokenController::class, 'store'])->middleware('throttle:5,10')->name('api-tokens.store');
     Route::delete('/integracoes/tokens/{token}', [ApiTokenController::class, 'destroy'])->name('api-tokens.destroy');
     Route::patch('/equipe/{member}/acesso', [TeamMemberController::class, 'updateAccess'])->name('team.members.access');
+    Route::patch('/equipe/{member}/especialidades', [TeamMemberController::class, 'updateSpecialties'])->name('team.members.specialties');
     Route::get('/equipe/producao', [TeamActivityController::class, 'index'])->name('team.activity');
     Route::get('/equipe/capacidade', [TeamCapacityController::class, 'index'])->name('team.capacity');
     Route::post('/equipe/capacidade/disponibilidade', [TeamCapacityController::class, 'setScheduledHours'])->name('team.capacity.schedule');

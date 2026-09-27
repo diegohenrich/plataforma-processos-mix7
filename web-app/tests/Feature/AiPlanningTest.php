@@ -57,6 +57,44 @@ class AiPlanningTest extends TestCase
             && $request['response_format']['type'] === 'json_schema');
     }
 
+    public function test_review_suggests_one_professional_by_exact_local_specialty_match_without_sending_roster_to_ai(): void
+    {
+        [, $manager, $professional, $demand] = $this->workspace();
+        $professional->update(['specialties' => ['design']]);
+        Http::fake(['https://ai-gateway.vercel.sh/v1/chat/completions' => Http::response($this->providerResponse(), 200)]);
+
+        $this->actingAs($manager)->post(route('ai-planning.propose', $demand))->assertRedirect();
+        $requestBody = Http::recorded()->first()[0]->data();
+        $this->assertStringNotContainsString($professional->name, $requestBody['messages'][1]['content']);
+        $page = $this->get(route('demands.show', $demand))->assertOk();
+        $this->assertStringContainsString('Responsável sugerido — confirme', $page->getContent());
+        $this->assertStringContainsString('Sugestão local pela correspondência exata da especialidade cadastrada.', $page->getContent());
+        $this->assertSame(1, preg_match('/<option\b(?=[^>]*value="'.$professional->id.'")(?=[^>]*selected)[^>]*>[^<]*especialidade compatível/s', $page->getContent()));
+        $this->assertFalse($professional->matchesSpecialty('Atendimento'));
+        $this->assertTrue($professional->matchesSpecialty('DESIGN'));
+        $this->assertTrue($professional->matchesSpecialty('dèsign'));
+        $this->assertSame(0, DemandTask::count());
+    }
+
+    public function test_review_does_not_preselect_when_multiple_professionals_match(): void
+    {
+        [, $manager, $professional, $demand] = $this->workspace();
+        $professional->update(['specialties' => ['Design']]);
+        User::factory()->create([
+            'organization_id' => $demand->organization_id,
+            'role' => UserRole::Professional,
+            'is_active' => true,
+            'specialties' => ['design'],
+        ]);
+        Http::fake(['https://ai-gateway.vercel.sh/v1/chat/completions' => Http::response($this->providerResponse(), 200)]);
+
+        $this->actingAs($manager)->post(route('ai-planning.propose', $demand))->assertRedirect();
+        $page = $this->get(route('demands.show', $demand))->assertOk();
+        $this->assertStringContainsString('Mais de uma pessoa informou esta especialidade; escolha quem executará.', $page->getContent());
+        $this->assertSame(0, preg_match('/<option\b(?=[^>]*value="'.$professional->id.'")(?=[^>]*selected)[^>]*>/', $page->getContent()));
+        $this->assertSame(0, DemandTask::count());
+    }
+
     public function test_manager_can_explicitly_include_only_this_demands_versioned_client_feedback(): void
     {
         [, $manager, $professional, $demand] = $this->workspace();

@@ -289,7 +289,7 @@ class DemandController extends Controller
                 ->get(),
             'canManage' => $request->user()->can('manage', $demand),
             'professionals' => $request->user()->can('manage', $demand)
-                ? User::query()->where('organization_id', $user->organization_id)->where('role', UserRole::Professional->value)->where('is_active', true)->orderBy('name')->get(['id', 'name'])
+                ? User::query()->where('organization_id', $user->organization_id)->where('role', UserRole::Professional->value)->where('is_active', true)->orderBy('name')->get(['id', 'name', 'specialties'])
                 : collect(),
             'clients' => $request->user()->can('manage', $demand)
                 ? User::query()->where('organization_id', $user->organization_id)->where('role', UserRole::Client->value)->where('is_active', true)->orderBy('name')->get(['id', 'name', 'email'])

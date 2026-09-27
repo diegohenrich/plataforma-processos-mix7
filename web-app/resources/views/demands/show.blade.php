@@ -203,7 +203,28 @@
                                             <p class="field-help">Este resumo só aparecerá para a equipe depois que você revisar e aplicar a proposta. Apague o texto se preferir manter apenas o trecho do briefing.</p>
                                             @foreach (($run->proposal['questions'] ?? []) as $questionIndex => $question)<label class="field">Pergunta para completar o briefing<input name="questions[{{ $questionIndex }}]" value="{{ $question }}" maxlength="500" required></label>@endforeach
                                             @foreach (($run->proposal['tasks'] ?? []) as $index => $suggestedTask)
-                                                <div class="ai-task-row"><label class="field">Aplicar esta tarefa?<select name="tasks[{{ $index }}][include]" data-ai-include><option value="1" selected>Sim, incluir</option><option value="0">Não, remover</option></select></label><fieldset class="ai-task-fields"><label class="field">Tarefa sugerida<input name="tasks[{{ $index }}][title]" value="{{ $suggestedTask['title'] }}" maxlength="180" required></label><label class="field">Perfil sugerido<input name="tasks[{{ $index }}][responsibility_profile]" value="{{ $suggestedTask['responsibility_profile'] }}" maxlength="120" required></label><label class="field">Estimativa (minutos)<input type="number" name="tasks[{{ $index }}][estimate_minutes]" value="{{ $suggestedTask['estimate_minutes'] }}" min="1" max="100000" required></label><label class="field">Responsável<select name="tasks[{{ $index }}][assignee_id]" required><option value="">Escolha uma pessoa</option>@foreach ($professionals as $professional)<option value="{{ $professional->id }}">{{ $professional->name }}</option>@endforeach</select></label><p>{{ $suggestedTask['rationale'] }}@if ($suggestedTask['depends_on'])<br><strong>Depende de:</strong> @foreach ($suggestedTask['depends_on'] as $dependencyIndex){{ $run->proposal['tasks'][$dependencyIndex]['title'] ?? 'Tarefa anterior' }}@if (!$loop->last), @endif @endforeach @else<br>Sem dependências anteriores.@endif @if (!empty($suggestedTask['feedback_refs']))<br><strong>Feedback ligado a esta tarefa:</strong> @foreach ($suggestedTask['feedback_refs'] as $feedbackId)@if (isset($feedbackById[$feedbackId]))versão {{ $feedbackById[$feedbackId]['version'] }} · “{{ mb_substr((string) $feedbackById[$feedbackId]['comment'], 0, 120) }}”@else resposta #{{ $feedbackId }}@endif @if (!$loop->last); @endif @endforeach @endif</p></fieldset></div>
+                                                @php
+                                                    $matchedProfessionals = $professionals->filter(fn ($person) => $person->matchesSpecialty((string) $suggestedTask['responsibility_profile']))->values();
+                                                    $recommendedProfessionalId = $matchedProfessionals->count() === 1 ? $matchedProfessionals->first()->id : null;
+                                                @endphp
+                                                <div class="ai-task-row" data-ai-assignee-row>
+                                                    <label class="field">Aplicar esta tarefa?<select name="tasks[{{ $index }}][include]" data-ai-include><option value="1" selected>Sim, incluir</option><option value="0">Não, remover</option></select></label>
+                                                    <fieldset class="ai-task-fields">
+                                                        <label class="field">Tarefa sugerida<input name="tasks[{{ $index }}][title]" value="{{ $suggestedTask['title'] }}" maxlength="180" required></label>
+                                                        <label class="field">Perfil sugerido<input name="tasks[{{ $index }}][responsibility_profile]" value="{{ $suggestedTask['responsibility_profile'] }}" maxlength="120" required data-ai-responsibility-profile></label>
+                                                        <label class="field">Estimativa (minutos)<input type="number" name="tasks[{{ $index }}][estimate_minutes]" value="{{ $suggestedTask['estimate_minutes'] }}" min="1" max="100000" required></label>
+                                                        <label class="field"><span data-ai-assignee-label>{{ $recommendedProfessionalId ? 'Responsável sugerido — confirme' : 'Responsável' }}</span>
+                                                            <select name="tasks[{{ $index }}][assignee_id]" required data-ai-assignee-select>
+                                                                <option value="" data-professional-name="">Escolha uma pessoa</option>
+                                                                @foreach ($professionals as $professional)
+                                                                    <option value="{{ $professional->id }}" data-professional-name="{{ $professional->name }}" data-professional-specialties="{{ json_encode($professional->specialties ?? [], JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_HEX_TAG) }}" @selected($recommendedProfessionalId === $professional->id)>{{ $professional->name }}@if ($professional->matchesSpecialty((string) $suggestedTask['responsibility_profile'])) · especialidade compatível @endif</option>
+                                                                @endforeach
+                                                            </select>
+                                                            <span class="field-help" data-ai-assignee-help>@if ($matchedProfessionals->count() > 1)Mais de uma pessoa informou esta especialidade; escolha quem executará.@elseif ($recommendedProfessionalId)Sugestão local pela correspondência exata da especialidade cadastrada. Confirme antes de aplicar.@else Nenhuma especialidade cadastrada corresponde exatamente ao perfil. Escolha manualmente.@endif</span>
+                                                        </label>
+                                                        <p>{{ $suggestedTask['rationale'] }}@if ($suggestedTask['depends_on'])<br><strong>Depende de:</strong> @foreach ($suggestedTask['depends_on'] as $dependencyIndex){{ $run->proposal['tasks'][$dependencyIndex]['title'] ?? 'Tarefa anterior' }}@if (!$loop->last), @endif @endforeach @else<br>Sem dependências anteriores.@endif @if (!empty($suggestedTask['feedback_refs']))<br><strong>Feedback ligado a esta tarefa:</strong> @foreach ($suggestedTask['feedback_refs'] as $feedbackId)@if (isset($feedbackById[$feedbackId]))versão {{ $feedbackById[$feedbackId]['version'] }} · “{{ mb_substr((string) $feedbackById[$feedbackId]['comment'], 0, 120) }}”@else resposta #{{ $feedbackId }}@endif @if (!$loop->last); @endif @endforeach @endif</p>
+                                                    </fieldset>
+                                                </div>
                                             @endforeach
                                             <p class="field-help">Ao remover uma tarefa, as tarefas seguintes deixam de depender dela.</p>
                                             @if ($professionals->isEmpty())<p class="empty-inline">Cadastre profissionais antes de aplicar a proposta.</p>@else<div class="form-actions"><button class="primary-button" type="submit">Revisar e criar tarefas selecionadas</button></div>@endif
@@ -291,6 +312,40 @@ document.querySelectorAll('[data-ai-include]').forEach((select) => {
     };
     select.addEventListener('change', sync);
     sync();
+});
+document.querySelectorAll('[data-ai-assignee-row]').forEach((row) => {
+    const profile = row.querySelector('[data-ai-responsibility-profile]');
+    const select = row.querySelector('[data-ai-assignee-select]');
+    const label = row.querySelector('[data-ai-assignee-label]');
+    const help = row.querySelector('[data-ai-assignee-help]');
+    const normalize = (value) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLocaleLowerCase('pt-BR');
+    const refreshSuggestion = () => {
+        const requestedSpecialty = normalize(profile.value);
+        const matches = [...select.options].filter((option) => {
+            try {
+                return JSON.parse(option.dataset.professionalSpecialties || '[]')
+                    .some((specialty) => normalize(specialty) === requestedSpecialty);
+            } catch {
+                return false;
+            }
+        });
+
+        for (const option of select.options) {
+            const name = option.dataset.professionalName || option.textContent;
+            option.textContent = name + (matches.includes(option) ? ' · especialidade compatível' : '');
+        }
+
+        label.textContent = matches.length === 1 ? 'Responsável sugerido — confirme' : 'Responsável';
+        help.textContent = matches.length === 1
+            ? 'Sugestão local pela correspondência exata da especialidade cadastrada. Confirme antes de aplicar.'
+            : matches.length > 1
+                ? 'Mais de uma pessoa informou esta especialidade; escolha quem executará.'
+                : 'Nenhuma especialidade cadastrada corresponde exatamente ao perfil. Escolha manualmente.';
+        select.value = matches.length === 1 ? matches[0].value : '';
+    };
+
+    profile.addEventListener('input', refreshSuggestion);
+    refreshSuggestion();
 });
 </script>
 @endif

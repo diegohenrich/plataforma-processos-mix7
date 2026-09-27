@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
@@ -29,6 +30,7 @@ class User extends Authenticatable
         'password',
         'organization_id',
         'role',
+        'specialties',
         'is_active',
     ];
 
@@ -54,6 +56,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'is_active' => 'boolean',
             'role' => UserRole::class,
+            'specialties' => 'array',
         ];
     }
 
@@ -80,5 +83,17 @@ class User extends Authenticatable
     public function activeTimeEntry(): HasOne
     {
         return $this->hasOne(TaskTimeEntry::class)->whereNull('ended_at');
+    }
+
+    public function matchesSpecialty(string $responsibilityProfile): bool
+    {
+        $profile = Str::lower(Str::ascii(trim($responsibilityProfile)));
+
+        if ($profile === '') {
+            return false;
+        }
+
+        return collect($this->specialties ?? [])
+            ->contains(fn (string $specialty): bool => Str::lower(Str::ascii(trim($specialty))) === $profile);
     }
 }
