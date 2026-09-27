@@ -7,7 +7,8 @@
 
 ## Verificação funcional da bandeja do profissional — 2026-09-27
 - Os testes existentes confirmam que a bandeja lista só tarefas atribuídas e abertas, impede iniciar uma tarefa bloqueada ou em paralelo, exibe cronômetro e heartbeat e permite pausar/concluir; concluir fecha o intervalo. Testes focados: 3 testes/31 assertions aprovados.
-- A inspeção visual do painel fixo em desktop e celular continua pendente; o teste automatizado não substitui a conferência renderizada. Nenhuma alteração de código foi necessária nesta verificação.
+- A tela autenticada foi renderizada no desktop (1264 × 712). A bandeja fixa mostrou duas tarefas sintéticas; iniciar exibiu contador crescente (00:00:00 → 00:00:07), pausa removeu o cronômetro ativo e a conclusão de outra tarefa encerrou o timer e reduziu a lista para uma tarefa. A tela expandida e minimizada foi inspecionada. A verificação móvel continua pendente porque a ferramenta atual não expõe controle de viewport.
+- Para a inspeção, usei cópia descartável do SQLite de demonstração, apliquei migrações recentes somente nessa cópia e troquei a senha da conta sintética nela. Encerrei o servidor `127.0.0.1:4210` e removi a cópia; o banco demo original foi preservado. Nenhuma alteração de código foi necessária.
 - A verificação documental foi publicada em `a7213609b7ea692f2fcb90e1476d50f3ec9c3106`; o SHA remoto corresponde e os checks de push/PR passaram nos runs [36309444678](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36309444678) e [36309446811](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36309446811).
 - Trello pendente pelo bloqueio da interface já registrado; não alegar sincronização.
 
