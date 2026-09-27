@@ -2,11 +2,13 @@
 - A tela autenticada da demanda renderizou um PDF de uma página gerado para QA: PDF.js carregou, exibiu “Página 1 de 1” e desenhou o conteúdo no canvas; controles de página/zoom e links para abrir em outra guia/baixar estavam presentes. O teste usou organização, conta, demanda, banco SQLite e arquivo sintéticos locais.
 - `DemandAttachmentTest` e `ApiDemandAttachmentTest`: 7 testes/81 assertions passaram. O navegador confirmou a prévia real no desktop. O envio do arquivo pelo formulário no navegador, limites PHP/Hostinger, armazenamento compartilhado e uso multiusuário ainda precisam de validação.
 - Encerrei o servidor local 127.0.0.1:4210 e removi o banco, o script e o PDF temporários. O banco demo existente e a cópia do CRM Mix7 foram preservados. Não alterei código nesta inspeção.
+- Auditoria e status publicados nos commits `6ba9484c47fe52c8db4953afced1f485ac331d03` e `a7213609b7ea692f2fcb90e1476d50f3ec9c3106`; os SHAs locais/remotos foram conferidos. Checks do push e PR passaram nos runs [36309321732](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36309321732), [36309324438](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36309324438), [36309444678](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36309444678) e [36309446811](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36309446811).
 - Trello permanece pendente: a atualização de interface foi bloqueada pela política do navegador e não há conector disponível nesta sessão; não marcar como sincronizado.
 
 ## Verificação funcional da bandeja do profissional — 2026-09-27
 - Os testes existentes confirmam que a bandeja lista só tarefas atribuídas e abertas, impede iniciar uma tarefa bloqueada ou em paralelo, exibe cronômetro e heartbeat e permite pausar/concluir; concluir fecha o intervalo. Testes focados: 3 testes/31 assertions aprovados.
 - A inspeção visual do painel fixo em desktop e celular continua pendente; o teste automatizado não substitui a conferência renderizada. Nenhuma alteração de código foi necessária nesta verificação.
+- A verificação documental foi publicada em `a7213609b7ea692f2fcb90e1476d50f3ec9c3106`; o SHA remoto corresponde e os checks de push/PR passaram nos runs [36309444678](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36309444678) e [36309446811](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36309446811).
 - Trello pendente pelo bloqueio da interface já registrado; não alegar sincronização.
 
 ## Encerramento agendado de cronômetros sem sinal — 2026-09-27
