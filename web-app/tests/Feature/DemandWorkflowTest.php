@@ -155,6 +155,39 @@ class DemandWorkflowTest extends TestCase
         ]);
     }
 
+    public function test_task_board_paginates_each_column_without_losing_total_counts(): void
+    {
+        [$organization, $manager, $professional] = $this->team();
+        $demand = $this->demand($organization, $manager);
+
+        for ($index = 1; $index <= 61; $index++) {
+            $this->task($demand, $professional, $manager, sprintf('Tarefa %02d', $index));
+        }
+
+        $firstPage = $this->actingAs($manager)->get(route('demand-tasks.board'))
+            ->assertOk()
+            ->assertSee('Mostrando 1–30 de 61 tarefas')
+            ->assertSee('Mostrar mais tarefas')
+            ->assertSee('page_todo=2')
+            ->assertDontSee('Tarefa 01');
+        $this->assertSame(30, preg_match_all('/<article class="task-board-card"/', $firstPage->getContent()));
+
+        $secondPage = $this->get(route('demand-tasks.board', ['page_todo' => 2]))
+            ->assertOk()
+            ->assertSee('Mostrando 31–60 de 61 tarefas')
+            ->assertSee('Voltar às anteriores')
+            ->assertSee('Mostrar mais tarefas')
+            ->assertDontSee('Tarefa 01');
+        $this->assertSame(30, preg_match_all('/<article class="task-board-card"/', $secondPage->getContent()));
+
+        $lastPage = $this->get(route('demand-tasks.board', ['page_todo' => 3]))
+            ->assertOk()
+            ->assertSee('Mostrando 61–61 de 61 tarefas')
+            ->assertSee('Tarefa 01')
+            ->assertSee('Voltar às anteriores');
+        $this->assertSame(1, preg_match_all('/<article class="task-board-card"/', $lastPage->getContent()));
+    }
+
     public function test_professional_task_board_contains_only_assigned_tasks_and_can_update_own_work(): void
     {
         [$organization, $manager, $professional, $colleague] = $this->team();

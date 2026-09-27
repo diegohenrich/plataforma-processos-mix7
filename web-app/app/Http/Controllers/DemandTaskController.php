@@ -27,18 +27,43 @@ class DemandTaskController extends Controller
         $user = $request->user();
         abort_unless(in_array($user->role, [UserRole::AgencyOwner, UserRole::MarketingManager, UserRole::Professional], true), 403);
 
-        $tasks = DemandTask::query()
-            ->where('organization_id', $user->organization_id)
-            ->when($user->role === UserRole::Professional, fn ($query) => $query->where('assigned_to', $user->id))
-            ->with(['demand:id,title,status', 'assignee:id,name,is_active', 'dependencies:id,title,status'])
-            ->latest()
-            ->get();
-        $boardColumns = collect(TaskStatus::cases())->mapWithKeys(fn (TaskStatus $status) => [
-            $status->value => $tasks->where('status', $status)->values(),
-        ]);
+        $perColumn = 30;
+        $boardColumns = collect();
+        $boardCounts = collect();
+        $boardPages = collect();
+
+        foreach (TaskStatus::cases() as $status) {
+            $scope = DemandTask::query()
+                ->where('organization_id', $user->organization_id)
+                ->where('status', $status->value)
+                ->when($user->role === UserRole::Professional, fn ($query) => $query->where('assigned_to', $user->id));
+            $total = (clone $scope)->count();
+            $lastPage = max(1, (int) ceil($total / $perColumn));
+            $pageKey = 'page_'.$status->value;
+            $page = min(max(1, $request->integer($pageKey, 1)), $lastPage);
+
+            $boardColumns->put($status->value, $scope
+                ->with(['demand:id,title,status', 'assignee:id,name,is_active', 'dependencies:id,title,status'])
+                ->latest()
+                ->orderByDesc('id')
+                ->offset(($page - 1) * $perColumn)
+                ->limit($perColumn)
+                ->get());
+            $boardCounts->put($status->value, $total);
+            $boardPages->put($status->value, [
+                'current' => $page,
+                'last' => $lastPage,
+                'from' => $total === 0 ? 0 : (($page - 1) * $perColumn) + 1,
+                'to' => min($page * $perColumn, $total),
+                'next_url' => $page < $lastPage ? $request->fullUrlWithQuery([$pageKey => $page + 1]) : null,
+                'previous_url' => $page > 1 ? $request->fullUrlWithQuery([$pageKey => $page - 1]) : null,
+            ]);
+        }
 
         return view('demands.tasks-board', [
             'boardColumns' => $boardColumns,
+            'boardCounts' => $boardCounts,
+            'boardPages' => $boardPages,
             'currentUser' => $user,
         ]);
     }
