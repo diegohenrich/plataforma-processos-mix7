@@ -22,20 +22,28 @@ class PerformanceReviewController extends Controller
         $user = $request->user();
         abort_unless(in_array($user->role, [UserRole::AgencyOwner, UserRole::MarketingManager, UserRole::Professional], true), 403);
         $management = in_array($user->role, [UserRole::AgencyOwner, UserRole::MarketingManager], true);
+        $filters = $request->validate([
+            'from' => ['nullable', 'date_format:Y-m-d'],
+            'to' => ['nullable', 'date_format:Y-m-d', Rule::when($request->filled('from'), ['after_or_equal:from'])],
+        ]);
 
         $reviews = PerformanceReview::query()
             ->where('organization_id', $user->organization_id)
             ->when(! $management, fn ($query) => $query->where('professional_id', $user->id))
+            ->when($filters['from'] ?? null, fn ($query, $from) => $query->whereDate('created_at', '>=', $from))
+            ->when($filters['to'] ?? null, fn ($query, $to) => $query->whereDate('created_at', '<=', $to))
             ->with(['task.demand:id,title', 'professional:id,name', 'reviewer:id,name,role', 'responses.user:id,name'])
             ->latest()
-            ->paginate(20);
+            ->paginate(20)
+            ->withQueryString();
         $completedTasks = $management
             ? DemandTask::query()->where('organization_id', $user->organization_id)
                 ->where('status', TaskStatus::Completed->value)
+                ->whereDoesntHave('performanceReviews', fn ($query) => $query->where('reviewer_id', $user->id))
                 ->with(['demand:id,title', 'assignee:id,name'])->latest('completed_at')->limit(100)->get()
             : collect();
 
-        return view('team.performance-reviews', compact('reviews', 'completedTasks', 'management'));
+        return view('team.performance-reviews', compact('reviews', 'completedTasks', 'management', 'filters'));
     }
 
     public function store(Request $request): RedirectResponse|JsonResponse

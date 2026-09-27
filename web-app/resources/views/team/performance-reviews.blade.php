@@ -20,7 +20,7 @@
                     <h2>Registrar avaliação de tarefa concluída</h2>
                     <p>Uma avaliação por pessoa avaliadora em cada tarefa. A direção tem peso 2 e a gerência peso 1, conforme indicado nos áudios; os pesos ficam registrados, sem cálculo de nota.</p>
                     @if ($completedTasks->isEmpty())
-                        <div class="empty-state"><h3>Nenhuma tarefa concluída disponível</h3><p>Conclua uma tarefa atribuída a um profissional para registrar uma avaliação ligada ao trabalho realizado.</p></div>
+                        <div class="empty-state"><h3>Nenhuma tarefa disponível para nova avaliação</h3><p>Conclua uma tarefa atribuída a um profissional. Tarefas que você já avaliou não aparecem novamente neste seletor.</p></div>
                     @else
                         <form class="performance-form" method="post" action="{{ route('performance-reviews.store') }}">
                             @csrf
@@ -39,6 +39,12 @@
 
             <section class="performance-list">
                 <div class="section-heading"><div><h2>{{ $management ? 'Histórico da equipe' : 'Seu histórico' }}</h2><p>{{ $management ? 'Registros da sua organização, com autoria e respostas.' : 'Avaliações das suas tarefas, sem acesso às avaliações de outras pessoas.' }}</p></div></div>
+                <form class="review-filters" method="get" action="{{ route('performance-reviews.index') }}">
+                    <label class="field"><span>De</span><input type="date" name="from" value="{{ $filters['from'] ?? '' }}"></label>
+                    <label class="field"><span>Até</span><input type="date" name="to" value="{{ $filters['to'] ?? '' }}"></label>
+                    <button class="secondary-button" type="submit">Filtrar período</button>
+                    @if (($filters['from'] ?? null) || ($filters['to'] ?? null))<a class="review-filter-clear" href="{{ route('performance-reviews.index') }}">Limpar</a>@endif
+                </form>
                 @forelse ($reviews as $review)
                     <article class="card performance-review-card">
                         <div class="performance-review-heading"><div><span class="pill">{{ $review->task->status->label() }}</span><h3>{{ $review->task->title }}</h3><p>{{ $review->task->demand->title }} · Profissional: {{ $review->professional->name }}</p></div><div class="performance-review-meta"><strong>{{ $review->reviewer->name }}</strong><span>{{ $review->reviewer_role === App\Enums\UserRole::AgencyOwner->value ? 'Direção · peso 2' : 'Gerência · peso 1' }}</span><time datetime="{{ $review->created_at->toISOString() }}">{{ $review->created_at->format('d/m/Y H:i') }}</time></div></div>

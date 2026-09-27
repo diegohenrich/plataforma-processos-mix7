@@ -247,6 +247,62 @@ class TeamActivityTest extends TestCase
         $this->actingAs($client)->get(route('performance-reviews.index'))->assertForbidden();
     }
 
+    public function test_review_history_filters_by_date_and_keeps_professional_scope(): void
+    {
+        [$organization, $owner, $manager, $professional, $colleague] = $this->workspace();
+        $demand = $this->demand($organization, $owner);
+        $insideRange = $this->task($demand, $professional, 'Avaliação do período', TaskStatus::Completed);
+        $outsideRange = $this->task($demand, $professional, 'Avaliação fora do período', TaskStatus::Completed);
+        $colleagueTask = $this->task($demand, $colleague, 'Avaliação de colega', TaskStatus::Completed);
+        $this->review($insideRange, $professional, $manager, '2026-09-15 12:00:00');
+        $this->review($outsideRange, $professional, $manager, '2026-08-31 12:00:00');
+        $this->review($colleagueTask, $colleague, $owner, '2026-09-15 12:00:00');
+
+        $this->actingAs($manager)->get(route('performance-reviews.index', ['from' => '2026-09-01', 'to' => '2026-09-30']))
+            ->assertOk()->assertSee('Avaliação do período')->assertSee('Avaliação de colega')
+            ->assertDontSee('Avaliação fora do período')->assertSee('name="from" value="2026-09-01"', false)
+            ->assertSee('name="to" value="2026-09-30"', false);
+
+        $this->actingAs($professional)->get(route('performance-reviews.index', ['from' => '2026-09-01', 'to' => '2026-09-30']))
+            ->assertOk()->assertSee('Avaliação do período')->assertDontSee('Avaliação de colega')
+            ->assertDontSee('Avaliação fora do período');
+
+        $this->actingAs($manager)->get(route('performance-reviews.index', ['from' => '2026-09-20', 'to' => '2026-09-01']))
+            ->assertSessionHasErrors('to');
+    }
+
+    public function test_management_cannot_accidentally_select_a_task_already_reviewed_by_them(): void
+    {
+        [$organization, $owner, $manager, $professional] = $this->workspace();
+        $demand = $this->demand($organization, $owner);
+        $alreadyReviewedByManager = $this->task($demand, $professional, 'Já avaliada por esta gerência', TaskStatus::Completed);
+        $reviewedByOwnerOnly = $this->task($demand, $professional, 'Avaliada somente pela direção', TaskStatus::Completed);
+        $this->review($alreadyReviewedByManager, $professional, $manager);
+        $this->review($reviewedByOwnerOnly, $professional, $owner);
+
+        $this->actingAs($manager)->get(route('performance-reviews.index'))
+            ->assertOk()->assertDontSee('value="'.$alreadyReviewedByManager->id.'"', false)
+            ->assertSee('value="'.$reviewedByOwnerOnly->id.'"', false);
+    }
+
+    private function review(DemandTask $task, User $professional, User $reviewer, string $createdAt = '2026-09-15 12:00:00'): PerformanceReview
+    {
+        $review = PerformanceReview::create([
+            'organization_id' => $task->organization_id,
+            'task_id' => $task->id,
+            'professional_id' => $professional->id,
+            'reviewer_id' => $reviewer->id,
+            'reviewer_role' => $reviewer->role->value,
+            'reviewer_weight' => $reviewer->role === UserRole::AgencyOwner ? 2 : 1,
+            'deadline_assessment' => 'O prazo foi avaliado com contexto e registro suficientes.',
+            'quality_assessment' => 'A qualidade foi conferida usando critérios registrados.',
+        ]);
+        $review->created_at = CarbonImmutable::parse($createdAt);
+        $review->save();
+
+        return $review;
+    }
+
     private function workspace(string $slug = 'mix7'): array
     {
         $organization = Organization::create(['name' => ucfirst($slug), 'slug' => $slug]);

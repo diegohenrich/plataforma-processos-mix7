@@ -40,6 +40,11 @@ class DemandTask extends Model
         return $this->hasMany(TaskTimeEntry::class, 'task_id');
     }
 
+    public function performanceReviews(): HasMany
+    {
+        return $this->hasMany(PerformanceReview::class, 'task_id');
+    }
+
     public function dependencies(): BelongsToMany
     {
         return $this->belongsToMany(self::class, 'demand_task_dependencies', 'task_id', 'depends_on_task_id');
