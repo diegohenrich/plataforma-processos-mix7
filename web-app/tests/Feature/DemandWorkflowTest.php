@@ -580,7 +580,41 @@ class DemandWorkflowTest extends TestCase
             ->assertOk()
             ->assertSee(str_replace('/', '\\/', route('demand-tasks.timer.heartbeat')), false)
             ->assertSee('heartbeatInterval = 20000', false)
-            ->assertSee('setInterval(sendHeartbeat, heartbeatInterval)', false);
+            ->assertSee('setInterval(sendHeartbeat, heartbeatInterval)', false)
+            ->assertSee('data-task-tray-timer', false)
+            ->assertSee(route('demand-tasks.timer.pause', $task), false);
+    }
+
+    public function test_professional_task_tray_lists_only_assigned_open_tasks_and_controls_timer(): void
+    {
+        [$organization, $manager, $professional, $colleague] = $this->team();
+        $demand = $this->demand($organization, $manager);
+        $ownTask = $this->task($demand, $professional, $manager, 'Minha tarefa do tray');
+        $blockedTask = $this->task($demand, $professional, $manager, 'Outra tarefa minha');
+        $dependency = $this->task($demand, $professional, $manager, 'Pré-requisito');
+        $blockedTask->dependencies()->attach($dependency->id);
+        $this->task($demand, $colleague, $manager, 'Tarefa privada do colega');
+
+        $this->actingAs($professional)->get(route('demands.index'))
+            ->assertOk()
+            ->assertSee('Minhas tarefas')
+            ->assertSee('Minha tarefa do tray')
+            ->assertSee('Outra tarefa minha')
+            ->assertSee(route('demand-tasks.timer.start', $ownTask), false)
+            ->assertSee('Bloqueada')
+            ->assertDontSee('Tarefa privada do colega');
+
+        $this->post(route('demand-tasks.timer.start', $ownTask))->assertRedirect();
+        $this->get(route('demands.index'))
+            ->assertOk()
+            ->assertSee('data-task-tray-timer', false)
+            ->assertSee('Pausar cronômetro de Minha tarefa do tray')
+            ->assertSee(route('demand-tasks.timer.pause', $ownTask), false)
+            ->assertSee('title="Pause a tarefa atual antes de iniciar outra"', false)
+            ->assertSee('Outra tarefa minha');
+
+        $this->actingAs($manager)->get(route('demands.index'))
+            ->assertOk()->assertDontSee('Minhas tarefas');
     }
 
     public function test_non_professional_cannot_recover_another_persons_timer(): void
