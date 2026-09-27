@@ -15,6 +15,12 @@
 - GitHub: commit `f1bd54fe58cb4346921acba70be63369c8b6a24e` publicado na branch `codex/fundacao-compartilhada`; push e PR #11 passaram ([push](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36284387392), [PR](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36284389512)).
 - Trello: atualização pendente da confirmação pontual já solicitada; sem ação externa ainda.
 
+## Anexos de demanda pela API — 2026-09-26
+- A API v1 oferece listar, enviar e abrir/baixar anexos da demanda para a futura interface Windows. Usa o mesmo armazenamento privado, limite, auditoria e autorização do site; o JSON nunca revela o caminho do arquivo. Cliente não recebe rota de anexos e o link de aprovação permanece limitado ao material da versão.
+- Validação local: `php artisan test` passou (174 testes, 1.454 assertions); `ApiDemandAttachmentTest` passou (3 testes, 33 assertions), Pint focalizado, `composer validate --no-check-publish`, rotas API conferidas e `git diff --check` passaram.
+- Sem nova tela nesta etapa; a validação visual não se aplica à implementação da API.
+- GitHub/Trello desta entrega ainda serão sincronizados. Atualização do Trello depende da confirmação pontual solicitada.
+
 ## Catálogo expansível de tipos de aprovação — 2026-09-27
 - Direção/gerência podem cadastrar tipos adicionais por organização com nome, descrição e chave técnica; desativar/reativar sem apagar ou reclassificar demandas antigas. Formulário de demanda e API usam o catálogo ativo; API lista tipos disponíveis e preserva chave, rótulo e versão.
 - Segurança validada por testes de papel, agência, chave duplicada/reservada, desativação, uso web/API e tentativa de seleção por outra agência. Tipos extras ainda compartilham campos e etapas; não há criador de campos ou regras específicas, pois a Mix7 não forneceu exemplos validados para essas variações.

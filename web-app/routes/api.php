@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\V1\DemandController;
 use App\Http\Controllers\Api\V1\KnowledgeController;
 use App\Http\Controllers\Api\V1\TeamMemberController as ApiTeamMemberController;
+use App\Http\Controllers\DemandAttachmentController;
 use App\Http\Controllers\DemandController as WebDemandController;
 use App\Http\Controllers\DemandDeliveryEvidenceController;
 use App\Http\Controllers\DemandModuleController;
@@ -48,6 +49,9 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active', 'api.token'])->group(
     Route::get('/onboarding/assignments', [KnowledgeController::class, 'assignments']);
     Route::patch('/onboarding/assignments/{assignment}/steps/{step}', [KnowledgeController::class, 'toggleStep']);
     Route::post('/demands', [WebDemandController::class, 'store']);
+    Route::get('/demands/{demand}/attachments', [DemandAttachmentController::class, 'indexApi'])->name('api.v1.demand-attachments.index');
+    Route::post('/demands/{demand}/attachments', [DemandAttachmentController::class, 'storeApi'])->name('api.v1.demand-attachments.store');
+    Route::get('/demands/{demand}/attachments/{attachment}', [DemandAttachmentController::class, 'showApi'])->name('api.v1.demand-attachments.show');
     Route::patch('/demands/{demand}/status', [WebDemandController::class, 'updateStatus']);
     Route::post('/demands/{demand}/tasks', [DemandTaskController::class, 'store']);
     Route::post('/demands/{demand}/delivery-evidences', [DemandDeliveryEvidenceController::class, 'store']);
