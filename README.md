@@ -19,6 +19,7 @@ Demanda/briefing → planejamento revisado → execução → revisão interna �
 - [Produto e público](docs/PRODUCT.md)
 - [Fases e critérios de avanço](docs/ROADMAP.md)
 - [Arquitetura web Laravel e Hostinger](docs/ARQUITETURA-HOSTINGER-LARAVEL.md)
+- [Operação e cópias de segurança](docs/OPERACOES-E-BACKUP.md)
 - [Contrato atual da API versionada](docs/API.md)
 - [Primeira implementação e seus limites](docs/PRIMEIRA-IMPLEMENTACAO.md)
 - [Conhecimento e onboarding: escopo e pendências](docs/CONHECIMENTO-ONBOARDING.md)
