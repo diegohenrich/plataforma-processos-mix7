@@ -276,6 +276,7 @@ class DemandTaskController extends Controller
                     'status' => $task->status->value,
                     'estimate_minutes' => $task->estimate_minutes,
                     'assignee' => ['id' => $task->assignee->id, 'name' => $task->assignee->name],
+                    'assigned_by' => ['id' => $request->user()->id, 'name' => $request->user()->name],
                 ],
             ], 201);
         }
@@ -469,7 +470,7 @@ class DemandTaskController extends Controller
             return back()->with('success', $message);
         }
 
-        $task->loadMissing('assignee:id,name');
+        $task->loadMissing(['assignee:id,name', 'creator:id,name', 'latestAssignmentEvent.actor:id,name']);
 
         return response()->json([
             'message' => $message,
@@ -479,6 +480,7 @@ class DemandTaskController extends Controller
                 'status_label' => $task->status->label(),
                 'completed_at' => $task->completed_at?->toISOString(),
                 'assignee' => ['id' => $task->assignee->id, 'name' => $task->assignee->name],
+                'assigned_by' => $task->latestAssignmentEvent?->actor?->only(['id', 'name']) ?? ['id' => $task->creator->id, 'name' => $task->creator->name],
                 'planned_start_on' => $task->planned_start_on?->format('Y-m-d'),
                 'planned_due_on' => $task->planned_due_on?->format('Y-m-d'),
                 'timer' => $entry ? [

@@ -1,3 +1,9 @@
+## Autoria da atribuição de tarefas — 2026-09-27
+- Cada tarefa agora mostra a pessoa responsável e quem fez a atribuição mais recente. Uma transferência troca o nome exibido; eventos anteriores seguem disponíveis no histórico recolhido. `GET /demands`, a criação/transferência por API e suas respostas internas também informam `assigned_by`; a resposta de cliente continua sem tarefas nem identidade interna.
+- Atualizei o contrato da API, requisitos, rastreabilidade dos áudios e auditoria por perfil. Não alterei permissões nem a configuração de persistência.
+- Validação: `DemandWorkflowTest` e `ApiDemandMutationTest` focados passaram (3 testes/60 assertions); suíte `php artisan test --compact` passou (203 testes/1.880 assertions); Pint focal, `composer validate --no-check-publish`, `npm run build`, cache/limpeza Blade e `git diff --check` passaram. Inspeção visual no navegador ainda pendente.
+- GitHub será sincronizado ao fechar esta tarefa. Trello ainda não foi sincronizado: a aba aberta está no cartão #35, que é de aprovação e tem descrição com rascunho não salvo; não alterei esse conteúdo. A habilidade `computer-use` exige confirmação imediatamente antes de publicar comentário ou criar/alterar conteúdo compartilhado.
+
 ## Origem do pedido e autoria do briefing — 2026-09-27
 - A criação web/API agora registra opcionalmente como o pedido chegou e qual conta interna ativa preparou o briefing, separado de quem cadastrou a demanda. O detalhe interno mostra os dados ou “Não informado/Não identificado”; API da equipe inclui canal e autoria, enquanto telas e API de cliente não recebem os campos. O autor é validado como pessoa interna ativa da mesma organização.
 - Atualizei `REQUIREMENTS.md`, `TRACEABILIDADE-AUDIOS.md`, `AUDITORIA-FUNCIONAL-POR-PERFIL.md`, `API.md` e a memória `.ai/`.

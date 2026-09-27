@@ -236,6 +236,7 @@ class DemandController extends Controller
                         'status' => $task->status->value,
                         'estimate_minutes' => $task->estimate_minutes,
                         'assignee' => ['id' => $task->assignee->id, 'name' => $task->assignee->name],
+                        'assigned_by' => ['id' => $request->user()->id, 'name' => $request->user()->name],
                     ]),
                 ],
             ], 201);
@@ -253,7 +254,7 @@ class DemandController extends Controller
         }
 
         $tasks = $demand->tasks()
-            ->with(['creator:id,name', 'assignee:id,name,is_active', 'timeEntries', 'dependencies:id,title,status'])
+            ->with(['creator:id,name', 'assignee:id,name,is_active', 'latestAssignmentEvent.actor:id,name', 'timeEntries', 'dependencies:id,title,status'])
             ->when($user->role === UserRole::Professional, fn (Builder $query) => $query->where('assigned_to', $user->id))
             ->get();
         $reviewLinks = $request->user()->can('manage', $demand)

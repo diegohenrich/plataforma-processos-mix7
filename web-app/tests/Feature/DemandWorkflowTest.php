@@ -54,6 +54,7 @@ class DemandWorkflowTest extends TestCase
         $this->assertSame(3, $demand->events()->count());
         $this->assertDatabaseHas('demand_events', ['demand_id' => $demand->id, 'actor_id' => $manager->id, 'event_type' => 'task_assigned']);
         $response = $this->get(route('demands.show', $demand))->assertOk()->assertSee('Tipo: Revisão de site')->assertSee('configuração v1')->assertSee('Como o pedido chegou')->assertSee('WhatsApp')->assertSee($professional->name)->assertSee('Quem preparou o briefing');
+        $response->assertSee('Atribuída por '.$manager->name);
         $response->assertSee('<details class="panel history-panel">', false)
             ->assertSee('3 registros')
             ->assertSee($demand->events()->firstOrFail()->summary)
@@ -249,6 +250,7 @@ class DemandWorkflowTest extends TestCase
     public function test_manager_can_transfer_an_inactive_professionals_open_task_with_audit_history(): void
     {
         [$organization, $manager, $previousAssignee, $nextAssignee] = $this->team();
+        $reassigner = User::factory()->create(['organization_id' => $organization->id, 'role' => UserRole::MarketingManager, 'is_active' => true]);
         $demand = $this->demand($organization, $manager);
         $task = $this->task($demand, $previousAssignee, $manager, 'Finalizar página inicial');
         $task->update(['status' => TaskStatus::Paused]);
@@ -268,17 +270,20 @@ class DemandWorkflowTest extends TestCase
             ->assertSee('Transferir tarefa')
             ->assertSee($nextAssignee->name);
 
-        $this->patch(route('demand-tasks.assignee', $task), [
+        $this->actingAs($reassigner)->patchJson(route('demand-tasks.assignee', $task), [
             'assignee_id' => $nextAssignee->id,
-        ])->assertRedirect()->assertSessionHasNoErrors();
+        ])->assertOk()
+            ->assertJsonPath('data.assignee.id', $nextAssignee->id)
+            ->assertJsonPath('data.assigned_by.id', $reassigner->id)
+            ->assertJsonPath('data.assigned_by.name', $reassigner->name);
 
         $this->assertSame($nextAssignee->id, $task->fresh()->assigned_to);
         $this->assertSame(TaskStatus::Paused, $task->fresh()->status);
         $this->assertDatabaseHas('demand_events', [
             'task_id' => $task->id,
-            'actor_id' => $manager->id,
+            'actor_id' => $reassigner->id,
             'event_type' => 'task_reassigned',
-            'summary' => $manager->name.' reatribuiu "Finalizar página inicial" de '.$previousAssignee->name.' para '.$nextAssignee->name,
+            'summary' => $reassigner->name.' reatribuiu "Finalizar página inicial" de '.$previousAssignee->name.' para '.$nextAssignee->name,
         ]);
 
         $this->assertDatabaseHas('demand_events', [
@@ -286,10 +291,11 @@ class DemandWorkflowTest extends TestCase
             'event_type' => 'task_assigned',
             'summary' => 'Tarefa "Finalizar página inicial" atribuída a '.$previousAssignee->name,
         ]);
-        $this->actingAs($manager)->get(route('demands.show', $demand))
+        $this->actingAs($reassigner)->get(route('demands.show', $demand))
             ->assertOk()
             ->assertSee('Atribuída a')
             ->assertSee($nextAssignee->name)
+            ->assertSee('Atribuída por '.$reassigner->name)
             ->assertSee('Reatribuir tarefa');
     }
 

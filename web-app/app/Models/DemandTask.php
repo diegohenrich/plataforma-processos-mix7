@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class DemandTask extends Model
 {
@@ -33,6 +34,13 @@ class DemandTask extends Model
     public function assignee(): BelongsTo
     {
         return $this->belongsTo(User::class, 'assigned_to');
+    }
+
+    public function latestAssignmentEvent(): HasOne
+    {
+        return $this->hasOne(DemandEvent::class, 'task_id')
+            ->whereIn('event_type', ['task_assigned', 'task_reassigned'])
+            ->latestOfMany();
     }
 
     public function timeEntries(): HasMany

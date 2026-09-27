@@ -47,6 +47,8 @@ class ApiDemandMutationTest extends TestCase
             ->assertJsonPath('data.client_user_id', $client->id)
             ->assertJsonCount(2, 'data.tasks')
             ->assertJsonPath('data.tasks.0.assignee.id', $professional->id)
+            ->assertJsonPath('data.tasks.0.assigned_by.id', $owner->id)
+            ->assertJsonPath('data.tasks.0.assigned_by.name', $owner->name)
             ->assertJsonPath('data.tasks.0.estimate_minutes', 90);
 
         $demand = Demand::query()->firstOrFail();
@@ -59,7 +61,13 @@ class ApiDemandMutationTest extends TestCase
             ->assertJsonPath('data.module.key', 'website_review')
             ->assertJsonPath('data.module.version', 1)
             ->assertJsonPath('data.intake_source', 'E-mail')
-            ->assertJsonPath('data.brief_author.id', $professional->id);
+            ->assertJsonPath('data.brief_author.id', $professional->id)
+            ->assertJsonPath('data.tasks.0.assigned_by.id', $owner->id)
+            ->assertJsonPath('data.tasks.0.assigned_by.name', $owner->name);
+        $this->authenticate($token)->getJson('/api/v1/demands')
+            ->assertOk()
+            ->assertJsonPath('data.0.tasks.0.assigned_by.id', $owner->id)
+            ->assertJsonPath('data.0.tasks.0.assigned_by.name', $owner->name);
         $this->assertDatabaseHas('demand_events', [
             'demand_id' => $demand->id,
             'actor_id' => $owner->id,
@@ -153,7 +161,9 @@ class ApiDemandMutationTest extends TestCase
         $taskResponse->assertCreated()
             ->assertJsonPath('data.title', 'Criar página inicial')
             ->assertJsonPath('data.status', TaskStatus::Todo->value)
-            ->assertJsonPath('data.assignee.id', $professional->id);
+            ->assertJsonPath('data.assignee.id', $professional->id)
+            ->assertJsonPath('data.assigned_by.id', $manager->id)
+            ->assertJsonPath('data.assigned_by.name', $manager->name);
         $taskId = $taskResponse->json('data.id');
 
         $this->patchJson("/api/v1/demands/{$demand->id}/status", ['status' => DemandStatus::Planning->value])

@@ -29,7 +29,7 @@ class DemandController extends Controller
                 'briefAuthor:id,name',
                 'moduleSteps.completer:id,name',
                 'tasks' => fn ($tasks) => $tasks
-                    ->with('assignee:id,name')
+                    ->with(['assignee:id,name', 'creator:id,name', 'latestAssignmentEvent.actor:id,name'])
                     ->when($user->role === UserRole::Professional, fn (Builder $query) => $query->where('assigned_to', $user->id))
                     ->when($user->role === UserRole::Client, fn (Builder $query) => $query->whereRaw('1 = 0')),
             ])
@@ -66,6 +66,7 @@ class DemandController extends Controller
                             'status' => ['value' => $task->status->value, 'label' => $task->status->label()],
                             'estimate_minutes' => $task->estimate_minutes,
                             'assignee' => ['id' => $task->assignee->id, 'name' => $task->assignee->name],
+                            'assigned_by' => $task->latestAssignmentEvent?->actor?->only(['id', 'name']) ?? ['id' => $task->creator->id, 'name' => $task->creator->name],
                         ]),
                 ]),
             'meta' => ['limit' => 100],
@@ -86,7 +87,7 @@ class DemandController extends Controller
             ]]);
         }
         $tasks = $demand->tasks()
-            ->with('assignee:id,name')
+            ->with(['assignee:id,name', 'creator:id,name', 'latestAssignmentEvent.actor:id,name'])
             ->when($user->role === UserRole::Professional, fn (Builder $query) => $query->where('assigned_to', $user->id))
             ->get();
 
@@ -108,6 +109,7 @@ class DemandController extends Controller
                     'status' => ['value' => $task->status->value, 'label' => $task->status->label()],
                     'estimate_minutes' => $task->estimate_minutes,
                     'assignee' => ['id' => $task->assignee->id, 'name' => $task->assignee->name],
+                    'assigned_by' => $task->latestAssignmentEvent?->actor?->only(['id', 'name']) ?? ['id' => $task->creator->id, 'name' => $task->creator->name],
                 ]),
             ],
         ]);
