@@ -7,6 +7,7 @@ use App\Enums\UserRole;
 use App\Models\DemandTask;
 use App\Models\TaskTimeEntry;
 use App\Models\User;
+use App\Services\TaskTimerHeartbeat;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -18,6 +19,7 @@ class TeamActivityController extends Controller
     public function index(Request $request): View|JsonResponse
     {
         $this->authorize('viewActivity', User::class);
+        app(TaskTimerHeartbeat::class)->closeAllStale();
         $viewer = $request->user();
         $personal = $viewer->role === UserRole::Professional;
         $periodStart = CarbonImmutable::now()->subDays(30);

@@ -62,4 +62,5 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active', 'api.token'])->group(
     Route::patch('/tasks/{task}/schedule', [DemandTaskController::class, 'updateSchedule']);
     Route::patch('/tasks/{task}/assignee', [DemandTaskController::class, 'updateAssignee']);
     Route::post('/tasks/timer/recover', [DemandTaskController::class, 'recoverTimer']);
+    Route::post('/tasks/timer/heartbeat', [DemandTaskController::class, 'heartbeat']);
 });

@@ -56,6 +56,7 @@ Route::middleware(['auth', 'active'])->group(function (): void {
     Route::post('/tarefas/{task}/cronometro/iniciar', [DemandTaskController::class, 'startTimer'])->name('demand-tasks.timer.start');
     Route::post('/tarefas/{task}/cronometro/pausar', [DemandTaskController::class, 'pauseTimer'])->name('demand-tasks.timer.pause');
     Route::post('/tarefas/cronometro/recuperar', [DemandTaskController::class, 'recoverTimer'])->name('demand-tasks.timer.recover');
+    Route::post('/tarefas/cronometro/sinal', [DemandTaskController::class, 'heartbeat'])->name('demand-tasks.timer.heartbeat');
     Route::patch('/tarefas/{task}/status', [DemandTaskController::class, 'updateStatus'])->name('demand-tasks.status');
     Route::patch('/tarefas/{task}/responsavel', [DemandTaskController::class, 'updateAssignee'])->name('demand-tasks.assignee');
     Route::patch('/tarefas/{task}/cronograma', [DemandTaskController::class, 'updateSchedule'])->name('demand-tasks.schedule');

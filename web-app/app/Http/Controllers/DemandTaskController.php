@@ -10,6 +10,7 @@ use App\Models\DemandEvent;
 use App\Models\DemandTask;
 use App\Models\TaskTimeEntry;
 use App\Models\User;
+use App\Services\TaskTimerHeartbeat;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -71,6 +72,7 @@ class DemandTaskController extends Controller
                 'task_id' => $task->id,
                 'user_id' => $user->id,
                 'started_at' => $now,
+                'last_heartbeat_at' => $now,
             ]);
 
             if ($task->status !== TaskStatus::InProgress) {
@@ -205,6 +207,13 @@ class DemandTaskController extends Controller
             ->first();
 
         return $this->actionSuccess($request, $entry->task, 'Cronômetro encerrado agora e tarefa pausada. O intervalo anterior permanece registrado; revise o tempo se o fechamento foi abrupto.', $entry);
+    }
+
+    public function heartbeat(Request $request, TaskTimerHeartbeat $heartbeat): JsonResponse
+    {
+        abort_unless($request->user()->role === UserRole::Professional, 403);
+
+        return response()->json(['data' => ['active' => $heartbeat->touch($request->user())]]);
     }
 
     public function store(Request $request, Demand $demand): RedirectResponse|JsonResponse
@@ -475,6 +484,7 @@ class DemandTaskController extends Controller
                 'timer' => $entry ? [
                     'id' => $entry->id,
                     'started_at' => $entry->started_at?->toISOString(),
+                    'last_heartbeat_at' => $entry->last_heartbeat_at?->toISOString(),
                     'ended_at' => $entry->ended_at?->toISOString(),
                     'duration_seconds' => $entry->ended_at
                         ? max(0, $entry->started_at->diffInSeconds($entry->ended_at, false))

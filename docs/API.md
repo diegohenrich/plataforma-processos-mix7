@@ -54,9 +54,10 @@ Arquivos privados continuam disponíveis pela URL de material que o `GET` retorn
 | `PATCH /tasks/{task}/status` | `{"status":"in_progress"}` | Aplica somente a próxima transição permitida. Concluir fecha o timer aberto e registra autoria e data de conclusão. |
 | `POST /tasks/{task}/timer/start` | Vazio | Profissional inicia timer da própria tarefa. Recusa tarefa concluída, predecessoras abertas ou outro timer ativo. |
 | `POST /tasks/{task}/timer/pause` | Vazio | Profissional pausa timer da própria tarefa e recebe o intervalo salvo. |
+| `POST /tasks/timer/heartbeat` | Vazio | Profissional mantém a própria sessão ativa. A tela web envia sinais a cada 20 segundos; após 180 segundos sem sinal, o servidor encerra o intervalo no último sinal confirmado e pausa a tarefa. |
 | `PATCH /tasks/{task}/schedule` | `{"planned_start_on":"2026-10-02","planned_due_on":"2026-10-07"}` | Direção/gerência salva ou limpa datas opcionais da tarefa na própria organização. Prazo anterior ao início é recusado. |
 | `PATCH /tasks/{task}/assignee` | `{"assignee_id":17}` | Direção/gerência transfere trabalho aberto para profissional ativo da própria organização. Se houver timer ativo, ele é encerrado e tarefa em execução fica pausada, com autoria no histórico. |
-| `POST /tasks/timer/recover` | Vazio | Profissional encerra sua sessão ativa e pausa a tarefa. Se o processo ficou fechado, o período desde o início pode incluir tempo offline e deve ser revisado. |
+| `POST /tasks/timer/recover` | Vazio | Profissional encerra uma sessão ativa antiga sem sinal de navegador (por exemplo, iniciada antes da implantação do heartbeat) e pausa a tarefa. |
 
 Profissionais só alteram tarefa atribuída a si; direção/gerência podem mudar o estado de tarefas da própria organização; clientes não operam tarefas. Iniciar/pausar/reconhecer timers é exclusivo do profissional responsável. Os mesmos eventos de autoria usados pelo site são gravados pela API.
 

@@ -14,6 +14,24 @@
     (() => {
         const timer = document.querySelector('[data-timer]');
         if (!timer) return;
+        const heartbeatUrl = @json(route('demand-tasks.timer.heartbeat'));
+        const heartbeatInterval = @json(\App\Services\TaskTimerHeartbeat::INTERVAL_SECONDS * 1000);
+        const csrfToken = @json(csrf_token());
+        const sendHeartbeat = async () => {
+            try {
+                const response = await fetch(heartbeatUrl, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken},
+                });
+                const result = await response.json();
+                if (response.ok && result.data?.active === false) window.location.reload();
+            } catch (_) {
+                // A short network interruption is tolerated; stale sessions close on the next request.
+            }
+        };
+        sendHeartbeat();
+        window.setInterval(sendHeartbeat, heartbeatInterval);
         const base = Number(timer.dataset.elapsedSeconds);
         const started = Date.parse(timer.dataset.startedAt);
         const render = () => {

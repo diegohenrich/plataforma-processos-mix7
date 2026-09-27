@@ -542,6 +542,44 @@ class DemandWorkflowTest extends TestCase
         Date::setTestNow();
     }
 
+    public function test_stale_browser_heartbeat_closes_timer_at_last_confirmed_signal(): void
+    {
+        Date::setTestNow(CarbonImmutable::parse('2026-09-26 12:00:00'));
+        [$organization, $owner, $professional] = $this->team();
+        $demand = $this->demand($organization, $owner);
+        $task = $this->task($demand, $professional, $owner, 'Tarefa após fechamento inesperado');
+        $this->actingAs($professional)->post(route('demand-tasks.timer.start', $task))->assertRedirect();
+        $entry = TaskTimeEntry::query()->firstOrFail();
+        $lastHeartbeat = $entry->last_heartbeat_at;
+
+        $this->travel(181)->seconds();
+        $this->actingAs($owner)->get(route('team.activity'))->assertOk();
+
+        $this->assertSame($lastHeartbeat->toDateTimeString(), $entry->fresh()->ended_at->toDateTimeString());
+        $this->assertSame(TaskStatus::Paused, $task->fresh()->status);
+        $this->assertDatabaseHas('demand_events', [
+            'demand_id' => $demand->id,
+            'task_id' => $task->id,
+            'actor_id' => null,
+            'event_type' => 'timer_auto_paused',
+        ]);
+        Date::setTestNow();
+    }
+
+    public function test_active_timer_page_renders_heartbeat_endpoint_and_interval(): void
+    {
+        [$organization, $owner, $professional] = $this->team();
+        $demand = $this->demand($organization, $owner);
+        $task = $this->task($demand, $professional, $owner, 'Heartbeat visível');
+        $this->actingAs($professional)->post(route('demand-tasks.timer.start', $task))->assertRedirect();
+
+        $this->get(route('demands.show', $demand))
+            ->assertOk()
+            ->assertSee(str_replace('/', '\\/', route('demand-tasks.timer.heartbeat')), false)
+            ->assertSee('heartbeatInterval = 20000', false)
+            ->assertSee('setInterval(sendHeartbeat, heartbeatInterval)', false);
+    }
+
     public function test_non_professional_cannot_recover_another_persons_timer(): void
     {
         [, $owner, $professional] = $this->team();

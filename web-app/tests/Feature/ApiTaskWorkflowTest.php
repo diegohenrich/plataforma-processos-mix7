@@ -60,6 +60,24 @@ class ApiTaskWorkflowTest extends TestCase
         Date::setTestNow();
     }
 
+    public function test_timer_heartbeat_keeps_a_live_session_and_updates_its_last_signal(): void
+    {
+        Date::setTestNow(CarbonImmutable::parse('2026-09-26 12:00:00'));
+        [$organization, $owner, $professional] = $this->workspace();
+        $task = $this->task($this->demand($organization, $owner), $professional, $owner);
+        $token = $professional->createToken('desktop')->plainTextToken;
+        $this->withToken($token)->postJson("/api/v1/tasks/{$task->id}/timer/start")->assertOk();
+
+        $this->travel(40)->seconds();
+        $this->postJson('/api/v1/tasks/timer/heartbeat')
+            ->assertOk()
+            ->assertJsonPath('data.active', true);
+
+        $this->assertSame('2026-09-26 12:00:40', TaskTimeEntry::query()->firstOrFail()->last_heartbeat_at->format('Y-m-d H:i:s'));
+        $this->assertNull(TaskTimeEntry::query()->firstOrFail()->ended_at);
+        Date::setTestNow();
+    }
+
     public function test_api_timer_and_status_respect_assignment_role_and_organization_boundaries(): void
     {
         [$organization, $owner, $professional, $colleague, $client] = $this->workspace();

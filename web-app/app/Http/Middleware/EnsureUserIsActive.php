@@ -2,6 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\UserRole;
+use App\Services\TaskTimerHeartbeat;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -21,6 +23,10 @@ class EnsureUserIsActive
             return $request->expectsJson()
                 ? response()->json(['message' => 'Conta desativada.'], 403)
                 : redirect()->route('login');
+        }
+
+        if ($request->user()->role === UserRole::Professional) {
+            app(TaskTimerHeartbeat::class)->closeStaleFor($request->user());
         }
 
         return $next($request);
