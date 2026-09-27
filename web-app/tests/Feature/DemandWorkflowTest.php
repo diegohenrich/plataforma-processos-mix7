@@ -109,6 +109,19 @@ class DemandWorkflowTest extends TestCase
         $response->assertSee('<summary>Mostrar 2 demandas</summary>', false);
     }
 
+    public function test_kanban_explains_that_open_tasks_block_internal_review(): void
+    {
+        [$organization, $manager, $professional] = $this->team();
+        $demand = $this->demand($organization, $manager);
+        $demand->update(['status' => DemandStatus::InProgress]);
+        $this->task($demand, $professional, $manager, 'Finalizar a entrega');
+
+        $this->actingAs($manager)->get(route('demands.index'))
+            ->assertOk()
+            ->assertSee('A revisão interna será liberada após concluir todas as tarefas.')
+            ->assertDontSee('Sem próxima etapa');
+    }
+
     public function test_task_board_shows_shared_work_by_status_and_manager_can_move_tasks(): void
     {
         [$organization, $manager, $professional] = $this->team();

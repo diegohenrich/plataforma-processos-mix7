@@ -74,7 +74,7 @@
                                                 </form>
                                             </details>
                                         @elseif($canMoveDemands)
-                                            <p class="kanban-meta" style="margin:9px 0 0">{{ $demand->status === App\Enums\DemandStatus::ClientApproval ? 'Aguardando decisão do cliente pelo link.' : 'Sem próxima etapa' }}</p>
+                                            <p class="kanban-meta" style="margin:9px 0 0">{{ $demand->status === App\Enums\DemandStatus::ClientApproval ? 'Aguardando decisão do cliente pelo link.' : ($demand->status === App\Enums\DemandStatus::InProgress ? 'A revisão interna será liberada após concluir todas as tarefas.' : 'Sem próxima etapa') }}</p>
                                         @endif
                                     </article>
                                 @empty
