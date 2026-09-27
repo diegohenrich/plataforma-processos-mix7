@@ -2,7 +2,7 @@
 
 ## Fonte conferida
 
-O CRM-MIX7-RENEW foi executado em ambiente local. Chromium renderizou a tela `/login`; a rota `/administrador/dashboard` redireciona para o login sem sessão, portanto ainda falta inspecionar o dashboard autenticado renderizado. Nenhuma credencial foi tentada. O layout base abaixo vem de `public/css/dashboard-light.css`, que é carregado pelo template do dashboard. A tela de entrada serve para confirmar apenas a identidade visual do login, não sua composição interna.
+O CRM-MIX7-RENEW foi executado em ambiente local. Em 26/09/2026, o dashboard autenticado foi renderizado na cópia local com MariaDB isolado e uma conta fictícia; o banco publicado e os arquivos do CRM não foram alterados. A captura ficou fora do repositório porque continha dados pessoais do backup. A evidência completa está na seção “Dashboard autenticado renderizado — 26/09/2026”. O layout base também foi conferido em `public/css/dashboard-light.css`, carregado pelo template do dashboard.
 
 O CSS define corpo de 16 px, títulos de 32–46 px, navegação de 15 px, lateral de 252 px (230 px até 1399 px), recuos de conteúdo de 38 px (28 px até 1399 px), cartões de raio 24 px e botões com altura mínima de 44 px. Define também a lateral em degradê `#243943` → `#10252f`, item ativo `#e8f3f8` e as cores `#202e35` (texto), `#204b61` (azul-petróleo), `#8ecde2` (azul-claro), `#f5f6f5` (fundo) e branco (superfícies).
 
@@ -14,10 +14,10 @@ Depois da alteração, a página de demandas foi aberta em Chromium na janela de
 
 A plataforma tem uma sessão local de demonstração aberta em outra aba com um formulário iniciado; ela foi preservada. As regras móveis definem lateral compacta de 72 px até 900 px e 56 px até 600 px. A revisão móvel desta primeira alteração foi concluída depois, conforme a seção “Validação móvel da plataforma” abaixo.
 
-## Pendências
+## Pendências vigentes
 
-- Comparar a composição autenticada do CRM com a plataforma quando o usuário fornecer os prints. O usuário pediu que essa validação não interrompa as demais frentes; continuar requisitos, pesquisa e testes enquanto isso.
-- Reavaliar este documento quando os prints chegarem. Nenhum arquivo do CRM foi alterado.
+- Renderizar o dashboard do CRM em desktop amplo e comparar diretamente cabeçalho, hierarquia, proporções e distribuição com a plataforma; a sessão de 26/09 tinha viewport disponível de 664 × 880.
+- Aplicar à plataforma apenas diferenças confirmadas nessa comparação. Nenhum arquivo do CRM foi alterado.
 
 ## Reinspeção solicitada — 25/09/2026
 
