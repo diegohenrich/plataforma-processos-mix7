@@ -41,4 +41,10 @@ enum DemandStatus: string
             self::Completed => [],
         };
     }
+
+    /** @return list<self> */
+    public function nextByManagement(): array
+    {
+        return $this === self::ClientApproval ? [] : $this->next();
+    }
 }

@@ -38,7 +38,7 @@
                             <div class="kanban-cards">
                                 @forelse ($boardColumns[$stage->value] as $demand)
                                     @php
-                                        $nextStatuses = $demand->status->next();
+                                        $nextStatuses = $demand->status->nextByManagement();
                                         if ($demand->tasks->contains(fn ($task) => $task->status !== App\Enums\TaskStatus::Completed)) {
                                             $nextStatuses = array_values(array_filter($nextStatuses, fn ($next) => $next !== App\Enums\DemandStatus::InternalReview));
                                         }
@@ -68,7 +68,7 @@
                                                 </form>
                                             </details>
                                         @elseif($canMoveDemands)
-                                            <p class="kanban-meta" style="margin:9px 0 0">Sem próxima etapa</p>
+                                            <p class="kanban-meta" style="margin:9px 0 0">{{ $demand->status === App\Enums\DemandStatus::ClientApproval ? 'Aguardando decisão do cliente pelo link.' : 'Sem próxima etapa' }}</p>
                                         @endif
                                     </article>
                                 @empty

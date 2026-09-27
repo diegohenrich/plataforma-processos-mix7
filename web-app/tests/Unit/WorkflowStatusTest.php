@@ -14,6 +14,8 @@ class WorkflowStatusTest extends TestCase
         self::assertSame([DemandStatus::Planning], DemandStatus::Received->next());
         self::assertSame([DemandStatus::InternalReview], DemandStatus::InProgress->next());
         self::assertSame([DemandStatus::Adjustments, DemandStatus::Delivery], DemandStatus::ClientApproval->next());
+        self::assertSame([], DemandStatus::ClientApproval->nextByManagement());
+        self::assertSame([DemandStatus::Planning], DemandStatus::Received->nextByManagement());
         self::assertSame([], DemandStatus::Completed->next());
     }
 

@@ -400,6 +400,26 @@ class DemandWorkflowTest extends TestCase
         $this->patch(route('demands.status', $demand), ['status' => DemandStatus::InternalReview->value])->assertSessionHasErrors('status');
     }
 
+    public function test_management_cannot_record_client_decision_or_skip_review_link(): void
+    {
+        [$organization, $manager] = $this->team();
+        $demand = $this->demand($organization, $manager);
+        $demand->update(['status' => DemandStatus::ClientApproval]);
+
+        $this->actingAs($manager)->get(route('demands.index'))
+            ->assertOk()
+            ->assertSee('Aguardando decisão do cliente pelo link.')
+            ->assertDontSee('Mover demanda');
+
+        foreach ([DemandStatus::Delivery, DemandStatus::Adjustments] as $target) {
+            $this->patch(route('demands.status', $demand), ['status' => $target->value])
+                ->assertSessionHasErrors(['status' => 'A etapa só avança depois que o cliente registra uma decisão pelo link de revisão.']);
+        }
+
+        $this->assertSame(DemandStatus::ClientApproval, $demand->fresh()->status);
+        $this->assertDatabaseMissing('demand_events', ['demand_id' => $demand->id, 'event_type' => 'demand_status_changed']);
+    }
+
     public function test_demands_api_requires_token_and_filters_tasks_for_professional(): void
     {
         [$organization, $manager, $professional, $colleague] = $this->team();

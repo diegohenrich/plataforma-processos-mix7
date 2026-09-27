@@ -312,6 +312,10 @@ class DemandController extends Controller
         $from = $demand->status;
         $to = DemandStatus::from($data['status']);
 
+        if ($from === DemandStatus::ClientApproval) {
+            return $this->workflowFailure($request, 'A etapa só avança depois que o cliente registra uma decisão pelo link de revisão.');
+        }
+
         if (! in_array($to, $from->next(), true)) {
             return $this->workflowFailure($request, 'Essa etapa não pode vir depois do estado atual.');
         }

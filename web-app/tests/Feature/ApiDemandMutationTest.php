@@ -174,6 +174,23 @@ class ApiDemandMutationTest extends TestCase
         $this->assertSame(0, DemandTask::query()->count());
     }
 
+    public function test_management_api_cannot_bypass_client_review_decision(): void
+    {
+        [$organization, $manager] = $this->workspace();
+        $demand = $this->demand($organization, $manager);
+        $demand->update(['status' => DemandStatus::ClientApproval]);
+        $this->authenticate($manager->createToken('review-stage')->plainTextToken);
+
+        foreach ([DemandStatus::Delivery, DemandStatus::Adjustments] as $target) {
+            $this->patchJson("/api/v1/demands/{$demand->id}/status", ['status' => $target->value])
+                ->assertConflict()
+                ->assertJsonPath('errors.status.0', 'A etapa só avança depois que o cliente registra uma decisão pelo link de revisão.');
+        }
+
+        $this->assertSame(DemandStatus::ClientApproval, $demand->fresh()->status);
+        $this->assertDatabaseMissing('demand_events', ['demand_id' => $demand->id, 'event_type' => 'demand_status_changed']);
+    }
+
     private function workspace(string $slug = 'mix7'): array
     {
         $organization = Organization::create(['name' => ucfirst($slug), 'slug' => $slug]);
