@@ -172,7 +172,7 @@ class AiPlanningTest extends TestCase
             'estimate_minutes' => 30,
         ]);
 
-        Http::fake(['https://ai-gateway.vercel.sh/v1/chat/completions' => Http::response($this->providerResponse(), 200)]);
+        Http::fake(['https://ai-gateway.vercel.sh/v1/chat/completions' => Http::response($this->providerResponse([], 'Os dados de disponibilidade estão incompletos; revise antes de assumir a carga total.'), 200)]);
         $page = $this->actingAs($manager)->get(route('demands.show', $demand))->assertOk();
         $page->assertSee('Considerar a capacidade semanal registrada pela gestão');
         preg_match('/<input[^>]*name="include_team_capacity"[^>]*>/', $page->getContent(), $checkbox);
@@ -204,11 +204,14 @@ class AiPlanningTest extends TestCase
         $run = AiPlanningRun::firstOrFail();
         $this->assertTrue($run->proposal['_source']['team_capacity_included']);
         $this->assertSame($week, $run->proposal['_source']['team_capacity']['week']);
+        $this->assertSame('Os dados de disponibilidade estão incompletos; revise antes de assumir a carga total.', $run->proposal['capacity_observation']);
         $this->get(route('demands.show', $demand))
             ->assertOk()
             ->assertSee('Ver totais de capacidade enviados')
             ->assertSee('1 de 2 profissionais com capacidade informada')
-            ->assertSee('39,00 h após 1,00 h de ausências');
+            ->assertSee('39,00 h após 1,00 h de ausências')
+            ->assertSee('Leitura preliminar da IA:')
+            ->assertSee('Os dados de disponibilidade estão incompletos; revise antes de assumir a carga total.');
         $this->assertSame(0, DemandTask::query()->where('demand_id', $demand->id)->count());
     }
 
@@ -225,6 +228,18 @@ class AiPlanningTest extends TestCase
 
         Http::assertNothingSent();
         $this->assertSame(0, AiPlanningRun::count());
+    }
+
+    public function test_planner_cannot_claim_capacity_context_when_management_did_not_send_it(): void
+    {
+        [, $manager, , $demand] = $this->workspace();
+        Http::fake(['https://ai-gateway.vercel.sh/v1/chat/completions' => Http::response($this->providerResponse([], 'A equipe está sobrecarregada.'), 200)]);
+
+        $this->actingAs($manager)->from(route('demands.show', $demand))
+            ->post(route('ai-planning.propose', $demand))->assertSessionHasErrors('ai');
+
+        $this->assertSame(0, AiPlanningRun::count());
+        $this->assertSame(0, DemandTask::count());
     }
 
     public function test_manager_edits_and_approves_proposal_with_real_dependency_and_audit(): void
@@ -455,11 +470,12 @@ class AiPlanningTest extends TestCase
         return [$organization, $manager, $professional, $demand];
     }
 
-    private function providerResponse(array $feedbackRefs = []): array
+    private function providerResponse(array $feedbackRefs = [], string $capacityObservation = ''): array
     {
         return [
             'choices' => [['message' => ['content' => json_encode([
                 'summary' => 'Planejar site em duas etapas.',
+                'capacity_observation' => $capacityObservation,
                 'questions' => ['Qual prazo?'],
                 'tasks' => [
                     ['title' => 'Organizar briefing', 'rationale' => 'Confirmar objetivo.', 'responsibility_profile' => 'Atendimento', 'estimate_minutes' => 30, 'depends_on' => [], 'feedback_refs' => $feedbackRefs],

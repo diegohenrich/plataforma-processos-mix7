@@ -633,3 +633,8 @@ Histórico operacional anterior preservado em [docs/VALIDACOES-HISTORICAS.md](..
 - Corrigi `docs/REQUIREMENTS.md`, que ainda dizia que o mecanismo estava em aberto. Teste com domínios reais, navegadores e tamanhos móveis permanece pendente; seleção automática de texto em site de outra origem não é possível por restrição do navegador.
 - GitHub: commit `3aae485f56f9d092801f773470f6d45eb764e258` publicado em `codex/fundacao-compartilhada`; SHA local/remoto confirmado. Checks de push [36306720074](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36306720074) e PR #11 [36306722055](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36306722055) passaram.
 - Trello segue pendente: a aba existente continua com rascunho não salvo no cartão #35; preservei o conteúdo e não há conector Trello direto nesta sessão.
+
+## Observação estruturada da IA sobre capacidade — 2026-09-27
+- A resposta do planejador agora inclui `capacity_observation`, exibida junto aos totais enviados. Se a gestão não incluiu capacidade, o servidor rejeita uma resposta que tente alegar sobrecarga ou disponibilidade; a observação não atribui profissionais nem altera as tarefas.
+- `AiPlanningTest`: 16 testes/141 assertions; suíte Laravel: 210 testes/1.964 assertions. Pint focalizado, Composer validate, cache/limpeza Blade e `git diff --check` passaram. Dados sintéticos e provedor HTTP fake; nenhuma chamada real à IA.
+- A inspeção autenticada do navegador ainda não foi possível nesta sessão. GitHub/CI e comentário do Trello desta extensão pendem da publicação; não há conector Trello e a aba mantém o rascunho do cartão #35.
