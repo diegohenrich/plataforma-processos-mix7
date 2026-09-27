@@ -549,3 +549,5 @@ Histórico operacional anterior preservado em [docs/VALIDACOES-HISTORICAS.md](..
 - A página de referência visual e o roadmap continham trechos resumidos obsoletos: o dashboard do CRM foi renderizado na cópia local em 26/09, embora desktop amplo ainda falte; catálogo de acesso a serviços já existe, embora a concessão externa continue manual.
 - Atualizei `docs/REFERENCIA-VISUAL.md` para distinguir renderização autenticada concluída de comparação em desktop amplo ainda pendente; atualizei o estado da biblioteca/acessos em `docs/ROADMAP.md`.
 - `git diff --check` passou. Alteração documental; nenhum código de aplicação mudou. Commit, CI e registro Trello desta correção ainda pendentes.
+
+- Os checks do commit documental 2b4826f7e111137b09e5fcf8e481ce4376f68c0c passaram: push [36297202531](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36297202531) e PR #11 [36297204492](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36297204492). SHA remoto corresponde ao local. Trello segue sem comentário novo nesta atualização.
