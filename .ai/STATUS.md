@@ -437,6 +437,12 @@ Continuação do projeto: escolher a próxima fatia baseada em requisitos explí
 
 Histórico operacional anterior preservado em [docs/VALIDACOES-HISTORICAS.md](../docs/VALIDACOES-HISTORICAS.md); este arquivo é a fonte vigente de status.
 
+## Envio web de link de aprovação por e-mail — 2026-09-26
+- Direção/gerência agora pode informar um e-mail ao criar uma versão para revisão. Com transporte diferente de `log`/`array`, o Laravel envia um aviso com link temporário e sem exigir conta do cliente; a tela também mostra o link uma única vez para cópia. O envio fica indisponível nos modos de log/teste, erros mantêm o link copiável e o JSON/API não pode disparar e-mail. O histórico identifica autor e versão, sem guardar o endereço de e-mail.
+- Testes usam `Notification::fake()` e provam a tela nos modos SMTP/log, disparo simulado, conteúdo sem conta, registro de evento e recusa por API. Validação: suíte completa `php artisan test` passou com 181 testes/1.584 assertions; testes focais `DemandReviewLinkTest` passaram 26/26; Pint focalizado, Composer validate, build Vite, cache/limpeza Blade e `git diff --check` passaram.
+- SMTP real não foi configurado ou testado; não há prova de entrega ao destinatário. A inspeção visual autenticada no navegador segue pendente. A documentação foi atualizada em `docs/REQUIREMENTS.md`, `docs/API.md`, `docs/ROADMAP.md` e `.ai/CONTEXT.md`.
+- GitHub e Trello ainda precisam ser sincronizados para esta tarefa. O código e este registro devem ser publicados após a inspeção final; a atualização do cartão/comentário Trello depende de confirmação pontual exigida pelo fluxo da interface.
+
 - Sincronização deste atalho: commit c892ca6d7d8f2ea4f3fb1a625e8305b56c424564 está na branch remota e no PR #11. O conector Trello atual não oferece criação de comentário nem edição de descrição; o cartão #30 foi lido, mas não alterado. CI para o commit está pendente nesta consulta.
 ## Conhecimento e onboarding pela API — 2026-09-26
 - Acrescentei leitura autenticada da biblioteca com filtros por tipo e busca, limitada à organização e a conteúdo ativo; direção, gerência e profissionais têm acesso interno, clientes não.
