@@ -88,6 +88,27 @@ class DemandWorkflowTest extends TestCase
             ->assertDontSee('Quadro de demandas por etapa');
     }
 
+    public function test_large_kanban_columns_keep_all_demands_accessible_without_stacking_them_by_default(): void
+    {
+        [$organization, $manager] = $this->team();
+        foreach (range(1, 8) as $number) {
+            $demand = $this->demand($organization, $manager);
+            $createdAt = now()->subMinutes($number);
+            $demand->update(['title' => sprintf('Volume de demonstração %02d', $number), 'created_at' => $createdAt, 'updated_at' => $createdAt]);
+        }
+
+        $response = $this->actingAs($manager)->get(route('demands.index'))->assertOk();
+        $html = $response->getContent();
+        $morePosition = strpos($html, '<details class="kanban-more">');
+
+        $this->assertNotFalse($morePosition);
+        $this->assertSame(8, substr_count($html, '<article class="kanban-card"'));
+        $this->assertSame(8, substr_count($html, 'aria-label="Abrir demanda:'));
+        $this->assertLessThan($morePosition, strpos($html, 'Volume de demonstração 06'));
+        $this->assertGreaterThan($morePosition, strpos($html, 'Volume de demonstração 07'));
+        $response->assertSee('<summary>Mostrar 2 demandas</summary>', false);
+    }
+
     public function test_task_board_shows_shared_work_by_status_and_manager_can_move_tasks(): void
     {
         [$organization, $manager, $professional] = $this->team();
