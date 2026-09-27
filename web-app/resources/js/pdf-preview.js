@@ -47,8 +47,8 @@ document.querySelectorAll('[data-pdf-preview]').forEach((viewer) => {
             next.disabled = pageNumber >= documentHandle.numPages;
             status.textContent = '';
         } catch (error) {
-            status.textContent = 'Não foi possível mostrar a prévia. Use “Abrir material” ou baixe o arquivo.';
-            console.error('Falha ao renderizar o PDF da revisão.', error);
+            status.textContent = 'Não foi possível mostrar a prévia. Use o link para abrir o arquivo em outra guia ou baixe-o.';
+            console.error('Falha ao renderizar a prévia do PDF.', error);
         } finally {
             rendering = false;
             if (rerender) {
@@ -91,8 +91,8 @@ document.querySelectorAll('[data-pdf-preview]').forEach((viewer) => {
                 render();
             })
             .catch((error) => {
-                status.textContent = 'Não foi possível mostrar a prévia. Use “Abrir material” ou baixe o arquivo.';
-                console.error('Falha ao carregar o PDF da revisão.', error);
+                status.textContent = 'Não foi possível mostrar a prévia. Use o link para abrir o arquivo em outra guia ou baixe-o.';
+                console.error('Falha ao carregar o PDF.', error);
             });
     };
 

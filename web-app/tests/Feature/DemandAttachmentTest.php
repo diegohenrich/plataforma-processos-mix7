@@ -57,8 +57,17 @@ class DemandAttachmentTest extends TestCase
             ->assertOk()
             ->assertSee('Arquivos da equipe')
             ->assertSee('brief.pdf')
-            ->assertSee('Ver PDF nesta tela')
+            ->assertSee('Visualizar PDF nesta tela')
+            ->assertSee('Controles do PDF')
+            ->assertSee('data-pdf-preview', false)
+            ->assertSee('Abrir PDF em outra guia')
+            ->assertSee('Baixar PDF')
             ->assertSee('Anexar à demanda');
+
+        $this->actingAs($professional)->get(route('demands.show', $demand))
+            ->assertOk()
+            ->assertSee('data-pdf-preview', false)
+            ->assertSee('Abrir PDF em outra guia');
     }
 
     public function test_client_cannot_see_or_fetch_internal_demand_attachments(): void

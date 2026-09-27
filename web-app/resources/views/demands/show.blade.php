@@ -41,9 +41,6 @@
                         <section class="drawing-responses"><h3>Rabiscos enviados com comentários</h3>@foreach ($reviewLinks as $reviewLink)@foreach ($reviewLink->responses as $response)@if (!empty($response->anchor_data['path'] ?? []))<article><strong>{{ $response->reviewer_name }} · versão {{ $reviewLink->version }}</strong><p>{{ $response->comment }}</p><x-anchor-drawing :points="$response->anchor_data['path']" /></article>@endif @endforeach @endforeach</section>
                     @endif
                 </section>
-                @if ($reviewLinks->contains('material_mime', 'application/pdf'))
-                    @vite('resources/js/pdf-preview.js')
-                @endif
                 <script>document.querySelectorAll('.review-expiry').forEach((time) => { time.textContent = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(time.dateTime)); });</script>
                 @if ($demand->status === App\Enums\DemandStatus::ClientApproval)<script>document.querySelector('.review-link-form')?.addEventListener('submit', function () { const local = document.getElementById('review-expires-local'); document.getElementById('review-expires-utc').value = new Date(local.value).toISOString(); });</script>@endif
             @endif
@@ -70,13 +67,16 @@
                     <ul class="attachment-list">
                         @foreach ($demand->attachments as $attachment)
                             @php $attachmentUrl = route('demand-attachments.show', [$demand, $attachment]); @endphp
-                            <li class="attachment-item"><div class="attachment-file-icon" aria-hidden="true">{{ str($attachment->original_name)->afterLast('.')->upper()->limit(4, '') }}</div><div class="attachment-file-info"><a href="{{ $attachmentUrl }}" target="_blank" rel="noopener noreferrer">{{ $attachment->original_name }}</a><span>{{ number_format($attachment->file_size / 1024 / 1024, 2, ',', '.') }} MB · enviado por {{ $attachment->uploader->name }} em {{ $attachment->created_at->format('d/m/Y H:i') }}</span>@if ($attachment->mime_type === 'application/pdf')<details class="attachment-preview"><summary>Ver PDF nesta tela</summary><iframe src="{{ $attachmentUrl }}" title="Prévia de {{ $attachment->original_name }}" loading="lazy"></iframe></details>@elseif (str_starts_with($attachment->mime_type, 'image/'))<details class="attachment-preview"><summary>Ver imagem nesta tela</summary><img src="{{ $attachmentUrl }}" alt="{{ $attachment->original_name }}" loading="lazy"></details>@elseif (str_starts_with($attachment->mime_type, 'video/'))<details class="attachment-preview"><summary>Ver vídeo nesta tela</summary><video controls preload="metadata"><source src="{{ $attachmentUrl }}" type="{{ $attachment->mime_type }}">Seu navegador não reproduz este vídeo.</video></details>@endif</div><a class="secondary-button attachment-download" href="{{ $attachmentUrl }}?download=1" download>Baixar</a></li>
+                            <li class="attachment-item"><div class="attachment-file-icon" aria-hidden="true">{{ str($attachment->original_name)->afterLast('.')->upper()->limit(4, '') }}</div><div class="attachment-file-info"><a href="{{ $attachmentUrl }}" target="_blank" rel="noopener noreferrer">{{ $attachment->original_name }}</a><span>{{ number_format($attachment->file_size / 1024 / 1024, 2, ',', '.') }} MB · enviado por {{ $attachment->uploader->name }} em {{ $attachment->created_at->format('d/m/Y H:i') }}</span>@if ($attachment->mime_type === 'application/pdf')<details class="attachment-preview"><summary>Visualizar PDF nesta tela</summary>@include('components.pdf-preview', ['pdfUrl' => $attachmentUrl, 'pdfName' => $attachment->original_name])<p><a href="{{ $attachmentUrl }}" target="_blank" rel="noopener noreferrer">Abrir PDF em outra guia</a> · <a href="{{ $attachmentUrl }}?download=1">Baixar PDF</a></p></details>@elseif (str_starts_with($attachment->mime_type, 'image/'))<details class="attachment-preview"><summary>Ver imagem nesta tela</summary><img src="{{ $attachmentUrl }}" alt="{{ $attachment->original_name }}" loading="lazy"></details>@elseif (str_starts_with($attachment->mime_type, 'video/'))<details class="attachment-preview"><summary>Ver vídeo nesta tela</summary><video controls preload="metadata"><source src="{{ $attachmentUrl }}" type="{{ $attachment->mime_type }}">Seu navegador não reproduz este vídeo.</video></details>@endif</div><a class="secondary-button attachment-download" href="{{ $attachmentUrl }}?download=1" download>Baixar</a></li>
                         @endforeach
                     </ul>
                 @else
                     <p class="empty-inline attachment-empty">Nenhum arquivo foi anexado a esta demanda.</p>
                 @endif
             </section>
+            @if ($demand->attachments->contains('mime_type', 'application/pdf') || $reviewLinks->contains('material_mime', 'application/pdf'))
+                @vite('resources/js/pdf-preview.js')
+            @endif
 
             <div class="detail-grid">
                 <div class="detail-main">

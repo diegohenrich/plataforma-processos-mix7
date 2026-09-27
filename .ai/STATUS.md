@@ -42,6 +42,12 @@
 - GitHub: implementação e documentação publicadas no commit `da0aa285d6e3a6252d62ca2b2af4e5692972d5b1`; SHA local/remoto igual. Checks de push e PR #11 passaram ([push](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36286102585), [PR](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36286104981)).
 - Trello: solicitei confirmação pontual para publicar resultado, commit e testes no cartão correspondente; ainda não houve resposta. Nenhum comentário foi publicado.
 
+## Prévia de PDF para anexos internos — 2026-09-27
+- Troquei o iframe nativo do navegador por PDF.js na tela de detalhe da demanda. A equipe autorizada pode expandir “Visualizar PDF nesta tela”; se a prévia falhar, há links explícitos para abrir o PDF em outra guia e baixar. O mesmo módulo continua atendendo PDFs de revisão por link, e a inclusão do script agora cobre profissionais além da gestão.
+- Validação local: testes focados de anexos passaram (7 testes/76 assertions); suíte completa passou (175 testes/1.484 assertions); Pint focalizado, `npm run build`, compilação/limpeza Blade, Composer, sintaxe JS e `git diff --check` passaram. Os testes verificam os controles e a rota de arquivo autorizada, não substituem o render visual.
+- Inspeção visual autenticada ainda pendente: a skill computer-use proíbe automatizar login e não havia sessão válida reutilizável. Não iniciei servidor nem tentei autenticação automatizada.
+- GitHub: aguardando commit/push e checks. Trello: confirmação pontual para a escrita no cartão ainda pendente.
+
 ## Catálogo expansível de tipos de aprovação — 2026-09-27
 - Direção/gerência podem cadastrar tipos adicionais por organização com nome, descrição e chave técnica; desativar/reativar sem apagar ou reclassificar demandas antigas. Formulário de demanda e API usam o catálogo ativo; API lista tipos disponíveis e preserva chave, rótulo e versão.
 - Segurança validada por testes de papel, agência, chave duplicada/reservada, desativação, uso web/API e tentativa de seleção por outra agência. Tipos extras ainda compartilham campos e etapas; não há criador de campos ou regras específicas, pois a Mix7 não forneceu exemplos validados para essas variações.
