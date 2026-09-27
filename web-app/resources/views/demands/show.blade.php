@@ -119,9 +119,10 @@
                                 <h3 class="assistant-history-heading">Perguntas recentes</h3>
                                 <div class="assistant-history" data-assistant-poll>
                                     @foreach ($aiAgentRuns as $run)
-                                        <article class="assistant-run" data-status-url="{{ in_array($run->status, ['queued', 'running'], true) ? route('ai-agent.status', [$demand, $run]) : '' }}">
+                                        <article class="assistant-run" data-assistant-run data-status-url="{{ in_array($run->status, ['queued', 'running'], true) ? route('ai-agent.status', [$demand, $run]) : '' }}">
                                             <div class="assistant-run-meta"><strong>{{ $run->requester->name }} · {{ $run->agent === 'approval_assistant' ? 'Especialista de aprovação' : 'Ajuda geral' }}</strong><time datetime="{{ $run->created_at->toISOString() }}">{{ $run->created_at->format('d/m/Y H:i') }}</time><span class="assistant-state assistant-state-{{ $run->status }}" data-assistant-state>{{ match ($run->status) {'queued' => 'Na fila', 'running' => 'Consultando', 'completed' => 'Concluído', 'failed' => 'Falhou', default => $run->status} }}</span></div>
                                             @if ($run->answer)<p class="assistant-answer">{{ $run->answer }}</p>@elseif ($run->status === 'failed')<p class="assistant-error">{{ $run->error_message ?: 'Não foi possível concluir a consulta.' }}</p>@else<p class="assistant-pending">O assistente está preparando a resposta…</p>@endif
+                                            @if (in_array($run->status, ['queued', 'running'], true))<p class="assistant-pending" data-assistant-poll-hint hidden>A atualização automática pausou após 10 minutos. Atualize a página para consultar o estado mais recente.</p>@endif
                                             @if ($run->tool_trace)<p class="assistant-sources"><strong>Consultas registradas:</strong> @foreach ($run->tool_trace as $receipt){{ match ($receipt['tool'] ?? '') {'read_demand_context' => 'demanda', 'search_knowledge' => 'conhecimento interno', 'list_client_feedback' => 'feedback do cliente', default => 'consulta recusada'} }}@if (!$loop->last), @endif @endforeach</p>@endif
                                             @if ($run->input_tokens || $run->output_tokens || $run->provider_cost !== null)<p class="assistant-usage">Tokens: {{ $run->input_tokens ?? '—' }} entrada · {{ $run->output_tokens ?? '—' }} saída · Custo reportado pelo provedor: {{ $run->provider_cost !== null ? '$'.number_format((float) $run->provider_cost, 6, '.', ',').' USD' : 'não informado' }}</p>@elseif ($run->status === 'completed')<p class="assistant-usage">O provedor não informou o custo desta execução.</p>@endif
                                         </article>
@@ -334,27 +335,5 @@ document.querySelectorAll('[data-attachment-upload]').forEach((form) => {
     });
 });
 </script>
-<script>
-(() => {
-    const runs = [...document.querySelectorAll('[data-assistant-poll] .assistant-run[data-status-url]')];
-    if (!runs.length) return;
-    let attempts = 0;
-    const refresh = async () => {
-        attempts += 1;
-        await Promise.all(runs.map(async (run) => {
-            const url = run.dataset.statusUrl;
-            if (!url) return;
-            try {
-                const response = await fetch(url, { headers: { Accept: 'application/json' } });
-                if (!response.ok) return;
-                const result = await response.json();
-                if (['completed', 'failed'].includes(result.status)) window.location.reload();
-                run.querySelector('[data-assistant-state]').textContent = result.status === 'running' ? 'Consultando' : 'Na fila';
-            } catch (_) { /* A próxima consulta tentará novamente. */ }
-        }));
-        if (attempts < 20 && runs.some((run) => run.dataset.statusUrl)) window.setTimeout(refresh, 3000);
-    };
-    window.setTimeout(refresh, 2500);
-})();
-</script>
+@vite('resources/js/assistant-polling.js')
 @endsection

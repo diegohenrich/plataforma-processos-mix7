@@ -102,6 +102,10 @@ class AiAgentRuntimeTest extends TestCase
         $this->assertNull($run->demand_id);
         $this->assertSame(hash('sha256', 'Quais demandas estão em aprovação?'), $run->input_hash);
         $this->assertDatabaseMissing('ai_agent_runs', ['answer' => 'Quais demandas estão em aprovação?']);
+        $this->actingAs($manager)->get(route('organization-assistant.index'))
+            ->assertOk()
+            ->assertSee('data-assistant-run', false)
+            ->assertSee('data-assistant-poll-hint', false);
         Bus::assertDispatched(ProcessAiAgentRun::class);
         Http::assertNothingSent();
     }
@@ -467,6 +471,11 @@ class AiAgentRuntimeTest extends TestCase
             ->assertDontSee('Assistente ainda não configurado');
         $this->post(route('ai-agent.ask', $demand), ['question' => 'Quais tarefas faltam?'])
             ->assertRedirect()->assertSessionHasNoErrors();
+
+        $this->actingAs($manager)->get(route('demands.show', $demand))
+            ->assertOk()
+            ->assertSee('data-assistant-run', false)
+            ->assertSee('data-assistant-poll-hint', false);
 
         $this->assertSame('openai-compatible', AiAgentRun::firstOrFail()->provider);
         Bus::assertDispatched(ProcessAiAgentRun::class);
