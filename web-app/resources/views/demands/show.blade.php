@@ -177,6 +177,8 @@
                                             <label class="ai-feedback-option"><input type="checkbox" name="include_client_feedback" value="1" @checked(old('include_client_feedback'))><span>Incluir até 20 comentários e anotações do cliente, identificados por versão ({{ $feedbackCount }} disponíveis)</span></label>
                                             <span class="field-help">Os comentários selecionados também serão enviados ao provedor. Nomes e links de revisão são omitidos.</span>
                                         @endif
+                                        <label class="ai-feedback-option"><input type="checkbox" name="include_assignment_candidates" value="1" @checked(old('include_assignment_candidates'))><span>Permitir que a IA sugira uma pessoa da equipe para cada tarefa</span></label>
+                                        <span class="field-help">Com esta opção, o provedor recebe especialidades declaradas e referências aleatórias, sem nomes, e-mails ou IDs internos. Especialidades também são dados internos: use somente após a política de envio da Mix7 ser aprovada. Você poderá trocar cada indicação antes de aplicar.</span>
                                         <label class="ai-feedback-option"><input type="checkbox" name="include_team_capacity" value="1" @checked(old('include_team_capacity')) data-capacity-toggle><span>Considerar a capacidade semanal registrada pela gestão</span></label>
                                         <label class="field ai-capacity-week">Semana de referência<input type="week" name="capacity_week" value="{{ old('capacity_week', now()->format('o-\\WW')) }}" data-capacity-week></label>
                                         <span class="field-help">Com a opção marcada, o provedor recebe apenas totais da semana, sem nomes ou títulos de tarefas. A prévia é preliminar; a gestão ainda escolhe cada responsável. O envio continua sujeito à política de dados da Mix7.</span>
@@ -197,6 +199,11 @@
                                         <details class="ai-capacity-source"><summary>Ver totais de capacidade enviados · semana {{ $capacitySource['week'] }}</summary><p>{{ $capacitySource['professionals_with_recorded_capacity'] }} de {{ $capacitySource['active_professionals'] }} profissionais com capacidade informada; {{ $capacitySource['professionals_without_recorded_capacity'] }} sem registro. Disponibilidade registrada: {{ number_format($capacitySource['recorded_available_minutes'] / 60, 2, ',', '.') }} h após {{ number_format($capacitySource['recorded_absence_minutes'] / 60, 2, ',', '.') }} h de ausências. Tarefas abertas com prazo nesta semana: {{ $capacitySource['dated_open_tasks_due_this_week'] }}, total estimado {{ number_format($capacitySource['open_estimate_minutes_due_this_week'] / 60, 2, ',', '.') }} h; {{ $capacitySource['dated_tasks_missing_estimate'] }} sem estimativa e {{ $capacitySource['open_tasks_without_due_date'] }} sem prazo. Nenhum nome ou título foi enviado.</p></details>
                                         @if (!empty($run->proposal['capacity_observation']))<p class="ai-capacity-observation"><strong>Leitura preliminar da IA:</strong> {{ $run->proposal['capacity_observation'] }} Revise os totais antes de decidir.</p>@endif
                                     @endif
+                                    @if (!empty($run->proposal['_source']['assignment_candidates_included']))
+                                        <p class="field-help">A IA recebeu especialidades com referências anônimas, sem nomes, e-mails ou IDs internos. Confira ou troque cada pessoa antes de aplicar.</p>
+                                    @elseif (!empty($run->proposal['_source']['assignment_suggestions_requested']))
+                                        <p class="notice notice-info">Nenhuma pessoa profissional ativa tem especialidades cadastradas para esta sugestão. Escolha os responsáveis manualmente.</p>
+                                    @endif
                                     @if ($run->status === 'pending' && $demand->status === App\Enums\DemandStatus::Planning)
                                         <form method="post" action="{{ route('ai-planning.approve', [$demand, $run]) }}" class="ai-review-form">@csrf
                                             <label class="field">Resumo curto para o quadro (revise antes de aprovar)<textarea name="summary" maxlength="280" rows="3">{{ $run->proposal['summary'] ?? '' }}</textarea></label>
@@ -205,7 +212,11 @@
                                             @foreach (($run->proposal['tasks'] ?? []) as $index => $suggestedTask)
                                                 @php
                                                     $matchedProfessionals = $professionals->filter(fn ($person) => $person->matchesSpecialty((string) $suggestedTask['responsibility_profile']))->values();
-                                                    $recommendedProfessionalId = $matchedProfessionals->count() === 1 ? $matchedProfessionals->first()->id : null;
+                                                    $candidateRef = $suggestedTask['suggested_assignee_ref'] ?? null;
+                                                    $candidateSuggestion = $candidateRef ? ($run->proposal['_source']['assignment_candidates'][$candidateRef] ?? null) : null;
+                                                    $aiSuggestedProfessional = $candidateSuggestion ? $professionals->firstWhere('id', $candidateSuggestion['user_id']) : null;
+                                                    $recommendedProfessionalId = $aiSuggestedProfessional?->id ?? ($matchedProfessionals->count() === 1 ? $matchedProfessionals->first()->id : null);
+                                                    $recommendationLabel = $aiSuggestedProfessional ? 'Responsável sugerido pela IA — confirme' : ($recommendedProfessionalId ? 'Responsável sugerido — confirme' : 'Responsável');
                                                 @endphp
                                                 <div class="ai-task-row" data-ai-assignee-row>
                                                     <label class="field">Aplicar esta tarefa?<select name="tasks[{{ $index }}][include]" data-ai-include><option value="1" selected>Sim, incluir</option><option value="0">Não, remover</option></select></label>
@@ -213,14 +224,14 @@
                                                         <label class="field">Tarefa sugerida<input name="tasks[{{ $index }}][title]" value="{{ $suggestedTask['title'] }}" maxlength="180" required></label>
                                                         <label class="field">Perfil sugerido<input name="tasks[{{ $index }}][responsibility_profile]" value="{{ $suggestedTask['responsibility_profile'] }}" maxlength="120" required data-ai-responsibility-profile></label>
                                                         <label class="field">Estimativa (minutos)<input type="number" name="tasks[{{ $index }}][estimate_minutes]" value="{{ $suggestedTask['estimate_minutes'] }}" min="1" max="100000" required></label>
-                                                        <label class="field"><span data-ai-assignee-label>{{ $recommendedProfessionalId ? 'Responsável sugerido — confirme' : 'Responsável' }}</span>
-                                                            <select name="tasks[{{ $index }}][assignee_id]" required data-ai-assignee-select>
+                                                        <label class="field"><span data-ai-assignee-label>{{ $recommendationLabel }}</span>
+                                                            <select name="tasks[{{ $index }}][assignee_id]" required data-ai-assignee-select data-ai-suggested="{{ $aiSuggestedProfessional ? '1' : '0' }}">
                                                                 <option value="" data-professional-name="">Escolha uma pessoa</option>
                                                                 @foreach ($professionals as $professional)
                                                                     <option value="{{ $professional->id }}" data-professional-name="{{ $professional->name }}" data-professional-specialties="{{ json_encode($professional->specialties ?? [], JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_HEX_TAG) }}" @selected($recommendedProfessionalId === $professional->id)>{{ $professional->name }}@if ($professional->matchesSpecialty((string) $suggestedTask['responsibility_profile'])) · especialidade compatível @endif</option>
                                                                 @endforeach
                                                             </select>
-                                                            <span class="field-help" data-ai-assignee-help>@if ($matchedProfessionals->count() > 1)Mais de uma pessoa informou esta especialidade; escolha quem executará.@elseif ($recommendedProfessionalId)Sugestão local pela correspondência exata da especialidade cadastrada. Confirme antes de aplicar.@else Nenhuma especialidade cadastrada corresponde exatamente ao perfil. Escolha manualmente.@endif</span>
+                                                            <span class="field-help" data-ai-assignee-help>@if ($aiSuggestedProfessional){{ $suggestedTask['assignment_rationale'] ?: 'A IA sugeriu esta pessoa com base nas especialidades declaradas.' }} Confira ou escolha outra pessoa antes de aplicar.@elseif ($matchedProfessionals->count() > 1)Mais de uma pessoa informou esta especialidade; escolha quem executará.@elseif ($recommendedProfessionalId)Sugestão local pela correspondência exata da especialidade cadastrada. Confirme antes de aplicar.@else Nenhuma especialidade cadastrada corresponde exatamente ao perfil. Escolha manualmente.@endif</span>
                                                         </label>
                                                         <p>{{ $suggestedTask['rationale'] }}@if ($suggestedTask['depends_on'])<br><strong>Depende de:</strong> @foreach ($suggestedTask['depends_on'] as $dependencyIndex){{ $run->proposal['tasks'][$dependencyIndex]['title'] ?? 'Tarefa anterior' }}@if (!$loop->last), @endif @endforeach @else<br>Sem dependências anteriores.@endif @if (!empty($suggestedTask['feedback_refs']))<br><strong>Feedback ligado a esta tarefa:</strong> @foreach ($suggestedTask['feedback_refs'] as $feedbackId)@if (isset($feedbackById[$feedbackId]))versão {{ $feedbackById[$feedbackId]['version'] }} · “{{ mb_substr((string) $feedbackById[$feedbackId]['comment'], 0, 120) }}”@else resposta #{{ $feedbackId }}@endif @if (!$loop->last); @endif @endforeach @endif</p>
                                                     </fieldset>
@@ -344,8 +355,11 @@ document.querySelectorAll('[data-ai-assignee-row]').forEach((row) => {
         select.value = matches.length === 1 ? matches[0].value : '';
     };
 
-    profile.addEventListener('input', refreshSuggestion);
-    refreshSuggestion();
+    profile.addEventListener('input', () => {
+        select.dataset.aiSuggested = '0';
+        refreshSuggestion();
+    });
+    if (select.dataset.aiSuggested !== '1') refreshSuggestion();
 });
 </script>
 @endif

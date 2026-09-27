@@ -52,6 +52,7 @@ class AiPlanningTest extends TestCase
         $this->assertDatabaseHas('demand_events', ['demand_id' => $demand->id, 'actor_id' => $manager->id, 'event_type' => 'ai_planning_proposed']);
         $input = json_decode(Http::recorded()->first()[0]['messages'][1]['content'], true, 32, JSON_THROW_ON_ERROR);
         $this->assertSame([], $input['team_capacity']);
+        $this->assertSame([], $input['assignment_candidates']);
         Http::assertSent(fn ($request) => $request['messages'][1]['content'] !== ''
             && str_contains($request['messages'][1]['content'], 'Briefing sintético')
             && $request['response_format']['type'] === 'json_schema');
@@ -74,6 +75,118 @@ class AiPlanningTest extends TestCase
         $this->assertTrue($professional->matchesSpecialty('DESIGN'));
         $this->assertTrue($professional->matchesSpecialty('dèsign'));
         $this->assertSame(0, DemandTask::count());
+    }
+
+    public function test_management_can_opt_in_to_an_anonymous_ai_assignee_suggestion_and_override_it(): void
+    {
+        [$organization, $manager, $professional, $demand] = $this->workspace();
+        $professional->update(['specialties' => ['Design']]);
+        $secondProfessional = User::factory()->create([
+            'organization_id' => $demand->organization_id,
+            'role' => UserRole::Professional,
+            'is_active' => true,
+            'specialties' => ['Atendimento'],
+        ]);
+        $inactiveProfessional = User::factory()->create([
+            'organization_id' => $organization->id,
+            'role' => UserRole::Professional,
+            'is_active' => false,
+            'specialties' => ['Design'],
+        ]);
+        $foreignOrganization = Organization::query()->create([
+            'name' => 'Outra agência',
+            'slug' => 'outra-agencia',
+        ]);
+        $foreignProfessional = User::factory()->create([
+            'organization_id' => $foreignOrganization->id,
+            'role' => UserRole::Professional,
+            'is_active' => true,
+            'specialties' => ['Atendimento'],
+        ]);
+        $suggestedReference = null;
+        Http::fake(['https://ai-gateway.vercel.sh/v1/chat/completions' => function ($request) use (&$suggestedReference, $professional, $secondProfessional, $inactiveProfessional, $foreignProfessional) {
+            $input = json_decode($request['messages'][1]['content'], true, 32, JSON_THROW_ON_ERROR);
+            $this->assertCount(2, $input['assignment_candidates']);
+            $this->assertSame(['candidate_ref', 'specialties'], array_keys($input['assignment_candidates'][0]));
+            $suggestedReference = collect($input['assignment_candidates'])
+                ->first(fn (array $candidate): bool => $candidate['specialties'] === ['Atendimento'])['candidate_ref'];
+            $prompt = $request['messages'][1]['content'];
+            $this->assertStringNotContainsString($professional->name, $prompt);
+            $this->assertStringNotContainsString($secondProfessional->name, $prompt);
+            $this->assertStringNotContainsString($professional->email, $prompt);
+            $this->assertStringNotContainsString($inactiveProfessional->name, $prompt);
+            $this->assertStringNotContainsString($inactiveProfessional->email, $prompt);
+            $this->assertStringNotContainsString($foreignProfessional->name, $prompt);
+            $this->assertStringNotContainsString($foreignProfessional->email, $prompt);
+            $this->assertArrayNotHasKey('id', $input['assignment_candidates'][0]);
+
+            return Http::response($this->providerResponse([], '', [$suggestedReference, null]), 200);
+        }]);
+
+        $page = $this->actingAs($manager)->get(route('demands.show', $demand))->assertOk()
+            ->assertSee('Permitir que a IA sugira uma pessoa da equipe para cada tarefa');
+        preg_match('/<input[^>]*name="include_assignment_candidates"[^>]*>/', $page->getContent(), $checkbox);
+        $this->assertNotEmpty($checkbox);
+        $this->assertStringNotContainsString('checked', $checkbox[0]);
+        $this->post(route('ai-planning.propose', $demand), ['include_assignment_candidates' => 1])
+            ->assertRedirect()->assertSessionHasNoErrors();
+
+        $run = AiPlanningRun::firstOrFail();
+        $this->assertTrue($run->proposal['_source']['assignment_candidates_included']);
+        $this->assertSame($secondProfessional->id, $run->proposal['_source']['assignment_candidates'][$suggestedReference]['user_id']);
+        $this->assertSame($suggestedReference, $run->proposal['tasks'][0]['suggested_assignee_ref']);
+        $this->assertSame(0, DemandTask::count());
+
+        $page = $this->get(route('demands.show', $demand))->assertOk();
+        $this->assertStringContainsString('Responsável sugerido pela IA — confirme', $page->getContent());
+        $this->assertSame(1, preg_match('/<select name="tasks\[0\]\[assignee_id\]"[^>]*>.*?<option value="'.$secondProfessional->id.'"[^>]*selected/s', $page->getContent()));
+
+        $this->post(route('ai-planning.approve', [$demand, $run]), [
+            'summary' => 'Resumo revisado pela gestão.',
+            'tasks' => [
+                ['include' => 1, 'title' => 'Organizar briefing', 'responsibility_profile' => 'Atendimento', 'estimate_minutes' => 30, 'assignee_id' => $professional->id],
+                ['include' => 0],
+            ],
+        ])->assertRedirect()->assertSessionHasNoErrors();
+
+        $task = $demand->tasks()->firstOrFail();
+        $this->assertSame($professional->id, $task->assigned_to);
+        $this->assertStringContainsString('A IA sugere a pessoa de atendimento.', $task->description);
+        $this->assertSame($suggestedReference, $run->fresh()->reviewed_tasks['tasks'][0]['suggested_assignee_ref']);
+        $this->assertSame($professional->id, $run->fresh()->reviewed_tasks['tasks'][0]['assignee_id']);
+    }
+
+    public function test_planner_rejects_a_person_reference_that_was_not_sent(): void
+    {
+        [, $manager, $professional, $demand] = $this->workspace();
+        $professional->update(['specialties' => ['Design']]);
+        Http::fake(['https://ai-gateway.vercel.sh/v1/chat/completions' => Http::response(
+            $this->providerResponse([], '', ['invented-reference']),
+            200,
+        )]);
+
+        $this->actingAs($manager)->from(route('demands.show', $demand))
+            ->post(route('ai-planning.propose', $demand), ['include_assignment_candidates' => 1])
+            ->assertSessionHasErrors('ai');
+
+        $this->assertSame(0, AiPlanningRun::count());
+        $this->assertSame(0, DemandTask::count());
+    }
+
+    public function test_opt_in_without_declared_specialties_falls_back_to_manual_assignment(): void
+    {
+        [, $manager, , $demand] = $this->workspace();
+        Http::fake(['https://ai-gateway.vercel.sh/v1/chat/completions' => Http::response($this->providerResponse(), 200)]);
+
+        $this->actingAs($manager)->post(route('ai-planning.propose', $demand), ['include_assignment_candidates' => 1])
+            ->assertRedirect()->assertSessionHasNoErrors();
+
+        $run = AiPlanningRun::firstOrFail();
+        $this->assertTrue($run->proposal['_source']['assignment_suggestions_requested']);
+        $this->assertFalse($run->proposal['_source']['assignment_candidates_included']);
+        $this->assertSame([], $run->proposal['_source']['assignment_candidates']);
+        $this->get(route('demands.show', $demand))->assertOk()
+            ->assertSee('Nenhuma pessoa profissional ativa tem especialidades cadastradas para esta sugestão. Escolha os responsáveis manualmente.');
     }
 
     public function test_review_does_not_preselect_when_multiple_professionals_match(): void
@@ -508,7 +621,7 @@ class AiPlanningTest extends TestCase
         return [$organization, $manager, $professional, $demand];
     }
 
-    private function providerResponse(array $feedbackRefs = [], string $capacityObservation = ''): array
+    private function providerResponse(array $feedbackRefs = [], string $capacityObservation = '', array $assignmentRefs = []): array
     {
         return [
             'choices' => [['message' => ['content' => json_encode([
@@ -516,8 +629,8 @@ class AiPlanningTest extends TestCase
                 'capacity_observation' => $capacityObservation,
                 'questions' => ['Qual prazo?'],
                 'tasks' => [
-                    ['title' => 'Organizar briefing', 'rationale' => 'Confirmar objetivo.', 'responsibility_profile' => 'Atendimento', 'estimate_minutes' => 30, 'depends_on' => [], 'feedback_refs' => $feedbackRefs],
-                    ['title' => 'Mapear páginas', 'rationale' => 'Preparar estrutura.', 'responsibility_profile' => 'Design', 'estimate_minutes' => 60, 'depends_on' => [0], 'feedback_refs' => []],
+                    ['title' => 'Organizar briefing', 'rationale' => 'Confirmar objetivo.', 'responsibility_profile' => 'Atendimento', 'estimate_minutes' => 30, 'depends_on' => [], 'feedback_refs' => $feedbackRefs, 'suggested_assignee_ref' => $assignmentRefs[0] ?? null, 'assignment_rationale' => isset($assignmentRefs[0]) ? 'A IA sugere a pessoa de atendimento.' : ''],
+                    ['title' => 'Mapear páginas', 'rationale' => 'Preparar estrutura.', 'responsibility_profile' => 'Design', 'estimate_minutes' => 60, 'depends_on' => [0], 'feedback_refs' => [], 'suggested_assignee_ref' => $assignmentRefs[1] ?? null, 'assignment_rationale' => isset($assignmentRefs[1]) ? 'A IA sugere a pessoa de design.' : ''],
                 ],
             ], JSON_THROW_ON_ERROR)]]],
             'usage' => ['prompt_tokens' => 123, 'completion_tokens' => 45],

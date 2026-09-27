@@ -17,6 +17,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use JsonException;
@@ -34,6 +35,7 @@ class AiPlanningController extends Controller
         $data = $request->validate([
             'include_client_feedback' => ['sometimes', 'boolean'],
             'include_team_capacity' => ['sometimes', 'boolean'],
+            'include_assignment_candidates' => ['sometimes', 'boolean'],
             'capacity_week' => ['required_if:include_team_capacity,1', 'nullable', 'regex:/^\d{4}-W\d{2}$/', function (string $attribute, mixed $value, \Closure $fail): void {
                 if (! is_string($value) || ! preg_match('/^\d{4}-W\d{2}$/', $value)) {
                     return;
@@ -48,9 +50,12 @@ class AiPlanningController extends Controller
         $teamCapacity = ($data['include_team_capacity'] ?? false)
             ? $this->teamCapacity($demand, $data['capacity_week'])
             : [];
+        [$assignmentCandidates, $assignmentCandidateMap] = ($data['include_assignment_candidates'] ?? false)
+            ? $this->assignmentCandidates($demand)
+            : [[], []];
 
         try {
-            $result = $agent->propose($demand, $feedback, $teamCapacity);
+            $result = $agent->propose($demand, $feedback, $teamCapacity, $assignmentCandidates);
         } catch (RuntimeException|JsonException $exception) {
             return back()->withErrors(['ai' => $exception->getMessage()]);
         }
@@ -61,6 +66,9 @@ class AiPlanningController extends Controller
             'feedback_versions' => array_column($feedback, 'version', 'response_id'),
             'team_capacity_included' => $teamCapacity !== [],
             'team_capacity' => $teamCapacity,
+            'assignment_suggestions_requested' => (bool) ($data['include_assignment_candidates'] ?? false),
+            'assignment_candidates_included' => $assignmentCandidates !== [],
+            'assignment_candidates' => $assignmentCandidateMap,
         ];
 
         $run = DB::transaction(function () use ($demand, $request, $result): AiPlanningRun {
@@ -141,6 +149,42 @@ class AiPlanningController extends Controller
         ];
     }
 
+    /** @return array{list<array{candidate_ref: string, specialties: list<string>}>, array<string, array{user_id: int, name: string, specialties: list<string>}>} */
+    private function assignmentCandidates(Demand $demand): array
+    {
+        $candidates = [];
+        $localMap = [];
+        $professionals = User::query()
+            ->where('organization_id', $demand->organization_id)
+            ->where('role', UserRole::Professional->value)
+            ->where('is_active', true)
+            ->orderBy('id')
+            ->get(['id', 'name', 'specialties']);
+
+        foreach ($professionals as $professional) {
+            $specialties = collect($professional->specialties ?? [])
+                ->filter(fn (mixed $specialty): bool => is_string($specialty) && trim($specialty) !== '')
+                ->map(fn (string $specialty): string => trim($specialty))
+                ->unique(fn (string $specialty): string => mb_strtolower($specialty))
+                ->take(12)
+                ->values()
+                ->all();
+            if ($specialties === []) {
+                continue;
+            }
+
+            $reference = Str::random(16);
+            $candidates[] = ['candidate_ref' => $reference, 'specialties' => $specialties];
+            $localMap[$reference] = [
+                'user_id' => $professional->id,
+                'name' => $professional->name,
+                'specialties' => $specialties,
+            ];
+        }
+
+        return [$candidates, $localMap];
+    }
+
     public function approve(Request $request, Demand $demand, AiPlanningRun $run): RedirectResponse
     {
         $this->authorize('manage', $demand);
@@ -218,12 +262,19 @@ class AiPlanningController extends Controller
                     fn (int $id): string => 'versão '.($feedbackVersions[$id] ?? $feedbackVersions[(string) $id] ?? '?').', resposta #'.$id,
                     $feedbackRefs,
                 ));
+                $suggestedAssignment = $original[$index]['suggested_assignee_ref'] ?? null;
+                $assignmentRationale = trim((string) ($original[$index]['assignment_rationale'] ?? ''));
+                $candidateMap = $run->proposal['_source']['assignment_candidates'] ?? [];
+                $suggestedPerson = $suggestedAssignment ? ($candidateMap[$suggestedAssignment] ?? null) : null;
+                $assignmentNote = $suggestedPerson
+                    ? "\nSugestão da IA: {$suggestedPerson['name']}. Responsável confirmado pela gestão: ".User::query()->whereKey($taskData['assignee_id'])->value('name').'. Motivo sugerido: '.($assignmentRationale ?: 'especialidades declaradas correspondentes.')
+                    : '';
                 $task = $demand->tasks()->create([
                     'organization_id' => $demand->organization_id,
                     'created_by' => $request->user()->id,
                     'assigned_to' => $taskData['assignee_id'],
                     'title' => trim($taskData['title']),
-                    'description' => 'Perfil: '.trim($taskData['responsibility_profile'])."\nMotivo: ".($original[$index]['rationale'] ?? 'Definido durante a revisão da proposta.').$feedbackSource,
+                    'description' => 'Perfil: '.trim($taskData['responsibility_profile'])."\nMotivo: ".($original[$index]['rationale'] ?? 'Definido durante a revisão da proposta.').$feedbackSource.$assignmentNote,
                     'status' => TaskStatus::Todo,
                     'estimate_minutes' => $taskData['estimate_minutes'],
                 ]);
@@ -258,6 +309,8 @@ class AiPlanningController extends Controller
                             'rationale' => $suggested['rationale'] ?? '',
                             'depends_on' => $selectedTasks[$index]['depends_on'],
                             'feedback_refs' => $suggested['feedback_refs'] ?? [],
+                            'suggested_assignee_ref' => $suggested['suggested_assignee_ref'] ?? null,
+                            'assignment_rationale' => $suggested['assignment_rationale'] ?? '',
                         ];
                     }, array_keys($original), $original)),
                 ],
