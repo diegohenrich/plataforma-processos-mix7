@@ -2,7 +2,7 @@
 
 Projeto da Mix7 para reunir gestão de equipe e aprovações em um fluxo documentado, rastreável e integrado. O primeiro módulo de aprovação tratará criativos de redes sociais; o modelo deverá comportar outras áreas da agência.
 
-**Estado:** engenharia de requisitos, protótipo local em `prototipo/` e fundação web Laravel em `web-app/`. O protótipo valida o fluxo no navegador; a nova aplicação inicia autenticação e integração com banco/API, mas ainda não está implantada nem pronta para dados reais.
+**Estado:** protótipo histórico em `prototipo/` e aplicação Laravel 12 em `web-app/`. A aplicação local já inclui autenticação, papéis, demandas/tarefas persistidas, aprovações por link, cronômetro, equipe, avaliações humanas, capacidade/Gantt, conhecimento/onboarding, acessos e API; a [auditoria por perfil](docs/AUDITORIA-FUNCIONAL-POR-PERFIL.md) descreve o que está funcional e o que falta. O ambiente de [demonstração local](docs/DEMONSTRACAO-LOCAL.md) usa dados fictícios. Ainda não há operação compartilhada ou validação para dados reais.
 
 ## Fluxo integrado já definido
 
@@ -34,4 +34,4 @@ O Trello é a fonte canônica para cartões e andamento. Este repositório guard
 
 **Regra de continuidade:** cada alteração ou tarefa concluída deve resultar em commit enviado e verificado no GitHub e atualização do cartão correspondente no Trello, com o resultado e o link. Consulte [AGENTS.md](AGENTS.md) e [Como contribuir](CONTRIBUTING.md). A organização inicial está preservada na tag `marco-2026-09-24-organizacao-inicial`.
 
-Para executar a demonstração local, siga [prototipo/README.md](prototipo/README.md). Para a nova aplicação web, consulte [a configuração Laravel](docs/ARQUITETURA-HOSTINGER-LARAVEL.md). Não use dados reais: o protótipo guarda dados só neste navegador e a aplicação Laravel ainda não tem permissões completas, operação de produção nem implantação. As pastas `Sistema de gestão de equipe` e `Sistema de aprovação de criativos das redes sociais` representam as duas frentes iniciais.
+Para executar o protótipo, siga [prototipo/README.md](prototipo/README.md). Para explorar a aplicação com perfis e registros sintéticos, siga [docs/DEMONSTRACAO-LOCAL.md](docs/DEMONSTRACAO-LOCAL.md); para preparar uma instalação Laravel, consulte [a arquitetura e configuração](docs/ARQUITETURA-HOSTINGER-LARAVEL.md). Não use dados reais até validar permissões, política de IA, e-mail, armazenamento/backup, limites da hospedagem e operação compartilhada. As pastas `Sistema de gestão de equipe` e `Sistema de aprovação de criativos das redes sociais` representam as duas frentes iniciais.
