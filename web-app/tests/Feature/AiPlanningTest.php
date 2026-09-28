@@ -26,6 +26,7 @@ class AiPlanningTest extends TestCase
     {
         parent::setUp();
         config([
+            'services.ai_gateway.provider' => 'openai-compatible',
             'services.ai_gateway.key' => 'test-key',
             'services.ai_gateway.base_url' => 'https://ai-gateway.vercel.sh/v1',
             'services.ai_gateway.model' => 'test-provider/test-model',

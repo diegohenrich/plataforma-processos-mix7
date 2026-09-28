@@ -8,7 +8,6 @@ use App\Services\AiProviderSettings;
 use App\Services\AiTextProvider;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Illuminate\View\View;
 use RuntimeException;
 
@@ -31,55 +30,23 @@ class AiProviderSettingsController extends Controller
     {
         $this->authorizeOwner($request);
         $data = $request->validate([
-            'provider' => ['required', 'string', 'in:openai-compatible,anthropic-api,claude-code-subscription,codex-chatgpt-subscription'],
-            'base_url' => ['nullable', 'string', 'max:255'],
-            'model' => ['nullable', 'string', 'max:160'],
-            'claude_model' => ['nullable', 'string', 'max:160'],
-            'codex_model' => ['nullable', 'string', 'max:160'],
-            'api_key' => ['nullable', 'string', 'max:4000'],
+            'provider' => ['required', 'string', 'in:ollama-gemma-local'],
             'enabled' => ['sometimes', 'boolean'],
-            'clear_api_key' => ['sometimes', 'boolean'],
         ]);
 
-        if (in_array($data['provider'], ['openai-compatible', 'anthropic-api'], true)) {
-            $data['base_url'] = rtrim(trim((string) ($data['base_url'] ?? '')), '/');
-            $data['model'] = trim((string) ($data['model'] ?? ''));
-            if ($data['base_url'] === '' || $data['model'] === '') {
-                return back()->withErrors(['base_url' => 'Informe o endereço da API e o nome exato do modelo.'])->withInput($request->except('api_key'));
-            }
-            if (! $this->safeEndpoint($data['base_url'])) {
-                return back()->withErrors(['base_url' => 'Use um endereço HTTPS válido. HTTP só é aceito para serviços locais quando o ambiente está local.'])->withInput($request->except('api_key'));
-            }
-        } elseif ($data['provider'] === 'claude-code-subscription') {
-            $data['base_url'] = null;
-            $data['model'] = trim((string) ($data['claude_model'] ?? $data['model'] ?? ''));
-        } else {
-            $data['base_url'] = null;
-            $data['model'] = trim((string) ($data['codex_model'] ?? $data['model'] ?? ''));
-        }
-
         $setting = AiProviderSetting::query()->firstOrNew(['organization_id' => $request->user()->organization_id]);
-        $previousProvider = $setting->provider;
-        $apiKey = trim((string) ($data['api_key'] ?? ''));
-        if ($data['provider'] !== $previousProvider) {
-            $setting->api_key = null;
-        }
-        if ($apiKey !== '') {
-            $setting->api_key = $apiKey;
-        } elseif (($data['clear_api_key'] ?? false) || in_array($data['provider'], ['claude-code-subscription', 'codex-chatgpt-subscription'], true)) {
-            $setting->api_key = null;
-        }
+        $setting->api_key = null;
         $setting->fill([
-            'provider' => $data['provider'],
-            'base_url' => $data['base_url'],
-            'model' => $data['model'],
+            'provider' => 'ollama-gemma-local',
+            'base_url' => 'http://127.0.0.1:11434/v1',
+            'model' => 'gemma3:4b',
             'enabled' => (bool) ($data['enabled'] ?? false),
             'tested_at' => null,
         ]);
         $setting->organization_id = $request->user()->organization_id;
         $setting->save();
 
-        return to_route('ai-settings.index')->with('success', 'Configuração salva. A chave fica criptografada no banco e nunca é exibida novamente.');
+        return to_route('ai-settings.index')->with('success', 'Configuração do Gemma 3:4b local salva para esta agência.');
     }
 
     public function test(Request $request, AiProviderSettings $settings, AiTextProvider $provider): RedirectResponse
@@ -103,26 +70,11 @@ class AiProviderSettingsController extends Controller
             return back()->withErrors(['provider' => 'Teste não concluído: '.$exception->getMessage()]);
         }
 
-        return back()->with('success', 'A conexão respondeu. Tokens e custo dependem do provedor e do modelo escolhidos.');
+        return back()->with('success', 'O Gemma 3:4b local respondeu ao teste fictício.');
     }
 
     private function authorizeOwner(Request $request): void
     {
         abort_unless($request->user()->is_active && $request->user()->role === UserRole::AgencyOwner && $request->user()->organization_id, 403);
-    }
-
-    private function safeEndpoint(string $url): bool
-    {
-        $parts = parse_url($url);
-        if (! is_array($parts) || ! isset($parts['scheme'], $parts['host']) || isset($parts['user']) || isset($parts['pass']) || isset($parts['fragment'])) {
-            return false;
-        }
-        if ($parts['scheme'] === 'https') {
-            return true;
-        }
-        $host = Str::lower($parts['host']);
-
-        return app()->environment('local') && $parts['scheme'] === 'http'
-            && in_array($host, ['localhost', '127.0.0.1', '::1'], true);
     }
 }

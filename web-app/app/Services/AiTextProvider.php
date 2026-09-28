@@ -27,6 +27,10 @@ class AiTextProvider
             throw new RuntimeException('A conexão de IA não está configurada ou está desativada. Nenhuma pergunta foi enviada.');
         }
 
+        if ($settings['provider'] === 'ollama-gemma-local') {
+            return $this->completeWithGemma($settings, $messages, $tools, $jsonSchema, $maxTokens);
+        }
+
         if ($settings['provider'] === 'claude-code-subscription') {
             return $this->completeWithClaudeCode($settings, $messages, $tools, $jsonSchema, $maxTokens);
         }
@@ -40,6 +44,187 @@ class AiTextProvider
         }
 
         return $this->completeWithOpenAiCompatible($settings, $messages, $tools, $jsonSchema, $maxTokens);
+    }
+
+    /** @param array<string, mixed> $settings
+     * @param  list<array<string, mixed>>  $messages
+     * @param  list<array<string, mixed>>  $tools
+     * @param  array<string, mixed>|null  $jsonSchema
+     * @return array{message:array{role:string,content:?string,tool_calls:list<array<string,mixed>>},usage:array<string,mixed>}
+     */
+    private function completeWithGemma(array $settings, array $messages, array $tools, ?array $jsonSchema, int $maxTokens): array
+    {
+        if ($tools === []) {
+            return $this->completeWithGemmaNative($settings, $messages, $jsonSchema, $maxTokens);
+        }
+
+        $definitions = [];
+        foreach ($tools as $tool) {
+            $function = $tool['function'] ?? [];
+            if (! is_array($function) || ! is_string($function['name'] ?? null)) {
+                continue;
+            }
+            $definitions[] = [
+                'name' => $function['name'],
+                'description' => (string) ($function['description'] ?? ''),
+                'parameters' => $function['parameters'] ?? ['type' => 'object', 'properties' => new \stdClass],
+            ];
+        }
+        if ($definitions === []) {
+            throw new RuntimeException('O assistente não possui consultas autorizadas nesta área.');
+        }
+
+        $toolSchema = [
+            'type' => 'object',
+            'properties' => [
+                'action' => ['type' => 'string', 'enum' => ['answer', 'call_tools']],
+                'answer' => ['type' => 'string'],
+                'tool_calls' => ['type' => 'array', 'items' => [
+                    'type' => 'object',
+                    'properties' => [
+                        'name' => ['type' => 'string', 'enum' => array_column($definitions, 'name')],
+                        'arguments' => ['type' => 'object', 'additionalProperties' => true],
+                    ],
+                    'required' => ['name', 'arguments'],
+                    'additionalProperties' => false,
+                ]],
+            ],
+            'required' => ['action', 'answer', 'tool_calls'],
+            'additionalProperties' => false,
+        ];
+
+        $messages = $this->gemmaToolMessages($messages, $definitions);
+        $response = $this->completeWithGemmaNative($settings, $messages, $toolSchema, $maxTokens);
+        $content = $response['message']['content'] ?? null;
+        try {
+            $decision = is_string($content) ? json_decode($content, true, 64, JSON_THROW_ON_ERROR) : null;
+        } catch (\JsonException $exception) {
+            throw new RuntimeException('O Gemma não retornou uma decisão estruturada válida. Tente reformular a pergunta.', previous: $exception);
+        }
+        if (! is_array($decision) || ! in_array($decision['action'] ?? null, ['answer', 'call_tools'], true)
+            || ! is_string($decision['answer'] ?? null) || ! is_array($decision['tool_calls'] ?? null)) {
+            throw new RuntimeException('O Gemma não retornou o formato esperado pelo assistente. Nenhuma consulta foi executada.');
+        }
+
+        $allowedNames = array_column($definitions, 'name');
+        $toolCalls = [];
+        foreach ($decision['tool_calls'] as $call) {
+            if (! is_array($call) || ! is_string($call['name'] ?? null)
+                || ! in_array($call['name'], $allowedNames, true) || ! is_array($call['arguments'] ?? null)) {
+                throw new RuntimeException('O Gemma propôs uma consulta inválida. Nenhuma consulta foi executada.');
+            }
+            $toolCalls[] = [
+                'id' => (string) Str::uuid(),
+                'type' => 'function',
+                'function' => [
+                    'name' => $call['name'],
+                    'arguments' => json_encode($call['arguments'], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE),
+                ],
+            ];
+        }
+        if ($decision['action'] === 'call_tools' && $toolCalls === []) {
+            throw new RuntimeException('O Gemma pediu uma consulta sem indicar ferramenta. Nenhuma consulta foi executada.');
+        }
+        if ($decision['action'] === 'answer' && $toolCalls !== []) {
+            throw new RuntimeException('O Gemma misturou uma resposta com consultas. Nenhuma consulta foi executada.');
+        }
+
+        $response['message']['content'] = $decision['answer'] !== '' ? $decision['answer'] : null;
+        $response['message']['tool_calls'] = $toolCalls;
+
+        return $response;
+    }
+
+    /** @param list<array<string, mixed>> $messages
+     * @param  list<array<string, mixed>>  $tools
+     * @return list<array<string, mixed>>
+     */
+    private function gemmaToolMessages(array $messages, array $tools): array
+    {
+        $toolGuide = "Consultas internas somente leitura disponíveis (a aplicação valida e executa; você não executa ações):\n".json_encode($tools, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE)
+            ."\nRetorne apenas o JSON exigido pelo formato. Use action=call_tools com uma lista de consultas necessárias e answer vazio; após receber resultados, responda com action=answer, sem repetir consultas. Nunca invente resultados nem escolha ferramentas fora da lista.";
+        $result = [];
+        foreach ($messages as $message) {
+            $role = $message['role'] ?? 'user';
+            if ($role === 'assistant' && ! empty($message['tool_calls'])) {
+                $calls = collect($message['tool_calls'])->map(fn (array $call): array => [
+                    'name' => $call['function']['name'] ?? '',
+                    'arguments' => json_decode((string) ($call['function']['arguments'] ?? '{}'), true) ?: new \stdClass,
+                ])->all();
+                $result[] = ['role' => 'assistant', 'content' => 'Solicitei as consultas autorizadas: '.json_encode($calls, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE)];
+
+                continue;
+            }
+            if ($role === 'tool') {
+                $result[] = ['role' => 'user', 'content' => "Resultado da consulta autorizada {$message['tool_call_id']}:\n".(string) ($message['content'] ?? '')];
+
+                continue;
+            }
+            if ($role === 'system') {
+                $message['content'] = (string) ($message['content'] ?? '')."\n\n".$toolGuide;
+            }
+            $result[] = $message;
+        }
+
+        return $result;
+    }
+
+    /** @param array<string, mixed> $settings
+     * @param  list<array<string, mixed>>  $messages
+     * @param  array<string, mixed>|null  $jsonSchema
+     * @return array{message:array{role:string,content:?string,tool_calls:list<array<string,mixed>>},usage:array<string,mixed>}
+     */
+    private function completeWithGemmaNative(array $settings, array $messages, ?array $jsonSchema, int $maxTokens): array
+    {
+        if (function_exists('set_time_limit')) {
+            @set_time_limit(270);
+        }
+        @ini_set('max_execution_time', '270');
+        $payload = [
+            'model' => $settings['model'],
+            'messages' => $messages,
+            'stream' => false,
+            'think' => false,
+            'keep_alive' => '5m',
+            'options' => [
+                'num_ctx' => 8192,
+                'num_predict' => min(max($maxTokens, 1), $jsonSchema === null ? 600 : 1200),
+                'temperature' => 0.25,
+                'top_p' => 0.9,
+                'repeat_penalty' => 1.12,
+            ],
+        ];
+        if ($jsonSchema !== null) {
+            $payload['format'] = $jsonSchema;
+        }
+
+        try {
+            $baseUrl = preg_replace('#/v1/?$#', '', $settings['base_url']) ?: $settings['base_url'];
+            $response = Http::baseUrl($baseUrl)->acceptJson()->asJson()
+                ->connectTimeout(5)->timeout(240)->post('/api/chat', $payload)->throw();
+        } catch (ConnectionException $exception) {
+            throw new RuntimeException('O Ollama local não respondeu. Confira se ele está aberto; nenhuma alteração foi feita.', previous: $exception);
+        } catch (RequestException $exception) {
+            $providerMessage = (string) $exception->response?->json('error', '');
+            $message = str_contains(mb_strtolower($providerMessage), 'repeat limit')
+                ? 'O Gemma interrompeu uma resposta repetitiva. Tente uma pergunta mais curta; nenhum rascunho foi perdido.'
+                : 'O Ollama recusou a solicitação. Confira se o Gemma 3:4b está disponível e tente novamente.';
+            throw new RuntimeException($message, previous: $exception);
+        }
+
+        $content = $response->json('message.content');
+        if (! is_string($content)) {
+            throw new RuntimeException('O Gemma retornou uma resposta inválida. Nenhuma alteração foi feita.');
+        }
+
+        return [
+            'message' => ['role' => 'assistant', 'content' => $content, 'tool_calls' => []],
+            'usage' => [
+                'input_tokens' => $this->integerOrNull($response->json('prompt_eval_count')),
+                'output_tokens' => $this->integerOrNull($response->json('eval_count')),
+                'cost' => null,
+            ],
+        ];
     }
 
     /** @param array<string, mixed> $settings
@@ -345,6 +530,9 @@ class AiTextProvider
 
         $schemaPath = null;
         try {
+            if (function_exists('set_time_limit')) {
+                set_time_limit(250);
+            }
             $command = [
                 $settings['codex_cli'], 'exec', '--ephemeral', '--ignore-user-config', '--skip-git-repo-check',
                 '--sandbox', 'read-only', '--cd', $directory, '--json',
@@ -365,20 +553,44 @@ class AiTextProvider
             }
             $command[] = '-';
 
-            try {
-                $process = new Process($command, $directory, null, $prompt, 120);
-                $process->run();
-            } catch (ProcessTimedOutException $exception) {
-                Log::warning('Local Codex request timed out.');
-                throw new RuntimeException('O Codex demorou mais que o limite de espera. Tente novamente em instantes; nenhum rascunho foi salvo.', previous: $exception);
-            } catch (\Throwable $exception) {
-                throw new RuntimeException('Não foi possível iniciar o Codex CLI local. Confira a instalação do Codex.', previous: $exception);
+            $process = null;
+            for ($attempt = 1; $attempt <= 2; $attempt++) {
+                try {
+                    $process = new Process($command, $directory, null, $prompt, 120);
+                    $process->run();
+                } catch (ProcessTimedOutException $exception) {
+                    Log::warning('Local Codex request timed out.', ['attempt' => $attempt]);
+                    throw new RuntimeException('O Codex demorou mais que o limite de espera. Tente novamente em instantes; nenhum rascunho foi salvo.', previous: $exception);
+                } catch (\Throwable $exception) {
+                    throw new RuntimeException('Não foi possível iniciar o Codex CLI local. Confira a instalação do Codex.', previous: $exception);
+                }
+
+                if ($process->isSuccessful()) {
+                    break;
+                }
+
+                $diagnostic = $process->getErrorOutput().' '.$process->getOutput();
+                $failure = $this->codexFailure($diagnostic);
+                $context = [
+                    'category' => $failure['category'],
+                    'exit_code' => $process->getExitCode(),
+                    'diagnostic_code' => $this->codexDiagnosticCode($diagnostic),
+                    'diagnostic_hint' => $this->safeCodexDiagnosticHint($process->getErrorOutput()),
+                    'attempt' => $attempt,
+                    'runtime' => $this->codexRuntimeSnapshot(),
+                ];
+                if ($attempt === 1 && $failure['category'] === 'connectivity') {
+                    Log::notice('Retrying local Codex request after a connection failure.', $context);
+                    usleep(1_200_000);
+
+                    continue;
+                }
+                Log::warning('Local Codex request failed.', $context);
+                throw new RuntimeException($failure['message']);
             }
 
-            if (! $process->isSuccessful()) {
-                $failure = $this->codexFailure($process->getErrorOutput().' '.$process->getOutput());
-                Log::warning('Local Codex request failed.', ['category' => $failure['category'], 'exit_code' => $process->getExitCode()]);
-                throw new RuntimeException($failure['message']);
+            if (! $process?->isSuccessful()) {
+                throw new RuntimeException('O Codex CLI encerrou sem resposta. Tente novamente; nenhum rascunho foi salvo.');
             }
 
             [$content, $usage] = $this->codexOutput($process->getOutput());
@@ -499,5 +711,86 @@ class AiTextProvider
         }
 
         return ['category' => 'provider', 'message' => 'O Codex CLI encerrou sem resposta. Confira a sessão e os limites da conta ChatGPT e tente novamente; nenhum rascunho foi salvo.'];
+    }
+
+    private function codexDiagnosticCode(string $diagnostic): string
+    {
+        $text = Str::ascii(mb_strtolower($diagnostic));
+        if (preg_match('/error sending request|error trying to connect/', $text)) {
+            return 'request_transport';
+        }
+        if (preg_match('/tcp connect error|tcp connection error/', $text)) {
+            return 'tcp_connect';
+        }
+        if (preg_match('/(?:os error|win(?:dows)? error)\s*(\d{1,5})/', $text, $match)) {
+            return 'os_error_'.$match[1];
+        }
+        if (preg_match('/connection refused|actively refused/', $text)) {
+            return 'connection_refused';
+        }
+        if (preg_match('/connection reset|forcibly closed/', $text)) {
+            return 'connection_reset';
+        }
+        if (preg_match('/no route to host|network is unreachable/', $text)) {
+            return 'network_unreachable';
+        }
+        if (preg_match('/\b(401|403|408|429|500|502|503|504)\b/', $text, $match)) {
+            return 'http_'.$match[1];
+        }
+        if (preg_match('/not logged in|not authenticated|authentication required|unauthorized|login required|token expired/', $text)) {
+            return 'authentication';
+        }
+        if (preg_match('/rate.?limit|usage.?limit|quota|too many requests|capacity reached/', $text)) {
+            return 'usage_limit';
+        }
+        if (preg_match('/dns|name resolution|could not resolve/', $text)) {
+            return 'dns';
+        }
+        if (preg_match('/ssl|tls|certificate/', $text)) {
+            return 'tls';
+        }
+        if (preg_match('/proxy/', $text)) {
+            return 'proxy';
+        }
+        if (preg_match('/timed out|timeout/', $text)) {
+            return 'timeout';
+        }
+        if (preg_match('/connection|network|could not connect|error sending request/', $text)) {
+            return 'network';
+        }
+
+        return 'unclassified';
+    }
+
+    private function safeCodexDiagnosticHint(string $diagnostic): ?string
+    {
+        $hint = trim($diagnostic);
+        if ($hint === '') {
+            return null;
+        }
+        $hint = preg_replace('/bearer\s+[^\s,;]+/i', 'Bearer [redigido]', $hint) ?? '';
+        $hint = preg_replace('/\b(?:sk|sess|codex)_[A-Za-z0-9_-]{12,}\b/i', '[segredo redigido]', $hint) ?? '';
+        $hint = preg_replace('/https?:\/\/[^\s"\']+/i', '[URL redigida]', $hint) ?? '';
+        $hint = preg_replace('/[A-Z]:\\\\[^\s"\']+/i', '[caminho redigido]', $hint) ?? '';
+        $hint = preg_replace('/[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}/', '[e-mail redigido]', $hint) ?? '';
+        $hint = preg_replace('/\s+/', ' ', $hint) ?? '';
+
+        return mb_substr($hint, -500);
+    }
+
+    /** @return array<string, bool> */
+    private function codexRuntimeSnapshot(): array
+    {
+        $path = (string) getenv('PATH');
+
+        return [
+            'user_profile_present' => (bool) getenv('USERPROFILE'),
+            'appdata_present' => (bool) getenv('APPDATA'),
+            'local_appdata_present' => (bool) getenv('LOCALAPPDATA'),
+            'home_present' => (bool) getenv('HOME'),
+            'codex_home_present' => (bool) getenv('CODEX_HOME'),
+            'codex_path_present' => stripos($path, 'OpenAI\\Codex\\bin') !== false,
+            'api_key_environment_present' => (bool) (getenv('OPENAI_API_KEY') ?: getenv('CODEX_API_KEY')),
+        ];
     }
 }

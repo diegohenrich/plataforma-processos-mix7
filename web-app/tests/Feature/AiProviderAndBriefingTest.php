@@ -12,7 +12,6 @@ use App\Models\User;
 use App\Services\AiProviderSettings;
 use App\Services\AiTextProvider;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
@@ -24,6 +23,7 @@ class AiProviderAndBriefingTest extends TestCase
     {
         parent::setUp();
         config([
+            'services.ai_gateway.provider' => 'openai-compatible',
             'services.ai_gateway.key' => 'test-key',
             'services.ai_gateway.oidc_token' => '',
             'services.ai_gateway.base_url' => 'https://ai-gateway.vercel.sh/v1',
@@ -31,23 +31,54 @@ class AiProviderAndBriefingTest extends TestCase
         ]);
     }
 
-    public function test_owner_can_save_encrypted_api_connection_and_only_owner_can_manage_it(): void
+    public function test_owner_can_activate_local_gemma_and_only_owner_can_manage_it(): void
     {
         [$organization, $owner, $manager] = $this->workspace();
-        $secret = 'test-secret-that-must-not-render';
-
         $this->actingAs($owner)->put(route('ai-settings.update'), [
-            'provider' => 'openai-compatible', 'base_url' => 'https://api.example.test/v1',
-            'model' => 'text-model-v1', 'api_key' => $secret, 'enabled' => '1',
+            'provider' => 'ollama-gemma-local', 'enabled' => '1',
         ])->assertRedirect(route('ai-settings.index'))->assertSessionHasNoErrors();
 
         $setting = AiProviderSetting::where('organization_id', $organization->id)->firstOrFail();
-        $storedValue = DB::table('ai_provider_settings')->where('id', $setting->id)->value('api_key');
-        $this->assertNotSame($secret, $storedValue);
-        $this->assertSame($secret, $setting->api_key);
-        $this->actingAs($owner)->get(route('ai-settings.index'))->assertOk()->assertDontSee($secret);
+        $this->assertSame('ollama-gemma-local', $setting->provider);
+        $this->assertSame('http://127.0.0.1:11434/v1', $setting->base_url);
+        $this->assertSame('gemma3:4b', $setting->model);
+        $this->assertNull($setting->api_key);
+        $this->assertTrue(app(AiProviderSettings::class)->isConfigured(app(AiProviderSettings::class)->forOrganization((int) $organization->id)));
+        $this->actingAs($owner)->get(route('ai-settings.index'))->assertOk()->assertSee('Gemma 3:4b local')->assertDontSee('Codex local');
         $this->actingAs($manager)->get(route('ai-settings.index'))->assertForbidden();
         $this->actingAs($manager)->put(route('ai-settings.update'), [])->assertForbidden();
+    }
+
+    public function test_demand_creation_shows_document_upload_for_guided_briefing(): void
+    {
+        [$organization, $owner] = $this->workspace();
+        User::factory()->create([
+            'organization_id' => $organization->id, 'role' => UserRole::Professional, 'is_active' => true,
+        ]);
+        AiProviderSetting::create([
+            'organization_id' => $organization->id, 'provider' => 'openai-compatible',
+            'base_url' => 'https://ai-gateway.vercel.sh/v1', 'model' => 'test-provider/test-model',
+            'api_key' => 'test-key', 'enabled' => true,
+        ]);
+
+        $this->actingAs($owner)->get(route('demands.create'))
+            ->assertOk()
+            ->assertSee('Já tem um briefing ou transcrição?')
+            ->assertSee('briefing-document')
+            ->assertSee('application/pdf')
+            ->assertSee('Escolha os responsáveis')
+            ->assertSee('O arquivo original fica no seu navegador');
+    }
+
+    public function test_ai_settings_rejects_codex_claude_and_remote_api_providers(): void
+    {
+        [, $owner] = $this->workspace();
+        foreach (['codex-chatgpt-subscription', 'claude-code-subscription', 'openai-compatible', 'anthropic-api'] as $provider) {
+            $this->actingAs($owner)->put(route('ai-settings.update'), [
+                'provider' => $provider, 'enabled' => '1',
+            ])->assertSessionHasErrors('provider');
+        }
+        $this->assertDatabaseCount('ai_provider_settings', 0);
     }
 
     public function test_guided_briefing_uses_configured_provider_and_never_creates_a_demand(): void
@@ -57,6 +88,7 @@ class AiProviderAndBriefingTest extends TestCase
             'message' => 'Quem é o público principal?', 'title' => 'Site institucional',
             'brief' => "Objetivo: apresentar a empresa.\nPúblico: A confirmar.",
             'follow_up' => ['Qual ação o visitante deve realizar?'], 'ready' => false, 'module_fields' => (object) [],
+            'tasks' => [['title' => 'Definir páginas e objetivo do site', 'estimate_minutes' => null]],
         ];
         $body = ['choices' => [['message' => ['role' => 'assistant', 'content' => json_encode($briefing, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE)]]]];
         Http::fake(['https://ai-gateway.vercel.sh/v1/chat/completions' => Http::response($body, 200)]);
@@ -72,7 +104,35 @@ class AiProviderAndBriefingTest extends TestCase
         Http::assertSent(fn ($request) => $request['model'] === 'test-provider/test-model'
             && isset($request['response_format']['json_schema']['schema'])
             && str_contains($request['messages'][0]['content'], 'Você decide') === false
-            && str_contains($request['messages'][0]['content'], 'Nenhum dado será salvo'));
+            && str_contains($request['messages'][0]['content'], 'Nada é salvo até'));
+    }
+
+    public function test_guided_briefing_uses_attached_document_as_context_without_saving_it(): void
+    {
+        [, $owner] = $this->workspace();
+        $draft = [
+            'message' => 'Qual é a data de publicação?', 'title' => 'Campanha de inauguração',
+            'brief' => 'Divulgar a inauguração da clínica. Público: moradores de Brasília.',
+            'follow_up' => ['Qual é a data de publicação?'], 'ready' => false, 'module_fields' => (object) [],
+            'tasks' => [['title' => 'Definir chamada para agendamento', 'estimate_minutes' => null]],
+        ];
+        Http::fake(['https://ai-gateway.vercel.sh/v1/chat/completions' => Http::response([
+            'choices' => [['message' => ['role' => 'assistant', 'content' => json_encode($draft, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE)]]],
+        ], 200)]);
+
+        $this->actingAs($owner)->postJson(route('ai-briefing.suggest'), [
+            'module_key' => 'social_creative',
+            'messages' => [['role' => 'user', 'content' => 'Organize o briefing deste documento.']],
+            'document_name' => 'transcricao-cliente.pdf',
+            'document_text' => 'Cliente pediu divulgação da inauguração de uma clínica em Brasília para moradores da região.',
+        ])->assertOk()->assertJsonPath('title', 'Campanha de inauguração')
+            ->assertJsonPath('tasks.0.title', 'Definir chamada para agendamento')
+            ->assertJsonPath('tasks.0.estimate_minutes', null);
+
+        Http::assertSent(fn ($request) => str_contains($request['messages'][0]['content'], 'transcricao-cliente.pdf')
+            && str_contains($request['messages'][0]['content'], 'divulgação da inauguração de uma clínica'));
+        $this->assertDatabaseCount('demands', 0);
+        $this->assertDatabaseCount('demand_attachments', 0);
     }
 
     public function test_anthropic_messages_adapter_preserves_schema_tools_and_usage(): void
@@ -116,6 +176,7 @@ class AiProviderAndBriefingTest extends TestCase
             'message' => 'Qual lista vai receber a campanha?', 'title' => 'Campanha de lançamento',
             'brief' => 'Divulgar o lançamento. Público: clientes atuais.', 'follow_up' => ['Qual é a data?'],
             'ready' => false, 'module_fields' => ['audience' => 'Clientes atuais'],
+            'tasks' => [['title' => 'Definir conteúdo da campanha', 'estimate_minutes' => null]],
         ];
         $body = ['choices' => [['message' => ['role' => 'assistant', 'content' => json_encode($draft, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE)]]]];
         Http::fake(['https://ai-gateway.vercel.sh/v1/chat/completions' => Http::response($body, 200)]);
@@ -181,68 +242,63 @@ class AiProviderAndBriefingTest extends TestCase
         $this->assertCount(10, $sentPrompts);
     }
 
-    public function test_switching_to_local_claude_subscription_clears_api_key_and_saves_optional_model(): void
+    public function test_gemma_uses_structured_application_managed_tool_requests(): void
     {
-        [$organization, $owner] = $this->workspace();
-        AiProviderSetting::create([
-            'organization_id' => $organization->id, 'provider' => 'openai-compatible',
-            'base_url' => 'https://api.example.test/v1', 'model' => 'old-model',
-            'api_key' => 'old-encrypted-key', 'enabled' => true,
-        ]);
-
-        $this->actingAs($owner)->put(route('ai-settings.update'), [
-            'provider' => 'claude-code-subscription', 'claude_model' => 'claude-sonnet-test', 'enabled' => '1',
-        ])->assertRedirect(route('ai-settings.index'))->assertSessionHasNoErrors();
-
-        $setting = AiProviderSetting::where('organization_id', $organization->id)->firstOrFail();
-        $this->assertSame('claude-code-subscription', $setting->provider);
-        $this->assertSame('claude-sonnet-test', $setting->model);
-        $this->assertNull($setting->api_key);
-        $this->assertNull($setting->base_url);
-    }
-
-    public function test_owner_can_enable_local_codex_chatgpt_login_without_an_api_key(): void
-    {
-        [$organization, $owner] = $this->workspace();
-        AiProviderSetting::create([
-            'organization_id' => $organization->id, 'provider' => 'openai-compatible',
-            'base_url' => 'https://api.example.test/v1', 'model' => 'old-model',
-            'api_key' => 'old-encrypted-key', 'enabled' => true,
-        ]);
-
-        $this->actingAs($owner)->put(route('ai-settings.update'), [
-            'provider' => 'codex-chatgpt-subscription', 'codex_model' => '', 'enabled' => '1',
-        ])->assertRedirect(route('ai-settings.index'))->assertSessionHasNoErrors();
-
-        $setting = AiProviderSetting::where('organization_id', $organization->id)->firstOrFail();
-        $this->assertSame('codex-chatgpt-subscription', $setting->provider);
-        $this->assertSame('', $setting->model);
-        $this->assertNull($setting->api_key);
-        $this->assertNull($setting->base_url);
+        [$organization] = $this->workspace();
         $this->app['env'] = 'local';
-        $effective = app(AiProviderSettings::class)->forOrganization((int) $organization->id);
-        $this->assertTrue(app(AiProviderSettings::class)->isConfigured($effective));
+        AiProviderSetting::create([
+            'organization_id' => $organization->id, 'provider' => 'ollama-gemma-local',
+            'base_url' => 'http://127.0.0.1:11434/v1', 'model' => 'gemma3:4b', 'enabled' => true,
+        ]);
+        Http::fake(['http://127.0.0.1:11434/api/chat' => Http::response([
+            'message' => ['role' => 'assistant', 'content' => json_encode([
+                'action' => 'call_tools', 'answer' => '', 'tool_calls' => [['name' => 'list_knowledge', 'arguments' => ['query' => 'briefing']]],
+            ], JSON_THROW_ON_ERROR)],
+            'prompt_eval_count' => 60, 'eval_count' => 20,
+        ], 200)]);
 
-        $this->app['env'] = 'production';
-        $this->assertFalse(app(AiProviderSettings::class)->isConfigured($effective));
+        $response = app(AiTextProvider::class)->complete((int) $organization->id, [
+            ['role' => 'system', 'content' => 'Use consultas autorizadas.'],
+            ['role' => 'user', 'content' => 'Como montar o briefing?'],
+        ], [[
+            'type' => 'function', 'function' => ['name' => 'list_knowledge', 'description' => 'Consultar conhecimento ativo.',
+                'parameters' => ['type' => 'object', 'properties' => ['query' => ['type' => 'string']], 'required' => ['query'], 'additionalProperties' => false]],
+        ]]);
+
+        $this->assertSame('list_knowledge', $response['message']['tool_calls'][0]['function']['name']);
+        $this->assertSame(['query' => 'briefing'], json_decode($response['message']['tool_calls'][0]['function']['arguments'], true));
+        $this->assertSame(60, $response['usage']['input_tokens']);
+        Http::assertSent(fn ($request) => $request->url() === 'http://127.0.0.1:11434/api/chat'
+            && ! isset($request['tools'])
+            && $request['model'] === 'gemma3:4b'
+            && isset($request['format']['properties']['tool_calls'])
+            && $request['options']['num_ctx'] === 8192
+            && $request['options']['repeat_penalty'] > 1
+            && $request['think'] === false
+            && str_contains($request['messages'][0]['content'], 'list_knowledge'));
     }
 
-    public function test_codex_cli_failures_are_classified_without_exposing_raw_provider_output(): void
+    public function test_gemma_plain_answers_are_kept_concise_to_reduce_generation_time(): void
     {
-        $classify = new \ReflectionMethod(AiTextProvider::class, 'codexFailure');
+        [$organization] = $this->workspace();
+        $this->app['env'] = 'local';
+        AiProviderSetting::create([
+            'organization_id' => $organization->id, 'provider' => 'ollama-gemma-local',
+            'base_url' => 'http://127.0.0.1:11434/v1', 'model' => 'gemma3:4b', 'enabled' => true,
+        ]);
+        Http::fake(['http://127.0.0.1:11434/api/chat' => Http::response([
+            'message' => ['role' => 'assistant', 'content' => 'Resposta curta.'],
+            'prompt_eval_count' => 20, 'eval_count' => 4,
+        ], 200)]);
 
-        $quota = $classify->invoke(app(AiTextProvider::class), 'HTTP 429 usage limit exceeded; diagnostic bearer secret-do-not-show');
-        $this->assertSame('usage_limit', $quota['category']);
-        $this->assertStringContainsString('limite de uso', $quota['message']);
-        $this->assertStringNotContainsString('secret-do-not-show', $quota['message']);
+        app(AiTextProvider::class)->complete((int) $organization->id, [
+            ['role' => 'system', 'content' => 'Responda de forma direta.'],
+            ['role' => 'user', 'content' => 'Qual o próximo passo?'],
+        ], [], null, 1800);
 
-        $auth = $classify->invoke(app(AiTextProvider::class), 'authentication required');
-        $this->assertSame('authentication', $auth['category']);
-        $this->assertStringContainsString('codex login', $auth['message']);
-
-        $network = $classify->invoke(app(AiTextProvider::class), 'connection timed out');
-        $this->assertSame('connectivity', $network['category']);
-        $this->assertStringContainsString('falha de conexão', $network['message']);
+        Http::assertSent(fn ($request) => $request->url() === 'http://127.0.0.1:11434/api/chat'
+            && $request['options']['num_predict'] === 600
+            && $request['keep_alive'] === '5m');
     }
 
     private function workspace(): array

@@ -45,20 +45,26 @@ class AiProviderSettings
             return false;
         }
 
-        if ($settings['provider'] === 'claude-code-subscription') {
-            return app()->environment('local') && $settings['local_cli'] !== '';
+        if ($settings['provider'] === 'ollama-gemma-local') {
+            return (app()->environment('local') || app()->environment('testing'))
+                && $settings['base_url'] === 'http://127.0.0.1:11434/v1'
+                && $settings['model'] === 'gemma3:4b';
         }
 
-        if ($settings['provider'] === 'codex-chatgpt-subscription') {
-            return app()->environment('local') && $settings['codex_cli'] !== '';
-        }
-
-        if ($settings['model'] === '' || $settings['base_url'] === '') {
+        if (in_array($settings['provider'], ['claude-code-subscription', 'codex-chatgpt-subscription'], true)) {
             return false;
         }
 
-        return $settings['key'] !== ''
-            || ($settings['provider'] === 'openai-compatible' && config('services.ai_gateway.allow_unauthenticated') === true);
+        // Provider fakes are retained for isolated feature tests only. The local app
+        // and every deployed environment use the explicitly approved Gemma runtime.
+        if (app()->environment('testing')) {
+            return in_array($settings['provider'], ['openai-compatible', 'anthropic-api'], true)
+                && $settings['base_url'] !== '' && $settings['model'] !== ''
+                && ($settings['key'] !== '' || ($settings['provider'] === 'openai-compatible'
+                    && config('services.ai_gateway.allow_unauthenticated') === true));
+        }
+
+        return false;
     }
 
     public function isConfiguredFor(?int $organizationId): bool

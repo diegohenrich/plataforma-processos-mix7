@@ -1,64 +1,27 @@
-# Pesquisa inicial de provedores de IA
+# IA local da Mix7 com Gemma 3:4b
 
-Levantamento em 27/09/2026 para escolher como testar o assistente textual da plataforma. Preços, modelos e cotas mudam; conferir as páginas oficiais novamente antes de configurar. Esta pesquisa não aprova envio de dados reais da Mix7.
+## Configuração atual
 
-## Necessidade do produto
+O CRM usa exclusivamente o modelo local `gemma3:4b`, servido pelo Ollama em `http://127.0.0.1:11434`. A página **Configuração de IA** permite ativar ou desativar esse provedor. Não usa login do Codex, Claude ou chave de API. O modelo e o runtime ficam instalados neste computador; os arquivos do modelo não fazem parte do Git. A instância compartilhada/Hostinger não pode alcançar o Ollama em `127.0.0.1` e permanece sem provedor até existir uma decisão específica de implantação.
 
-A IA deve ajudar a equipe a entender pedidos, fazer perguntas úteis, estruturar e revisar briefings, oferecer orientação técnica/criativa e organizar feedback. No caso de vídeo, pode preparar roteiro, estrutura de cenas e instruções ou prompts para ferramentas externas; não precisa gerar o vídeo. Cada tipo de serviço terá um especialista com instruções próprias. A pessoa revisa e confirma qualquer rascunho ou proposta. A conexão é administrada centralmente, sem exigir que cada profissional forneça uma chave.
+O modelo oficial tem aproximadamente 4,3 bilhões de parâmetros, quantização Q4_K_M e download de 3,3 GB. Gemma 3 aceita texto e imagens. O CRM restringe o serviço local a `APP_ENV=local`, host de loopback, modelo e endpoint fixos; não aceita um endpoint externo nesta configuração. Instale Ollama 0.6 ou mais recente, baixe `gemma3:4b` e mantenha o serviço local disponível durante o uso. Para reinstalar, execute `ollama pull gemma3:4b`.
 
-## Opções observadas
+## Assistentes do CRM
 
-| Opção | O que oferece sem cobrança inicial | Limites relevantes para a Mix7 |
-| --- | --- | --- |
-| Google Gemini API / AI Studio | A documentação lista modelos e uso de API com tokens gratuitos em planos Free Tier. | A cota varia por modelo e projeto; há limites de requisição/tokens. A página de preços informa que conteúdo enviado no nível gratuito pode ser usado para melhorar produtos. Usar apenas exemplos sintéticos até política e termos serem aprovados. |
-| Groq API | Há modelos acessíveis no Free Plan, com limites por organização e por modelo. | Cotas podem ser atingidas e a API retorna `429`; os limites exatos devem ser conferidos na conta e no modelo escolhido. É uma possibilidade de protótipo, não uma promessa de disponibilidade contínua. |
-| OpenRouter | Catálogo com modelos gratuitos e API unificada. | O plano gratuito informa 50 chamadas/dia, sem SLA contratual. O resultado depende também da disponibilidade e das cotas dos provedores dos modelos. |
-| Modelo local (ex.: Ollama) | Sem cobrança por token para executar um modelo instalado em equipamento próprio. | Requer máquina/servidor com memória e capacidade adequadas, energia, manutenção e acesso de rede seguro. Para a aplicação Laravel hospedada, seria necessária uma conexão operacional segura; não é gratuito em custo total nem garante serviço sempre disponível. |
+A conexão alimenta o briefing conversacional antes de salvar uma demanda, o copiloto contextual das áreas, o assistente de demanda, o planejamento e a organização dos comentários de aprovação. O feedback continua vinculado pelo CRM à resposta original, versão e marcação do cliente. A IA só propõe texto e consultas; o servidor valida permissões e escopo das consultas; uma pessoa revisa toda sugestão. A IA não cria/aplica tarefas, não envia mensagens, não altera versões e não decide aprovações.
 
-## Recomendação
+O catálogo oficial do Ollama não lista Gemma 3 como modelo com tool calling nativo. Para manter os assistentes com consultas internas, o adaptador do CRM usa a API nativa `/api/chat`, contexto de 8.192 tokens e resposta JSON estruturada com as ferramentas permitidas. A aplicação valida nomes e argumentos contra a lista da área antes de executar qualquer consulta. Falha de formato ou consulta inválida é recusada sem executar ferramenta. As ferramentas continuam somente leitura. Repetição de tokens e limites do Ollama são apresentados como erro recuperável, sem salvar propostas.
 
-Começar por uma avaliação controlada com exemplos fictícios em dois provedores gratuitos (Gemini e Groq, por exemplo) e uma lista de tarefas representativas: briefing de site, campanha de e-mail, vídeo, criativo social, perguntas de esclarecimento, orientação técnica e revisão de feedback. Medir clareza em português, perguntas que detectam lacunas, aderência ao formato estruturado, consistência entre especialistas, latência, erros/limites e facilidade de revisão humana. Não escolher pelo nome do modelo ou por demonstração isolada.
+Na criação de demanda, a equipe pode anexar PDF, DOCX, TXT, MD ou CSV de até 5 MB. PDF.js, no navegador, extrai texto selecionável do PDF; Mammoth extrai o texto do Word. O texto é limitado a 12 mil caracteres e enviado somente ao Ollama local junto da conversa. O arquivo original não é transmitido, armazenado nem anexado automaticamente à futura demanda. PDF escaneado sem camada de texto exige transcrição/OCR externo; OCR não está incluído. A resposta guiada propõe título, briefing, campos do tipo e até cinco tarefas iniciais sem responsáveis; se o formulário estiver vazio, esses itens são inseridos para revisão, e nada é salvo até a pessoa escolher responsáveis e criar a demanda.
 
-As cotas gratuitas são adequadas para avaliação e prototipagem, mas não asseguram uso irrestrito nem disponibilidade para a operação diária. Assim, a resposta prática à pergunta “dá para começar sem pagar?” é sim, com conteúdo fictício e limites aceitos. Para “IA sempre online para a equipe”, não há garantia com esses tiers; será preciso escolher uma operação paga dentro de um orçamento aprovado ou hospedar um modelo com infraestrutura e responsabilidade de operação próprias.
+As solicitações para inferência são locais; o download inicial do modelo usa a biblioteca oficial Ollama. Respostas locais não têm SLA e dependem da máquina. Este computador tem uma GPU RTX 3050 Ti com 4 GB de VRAM; o modelo Q4 de 3,3 GB pode dividir execução entre GPU e RAM e responder lentamente. Chamadas sintéticas de briefing levaram 32,8 s na primeira execução e 21,3 s com o modelo aquecido. O CRM limita o contexto a 8.192 tokens, respostas conversacionais sem JSON a até 600 tokens, briefing a 800 e respostas estruturadas a 1.200, além de manter o modelo aquecido por cinco minutos. O timeout PHP dessas chamadas Gemma foi elevado de 30 para 270 s para não cortar a geração. Isso reduz recargas e evita o timeout observado, mas não oferece garantia de velocidade fixa. A configuração compartilhada em Hostinger segue pendente e não deve expor o computador pessoal à internet.
 
-## Integração implementada no CRM
-
-A página **Configuração de IA** conecta quatro modos por organização:
-
-- **API compatível com OpenAI Chat Completions:** informe URL-base, modelo e chave privada. Pode atender provedores que implementem o protocolo; ferramentas e saída estruturada precisam ser compatíveis com os recursos usados.
-- **API Anthropic Messages:** informe a URL-base, um modelo válido e uma chave criada na Claude Platform. A assinatura do Claude Code não substitui uma chave de API nesse modo.
-- **Claude Code local com assinatura:** executa o CLI instalado no mesmo computador da aplicação. Só habilita em `APP_ENV=local`; não é uma opção da hospedagem compartilhada. O usuário precisa fazer login no terminal com `claude` antes do teste. O CRM chama o CLI sem salvar sessão e sem ferramentas; as consultas do CRM continuam sujeitas às permissões e às confirmações humanas.
-- **Codex local com login ChatGPT:** executa o Codex CLI instalado na mesma máquina da aplicação, autenticado com `codex login` e a conta ChatGPT. Só habilita em `APP_ENV=local`; não é uma credencial compartilhada para hospedagem. Cada chamada é efêmera, usa uma pasta temporária isolada e somente leitura, ignora a configuração de usuário do Codex, desabilita shell, conectores, busca web e agentes paralelos, e não recebe ferramentas do sistema operacional. As consultas autorizadas do CRM continuam sujeitas ao papel da pessoa e à revisão humana. O modelo é opcional; em branco, o CLI escolhe o padrão da conta. `AI_CODEX_BIN` permite apontar para outro executável.
-
-A chave de API é criptografada no banco e não é devolvida à interface. O botão de teste envia somente uma frase sintética. A integração alimenta o briefing guiado antes da demanda (incluindo campos personalizados do tipo escolhido), o copiloto em áreas internas, a ajuda contextual da demanda, o planejamento e a análise estruturada de feedback. No feedback, cada sugestão fica vinculada no servidor ao comentário, à versão e à marcação originais; a IA não altera esses dados nem cria tarefas. O operador revisa e só então copia o título sugerido para um formulário de tarefa ou envia a demanda.
-
-## Claude Code com a assinatura atual
-
-A documentação oficial informa que chamadas de `claude -p`, Agent SDK e aplicativos de terceiros continuam consumindo os limites de uso da assinatura; a mudança anunciada para 15/06/2026 foi pausada e o crédito mensal anunciado não está disponível. Portanto, a integração local reaproveita sua autenticação e seus limites atuais, sem prometer uso ilimitado ou separado. O CLI desta máquina está instalado, mas no teste de 27/09 respondeu que ainda não está conectado; é necessário autenticar manualmente no terminal e depois testar no CRM. [Orientação oficial sobre usar o Agent SDK com um plano Claude](https://support.claude.com/en/articles/15036540-use-the-claude-agent-sdk-with-your-claude-plan).
-
-Para uso compartilhado na hospedagem, a documentação da Anthropic recomenda identidade de serviço para serviços de produção, em vez de chave pessoal de uma pessoa. A chave API pode ser cadastrada na configuração central do CRM; nunca deve ir para GitHub. [Autenticação e contas de serviço da Claude Platform](https://platform.claude.com/docs/en/manage-claude/authentication).
-
-Referência dos parâmetros do CLI usados (`-p`, `--json-schema`, `--no-session-persistence`, `--tools`): [CLI do Claude Code](https://code.claude.com/docs/en/cli-usage).
-
-## Codex CLI com login ChatGPT
-
-O Codex CLI aceita autenticação com conta ChatGPT por `codex login`; a autenticação é mantida pelo próprio CLI e não é copiada para o banco do CRM. O CRM precisa rodar no mesmo computador e sob o mesmo perfil que possui essa sessão. As chamadas consomem os limites do plano ChatGPT disponível para o Codex, sujeitos às cotas e políticas atuais. [Entrar no Codex CLI com ChatGPT](https://help.openai.com/en/articles/11381614-api-codex-cli-and-sign-in-with-chatgpt) e [usar Codex no plano ChatGPT](https://help.openai.com/en/articles/11369540-using-codex-with-your-chatgpt-plan).
-
-O adaptador usa `codex exec --ephemeral --ignore-user-config --sandbox read-only --output-schema`, em um diretório temporário exclusivo, e não concede ferramentas da máquina. `AI_CODEX_BIN` pode apontar para um caminho diferente do comando `codex`. Essa autenticação pessoal não é uma opção de produção/Hostinger; lá, configure uma chave de API de serviço compatível.
-
-Em 28/09/2026 o Codex CLI estava autenticado nesta máquina. O teste real foi feito com mensagens fictícias no adaptador do CRM: conexão, briefing, copiloto de aprovação, planejamento e revisão criativa responderam. A sugestão de revisão manteve comentário original, versão e âncora; o CRM não aplicou nem enviou a proposta. Uma oscilação do modelo tentou preencher capacidade e responsável sem contexto; o servidor passou a descartar esses campos sem fonte, e os testes automatizados passaram.
-
-O uso testado segue restrito a conteúdo sintético até a Mix7 aprovar política de dados, retenção, orçamento e disponibilidade. A ativação local não configura a hospedagem, nem garante serviço contínuo. A autenticação Claude continua disponível pela opção correspondente; neste computador, ela depende do login local `claude`.
+O teste inicial usa somente dados fictícios. O envio de conteúdo real dos clientes depende da política de privacidade, retenção, acesso local e consentimento operacional da Mix7; rodar local reduz a transferência a um provedor de IA, mas não substitui essas decisões.
 
 ## Fontes oficiais
 
-- [Codex CLI: entrar com ChatGPT](https://help.openai.com/en/articles/11381614-api-codex-cli-and-sign-in-with-chatgpt).
-- [Codex incluído nos planos ChatGPT](https://help.openai.com/en/articles/11369540-using-codex-with-your-chatgpt-plan).
-- [Codex CLI — referência](https://developers.openai.com/codex/cli/reference).
-- [Orientação oficial sobre usar o Agent SDK com um plano Claude](https://support.claude.com/en/articles/15036540-use-the-agent-sdk-with-your-claude-plan).
-- [Autenticação e contas de serviço da Claude Platform](https://platform.claude.com/docs/en/manage-claude/authentication).
-- [CLI do Claude Code](https://code.claude.com/docs/en/cli-usage).
-- [Preços da Gemini API](https://ai.google.dev/gemini-api/docs/pricing) — modelos, tiers e aviso de uso de conteúdo para melhoria no tier gratuito.
-- [Limites de requisição da Gemini API](https://ai.google.dev/gemini-api/docs/rate-limits) — limites por tier/projeto.
-- [Limites de requisição da Groq](https://console.groq.com/docs/rate-limits) — cotas por modelo/organização e resposta `429`.
-- [Preços e recursos do OpenRouter](https://openrouter.ai/pricing/) — modelos gratuitos, 50 requisições/dia no tier Free e ausência de SLA contratual nesse plano.
+- [Gemma 3:4b no catálogo Ollama](https://ollama.com/library/gemma3:4b) — tamanho, quantização, licença e modalidades.
+- [Instalador Ollama para Windows](https://ollama.com/download/windows).
+- [Compatibilidade da API Chat Completions do Ollama](https://ollama.com/blog/openai-compatibility).
+- [Saídas estruturadas JSON Schema](https://ollama.com/blog/structured-outputs).
+- [Suporte a ferramentas e modelos listados](https://ollama.com/blog/tool-support).

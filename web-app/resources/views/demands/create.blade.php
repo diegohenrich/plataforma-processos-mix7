@@ -16,15 +16,22 @@
             @else
                 <section class="ai-briefing-guide panel" data-briefing-assistant data-endpoint="{{ route('ai-briefing.suggest') }}">
                     <div class="section-heading"><div><h2>Monte o briefing com a IA</h2><p>Conte o pedido com suas palavras. O assistente pergunta o que falta e organiza um rascunho para você revisar.</p></div><span class="assistant-badge">Você decide e salva</span></div>
-                    <p class="ai-briefing-privacy">A conversa e o rascunho são enviados ao provedor configurado para esta agência. Nada é salvo como demanda até você conferir e clicar em “Criar demanda”.</p>
+                    <p class="ai-briefing-privacy">A conversa e o texto do documento são processados localmente pelo Gemma. O arquivo original fica no seu navegador e não é salvo como demanda; nada é criado até você revisar e clicar em “Criar demanda”.</p>
                     @if ($aiConfigured)
                         <div class="ai-briefing-messages" data-briefing-messages role="log" aria-live="polite"><p class="ai-briefing-empty">Escolha o tipo do trabalho acima e descreva o que o cliente pediu para começar.</p></div>
                         <label class="field" for="briefing-assistant-input">O que você já sabe sobre o pedido?</label>
                         <textarea id="briefing-assistant-input" rows="3" maxlength="2000" placeholder="Ex.: preciso de um site para apresentar nossa empresa e captar contatos"></textarea>
+                        <div class="ai-briefing-attachment">
+                            <label class="field" for="briefing-document">Já tem um briefing ou transcrição? Anexe para a IA consultar
+                                <input id="briefing-document" type="file" accept=".pdf,.docx,.txt,.md,.csv,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,text/markdown,text/csv">
+                            </label>
+                            <div class="ai-briefing-file-status" data-briefing-file-status aria-live="polite">PDF, Word ou texto · até 5 MB. O arquivo é lido no navegador.</div>
+                            <button class="secondary-button" type="button" data-briefing-remove-file hidden>Remover documento</button>
+                        </div>
                         <div class="ai-briefing-actions"><span class="field-help" data-briefing-status>O rascunho fica editável no formulário.</span><button class="secondary-button" type="button" data-briefing-send>Conversar com a IA</button></div>
-                        <div class="ai-briefing-draft" data-briefing-draft hidden><strong>Rascunho organizado</strong><p data-briefing-followup></p><button class="secondary-button" type="button" data-briefing-apply>Usar no formulário para revisar</button></div>
+                        <div class="ai-briefing-draft" data-briefing-draft hidden><strong>Rascunho organizado</strong><p data-briefing-followup></p><button class="secondary-button" type="button" data-briefing-apply>Aplicar sem apagar edições</button></div>
                     @else
-                        <div class="notice notice-info">O assistente ainda não está configurado. A direção da agência pode conectar uma API ou o Claude Code local em <a href="{{ route('ai-settings.index') }}">Configuração de IA</a>. Você também pode continuar preenchendo o formulário manualmente.</div>
+                        <div class="notice notice-info">O Gemma 3:4b local ainda não está ativo. Abra a <a href="{{ route('ai-settings.index') }}">Configuração de IA</a> para conferir o Ollama. Você também pode preencher o formulário manualmente.</div>
                     @endif
                 </section>
                 <form method="post" action="{{ route('demands.store') }}" class="form-card" novalidate>
@@ -131,6 +138,7 @@
     const input = root.querySelector('#briefing-assistant-input');
     const send = root.querySelector('[data-briefing-send]');
     const status = root.querySelector('[data-briefing-status]');
+    const attachmentStatus = root.querySelector('[data-briefing-file-status]');
     const draftPanel = root.querySelector('[data-briefing-draft]');
     const followUp = root.querySelector('[data-briefing-followup]');
     const renderMessage = (role, text) => {
@@ -142,11 +150,17 @@
         item.scrollIntoView({block:'nearest'});
     };
     let latestDraft = null;
+    let appliedDraft = false;
+    const aiAppliedValues = new Map();
+    const aiTaskRows = [];
     let previousModule = form.querySelector('#module-key').value;
     form.querySelector('#module-key').addEventListener('change', (event) => {
         if (previousModule && event.target.value !== previousModule) {
             messages.length = 0;
             latestDraft = null;
+            appliedDraft = false;
+            aiAppliedValues.clear();
+            aiTaskRows.length = 0;
             log.replaceChildren();
             draftPanel.hidden = true;
             status.textContent = 'O tipo mudou. Comece uma nova conversa para este briefing.';
@@ -155,18 +169,19 @@
     });
     send.addEventListener('click', async () => {
         const text = input.value.trim();
+        const prompt = text || (root.briefingDocument ? 'Leia o documento anexado e organize um rascunho do briefing. Pergunte o que ainda estiver faltando.' : '');
         const moduleKey = form.querySelector('#module-key').value;
         if (!moduleKey) { status.textContent = 'Escolha primeiro o tipo do trabalho.'; form.querySelector('#module-key').focus(); return; }
-        if (text.length < 3) { status.textContent = 'Escreva um pouco sobre o que foi pedido.'; input.focus(); return; }
-        messages.push({role:'user', content:text});
-        renderMessage('user', text);
+        if (prompt.length < 3) { status.textContent = 'Escreva o que deseja saber ou escolha um documento para a IA consultar.'; input.focus(); return; }
+        messages.push({role:'user', content:prompt});
+        renderMessage('user', prompt);
         input.value = '';
         send.disabled = true;
         status.textContent = 'A IA está organizando o briefing…';
         try {
             const response = await fetch(root.dataset.endpoint, {
                 method:'POST', headers:{'Accept':'application/json','Content-Type':'application/json','X-CSRF-TOKEN':form.querySelector('input[name="_token"]').value},
-                body:JSON.stringify({module_key:moduleKey,messages:messages.slice(-12)}),
+                body:JSON.stringify({module_key:moduleKey,messages:messages.slice(-12),document_name:root.briefingDocument?.name,document_text:root.briefingDocument?.text}),
             });
             const data = await response.json();
             if (!response.ok) throw new Error(data.message || 'Não foi possível consultar a IA.');
@@ -175,32 +190,89 @@
             latestDraft = data;
             draftPanel.hidden = false;
             followUp.textContent = data.follow_up?.length ? `Ainda vale confirmar: ${data.follow_up.join(' · ')}` : (data.ready ? 'O briefing já pode ser revisado no formulário.' : 'Confira se o rascunho representa corretamente o pedido.');
-            status.textContent = 'Rascunho atualizado. Ele ainda não foi salvo como demanda.';
+            const formWasEmpty = !form.querySelector('[name="title"]').value.trim()
+                && !form.querySelector('[name="brief"]').value.trim()
+                && [...form.querySelectorAll('#task-list [name$="[title]"]')].every((field) => !field.value.trim());
+            if (!appliedDraft && formWasEmpty) {
+                applyDraft();
+                appliedDraft = true;
+                status.textContent = 'Rascunho e tarefas inseridos para revisão. Escolha os responsáveis; nada foi salvo ainda.';
+            } else {
+                status.textContent = 'Rascunho pronto. Aplique para preencher campos vazios; edições manuais serão preservadas.';
+                root.querySelector('[data-briefing-apply]').hidden = false;
+            }
         } catch (error) {
             messages.pop();
             status.textContent = error.message;
+            attachmentStatus?.classList.toggle('is-error', Boolean(root.briefingDocument));
         } finally {
             send.disabled = false;
         }
     });
-    root.querySelector('[data-briefing-apply]')?.addEventListener('click', () => {
+    const applyDraft = () => {
         if (!latestDraft) return;
         const title = form.querySelector('[name="title"]');
         const brief = form.querySelector('[name="brief"]');
-        if (latestDraft.title) title.value = latestDraft.title;
-        if (latestDraft.brief) brief.value = latestDraft.brief;
+        const applyValue = (field, value) => {
+            if (typeof value !== 'string' || !value.trim()) return;
+            const previousAiValue = aiAppliedValues.get(field.name);
+            if (!field.value.trim() || previousAiValue === field.value) {
+                field.value = value;
+                aiAppliedValues.set(field.name, value);
+            }
+        };
+        applyValue(title, latestDraft.title);
+        applyValue(brief, latestDraft.brief);
         for (const [key, value] of Object.entries(latestDraft.module_fields || {})) {
             const field = [...form.querySelectorAll('[name]')].find((input) => input.name === `module_fields_data[${key}]`);
-            if (field) field.value = value;
+            if (field) applyValue(field, value);
         }
+        const taskList = form.querySelector('#task-list');
+        const suggestedTasks = Array.isArray(latestDraft.tasks) ? latestDraft.tasks.slice(0, 5) : [];
+        const blankRows = [...taskList.querySelectorAll('.task-form-row')].filter((row) => !row.querySelector('[name$="[title]"]').value.trim());
+        suggestedTasks.forEach((task, taskIndex) => {
+            let appliedTask = aiTaskRows[taskIndex];
+            if (appliedTask && !appliedTask.row?.isConnected) return;
+            if (appliedTask) {
+                const titleField = appliedTask.row.querySelector('[name$="[title]"]');
+                const estimateField = appliedTask.row.querySelector('[name$="[estimate_minutes]"]');
+                if (titleField.value !== appliedTask.title) appliedTask.titleEdited = true;
+                if (estimateField && estimateField.value !== appliedTask.estimate) appliedTask.estimateEdited = true;
+                if (!appliedTask.titleEdited) {
+                    titleField.value = task.title || '';
+                    appliedTask.title = titleField.value;
+                }
+                if (estimateField && !appliedTask.estimateEdited) {
+                    estimateField.value = task.estimate_minutes || '';
+                    appliedTask.estimate = estimateField.value;
+                }
+                return;
+            }
+            let row = blankRows.shift();
+            if (!row) {
+                form.querySelector('#add-task')?.click();
+                row = taskList.lastElementChild;
+            }
+            if (!row) return;
+            row.querySelector('[name$="[title]"]').value = task.title || '';
+            const estimate = row.querySelector('[name$="[estimate_minutes]"]');
+            if (estimate) estimate.value = task.estimate_minutes || '';
+            const assignee = row.querySelector('[name$="[assignee_id]"]');
+            if (assignee && !assignee.value) assignee.focus();
+            aiTaskRows[taskIndex] = {row, title:task.title || '', estimate:estimate?.value || '', titleEdited:false, estimateEdited:false};
+        });
         title.focus();
-        status.textContent = 'Rascunho copiado para os campos editáveis. Revise antes de criar a demanda.';
-    });
+        status.textContent = 'Rascunho aplicado sem apagar edições manuais. Revise os dados e escolha os responsáveis; nada foi salvo ainda.';
+        root.querySelector('[data-briefing-apply]').hidden = true;
+        appliedDraft = true;
+    };
+    root.querySelector('[data-briefing-apply]')?.addEventListener('click', applyDraft);
 })();
 </script>
+@vite('resources/js/briefing-document.js')
 @endif
 <style>
-.ai-briefing-guide{margin-top:24px;background:linear-gradient(120deg,#fff,#f5fbfd)}.ai-briefing-guide h2{font-size:16px;margin:0}.ai-briefing-guide .assistant-badge{border-radius:999px;background:#e8f5fa;color:#204b61;padding:7px 10px;font-size:10px;font-weight:700;white-space:nowrap}.ai-briefing-privacy,.ai-briefing-empty,.ai-briefing-status{color:#718087;font-size:11px;line-height:1.55}.ai-briefing-messages{display:grid;gap:8px;max-height:280px;overflow:auto;margin:16px 0;padding:12px;border:1px solid #e3ecee;border-radius:12px;background:#fff}.ai-briefing-messages:empty{display:none}.ai-briefing-message{max-width:92%;margin:0;padding:10px 12px;border-radius:11px;font-size:12px;line-height:1.6;white-space:pre-wrap}.ai-briefing-user{justify-self:end;background:#eaf6fa;color:#204b61}.ai-briefing-assistant{justify-self:start;background:#f4f7f7;color:#344d56}.ai-briefing-guide textarea{display:block;width:100%;padding:11px 12px;border:1px solid #d6e0e1;border-radius:10px;font:inherit;font-size:13px;resize:vertical}.ai-briefing-actions{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:10px}.ai-briefing-actions button:disabled{opacity:.6;cursor:wait}.ai-briefing-draft{margin-top:14px;padding:13px;border:1px solid #cfe2e8;border-radius:11px;background:#fff}.ai-briefing-draft p{color:#667a82;font-size:12px;line-height:1.55}.ai-briefing-draft[hidden]{display:none}.module-custom-fields{margin:16px 0;padding:16px;border:1px solid #dbe5e9;border-radius:10px;background:#fbfdfe}.module-custom-fields[hidden]{display:none}.module-custom-fields .form-section-heading{margin:0 0 12px}.module-custom-fields #module-fields-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 16px}@media(max-width:600px){.module-custom-fields{padding:12px}.module-custom-fields #module-fields-list{grid-template-columns:1fr}.ai-briefing-guide .section-heading{align-items:flex-start;flex-direction:column}.ai-briefing-actions{align-items:stretch;flex-direction:column}}
+.ai-briefing-file-status.is-error{color:#a33}.ai-briefing-guide{margin-top:24px;background:linear-gradient(120deg,#fff,#f5fbfd)}.ai-briefing-guide h2{font-size:16px;margin:0}.ai-briefing-guide .assistant-badge{border-radius:999px;background:#e8f5fa;color:#204b61;padding:7px 10px;font-size:10px;font-weight:700;white-space:nowrap}.ai-briefing-privacy,.ai-briefing-empty,.ai-briefing-status{color:#718087;font-size:11px;line-height:1.55}.ai-briefing-messages{display:grid;gap:8px;max-height:280px;overflow:auto;margin:16px 0;padding:12px;border:1px solid #e3ecee;border-radius:12px;background:#fff}.ai-briefing-messages:empty{display:none}.ai-briefing-message{max-width:92%;margin:0;padding:10px 12px;border-radius:11px;font-size:12px;line-height:1.6;white-space:pre-wrap}.ai-briefing-user{justify-self:end;background:#eaf6fa;color:#204b61}.ai-briefing-assistant{justify-self:start;background:#f4f7f7;color:#344d56}.ai-briefing-guide textarea{display:block;width:100%;padding:11px 12px;border:1px solid #d6e0e1;border-radius:10px;font:inherit;font-size:13px;resize:vertical}.ai-briefing-attachment{display:flex;align-items:flex-end;gap:12px;margin:8px 0 12px;padding:12px;border:1px dashed #cbdde1;border-radius:10px;background:#fff}.ai-briefing-attachment .field{flex:1;margin:0}.ai-briefing-attachment input{display:block;margin-top:8px;font-size:12px}.ai-briefing-file-status{color:#718087;font-size:11px}.ai-briefing-actions{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:10px}.ai-briefing-actions button:disabled{opacity:.6;cursor:wait}.ai-briefing-draft{margin-top:14px;padding:13px;border:1px solid #cfe2e8;border-radius:11px;background:#fff}.ai-briefing-draft p{color:#667a82;font-size:12px;line-height:1.55}.ai-briefing-draft[hidden]{display:none}.module-custom-fields{margin:16px 0;padding:16px;border:1px solid #dbe5e9;border-radius:10px;background:#fbfdfe}.module-custom-fields[hidden]{display:none}.module-custom-fields .form-section-heading{margin:0 0 12px}.module-custom-fields #module-fields-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 16px}@media(max-width:600px){.module-custom-fields{padding:12px}.module-custom-fields #module-fields-list{grid-template-columns:1fr}.ai-briefing-guide .section-heading{align-items:flex-start;flex-direction:column}.ai-briefing-actions,.ai-briefing-attachment{align-items:stretch;flex-direction:column}}
 </style>
 @endif
 @endsection
