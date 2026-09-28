@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\DemandStatus;
 use App\Enums\UserRole;
 use App\Models\AiAgentRun;
 use App\Models\AiProviderSetting;
@@ -105,6 +106,114 @@ class AiProviderAndBriefingTest extends TestCase
             && isset($request['response_format']['json_schema']['schema'])
             && str_contains($request['messages'][0]['content'], 'Você decide') === false
             && str_contains($request['messages'][0]['content'], 'Nada é salvo até'));
+    }
+
+    public function test_manager_can_generate_a_solution_from_demand_title_and_brief_without_creating_tasks(): void
+    {
+        [$organization, $owner, $manager] = $this->workspace();
+        AiProviderSetting::create([
+            'organization_id' => $organization->id,
+            'provider' => 'openai-compatible',
+            'base_url' => 'https://ai-gateway.vercel.sh/v1',
+            'model' => 'test-provider/test-model',
+            'api_key' => 'test-key',
+            'enabled' => true,
+        ]);
+        $demand = Demand::create([
+            'organization_id' => $organization->id,
+            'created_by' => $owner->id,
+            'title' => 'Melhorar recebimento de e-mails do domínio',
+            'brief' => 'Alguns e-mails são recebidos parcialmente. Verificar configurações do domínio e orientar próximos testes.',
+            'status' => DemandStatus::Received,
+        ]);
+        Http::fake(['https://ai-gateway.vercel.sh/v1/chat/completions' => Http::response([
+            'choices' => [['message' => ['role' => 'assistant', 'content' => 'Confira MX, SPF e DKIM; valide aliases e faça um teste de envio e recebimento.']]],
+        ], 200)]);
+
+        $this->actingAs($manager)->get(route('demands.show', $demand))
+            ->assertOk()
+            ->assertSee('Solução sugerida pela IA')
+            ->assertSee('Propor solução com IA');
+
+        $this->actingAs($manager)->post(route('ai-solution.generate', $demand))
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        $this->assertSame('Confira MX, SPF e DKIM; valide aliases e faça um teste de envio e recebimento.', $demand->fresh()->suggested_solution);
+        $this->assertDatabaseCount('demand_tasks', 0);
+        $this->assertDatabaseHas('demand_events', [
+            'demand_id' => $demand->id,
+            'actor_id' => $manager->id,
+            'event_type' => 'ai_solution_suggested',
+        ]);
+        Http::assertSent(fn ($request) => str_contains($request['messages'][1]['content'], 'Melhorar recebimento de e-mails do domínio')
+            && str_contains($request['messages'][1]['content'], 'Alguns e-mails são recebidos parcialmente'));
+
+        $this->actingAs($manager)->get(route('demands.show', $demand))
+            ->assertOk()
+            ->assertSee('Solução sugerida pela IA')
+            ->assertSee('Gerar nova sugestão');
+
+        $managerToken = $manager->createToken('solution-api-manager')->plainTextToken;
+        $this->withToken($managerToken)->getJson('/api/v1/demands/'.$demand->id)
+            ->assertOk()->assertJsonPath('data.suggested_solution', 'Confira MX, SPF e DKIM; valide aliases e faça um teste de envio e recebimento.');
+
+        $this->actingAs($manager)->get(route('demands.show', $demand))
+            ->assertOk()
+            ->assertSee('Solução sugerida pela IA')
+            ->assertSee('Confira MX, SPF e DKIM; valide aliases e faça um teste de envio e recebimento.')
+            ->assertSee($manager->name);
+    }
+
+    public function test_client_api_never_exposes_internal_suggested_solution(): void
+    {
+        [$organization, $owner] = $this->workspace();
+        $client = User::factory()->create([
+            'organization_id' => $organization->id, 'role' => UserRole::Client, 'is_active' => true,
+        ]);
+        $demand = Demand::create([
+            'organization_id' => $organization->id,
+            'created_by' => $owner->id,
+            'client_user_id' => $client->id,
+            'title' => 'Campanha de divulgação',
+            'brief' => 'Texto interno do briefing.',
+            'suggested_solution' => 'Orientação interna da equipe.',
+            'status' => DemandStatus::Received,
+        ]);
+        $token = $client->createToken('solution-api-client')->plainTextToken;
+
+        $this->withToken($token)->getJson('/api/v1/demands/'.$demand->id)
+            ->assertOk()
+            ->assertJsonMissingPath('data.suggested_solution')
+            ->assertJsonMissingPath('data.brief');
+    }
+
+    public function test_professional_cannot_generate_demand_solution_and_failed_ai_keeps_previous_solution(): void
+    {
+        [$organization, $owner] = $this->workspace();
+        $professional = User::factory()->create([
+            'organization_id' => $organization->id, 'role' => UserRole::Professional, 'is_active' => true,
+        ]);
+        $demand = Demand::create([
+            'organization_id' => $organization->id,
+            'created_by' => $owner->id,
+            'title' => 'Ajustar página inicial',
+            'brief' => 'A página precisa mostrar melhor os serviços.',
+            'suggested_solution' => 'Sugestão anterior preservada.',
+            'status' => DemandStatus::Received,
+        ]);
+
+        $this->actingAs($professional)->post(route('ai-solution.generate', $demand))->assertForbidden();
+
+        Http::fake(['https://ai-gateway.vercel.sh/v1/chat/completions' => Http::response([
+            'choices' => [['message' => ['role' => 'assistant', 'content' => '']]],
+        ], 200)]);
+        $this->actingAs($owner)->post(route('ai-solution.generate', $demand))
+            ->assertRedirect()
+            ->assertSessionHasErrors('suggested_solution');
+
+        $this->assertSame('Sugestão anterior preservada.', $demand->fresh()->suggested_solution);
+        $this->assertDatabaseMissing('demand_events', ['demand_id' => $demand->id, 'event_type' => 'ai_solution_suggested']);
     }
 
     public function test_guided_briefing_uses_attached_document_as_context_without_saving_it(): void

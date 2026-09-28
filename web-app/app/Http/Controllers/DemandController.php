@@ -287,6 +287,7 @@ class DemandController extends Controller
         return view('demands.show', [
             'currentUser' => $user,
             'demand' => $demand->load(['creator:id,name', 'briefAuthor:id,name', 'organization:id,name', 'client:id,name,email', 'attachments.uploader:id,name']),
+            'suggestedSolutionEvent' => $demand->events()->where('event_type', 'ai_solution_suggested')->with('actor:id,name')->latest('created_at')->first(),
             'moduleSteps' => $demand->moduleSteps()->with('completer:id,name')->get(),
             'tasks' => $tasks,
             'scheduledTasks' => $tasks->filter(fn ($task) => $task->planned_start_on || $task->planned_due_on)->values(),
