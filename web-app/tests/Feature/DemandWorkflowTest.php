@@ -217,6 +217,41 @@ class DemandWorkflowTest extends TestCase
             ->assertSee('value="'.$colleague->name.'"', false);
     }
 
+    public function test_task_board_search_preserves_professional_and_organization_boundaries(): void
+    {
+        [$organization, $manager, $professional, $colleague] = $this->team();
+        $demand = $this->demand($organization, $manager);
+        $this->task($demand, $professional, $manager, 'Minha tarefa visível');
+        $this->task($demand, $colleague, $manager, 'Nota privada colega exclusiva');
+
+        $professionalSearch = $this->actingAs($professional)
+            ->get(route('demand-tasks.board', ['q' => 'Nota privada colega exclusiva']))
+            ->assertOk()
+            ->assertSee('Nenhuma tarefa encontrada');
+        $this->assertSame(0, preg_match_all('/<article class="task-board-card"/', $professionalSearch->getContent()));
+
+        $outsideOrganization = Organization::create(['name' => 'Outra agência', 'slug' => 'outra-agencia']);
+        $outsideManager = User::factory()->create([
+            'organization_id' => $outsideOrganization->id,
+            'role' => UserRole::AgencyOwner,
+            'is_active' => true,
+        ]);
+        $outsideProfessional = User::factory()->create([
+            'organization_id' => $outsideOrganization->id,
+            'role' => UserRole::Professional,
+            'is_active' => true,
+        ]);
+        $outsideDemand = $this->demand($outsideOrganization, $outsideManager);
+        $outsideDemand->update(['title' => 'Campanha confidencial externa']);
+        $this->task($outsideDemand, $outsideProfessional, $outsideManager, 'Entrega externa secreta');
+
+        $managerSearch = $this->actingAs($manager)
+            ->get(route('demand-tasks.board', ['q' => 'externa secreta']))
+            ->assertOk()
+            ->assertSee('Nenhuma tarefa encontrada');
+        $this->assertSame(0, preg_match_all('/<article class="task-board-card"/', $managerSearch->getContent()));
+    }
+
     public function test_professional_task_board_contains_only_assigned_tasks_and_can_update_own_work(): void
     {
         [$organization, $manager, $professional, $colleague] = $this->team();

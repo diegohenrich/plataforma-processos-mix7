@@ -54,6 +54,11 @@ class RoleNavigationTest extends TestCase
             $this->assertSame($expectedPaths, $desktopPaths, "Desktop links differ for role {$role}.");
             $this->assertSame($expectedPaths, $mobilePaths, "Mobile links differ for role {$role}.");
 
+            foreach ($routes as $routeName) {
+                $response = $this->actingAs($user)->get(route($routeName));
+                $this->assertSame(200, $response->getStatusCode(), "Route {$routeName} failed for role {$role}.");
+            }
+
             if ($role === UserRole::Client->value) {
                 $this->get(route('team.capacity'))->assertForbidden();
                 $this->get(route('performance-reviews.index'))->assertForbidden();
