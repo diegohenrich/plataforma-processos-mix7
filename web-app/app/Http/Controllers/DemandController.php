@@ -26,7 +26,13 @@ class DemandController extends Controller
     {
         $this->authorize('viewAny', Demand::class);
         $user = $request->user();
-        $isBoard = $user->role !== UserRole::Client && $request->query('view') !== 'list';
+        $workspaceView = $request->query('view');
+        if ($workspaceView === 'tasks') {
+            abort_if($user->role === UserRole::Client, 403);
+
+            return app(DemandTaskController::class)->board($request);
+        }
+        $isBoard = $user->role !== UserRole::Client && $workspaceView !== 'list';
         $query = Demand::query()
             ->where('organization_id', $user->organization_id)
             ->when($user->role === UserRole::Professional, function (Builder $query) use ($user): void {

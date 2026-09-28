@@ -4,13 +4,14 @@
 
 @section('body')
 <div class="shell">
-    @include('layouts.navigation', ['active' => 'performance-reviews'])
+    @include('layouts.navigation', ['active' => 'team'])
     <main class="main">
         @include('layouts.topbar')
         <div class="content">
             <p class="eyebrow">Desenvolvimento da equipe</p>
             <h1 class="heading">Avaliações</h1>
             <p class="subheading">Registre observações sobre prazo e qualidade com exemplos concretos. A pessoa avaliada pode responder e complementar o histórico.</p>
+            @include('partials.team-tabs', ['teamView' => 'reviews'])
 
             @if (session('success'))<div class="notice" role="status">{{ session('success') }}</div>@endif
             @if ($errors->any())<div class="notice notice-error" role="alert"><strong>Revise os campos:</strong> {{ $errors->first() }}</div>@endif

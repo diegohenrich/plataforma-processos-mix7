@@ -19,18 +19,15 @@ class RoleNavigationTest extends TestCase
         $expected = [
             UserRole::AgencyOwner->value => [
                 'dashboard', 'demands.index', 'notifications.index', 'organization-assistant.index',
-                'demand-tasks.board', 'approvals.index', 'approval-modules.index', 'team.activity',
-                'team.capacity', 'performance-reviews.index', 'team.index', 'service-access.index',
+                'team.index', 'service-access.index',
                 'knowledge.index', 'api-tokens.index',
             ],
             UserRole::MarketingManager->value => [
                 'dashboard', 'demands.index', 'notifications.index', 'organization-assistant.index',
-                'demand-tasks.board', 'approvals.index', 'approval-modules.index', 'team.activity',
-                'team.capacity', 'performance-reviews.index', 'service-access.index', 'knowledge.index', 'api-tokens.index',
+                'team.activity', 'service-access.index', 'knowledge.index', 'api-tokens.index',
             ],
             UserRole::Professional->value => [
-                'dashboard', 'demands.index', 'notifications.index', 'demand-tasks.board', 'approvals.index',
-                'team.activity', 'team.capacity', 'performance-reviews.index', 'service-access.index', 'knowledge.index', 'api-tokens.index',
+                'dashboard', 'demands.index', 'notifications.index', 'team.activity', 'service-access.index', 'knowledge.index', 'api-tokens.index',
             ],
             UserRole::Client->value => ['dashboard', 'demands.index', 'notifications.index'],
         ];
@@ -53,6 +50,10 @@ class RoleNavigationTest extends TestCase
 
             $this->assertSame($expectedPaths, $desktopPaths, "Desktop links differ for role {$role}.");
             $this->assertSame($expectedPaths, $mobilePaths, "Mobile links differ for role {$role}.");
+            $this->assertStringNotContainsString(route('approvals.index'), $html);
+            $this->assertStringNotContainsString(route('demand-tasks.board'), $html);
+            $this->assertStringNotContainsString(route('team.capacity'), $html);
+            $this->assertStringNotContainsString(route('performance-reviews.index'), $html);
 
             foreach ($routes as $routeName) {
                 $response = $this->actingAs($user)->get(route($routeName));
@@ -65,6 +66,12 @@ class RoleNavigationTest extends TestCase
                 $this->get(route('service-access.index'))->assertForbidden();
             } elseif (in_array($role, [UserRole::MarketingManager->value, UserRole::Professional->value], true)) {
                 $this->get(route('service-access.index'))->assertOk();
+            }
+
+            if ($role !== UserRole::Client->value) {
+                $this->get(route('demands.index', ['view' => 'tasks']))->assertOk()->assertSee('Tarefas');
+                $this->get(route('demands.index', ['view' => 'board']))->assertOk()->assertSee('Demandas');
+                $this->get(route('approvals.index'))->assertRedirect(route('demands.index', ['view' => 'board']));
             }
         }
     }

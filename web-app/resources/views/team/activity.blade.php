@@ -4,13 +4,54 @@
 
 @section('body')
 <div class="shell">
-    @include('layouts.navigation', ['active' => 'activity'])
+    @include('layouts.navigation', ['active' => 'team'])
     <main class="main">
         @include('layouts.topbar')
         <div class="content">
             <p class="eyebrow">{{ $personal ? 'Minha rotina' : 'Acompanhamento da equipe' }}</p>
             <h1 class="heading">{{ $personal ? 'Meu trabalho' : 'Produção da equipe' }}</h1>
             <p class="subheading">{{ $personal ? 'Veja suas tarefas ativas e o tempo que você registrou.' : 'Acompanhe tarefas atribuídas e tempo registrado por profissional.' }}</p>
+            @include('partials.team-tabs', ['teamView' => 'activity'])
+
+            @if (! $personal)
+                <section class="team-now" aria-labelledby="team-now-title" data-team-now data-url="{{ route('team.activity.now') }}">
+                    <div class="team-now-heading"><div><h2 id="team-now-title">Em que cada profissional está comprometido</h2><p>Veja todas as tarefas abertas por pessoa. “Cronômetro ativo” indica trabalho com tempo sendo registrado agora. Atualiza a cada 30 segundos.</p></div><span data-team-now-updated>Carregando…</span></div>
+                    <div class="team-now-grid" data-team-now-list aria-live="polite"><p>Consultando o estado atual da equipe…</p></div>
+                    <p class="team-now-error" data-team-now-error hidden>Não foi possível atualizar agora. A tela tentará novamente.</p>
+                </section>
+                <script>
+                    (() => {
+                        const panel = document.querySelector('[data-team-now]');
+                        if (!panel) return;
+                        const list = panel.querySelector('[data-team-now-list]');
+                        const updated = panel.querySelector('[data-team-now-updated]');
+                        const error = panel.querySelector('[data-team-now-error]');
+                        const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (character) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[character]));
+                        const refresh = async () => {
+                            if (document.hidden) return;
+                            try {
+                                const response = await fetch(panel.dataset.url, {headers: {'Accept': 'application/json'}, credentials: 'same-origin'});
+                                if (!response.ok) throw new Error('Atualização indisponível');
+                                const payload = await response.json();
+                                list.innerHTML = payload.data.professionals.map((person) => {
+                                    const commitments = person.commitments.length ? person.commitments.map((task) => {
+                                        const details = [task.planned_due_on ? `prazo ${new Date(`${task.planned_due_on}T12:00:00`).toLocaleDateString('pt-BR')}` : null, Number.isInteger(task.estimate_minutes) ? `${task.estimate_minutes} min previstos` : null, task.timer_started_at ? `cronômetro iniciado às ${new Date(task.timer_started_at).toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})}` : null].filter(Boolean).join(' · ');
+                                        return `<li><span class="team-now-state ${task.status === 'blocked' ? 'is-blocked' : ''}">${escapeHtml(task.status_label)}${task.timer_running ? ' · cronômetro ativo' : ''}</span><strong>${escapeHtml(task.task)}</strong><small>${escapeHtml(task.demand || 'Demanda sem título')}${details ? ` · ${escapeHtml(details)}` : ''}</small></li>`;
+                                    }).join('') : '<li class="team-now-empty">Sem tarefas abertas atribuídas.</li>';
+                                    return `<article class="team-now-person"><h3>${escapeHtml(person.professional)}${person.active ? '' : ' · acesso desativado'}<small class="team-now-count">${person.commitments.length} ${person.commitments.length === 1 ? 'compromisso aberto' : 'compromissos abertos'}</small></h3><ul>${commitments}</ul></article>`;
+                                }).join('') || '<p>Nenhum profissional encontrado.</p>';
+                                updated.textContent = `Atualizado às ${new Date(payload.data.refreshed_at).toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit', second:'2-digit'})}`;
+                                error.hidden = true;
+                            } catch {
+                                error.hidden = false;
+                            }
+                        };
+                        refresh();
+                        window.setInterval(refresh, 30000);
+                        document.addEventListener('visibilitychange', refresh);
+                    })();
+                </script>
+            @endif
 
             @if ($personal && $activeEntry)
                 <section class="activity-timer" aria-live="polite">
@@ -32,7 +73,7 @@
                     @php($hours = number_format($row['recorded_seconds_30d'] / 3600, 1, ',', '.'))
                     @php($estimateHours = number_format($row['estimate_minutes'] / 60, 1, ',', '.'))
                     <article class="activity-card">
-                        <div class="activity-person"><span class="avatar" aria-hidden="true">{{ mb_strtoupper(mb_substr($row['user']->name, 0, 1)) }}</span><div><h2>{{ $personal ? 'Sua atividade' : $row['user']->name }} @unless ($row['is_active'])<span class="pill pill-blocked">Acesso desativado</span>@endunless</h2><span>{{ $row['open'] }} {{ $row['open'] === 1 ? 'tarefa aberta' : 'tarefas abertas' }}</span></div></div>
+                        <div class="activity-person"><span class="avatar" aria-hidden="true">{{ mb_strtoupper(mb_substr($row['user']->name, 0, 1)) }}</span><div><h2>{{ $personal ? 'Sua atividade' : $row['user']->name }} @unless ($row['is_active'])<span class="pill pill-blocked">Acesso desativado</span>@endunless</h2><span>{{ $row['open'] }} {{ $row['open'] === 1 ? 'tarefa aberta' : 'tarefas abertas' }}</span>@unless ($personal)<a href="{{ route('team.capacity', ['professional_id' => $row['user']->id]) }}">Ver disponibilidade e carga desta pessoa</a>@endunless</div></div>
                         <div class="activity-statuses" aria-label="Tarefas abertas por etapa">
                             <span><strong>{{ $row['todo'] }}</strong> A fazer</span><span><strong>{{ $row['in_progress'] }}</strong> Em andamento</span><span><strong>{{ $row['paused'] }}</strong> Pausadas</span><span><strong>{{ $row['blocked'] }}</strong> Impedidas</span>
                         </div>
@@ -79,4 +120,8 @@
         </div>
     </main>
 </div>
+<style>
+    .activity-person a{display:inline-block;margin-top:4px;color:#39758b;font-size:11px;font-weight:700;text-decoration:none}.activity-person a:hover{text-decoration:underline}.activity-task-section{display:grid;gap:10px;margin-top:24px}.activity-task{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 16px;background:#fff;border:1px solid #e3e9e8;border-radius:13px}.activity-task-main{display:grid;grid-template-columns:max-content minmax(0,1fr);align-items:center;gap:6px 9px;min-width:0}.activity-task-main>a{color:#204b61;font-size:13px;font-weight:750;line-height:1.4;text-decoration:none;overflow-wrap:anywhere}.activity-task-main>a:hover{text-decoration:underline}.activity-task-main>span:last-child{grid-column:2;color:#718087;font-size:11px}.activity-task-actions{display:flex;flex:none}.activity-task-actions form{margin:0}@media(max-width:650px){.activity-task{align-items:flex-start;flex-direction:column}.activity-task-actions{width:100%}.activity-task-actions button{width:100%}}
+    .team-now{margin:0 0 22px;padding:18px;background:#fff;border:1px solid #dce9ec;border-radius:16px}.team-now-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.team-now-heading h2{margin:0;color:#204b61;font-size:16px}.team-now-heading p{margin:5px 0 0;color:#718087;font-size:11px;line-height:1.5}.team-now-heading>span{color:#718087;font-size:10px;white-space:nowrap}.team-now-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:10px;margin-top:14px}.team-now-person{min-width:0;padding:12px;border:1px solid #e6edef;border-radius:12px;background:#f9fcfc}.team-now-person h3{margin:0 0 9px;color:#204b61;font-size:13px}.team-now-person ul{display:grid;gap:8px;margin:0;padding:0;list-style:none}.team-now-person li{display:grid;gap:4px;padding-top:8px;border-top:1px solid #e7eeee}.team-now-person li:first-child{padding-top:0;border:0}.team-now-person li strong{font-size:12px;overflow-wrap:anywhere}.team-now-person li small,.team-now-empty{color:#718087;font-size:10px}.team-now-state{width:max-content;max-width:100%;padding:3px 7px;border-radius:99px;background:#e5f4f8;color:#326c82;font-size:9px;font-weight:750}.team-now-state.is-blocked{background:#fff0ed;color:#9a5148}.team-now-error{margin:12px 0 0;color:#9a5148;font-size:11px}@media(max-width:600px){.team-now-heading{flex-direction:column}.team-now-heading>span{white-space:normal}}
+</style>
 @endsection

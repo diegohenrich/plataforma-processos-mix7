@@ -56,9 +56,9 @@ class TeamActivityTest extends TestCase
             ->assertSee('2,0 h')->assertSee('0,5 h')->assertSee('concluídas em 30 dias')
             ->assertSee('Ver evolução semanal')->assertSee('Concluídas')->assertSee('Tempo registrado')
             ->assertSee('não são nota, ranking')->assertSee($colleague->name)->assertDontSee('Tarefa da colega')->assertDontSee($outsideProfessional->name);
-        $this->get(route('dashboard'))->assertOk()->assertSee('Produção da equipe')
-            ->assertSee(route('approvals.index'), false)->assertSee(route('performance-reviews.index'), false)
-            ->assertDontSee('Em construção')->assertSee('nota automática não está disponível');
+        $this->get(route('dashboard'))->assertOk()->assertSee('Equipe')
+            ->assertSee(route('team.activity'), false)
+            ->assertDontSee(route('performance-reviews.index'), false)->assertSee('Acessos da API');
         $this->actingAs($owner)->get(route('team.activity'))->assertOk();
         $this->actingAs($manager)->get(route('team.index'))->assertForbidden();
     }
@@ -73,8 +73,7 @@ class TeamActivityTest extends TestCase
         $this->actingAs($professional)->get(route('team.activity'))
             ->assertOk()->assertSee('Meu trabalho')->assertSee('Minha tarefa')->assertSee('Iniciar tempo')->assertDontSee('Tarefa privada da colega');
         $this->get(route('dashboard'))->assertOk()->assertSee('Meu trabalho')->assertSee('Abrir minhas tarefas')
-            ->assertSee(route('approvals.index'), false)->assertSee(route('performance-reviews.index'), false)
-            ->assertDontSee('Em construção');
+            ->assertSee(route('team.activity'), false)->assertDontSee(route('performance-reviews.index'), false);
         $this->actingAs($professional)->get(route('team.index'))->assertForbidden();
     }
 
@@ -128,6 +127,42 @@ class TeamActivityTest extends TestCase
         [$organization, , , , , $client] = $this->workspace();
 
         $this->actingAs($client)->get(route('team.activity'))->assertForbidden();
+    }
+
+    public function test_team_now_shows_current_commitments_and_active_timer_with_role_scope(): void
+    {
+        [$organization, $owner, $manager, $professional, $colleague, $client] = $this->workspace();
+        $demand = $this->demand($organization, $owner);
+        $todoTask = $this->task($demand, $professional, 'Preparar a página interna', TaskStatus::Todo);
+        $todoTask->update(['planned_due_on' => '2026-10-02', 'estimate_minutes' => 90]);
+        $activeTask = $this->task($demand, $professional, 'Finalizar a página inicial', TaskStatus::InProgress);
+        $this->task($demand, $professional, 'Revisar texto pausado', TaskStatus::Paused);
+        $this->task($demand, $colleague, 'Aguardar material do cliente', TaskStatus::Blocked);
+        $this->task($demand, $colleague, 'Tarefa concluída não deve aparecer', TaskStatus::Completed);
+        TaskTimeEntry::create([
+            'organization_id' => $organization->id,
+            'task_id' => $activeTask->id,
+            'user_id' => $professional->id,
+            'started_at' => CarbonImmutable::now()->subMinutes(12),
+            'last_heartbeat_at' => CarbonImmutable::now(),
+        ]);
+
+        $response = $this->actingAs($manager)->getJson(route('team.activity.now'))->assertOk();
+        $person = collect($response->json('data.professionals'))->firstWhere('professional_id', $professional->id);
+        $commitments = collect($person['commitments']);
+        $this->assertEqualsCanonicalizing(['A fazer', 'Em andamento', 'Pausada'], $commitments->pluck('status_label')->all());
+        $plannedTask = $commitments->firstWhere('task', 'Preparar a página interna');
+        $this->assertSame('2026-10-02', $plannedTask['planned_due_on']);
+        $this->assertSame(90, $plannedTask['estimate_minutes']);
+        $this->assertSame('Aguardar material do cliente', collect($response->json('data.professionals'))->firstWhere('professional_id', $colleague->id)['commitments'][0]['task']);
+        $this->assertTrue($commitments->firstWhere('status', TaskStatus::InProgress->value)['timer_running']);
+        $this->assertFalse(collect($response->json('data.professionals'))->firstWhere('professional_id', $colleague->id)['commitments'][0]['timer_running']);
+        $this->assertStringNotContainsString('Tarefa concluída não deve aparecer', $response->getContent());
+        $this->assertStringNotContainsString($client->email, $response->getContent());
+
+        $this->actingAs($professional)->getJson(route('team.activity.now'))->assertOk()
+            ->assertJsonCount(1, 'data.professionals')->assertJsonPath('data.professionals.0.professional_id', $professional->id);
+        $this->actingAs($client)->getJson(route('team.activity.now'))->assertForbidden();
     }
 
     public function test_management_can_record_task_review_and_professional_can_respond_with_history(): void

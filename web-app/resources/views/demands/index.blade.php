@@ -22,10 +22,7 @@
             @include('partials.flash')
 
             @if (auth()->user()->role !== App\Enums\UserRole::Client)
-                <nav class="demand-view-tools" aria-label="Visualização das demandas">
-                    <a href="{{ route('demands.index', ['view' => 'board']) }}" @if($isBoard) aria-current="page" @endif>Quadro</a>
-                    <a href="{{ route('demands.index', ['view' => 'list']) }}" @if(!$isBoard) aria-current="page" @endif>Lista</a>
-                </nav>
+                @include('partials.work-tabs', ['workView' => $isBoard ? 'board' : 'list'])
             @endif
 
             @if ($demands->isEmpty())

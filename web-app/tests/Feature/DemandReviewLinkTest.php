@@ -20,7 +20,7 @@ class DemandReviewLinkTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_team_approval_inbox_shows_versions_and_client_responses(): void
+    public function test_team_approval_history_is_opened_from_the_demand_instead_of_a_separate_inbox(): void
     {
         [$organization, $manager, $demand] = $this->setupApproval();
         $this->createLink($manager, $demand, 'https://preview.example.test/site-v1');
@@ -33,18 +33,14 @@ class DemandReviewLinkTest extends TestCase
         ]);
 
         $this->actingAs($manager)->get(route('approvals.index'))
-            ->assertOk()
-            ->assertSee('Aprovações')
-            ->assertSee('Site institucional')
-            ->assertSee('Versão 1')
-            ->assertSee('Aguardando cliente')
-            ->assertSee('Cliente Mix7')
-            ->assertSee('Ajustar o texto do destaque.')
-            ->assertSee(route('demands.show', $demand), false)
-            ->assertDontSee('Briefing privado do teste');
+            ->assertRedirect(route('demands.index', ['view' => 'board']))
+            ->assertSessionHas('info');
+        $this->get(route('demands.show', $demand))->assertOk()
+            ->assertSee('Versão 1')->assertSee('Aprovação do cliente')
+            ->assertSee('Cliente Mix7')->assertSee('Ajustar o texto do destaque.');
     }
 
-    public function test_professional_approval_inbox_only_shows_demands_in_their_work(): void
+    public function test_professional_approval_area_returns_to_the_single_demand_workspace(): void
     {
         [$organization, $manager, $demand, $professional] = $this->setupApproval();
         $this->createLink($manager, $demand, 'https://preview.example.test/assigned');
@@ -66,13 +62,10 @@ class DemandReviewLinkTest extends TestCase
         ]);
 
         $this->actingAs($professional)->get(route('approvals.index'))
-            ->assertOk()
-            ->assertSee('Site institucional')
-            ->assertDontSee('Demanda sem atribuição')
-            ->assertDontSee('Não deve aparecer');
+            ->assertRedirect(route('demands.index', ['view' => 'board']));
     }
 
-    public function test_approval_inbox_distinguishes_expired_revoked_and_decided_versions(): void
+    public function test_approval_statuses_remain_in_the_related_demand_when_the_queue_is_removed(): void
     {
         [$organization, $manager, $revokedDemand] = $this->setupApproval();
         $this->createLink($manager, $revokedDemand, 'https://preview.example.test/revoked');
@@ -104,10 +97,10 @@ class DemandReviewLinkTest extends TestCase
         ]);
 
         $this->actingAs($manager)->get(route('approvals.index'))
-            ->assertOk()
-            ->assertSee('Link revogado')
-            ->assertSee('Link expirado')
-            ->assertSee('Aprovado pelo cliente');
+            ->assertRedirect(route('demands.index', ['view' => 'board']));
+        $this->get(route('demands.show', $revokedDemand))->assertOk()->assertSee('Revogado');
+        $this->get(route('demands.show', $expiredDemand))->assertOk()->assertSee('Expirado');
+        $this->get(route('demands.show', $approvedDemand))->assertOk()->assertSee('Respondida')->assertSee('Aprovou');
     }
 
     public function test_client_account_cannot_open_internal_approval_inbox(): void

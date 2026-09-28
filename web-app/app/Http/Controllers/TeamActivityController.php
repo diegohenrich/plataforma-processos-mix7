@@ -16,6 +16,62 @@ use Illuminate\View\View;
 
 class TeamActivityController extends Controller
 {
+    public function now(Request $request): JsonResponse
+    {
+        $this->authorize('viewActivity', User::class);
+        app(TaskTimerHeartbeat::class)->closeAllStale();
+        $viewer = $request->user();
+        $personal = $viewer->role === UserRole::Professional;
+        $professionals = User::query()
+            ->where('organization_id', $viewer->organization_id)
+            ->where('role', UserRole::Professional->value)
+            ->when($personal, fn ($query) => $query->whereKey($viewer->id))
+            ->orderBy('name')
+            ->get(['id', 'name', 'is_active']);
+        $ids = $professionals->modelKeys();
+        $tasks = DemandTask::query()
+            ->where('organization_id', $viewer->organization_id)
+            ->whereIn('assigned_to', $ids)
+            ->where('status', '!=', TaskStatus::Completed->value)
+            ->with('demand:id,title')
+            ->orderBy('assigned_to')->orderBy('title')
+            ->get(['id', 'assigned_to', 'demand_id', 'title', 'status', 'estimate_minutes', 'planned_start_on', 'planned_due_on']);
+        $timers = TaskTimeEntry::query()
+            ->where('organization_id', $viewer->organization_id)
+            ->whereIn('user_id', $ids)
+            ->whereNull('ended_at')
+            ->get(['id', 'user_id', 'task_id', 'started_at'])
+            ->keyBy('task_id');
+
+        $data = $professionals->map(function (User $professional) use ($tasks, $timers): array {
+            $commitments = $tasks->where('assigned_to', $professional->id)->map(function (DemandTask $task) use ($timers): array {
+                $timer = $timers->get($task->id);
+
+                return [
+                    'task_id' => $task->id,
+                    'task' => $task->title,
+                    'demand' => $task->demand?->title,
+                    'status' => $task->status->value,
+                    'status_label' => $task->status->label(),
+                    'estimate_minutes' => $task->estimate_minutes,
+                    'planned_start_on' => $task->planned_start_on?->toDateString(),
+                    'planned_due_on' => $task->planned_due_on?->toDateString(),
+                    'timer_running' => $timer !== null,
+                    'timer_started_at' => $timer?->started_at?->toISOString(),
+                ];
+            })->values();
+
+            return [
+                'professional_id' => $professional->id,
+                'professional' => $professional->name,
+                'active' => $professional->is_active,
+                'commitments' => $commitments,
+            ];
+        })->values();
+
+        return response()->json(['data' => ['refreshed_at' => now()->toISOString(), 'professionals' => $data]]);
+    }
+
     public function index(Request $request): View|JsonResponse
     {
         $this->authorize('viewActivity', User::class);

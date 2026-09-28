@@ -4,12 +4,13 @@
 
 @section('body')
 <div class="shell">
-    @include('layouts.navigation', ['active' => 'approval-modules'])
+    @include('layouts.navigation', ['active' => 'demands'])
     <main class="main">
         @include('layouts.topbar')
         <div class="content narrow-content">
             <p class="eyebrow">Configuração da agência</p>
-            <h1 class="heading">Tipos de aprovação</h1>
+            <h1 class="heading">Configurar tipos de aprovação</h1>
+            @include('partials.work-tabs', ['workView' => 'settings'])
             <p class="subheading">Cadastre áreas, dados próprios e etapas de conferência. A trilha principal continua compartilhada; cada tipo pode guardar seu próprio roteiro interno.</p>
             @include('partials.flash')
             @if ($errors->any())<div class="notice notice-error">Confira os campos destacados.</div>@endif

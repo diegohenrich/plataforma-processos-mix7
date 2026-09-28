@@ -4,13 +4,14 @@
 
 @section('body')
 <div class="shell">
-    @include('layouts.navigation', ['active' => 'capacity'])
+    @include('layouts.navigation', ['active' => 'team'])
     <main class="main">
         @include('layouts.topbar')
         <div class="content">
             <p class="eyebrow">{{ $canManage ? 'Planejamento da equipe' : 'Meu planejamento' }}</p>
             <h1 class="heading">Disponibilidade e carga prevista</h1>
             <p class="subheading">Compare as horas informadas com as estimativas das tarefas que vencem na semana. O sistema não distribui horas nem muda prazos ou responsáveis.</p>
+            @include('partials.team-tabs', ['teamView' => 'capacity'])
 
             @if (session('success'))<div class="notice notice-success" role="status">{{ session('success') }}</div>@endif
             @if ($errors->any())<div class="notice notice-error" role="alert">{{ $errors->first() }}</div>@endif

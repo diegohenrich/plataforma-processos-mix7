@@ -10,17 +10,13 @@
     @media(max-width:650px){.task-board{grid-auto-columns:minmax(245px,82vw);gap:10px}.task-column{min-height:220px}.task-column-cards{min-height:160px}.task-board-tools{margin-top:-4px}}
 </style>
 <div class="shell board-shell">
-    @include('layouts.navigation', ['active' => 'task-board'])
+            @include('layouts.navigation', ['active' => 'demands'])
     <main class="main">
         @include('layouts.topbar')
         <div class="content">
-            <div class="page-heading"><div><p class="eyebrow">Gestão do trabalho</p><h1 class="heading">Quadro de tarefas</h1><p class="subheading">Veja cada tarefa na etapa atual, com responsável, demanda e impedimentos.</p></div><a class="primary-link" href="{{ route('demands.index') }}">Ver demandas</a></div>
+            <div class="page-heading"><div><p class="eyebrow">Espaço de demandas</p><h1 class="heading">Tarefas</h1><p class="subheading">Veja cada tarefa na etapa atual, com responsável, demanda e impedimentos.</p></div><a class="primary-link" href="{{ route('demands.index') }}">Nova demanda</a></div>
             @include('partials.flash')
-            <nav class="task-board-tools" aria-label="Outras visualizações de trabalho">
-                <a href="{{ route('demand-tasks.board') }}" aria-current="page">Quadro de tarefas</a>
-                <a href="{{ route('demands.index', ['view' => 'board']) }}">Etapas das demandas</a>
-                <a href="{{ route('demands.index', ['view' => 'list']) }}">Lista de demandas</a>
-            </nav>
+            @include('partials.work-tabs', ['workView' => 'tasks'])
             <form class="task-board-search" method="get" action="{{ route('demand-tasks.board') }}">
                 <label for="task-board-search">Buscar tarefa, demanda ou responsável</label>
                 <div class="task-board-search-controls">

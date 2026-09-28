@@ -11,6 +11,7 @@
             <p class="eyebrow">Acesso da agência</p>
             <h1 class="heading">Equipe e clientes</h1>
             <p class="subheading">Envie um convite; cada pessoa cria a própria senha para acessar seu espaço.</p>
+            @include('partials.team-tabs', ['teamView' => 'people'])
             @include('partials.flash')
             @error('invitation')<p class="error" role="alert">{{ $message }}</p>@enderror
             @if (session('invitation_url'))

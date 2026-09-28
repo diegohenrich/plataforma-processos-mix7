@@ -6,22 +6,18 @@
     .brand-copy small{color:#bed4dc;font-size:13px;line-height:1.5;overflow-wrap:anywhere}
     .mobile-nav .brand-image{width:38px;height:38px;border-radius:50%}
     .mobile-nav .brand-copy{display:block;color:#fff;font-size:16px;font-weight:750}
+    .workspace-tabs{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:0 0 20px;padding-bottom:12px;border-bottom:1px solid #e3e9e8}.workspace-tabs a{display:inline-flex;align-items:center;min-height:38px;padding:7px 12px;border:1px solid #d6e0e1;border-radius:10px;background:#fff;color:#52666e;text-decoration:none;font-size:12px;font-weight:650}.workspace-tabs a[aria-current="page"]{border-color:#204b61;background:#eaf6fa;color:#204b61}.workspace-tabs .workspace-settings{margin-left:auto;background:#f8fbfb}
     @media(max-width:650px){.mobile-nav .brand{gap:10px;padding:0}.mobile-nav .brand-copy small{display:none}}
 </style>
 @php
     $navigationRole = auth()->user()->role;
+    $teamEntry = $navigationRole === App\Enums\UserRole::Professional ? 'team.activity' : (auth()->user()->can('viewAny', App\Models\User::class) ? 'team.index' : 'team.activity');
     $navigationItems = [
         ['label' => 'Visão geral', 'icon' => '▦', 'route' => 'dashboard', 'active' => 'dashboard', 'show' => true],
         ['label' => $navigationRole === App\Enums\UserRole::Client ? 'Minhas demandas' : 'Demandas', 'icon' => '◷', 'route' => 'demands.index', 'active' => 'demands', 'show' => true],
         ['label' => 'Notificações', 'icon' => '♧', 'route' => 'notifications.index', 'active' => 'notifications', 'show' => true],
         ['label' => 'Assistente da agência', 'icon' => '✦', 'route' => 'organization-assistant.index', 'active' => 'organization-assistant', 'show' => in_array($navigationRole, [App\Enums\UserRole::AgencyOwner, App\Enums\UserRole::MarketingManager], true)],
-        ['label' => 'Quadro de tarefas', 'icon' => '▦', 'route' => 'demand-tasks.board', 'active' => 'task-board', 'show' => $navigationRole !== App\Enums\UserRole::Client],
-        ['label' => 'Aprovações', 'icon' => '✓', 'route' => 'approvals.index', 'active' => 'approvals', 'show' => $navigationRole !== App\Enums\UserRole::Client],
-        ['label' => 'Tipos de aprovação', 'icon' => '＋', 'route' => 'approval-modules.index', 'active' => 'approval-modules', 'show' => auth()->user()->can('create', App\Models\Demand::class)],
-        ['label' => $navigationRole === App\Enums\UserRole::Professional ? 'Meu trabalho' : 'Produção da equipe', 'mobile_label' => $navigationRole === App\Enums\UserRole::Professional ? 'Meu trabalho' : 'Produção', 'icon' => '◷', 'route' => 'team.activity', 'active' => 'activity', 'show' => auth()->user()->can('viewActivity', App\Models\User::class)],
-        ['label' => 'Disponibilidade', 'icon' => '◫', 'route' => 'team.capacity', 'active' => 'capacity', 'show' => $navigationRole !== App\Enums\UserRole::Client],
-        ['label' => 'Avaliações', 'icon' => '◎', 'route' => 'performance-reviews.index', 'active' => 'performance-reviews', 'show' => in_array($navigationRole, [App\Enums\UserRole::AgencyOwner, App\Enums\UserRole::MarketingManager, App\Enums\UserRole::Professional], true)],
-        ['label' => 'Equipe', 'icon' => '♧', 'route' => 'team.index', 'active' => 'team', 'show' => auth()->user()->can('viewAny', App\Models\User::class)],
+        ['label' => $navigationRole === App\Enums\UserRole::Professional ? 'Meu trabalho' : 'Equipe', 'icon' => '♧', 'route' => $teamEntry, 'active' => 'team', 'show' => auth()->user()->can('viewActivity', App\Models\User::class) || auth()->user()->can('viewAny', App\Models\User::class)],
         ['label' => 'Acessos de serviços', 'icon' => '⌑', 'route' => 'service-access.index', 'active' => 'service-access', 'show' => $navigationRole !== App\Enums\UserRole::Client],
         ['label' => 'Conhecimento', 'icon' => '▤', 'route' => 'knowledge.index', 'active' => 'knowledge', 'show' => auth()->user()->can('viewAny', App\Models\KnowledgeItem::class)],
         ['label' => 'Acessos da API', 'icon' => '⌘', 'route' => 'api-tokens.index', 'active' => 'integrations', 'show' => $navigationRole !== App\Enums\UserRole::Client],
