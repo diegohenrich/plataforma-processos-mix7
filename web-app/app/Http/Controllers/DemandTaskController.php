@@ -27,6 +27,9 @@ class DemandTaskController extends Controller
         $user = $request->user();
         abort_unless(in_array($user->role, [UserRole::AgencyOwner, UserRole::MarketingManager, UserRole::Professional], true), 403);
 
+        $validated = $request->validate(['q' => ['sometimes', 'nullable', 'string', 'max:120']]);
+        $search = trim((string) ($validated['q'] ?? ''));
+
         $perColumn = 30;
         $boardColumns = collect();
         $boardCounts = collect();
@@ -36,7 +39,15 @@ class DemandTaskController extends Controller
             $scope = DemandTask::query()
                 ->where('organization_id', $user->organization_id)
                 ->where('status', $status->value)
-                ->when($user->role === UserRole::Professional, fn ($query) => $query->where('assigned_to', $user->id));
+                ->when($user->role === UserRole::Professional, fn ($query) => $query->where('assigned_to', $user->id))
+                ->when($search !== '', function ($query) use ($search): void {
+                    $term = '%'.$search.'%';
+                    $query->where(function ($matches) use ($term): void {
+                        $matches->where('title', 'like', $term)
+                            ->orWhereHas('demand', fn ($demand) => $demand->where('title', 'like', $term))
+                            ->orWhereHas('assignee', fn ($assignee) => $assignee->where('name', 'like', $term));
+                    });
+                });
             $total = (clone $scope)->count();
             $lastPage = max(1, (int) ceil($total / $perColumn));
             $pageKey = 'page_'.$status->value;
@@ -65,6 +76,7 @@ class DemandTaskController extends Controller
             'boardCounts' => $boardCounts,
             'boardPages' => $boardPages,
             'currentUser' => $user,
+            'search' => $search,
         ]);
     }
 

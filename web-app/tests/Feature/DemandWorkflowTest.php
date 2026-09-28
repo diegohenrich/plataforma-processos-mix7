@@ -164,28 +164,57 @@ class DemandWorkflowTest extends TestCase
             $this->task($demand, $professional, $manager, sprintf('Tarefa %02d', $index));
         }
 
-        $firstPage = $this->actingAs($manager)->get(route('demand-tasks.board'))
+        $firstPage = $this->actingAs($manager)->get(route('demand-tasks.board', ['q' => 'Tarefa']))
             ->assertOk()
             ->assertSee('Mostrando 1–30 de 61 tarefas')
             ->assertSee('Mostrar mais tarefas')
             ->assertSee('page_todo=2')
+            ->assertSee('value="Tarefa"', false)
             ->assertDontSee('Tarefa 01');
         $this->assertSame(30, preg_match_all('/<article class="task-board-card"/', $firstPage->getContent()));
 
-        $secondPage = $this->get(route('demand-tasks.board', ['page_todo' => 2]))
+        $secondPage = $this->get(route('demand-tasks.board', ['q' => 'Tarefa', 'page_todo' => 2]))
             ->assertOk()
             ->assertSee('Mostrando 31–60 de 61 tarefas')
             ->assertSee('Voltar às anteriores')
             ->assertSee('Mostrar mais tarefas')
+            ->assertSee('q=Tarefa')
             ->assertDontSee('Tarefa 01');
         $this->assertSame(30, preg_match_all('/<article class="task-board-card"/', $secondPage->getContent()));
 
-        $lastPage = $this->get(route('demand-tasks.board', ['page_todo' => 3]))
+        $lastPage = $this->get(route('demand-tasks.board', ['q' => 'Tarefa', 'page_todo' => 3]))
             ->assertOk()
             ->assertSee('Mostrando 61–61 de 61 tarefas')
             ->assertSee('Tarefa 01')
             ->assertSee('Voltar às anteriores');
         $this->assertSame(1, preg_match_all('/<article class="task-board-card"/', $lastPage->getContent()));
+    }
+
+    public function test_task_board_search_matches_task_title_demand_title_or_assignee(): void
+    {
+        [$organization, $manager, $professional, $colleague] = $this->team();
+        $demand = $this->demand($organization, $manager);
+        $demand->update(['title' => 'Campanha Aurora']);
+        $this->task($demand, $professional, $manager, 'Revisar texto do criativo');
+        $this->task($demand, $colleague, $manager, 'Conferir formatos da campanha');
+
+        $this->actingAs($manager)->get(route('demand-tasks.board', ['q' => 'criativo']))
+            ->assertOk()
+            ->assertSee('Revisar texto do criativo')
+            ->assertDontSee('Conferir formatos da campanha')
+            ->assertSee('Mostrando 1–1 de 1 tarefas');
+
+        $this->get(route('demand-tasks.board', ['q' => 'Aurora']))
+            ->assertOk()
+            ->assertSee('Revisar texto do criativo')
+            ->assertSee('Conferir formatos da campanha')
+            ->assertSee('Mostrando 1–2 de 2 tarefas');
+
+        $this->get(route('demand-tasks.board', ['q' => $colleague->name]))
+            ->assertOk()
+            ->assertSee('Conferir formatos da campanha')
+            ->assertDontSee('Revisar texto do criativo')
+            ->assertSee('value="'.$colleague->name.'"', false);
     }
 
     public function test_professional_task_board_contains_only_assigned_tasks_and_can_update_own_work(): void
