@@ -22,6 +22,7 @@
                         <option value="openai-compatible" @selected(old('provider', $saved?->provider ?? ($effective['source'] === 'environment' ? $effective['provider'] : 'openai-compatible')) === 'openai-compatible')>API compatível com OpenAI Chat Completions</option>
                         <option value="anthropic-api" @selected(old('provider', $saved?->provider) === 'anthropic-api')>API Anthropic Messages</option>
                         <option value="claude-code-subscription" @selected(old('provider', $saved?->provider) === 'claude-code-subscription')>Claude Code local com minha assinatura</option>
+                        <option value="codex-chatgpt-subscription" @selected(old('provider', $saved?->provider) === 'codex-chatgpt-subscription')>Codex local com login ChatGPT</option>
                     </select>
                     <p class="ai-provider-note" id="ai-provider-help">Compatível com provedores que implementam chat completions e ferramentas, como OpenAI, Gateway e serviços locais. Endereço, modelo e chave variam conforme o fornecedor.</p>
                     <div id="ai-api-fields">
@@ -35,6 +36,10 @@
                     <div id="ai-claude-fields" hidden>
                         <label class="field" for="ai-claude-model">Modelo do Claude Code (opcional)<input id="ai-claude-model" name="claude_model" value="{{ old('claude_model', $saved?->model) }}" placeholder="Deixe vazio para usar o padrão da conta"></label>
                         <p class="ai-provider-note">Usa o login que já estiver no Claude Code desta máquina. Se não estiver conectado, abra o terminal e execute <code>claude</code> para fazer login. A assinatura limita o uso à sua conta e cota; não é uma API compartilhada para produção.</p>
+                    </div>
+                    <div id="ai-codex-fields" hidden>
+                        <label class="field" for="ai-codex-model">Modelo do Codex (opcional)<input id="ai-codex-model" name="codex_model" value="{{ old('codex_model', $saved?->model) }}" placeholder="Deixe vazio para usar o padrão da conta"></label>
+                        <p class="ai-provider-note">Usa o login ChatGPT já autenticado no Codex CLI desta máquina. Se precisar entrar, execute <code>codex login</code> no terminal. A sessão é individual, usa os limites do seu plano e funciona somente nesta instância local; não compartilha login na hospedagem.</p>
                     </div>
                     <label class="ai-enabled"><input type="checkbox" name="enabled" value="1" @checked(old('enabled', $saved?->enabled ?? false))> Ativar esta conexão para os assistentes da Mix7</label>
                     <div class="form-actions"><button class="primary-button" type="submit">Salvar configuração</button></div>
@@ -50,25 +55,33 @@
     const provider = document.getElementById('ai-provider');
     const apiFields = document.getElementById('ai-api-fields');
     const claudeFields = document.getElementById('ai-claude-fields');
+    const codexFields = document.getElementById('ai-codex-fields');
     const help = document.getElementById('ai-provider-help');
     const url = document.getElementById('ai-base-url');
     const model = document.getElementById('ai-model');
     const key = document.getElementById('ai-api-key');
     const claudeModel = document.getElementById('ai-claude-model');
+    const codexModel = document.getElementById('ai-codex-model');
     const update = () => {
         const localClaude = provider.value === 'claude-code-subscription';
-        apiFields.hidden = localClaude;
+        const localCodex = provider.value === 'codex-chatgpt-subscription';
+        const localCli = localClaude || localCodex;
+        apiFields.hidden = localCli;
         claudeFields.hidden = !localClaude;
-        url.required = !localClaude;
-        model.required = !localClaude;
-        model.disabled = localClaude;
-        url.disabled = localClaude;
-        key.disabled = localClaude;
+        codexFields.hidden = !localCodex;
+        url.required = !localCli;
+        model.required = !localCli;
+        model.disabled = localCli;
+        url.disabled = localCli;
+        key.disabled = localCli;
         claudeModel.disabled = !localClaude;
+        codexModel.disabled = !localCodex;
         help.textContent = provider.value === 'anthropic-api'
             ? 'Conecta diretamente ao protocolo Messages da Anthropic. Requer uma chave da Claude Platform; a assinatura do Claude Code não substitui uma chave de API no site compartilhado.'
             : provider.value === 'claude-code-subscription'
                 ? 'Disponível somente nesta instância local, autenticada no Claude Code. A hospedagem compartilhada deve usar uma API de serviço.'
+                : provider.value === 'codex-chatgpt-subscription'
+                    ? 'Disponível somente nesta instância local, usando o login ChatGPT do Codex CLI. A hospedagem compartilhada deve usar uma API de serviço.'
                 : 'Compatível com provedores que implementam chat completions e ferramentas, como OpenAI, Gateway e serviços locais. Endereço, modelo e chave variam conforme o fornecedor.';
     };
     provider.addEventListener('change', update);

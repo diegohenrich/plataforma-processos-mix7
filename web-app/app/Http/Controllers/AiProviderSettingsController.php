@@ -31,10 +31,11 @@ class AiProviderSettingsController extends Controller
     {
         $this->authorizeOwner($request);
         $data = $request->validate([
-            'provider' => ['required', 'string', 'in:openai-compatible,anthropic-api,claude-code-subscription'],
+            'provider' => ['required', 'string', 'in:openai-compatible,anthropic-api,claude-code-subscription,codex-chatgpt-subscription'],
             'base_url' => ['nullable', 'string', 'max:255'],
             'model' => ['nullable', 'string', 'max:160'],
             'claude_model' => ['nullable', 'string', 'max:160'],
+            'codex_model' => ['nullable', 'string', 'max:160'],
             'api_key' => ['nullable', 'string', 'max:4000'],
             'enabled' => ['sometimes', 'boolean'],
             'clear_api_key' => ['sometimes', 'boolean'],
@@ -49,9 +50,12 @@ class AiProviderSettingsController extends Controller
             if (! $this->safeEndpoint($data['base_url'])) {
                 return back()->withErrors(['base_url' => 'Use um endereço HTTPS válido. HTTP só é aceito para serviços locais quando o ambiente está local.'])->withInput($request->except('api_key'));
             }
-        } else {
+        } elseif ($data['provider'] === 'claude-code-subscription') {
             $data['base_url'] = null;
             $data['model'] = trim((string) ($data['claude_model'] ?? $data['model'] ?? ''));
+        } else {
+            $data['base_url'] = null;
+            $data['model'] = trim((string) ($data['codex_model'] ?? $data['model'] ?? ''));
         }
 
         $setting = AiProviderSetting::query()->firstOrNew(['organization_id' => $request->user()->organization_id]);
@@ -62,7 +66,7 @@ class AiProviderSettingsController extends Controller
         }
         if ($apiKey !== '') {
             $setting->api_key = $apiKey;
-        } elseif (($data['clear_api_key'] ?? false) || $data['provider'] === 'claude-code-subscription') {
+        } elseif (($data['clear_api_key'] ?? false) || in_array($data['provider'], ['claude-code-subscription', 'codex-chatgpt-subscription'], true)) {
             $setting->api_key = null;
         }
         $setting->fill([

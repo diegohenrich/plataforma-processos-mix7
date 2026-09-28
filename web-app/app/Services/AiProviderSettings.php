@@ -6,7 +6,7 @@ use App\Models\AiProviderSetting;
 
 class AiProviderSettings
 {
-    /** @return array{provider:string,base_url:string,model:string,key:string,enabled:bool,local_cli:string,source:string} */
+    /** @return array{provider:string,base_url:string,model:string,key:string,enabled:bool,local_cli:string,codex_cli:string,source:string} */
     public function forOrganization(?int $organizationId): array
     {
         $saved = $organizationId
@@ -21,6 +21,7 @@ class AiProviderSettings
                 'key' => (string) $saved->api_key,
                 'enabled' => $saved->enabled,
                 'local_cli' => (string) config('services.ai_gateway.claude_bin', 'claude'),
+                'codex_cli' => (string) config('services.ai_gateway.codex_bin', 'codex'),
                 'source' => 'database',
             ];
         }
@@ -32,11 +33,12 @@ class AiProviderSettings
             'key' => (string) (config('services.ai_gateway.key') ?: config('services.ai_gateway.oidc_token')),
             'enabled' => true,
             'local_cli' => (string) config('services.ai_gateway.claude_bin', 'claude'),
+            'codex_cli' => (string) config('services.ai_gateway.codex_bin', 'codex'),
             'source' => 'environment',
         ];
     }
 
-    /** @param array{provider:string,base_url:string,model:string,key:string,enabled:bool,local_cli:string,source:string} $settings */
+    /** @param array{provider:string,base_url:string,model:string,key:string,enabled:bool,local_cli:string,codex_cli:string,source:string} $settings */
     public function isConfigured(array $settings): bool
     {
         if (! $settings['enabled']) {
@@ -45,6 +47,10 @@ class AiProviderSettings
 
         if ($settings['provider'] === 'claude-code-subscription') {
             return app()->environment('local') && $settings['local_cli'] !== '';
+        }
+
+        if ($settings['provider'] === 'codex-chatgpt-subscription') {
+            return app()->environment('local') && $settings['codex_cli'] !== '';
         }
 
         if ($settings['model'] === '' || $settings['base_url'] === '') {

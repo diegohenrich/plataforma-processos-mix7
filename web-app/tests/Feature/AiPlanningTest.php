@@ -384,12 +384,15 @@ class AiPlanningTest extends TestCase
     public function test_planner_cannot_claim_capacity_context_when_management_did_not_send_it(): void
     {
         [, $manager, , $demand] = $this->workspace();
-        Http::fake(['https://ai-gateway.vercel.sh/v1/chat/completions' => Http::response($this->providerResponse([], 'A equipe está sobrecarregada.'), 200)]);
+        Http::fake(['https://ai-gateway.vercel.sh/v1/chat/completions' => Http::response($this->providerResponse([], 'A equipe está sobrecarregada.', ['invented-candidate']), 200)]);
 
         $this->actingAs($manager)->from(route('demands.show', $demand))
-            ->post(route('ai-planning.propose', $demand))->assertSessionHasErrors('ai');
+            ->post(route('ai-planning.propose', $demand))->assertRedirect()->assertSessionHasNoErrors();
 
-        $this->assertSame(0, AiPlanningRun::count());
+        $proposal = AiPlanningRun::firstOrFail()->proposal;
+        $this->assertSame('', $proposal['capacity_observation']);
+        $this->assertNull($proposal['tasks'][0]['suggested_assignee_ref']);
+        $this->assertSame('', $proposal['tasks'][0]['assignment_rationale']);
         $this->assertSame(0, DemandTask::count());
     }
 

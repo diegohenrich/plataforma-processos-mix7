@@ -44,7 +44,7 @@ class AiAgentController extends Controller
         if (! app(AiProviderSettings::class)->isConfigured($providerSettings)) {
             return back()->withErrors(['assistant' => 'O agente ainda não está configurado. Nenhuma chamada foi enviada.']);
         }
-        $model = $providerSettings['model'] ?: 'claude-code-subscription';
+        $model = $providerSettings['model'] ?: $providerSettings['provider'];
         $provider = $providerSettings['provider'];
 
         $run = AiAgentRun::create([
@@ -94,7 +94,7 @@ class AiAgentController extends Controller
         if (! app(AiProviderSettings::class)->isConfigured($providerSettings)) {
             return back()->withErrors(['assistant' => 'O agente ainda não está configurado. Nenhuma chamada foi enviada.']);
         }
-        $model = $providerSettings['model'] ?: 'claude-code-subscription';
+        $model = $providerSettings['model'] ?: $providerSettings['provider'];
         $provider = $providerSettings['provider'];
 
         $run = DB::transaction(function () use ($request, $demand, $data, $model, $provider): AiAgentRun {

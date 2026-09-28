@@ -9,6 +9,7 @@ use App\Models\Demand;
 use App\Models\DemandModuleDefinition;
 use App\Models\Organization;
 use App\Models\User;
+use App\Services\AiProviderSettings;
 use App\Services\AiTextProvider;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -150,6 +151,36 @@ class AiProviderAndBriefingTest extends TestCase
         ])->assertForbidden();
     }
 
+    public function test_contextual_copilot_routes_all_ten_areas_to_the_provider(): void
+    {
+        [$organization] = $this->workspace();
+        $areas = ['overview', 'demands', 'tasks', 'approvals', 'team', 'knowledge', 'service-access', 'capacity', 'evaluations', 'onboarding'];
+        $labels = [
+            'visão geral e navegação', 'criação e acompanhamento de demandas', 'tarefas e execução do trabalho',
+            'aprovação de criativos e feedback do cliente', 'equipe e responsabilidades', 'conhecimento e onboarding',
+            'acessos a serviços externos', 'disponibilidade e carga de trabalho', 'avaliações humanas de tarefas',
+            'integração e treinamento de profissionais',
+        ];
+        Http::fake(['https://ai-gateway.vercel.sh/v1/chat/completions' => Http::response([
+            'choices' => [['message' => ['role' => 'assistant', 'content' => 'Orientação fictícia para esta área.']]],
+        ], 200)]);
+
+        foreach ($areas as $area) {
+            $professional = User::factory()->create([
+                'organization_id' => $organization->id, 'role' => UserRole::Professional, 'is_active' => true,
+            ]);
+            $this->actingAs($professional)->postJson(route('contextual-assistant.ask'), [
+                'area' => $area, 'messages' => [['role' => 'user', 'content' => 'Como começo este fluxo fictício?']],
+            ])->assertOk()->assertJsonPath('answer', 'Orientação fictícia para esta área.');
+        }
+
+        $sentPrompts = Http::recorded()->map(fn ($pair) => $pair[0]['messages'][1]['content'])->all();
+        foreach ($labels as $label) {
+            $this->assertTrue(collect($sentPrompts)->contains(fn (string $prompt): bool => str_contains($prompt, $label)), "A área {$label} não foi incluída no contexto enviado.");
+        }
+        $this->assertCount(10, $sentPrompts);
+    }
+
     public function test_switching_to_local_claude_subscription_clears_api_key_and_saves_optional_model(): void
     {
         [$organization, $owner] = $this->workspace();
@@ -168,6 +199,50 @@ class AiProviderAndBriefingTest extends TestCase
         $this->assertSame('claude-sonnet-test', $setting->model);
         $this->assertNull($setting->api_key);
         $this->assertNull($setting->base_url);
+    }
+
+    public function test_owner_can_enable_local_codex_chatgpt_login_without_an_api_key(): void
+    {
+        [$organization, $owner] = $this->workspace();
+        AiProviderSetting::create([
+            'organization_id' => $organization->id, 'provider' => 'openai-compatible',
+            'base_url' => 'https://api.example.test/v1', 'model' => 'old-model',
+            'api_key' => 'old-encrypted-key', 'enabled' => true,
+        ]);
+
+        $this->actingAs($owner)->put(route('ai-settings.update'), [
+            'provider' => 'codex-chatgpt-subscription', 'codex_model' => '', 'enabled' => '1',
+        ])->assertRedirect(route('ai-settings.index'))->assertSessionHasNoErrors();
+
+        $setting = AiProviderSetting::where('organization_id', $organization->id)->firstOrFail();
+        $this->assertSame('codex-chatgpt-subscription', $setting->provider);
+        $this->assertSame('', $setting->model);
+        $this->assertNull($setting->api_key);
+        $this->assertNull($setting->base_url);
+        $this->app['env'] = 'local';
+        $effective = app(AiProviderSettings::class)->forOrganization((int) $organization->id);
+        $this->assertTrue(app(AiProviderSettings::class)->isConfigured($effective));
+
+        $this->app['env'] = 'production';
+        $this->assertFalse(app(AiProviderSettings::class)->isConfigured($effective));
+    }
+
+    public function test_codex_cli_failures_are_classified_without_exposing_raw_provider_output(): void
+    {
+        $classify = new \ReflectionMethod(AiTextProvider::class, 'codexFailure');
+
+        $quota = $classify->invoke(app(AiTextProvider::class), 'HTTP 429 usage limit exceeded; diagnostic bearer secret-do-not-show');
+        $this->assertSame('usage_limit', $quota['category']);
+        $this->assertStringContainsString('limite de uso', $quota['message']);
+        $this->assertStringNotContainsString('secret-do-not-show', $quota['message']);
+
+        $auth = $classify->invoke(app(AiTextProvider::class), 'authentication required');
+        $this->assertSame('authentication', $auth['category']);
+        $this->assertStringContainsString('codex login', $auth['message']);
+
+        $network = $classify->invoke(app(AiTextProvider::class), 'connection timed out');
+        $this->assertSame('connectivity', $network['category']);
+        $this->assertStringContainsString('falha de conexão', $network['message']);
     }
 
     private function workspace(): array

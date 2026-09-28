@@ -43,6 +43,7 @@ return [
         'model' => env('AI_MODEL') ?: env('AI_PLANNING_MODEL'),
         'allow_unauthenticated' => (bool) env('AI_ALLOW_UNAUTHENTICATED', false),
         'claude_bin' => env('AI_CLAUDE_BIN', 'claude'),
+        'codex_bin' => env('AI_CODEX_BIN', 'codex'),
     ],
 
 ];
