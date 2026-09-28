@@ -1,3 +1,10 @@
+# Solução sugerida pela IA a partir do briefing — 2026-09-28
+- Implementei na demanda a propriedade interna “Solução sugerida”, gerada por ação explícita de direção/gerência usando apenas título e briefing. A IA propõe; a pessoa revisa. Texto anterior permanece se houver falha, e a proposta não aparece para o cliente. Evento guarda autor e horário.
+- Validação local: suíte Laravel 253 testes/2.517 assertions; conjunto focado 14/117; Pint focal e `git diff --check` passaram. Migração aplicada no SQLite local. Gemma respondeu a solicitação fictícia em 10,6 s. Inspecionei a tela da demanda em viewport 390×844.
+- GitHub: commit `1db98c8c70aafe8fc1f011264038f82635247f72`, branch `codex/fundacao-compartilhada`; PR #11. Os dois checks do commit passaram: [36475390217](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36475390217) e [36475384413](https://github.com/diegohenrich/plataforma-processos-mix7/actions/runs/36475384413).
+- Trello: cartão #39 atualizado com a funcionalidade, limites de acesso e validações: https://trello.com/c/Tim9aDuc/39-runtime-inicial-do-assistente-de-ia-por-demanda. Cartão permanece “Em andamento”.
+- Pendência de operação: confirmar no ambiente do usuário que Ollama/Gemma está disponível e que a função responde em sua sessão local; nenhuma demanda real foi alterada neste teste.
+
 # Unificação dos modos de visualização de demandas — 2026-09-27
 - A navegação interna agora chama o modo Kanban de “Quadro” e identifica a barra como visualizações e tarefas das demandas. A Lista permanece como outro modo da mesma seção; a navegação principal continua com uma única entrada “Demandas”. “Tarefas” permanece separada.
 - Validação: teste Laravel focalizado passou (1 teste, 17 assertions); `git diff --check` passou. Conferi na aba existente do CRM em `127.0.0.1:4292`: menu principal “Demandas”, alternadores “Quadro”/“Lista”/“Tarefas” e a página da Lista renderizados. Nenhum dado da demonstração foi alterado.
