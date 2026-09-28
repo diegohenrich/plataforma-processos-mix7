@@ -955,3 +955,8 @@ Histórico operacional anterior preservado em [docs/VALIDACOES-HISTORICAS.md](..
 - Excluí os 99 vínculos de onboarding, 3 solicitações de acesso e 272 registros de capacidade associados às contas removidas. Os 5 itens de conhecimento e 4 acessos de serviço compartilhados foram preservados. Demandas e tarefas continuam em zero. A verificação SQLite `PRAGMA foreign_key_check` retornou zero violações.
 - O teste `AuthenticationTest.php` passou (3 testes, 42 assertions); `git diff --check` passou.
 - Antes da exclusão, foi criada uma cópia de segurança local em `%TEMP%\mix7-users-before-cleanup-20260928.sqlite` para recuperação. A cópia contém o estado anterior à limpeza; a base ativa do CRM contém somente os quatro usuários escolhidos. Trello ainda aguarda confirmação no momento da publicação pela interface.
+
+# Acesso unificado aos quatro perfis de demonstração — 2026-09-28
+- Ao conferir a solicitação de acesso a todos os perfis, constatei que a senha temporária anteriormente comunicada como comum validava apenas a conta de Direção. Padronizei a senha somente nas quatro contas fictícias mantidas, conforme o pedido para usar a mesma senha, sem alterar e-mails, papéis ou estado ativo.
+- `Auth::guard('web')->once` com a senha `Mix7Demo-2026!` autenticou Direção, Gerência, Profissional e Cliente. `AuthenticationTest.php` passou (3 testes, 42 assertions); a contagem segue em quatro usuários (um de cada papel) e `PRAGMA foreign_key_check` não encontrou violações. O CRM continua disponível em `127.0.0.1:4292`.
+- A chamada fictícia anterior à IA continua validada pelo CLI e por `AiTextProvider`; a falha de conexão não se repetiu. Como a tela informa que nenhum rascunho foi salvo, o texto precisa ser colado novamente para tentar outra vez.
