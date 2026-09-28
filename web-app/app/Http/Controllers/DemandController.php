@@ -10,6 +10,7 @@ use App\Models\Demand;
 use App\Models\DemandEvent;
 use App\Models\DemandModuleDefinition;
 use App\Models\User;
+use App\Services\AiProviderSettings;
 use App\Services\TaskAssignmentNotifier;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -100,7 +101,7 @@ class DemandController extends Controller
             ->get(['key', 'label', 'fields', 'workflow_steps'])
             ->map(fn (DemandModuleDefinition $module): array => ['key' => $module->key, 'label' => $module->label, 'fields' => $module->fields ?? [], 'workflow_steps' => $module->workflow_steps ?? []]));
 
-        $aiConfigured = app(\App\Services\AiProviderSettings::class)->isConfiguredFor((int) $request->user()->organization_id);
+        $aiConfigured = app(AiProviderSettings::class)->isConfiguredFor((int) $request->user()->organization_id);
 
         return view('demands.create', compact('professionals', 'clients', 'briefAuthors', 'modules', 'aiConfigured'));
     }
@@ -315,7 +316,7 @@ class DemandController extends Controller
                 ->where('requested_by', $request->user()->id)
                 ->take(8)
                 ->get(),
-            'aiConfigured' => app(\App\Services\AiProviderSettings::class)->isConfiguredFor((int) $user->organization_id),
+            'aiConfigured' => app(AiProviderSettings::class)->isConfiguredFor((int) $user->organization_id),
         ]);
     }
 
