@@ -71,6 +71,7 @@ class DemandWorkflowTest extends TestCase
             ->assertOk()
             ->assertSee('Quadro')
             ->assertSee('Lista')
+            ->assertSee('aria-label="Visualizações e tarefas das demandas"', false)
             ->assertSee('Quadro de demandas por etapa')
             ->assertSee('Demanda recebida')
             ->assertSee('Aprovação do cliente')
