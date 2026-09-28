@@ -330,9 +330,8 @@ class AiAgentTools
             ->get()
             ->reverse()
             ->map(fn (DemandReviewResponse $response) => [
+                'response_id' => $response->id,
                 'version' => $response->reviewLink->version,
-                'reviewer_name' => $response->reviewer_name,
-                'reviewer_name_is_self_reported' => true,
                 'type' => $response->type,
                 'comment' => $response->comment,
                 'anchor_type' => $response->anchor_type,

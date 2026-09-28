@@ -11,6 +11,7 @@ use App\Models\DemandEvent;
 use App\Models\DemandTask;
 use App\Models\TeamCapacitySnapshot;
 use App\Models\User;
+use App\Services\AiProviderSettings;
 use App\Services\PlanningAgent;
 use App\Services\TaskAssignmentNotifier;
 use Carbon\CarbonImmutable;
@@ -72,13 +73,14 @@ class AiPlanningController extends Controller
             'assignment_candidates' => $assignmentCandidateMap,
         ];
 
-        $run = DB::transaction(function () use ($demand, $request, $result): AiPlanningRun {
+        $providerSettings = app(AiProviderSettings::class)->forOrganization((int) $demand->organization_id);
+        $run = DB::transaction(function () use ($demand, $request, $result, $providerSettings): AiPlanningRun {
             $run = AiPlanningRun::create([
                 'organization_id' => $demand->organization_id,
                 'demand_id' => $demand->id,
                 'requested_by' => $request->user()->id,
-                'provider' => (string) config('services.ai_gateway.provider'),
-                'model' => (string) config('services.ai_gateway.model'),
+                'provider' => $providerSettings['provider'],
+                'model' => $providerSettings['model'] ?: $providerSettings['provider'],
                 'input_hash' => $result['input_hash'],
                 'input_characters' => $result['input_characters'],
                 'input_tokens' => $result['usage']['input_tokens'],

@@ -61,6 +61,14 @@ class AiAgentRuntimeTest extends TestCase
     public function test_approval_specialist_is_scoped_to_demand_and_client_feedback(): void
     {
         [$organization, $manager, , $demand] = $this->workspace();
+        $link = DemandReviewLink::create([
+            'organization_id' => $organization->id, 'demand_id' => $demand->id, 'created_by' => $manager->id,
+            'version' => 3, 'token_hash' => str_repeat('c', 64), 'material_url' => 'https://preview.example.test/v3', 'expires_at' => now()->addDay(),
+        ]);
+        $response = $link->responses()->create([
+            'reviewer_name' => 'Cliente', 'type' => 'comment', 'comment' => 'A chamada do topo precisa ficar mais visível.',
+            'anchor_type' => 'text', 'anchor_data' => ['text' => 'Conheça nossos serviços', 'page' => 'home'],
+        ]);
         Bus::fake();
 
         $this->actingAs($manager)->post(route('ai-agent.ask', $demand), [
@@ -75,16 +83,29 @@ class AiAgentRuntimeTest extends TestCase
             ->pluck('function.name')->all();
         $this->assertSame(['read_demand_context', 'list_client_feedback'], $tools);
 
-        Http::fakeSequence()->push($this->toolResponse([
-            ['id' => 'feedback', 'function' => ['name' => 'list_client_feedback', 'arguments' => '{}']],
-        ]), 200)->push($this->answerResponse('O comentário da versão 1 pede ajuste.'), 200);
+        $structured = json_encode([
+            'summary' => 'O cliente pediu destaque maior para a chamada principal.',
+            'adjustments' => [[
+                'response_id' => $response->id, 'classification' => 'adjustment',
+                'instruction' => 'Aumentar o destaque visual da chamada principal.',
+                'expected_result' => 'A chamada deve ficar mais perceptível no topo da página.',
+                'acceptance_criteria' => ['O texto continua igual ao aprovado.', 'O destaque aparece na primeira dobra.'],
+                'task_title' => 'Ajustar destaque da chamada principal',
+            ]],
+        ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
+        Http::fake(['https://ai-gateway.vercel.sh/v1/chat/completions' => Http::response($this->answerResponse($structured), 200)]);
         $result = app(AiAgentRuntime::class)->run($demand, $manager, 'Organize o feedback.', $run->agent);
 
-        $this->assertSame('O comentário da versão 1 pede ajuste.', $result['answer']);
+        $proposal = json_decode($result['answer'], true, 16, JSON_THROW_ON_ERROR);
+        $this->assertSame('O cliente pediu destaque maior para a chamada principal.', $proposal['summary']);
+        $this->assertSame('A chamada do topo precisa ficar mais visível.', $proposal['adjustments'][0]['original_comment']);
+        $this->assertSame(3, $proposal['adjustments'][0]['version']);
+        $this->assertSame(['text' => 'Conheça nossos serviços', 'page' => 'home'], $proposal['adjustments'][0]['anchor']);
         $this->assertSame(['list_client_feedback'], collect($result['tool_trace'])->pluck('tool')->all());
-        Http::assertSent(fn ($request) => collect($request['tools'])->pluck('function.name')->all() === ['read_demand_context', 'list_client_feedback']
+        Http::assertSent(fn ($request) => ! isset($request['tools'])
             && str_contains($request['messages'][0]['content'], 'proponha rascunhos de tarefas')
-            && str_contains($request['messages'][0]['content'], 'não crie tarefas'));
+            && str_contains($request['messages'][1]['content'], 'A chamada do topo precisa ficar mais visível.')
+            && isset($request['response_format']['json_schema']['schema']));
     }
 
     public function test_organization_assistant_queues_audited_question_without_demand_or_raw_prompt(): void

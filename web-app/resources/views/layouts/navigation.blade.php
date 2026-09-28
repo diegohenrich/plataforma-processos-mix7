@@ -21,6 +21,7 @@
         ['label' => 'Acessos de serviços', 'icon' => '⌑', 'route' => 'service-access.index', 'active' => 'service-access', 'show' => $navigationRole !== App\Enums\UserRole::Client],
         ['label' => 'Conhecimento', 'icon' => '▤', 'route' => 'knowledge.index', 'active' => 'knowledge', 'show' => auth()->user()->can('viewAny', App\Models\KnowledgeItem::class)],
         ['label' => 'Acessos da API', 'icon' => '⌘', 'route' => 'api-tokens.index', 'active' => 'integrations', 'show' => $navigationRole !== App\Enums\UserRole::Client],
+        ['label' => 'Configuração de IA', 'icon' => '✧', 'route' => 'ai-settings.index', 'active' => 'ai-settings', 'show' => $navigationRole === App\Enums\UserRole::AgencyOwner],
     ];
 @endphp
 <aside class="sidebar" aria-label="Navegação principal">

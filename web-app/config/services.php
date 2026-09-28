@@ -42,6 +42,7 @@ return [
         'base_url' => env('AI_BASE_URL', 'https://ai-gateway.vercel.sh/v1'),
         'model' => env('AI_MODEL') ?: env('AI_PLANNING_MODEL'),
         'allow_unauthenticated' => (bool) env('AI_ALLOW_UNAUTHENTICATED', false),
+        'claude_bin' => env('AI_CLAUDE_BIN', 'claude'),
     ],
 
 ];

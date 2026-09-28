@@ -20,5 +20,6 @@
 </head>
 <body>
 @yield('body')
+@include('layouts.ai-copilot')
 </body>
 </html>

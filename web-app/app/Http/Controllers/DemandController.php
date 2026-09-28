@@ -100,7 +100,9 @@ class DemandController extends Controller
             ->get(['key', 'label', 'fields', 'workflow_steps'])
             ->map(fn (DemandModuleDefinition $module): array => ['key' => $module->key, 'label' => $module->label, 'fields' => $module->fields ?? [], 'workflow_steps' => $module->workflow_steps ?? []]));
 
-        return view('demands.create', compact('professionals', 'clients', 'briefAuthors', 'modules'));
+        $aiConfigured = app(\App\Services\AiProviderSettings::class)->isConfiguredFor((int) $request->user()->organization_id);
+
+        return view('demands.create', compact('professionals', 'clients', 'briefAuthors', 'modules', 'aiConfigured'));
     }
 
     public function store(Request $request, TaskAssignmentNotifier $taskAssignmentNotifier): RedirectResponse|JsonResponse
@@ -313,6 +315,7 @@ class DemandController extends Controller
                 ->where('requested_by', $request->user()->id)
                 ->take(8)
                 ->get(),
+            'aiConfigured' => app(\App\Services\AiProviderSettings::class)->isConfiguredFor((int) $user->organization_id),
         ]);
     }
 

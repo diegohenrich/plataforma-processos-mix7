@@ -17,6 +17,7 @@ Demanda/briefing → planejamento revisado → execução → revisão interna �
 - [Glossário e critério de conclusão](docs/GLOSSARIO.md)
 - [Ficha para validar um caso real da Mix7](docs/VALIDACAO-CASO-REAL.md)
 - [Produto e público](docs/PRODUCT.md)
+- [Pesquisa inicial de provedores de IA](docs/IA-PROVEDORES.md)
 - [Fases e critérios de avanço](docs/ROADMAP.md)
 - [Arquitetura web Laravel e Hostinger](docs/ARQUITETURA-HOSTINGER-LARAVEL.md)
 - [Operação e cópias de segurança](docs/OPERACOES-E-BACKUP.md)

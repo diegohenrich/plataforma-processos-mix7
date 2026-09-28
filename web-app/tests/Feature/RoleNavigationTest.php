@@ -20,7 +20,7 @@ class RoleNavigationTest extends TestCase
             UserRole::AgencyOwner->value => [
                 'dashboard', 'demands.index', 'notifications.index', 'organization-assistant.index',
                 'team.index', 'service-access.index',
-                'knowledge.index', 'api-tokens.index',
+                'knowledge.index', 'api-tokens.index', 'ai-settings.index',
             ],
             UserRole::MarketingManager->value => [
                 'dashboard', 'demands.index', 'notifications.index', 'organization-assistant.index',

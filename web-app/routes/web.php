@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\AiAgentController;
+use App\Http\Controllers\AiBriefingController;
 use App\Http\Controllers\AiPlanningController;
+use App\Http\Controllers\AiProviderSettingsController;
 use App\Http\Controllers\ApiTokenController;
 use App\Http\Controllers\ApprovalsController;
 use App\Http\Controllers\Auth\PasswordResetController;
@@ -44,6 +46,7 @@ Route::middleware(['auth', 'active'])->group(function (): void {
     Route::post('/notificacoes/ler-todas', [UserNotificationController::class, 'markAllRead'])->name('notifications.read-all');
     Route::get('/notificacoes/{notification}', [UserNotificationController::class, 'open'])->name('notifications.open');
     Route::resource('demandas', DemandController::class)->only(['index', 'create', 'store', 'show'])->names('demands')->parameters(['demandas' => 'demand']);
+    Route::post('/demandas/assistente-briefing', [AiBriefingController::class, 'suggest'])->middleware('throttle:5,1')->name('ai-briefing.suggest');
     Route::get('/tipos-aprovacao', [DemandModuleController::class, 'index'])->name('approval-modules.index');
     Route::post('/tipos-aprovacao', [DemandModuleController::class, 'store'])->name('approval-modules.store');
     Route::put('/tipos-aprovacao/{module}/campos', [DemandModuleController::class, 'updateFields'])->name('approval-modules.fields');
@@ -64,6 +67,10 @@ Route::middleware(['auth', 'active'])->group(function (): void {
     Route::get('/assistente-agencia', [AiAgentController::class, 'organizationIndex'])->name('organization-assistant.index');
     Route::post('/assistente-agencia', [AiAgentController::class, 'askOrganization'])->middleware('throttle:3,1')->name('organization-assistant.ask');
     Route::get('/assistente-agencia/{run}/status', [AiAgentController::class, 'organizationStatus'])->name('organization-assistant.status');
+    Route::post('/assistente/contextual', [AiAgentController::class, 'askContextual'])->middleware('throttle:5,1')->name('contextual-assistant.ask');
+    Route::get('/configuracoes/ia', [AiProviderSettingsController::class, 'index'])->name('ai-settings.index');
+    Route::put('/configuracoes/ia', [AiProviderSettingsController::class, 'update'])->name('ai-settings.update');
+    Route::post('/configuracoes/ia/teste', [AiProviderSettingsController::class, 'test'])->middleware('throttle:3,1')->name('ai-settings.test');
     Route::post('/demandas/{demand}/links-revisao', [DemandReviewController::class, 'store'])->name('demand-reviews.store');
     Route::delete('/demandas/{demand}/links-revisao/{reviewLink}', [DemandReviewController::class, 'revoke'])->name('demand-reviews.revoke');
     Route::get('/demandas/{demand}/links-revisao/{reviewLink}/material', [DemandReviewController::class, 'teamMaterial'])->name('demand-reviews.team-material');
