@@ -33,17 +33,11 @@ nano .env
 
 Preencha no editor:
 
-- `APP_KEY`: deixe vazio por enquanto; gere-a no passo abaixo e cole o resultado no arquivo.
+- `APP_KEY`: deixe vazio por enquanto; gere-a depois do build e cole o resultado no arquivo.
 - `DB_HOST`: host do Session pooler mostrado pelo Supabase.
 - `DB_USERNAME`: `postgres.` seguido do identificador do projeto Supabase.
 - `DB_PASSWORD`: senha do banco, sem os colchetes do placeholder. Não a cole no chat. Se contiver caracteres especiais, mantenha o valor entre aspas simples no `.env`.
 - `MAIL_*`: ficam em transporte `log` inicialmente, então recuperação de senha/convites não serão entregues por e-mail. Configure SMTP antes de convidar pessoas.
-
-Gere uma chave de aplicação e copie a linha impressa para `APP_KEY` em `.env`:
-
-```bash
-docker compose -f docker-compose.vps.yml run --rm app php artisan key:generate --show
-```
 
 Salve o arquivo no `nano` (`Ctrl+O`, Enter, `Ctrl+X`) e confira somente permissões e nomes, sem mostrar valores:
 
@@ -60,7 +54,23 @@ O build acontece apenas neste projeto e pode levar alguns minutos. Não inicia n
 
 ```bash
 docker compose -f docker-compose.vps.yml build --pull app scheduler
+```
+
+Depois que o build terminar, gere uma chave de aplicação e cole a linha impressa em `APP_KEY` no `.env`. Essa chave é secreta; não a compartilhe. Salve o arquivo e confirme novamente a permissão `600`.
+
+```bash
+docker compose -f docker-compose.vps.yml run --rm app php artisan key:generate --show
+```
+
+Consulte o estado das migrations. Se falhar com `ENOIDENTIFIER`, **não rode migrate**: no Supabase, abra Connect → Session pooler e confira o host exato e o usuário `postgres.<PROJECT_REF>` da URI. O Project ID no sufixo deve ser do novo projeto Gestão Mix7. Esse erro indica tenant/host/usuário do pooler não identificado; não redefina a senha sem antes conferir esses dados.
+
+```bash
 docker compose -f docker-compose.vps.yml run --rm --no-deps app php artisan migrate:status
+```
+
+Só se o status mostrar o banco novo e as migrations como pendentes, aplique e continue:
+
+```bash
 docker compose -f docker-compose.vps.yml run --rm --no-deps app php artisan migrate --force
 docker compose -f docker-compose.vps.yml run --rm --no-deps app php artisan mix7:owner:create
 docker compose -f docker-compose.vps.yml up -d app scheduler

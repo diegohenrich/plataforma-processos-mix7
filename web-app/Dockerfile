@@ -23,7 +23,7 @@ FROM postgres:17-bookworm AS postgres-client
 FROM php:8.3-apache-bookworm AS runtime
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends libgssapi-krb5-2 libldap-2.5-0 liblz4-1 libonig5 libpq5 libssl3 libzstd1 unzip zlib1g \
+    && apt-get install -y --no-install-recommends libgssapi-krb5-2 libldap-2.5-0 liblz4-1 libonig5 libpq5 libssl3 libzip4 libzstd1 unzip zlib1g \
     && rm -rf /var/lib/apt/lists/* \
     && a2enmod headers rewrite \
     && sed -i 's/^Listen 80$/Listen 8080/' /etc/apache2/ports.conf \

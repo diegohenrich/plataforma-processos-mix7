@@ -1,13 +1,11 @@
-# Preparação do contêiner VPS/Supabase — 2026-10-01
-- O projeto Supabase novo foi criado pelo usuário. A VPS confirmou conexão TLS pelo Session pooler: `current_database=postgres`, `current_user=postgres`. Isso confirma conectividade, não as migrations Laravel; nenhuma senha foi recebida ou registrada.
-- Preparei imagem multi-stage PHP 8.3/Apache com PDO PostgreSQL e `pg_dump` 17, Compose privado com `app`/`scheduler`, filesystem read-only, volume persistente, labels Traefik `websecure`/`letsencrypt`, redirecionamento HTTP→HTTPS e sem portas publicadas. O Ollama do Windows não é acessível no container e a IA não fica configurada em produção.
-- Incluí exemplo `.env` sem segredos, instruções de implantação, links de arquitetura/roadmap, trusted proxy no bootstrap e etapa de build Docker no workflow.
-- Validações locais: Laravel 254 aprovados, 4 ignorados, 2.521 assertions; Pint passou nos arquivos PHP; Composer validate; parser YAML confirmou serviços, `read_only` e nenhuma porta pública; `docker compose config --no-env-resolution --quiet` e `bash -n` passaram; `git diff --check` passou. O Docker Desktop local não foi iniciado.
-- CI do commit `50674265bd1622f6b3950d86f8dfd0bff7103c02` passou, incluindo build da imagem. Commit `e83b18b7477df622a5f2dfc15c0edd75c321c7eb` foi publicado e o SHA local/remoto conferido; CI desse commit segue em andamento.
-- Em 2026-10-01, DNS A de `gestao.mix7.org` resolve para `72.61.51.41` tanto no resolvedor local quanto em `1.1.1.1` e `8.8.8.8`; corresponde ao IP visto na captura do hPanel. Sem registro AAAA. Isso confirma DNS, não o serviço HTTPS.
-- Pendentes: checagem somente leitura no VPS de `/opt/gestao-mix7`, containers, Traefik e disco; depois build, migrations e acesso HTTPS. Nada foi alterado na VPS.
-- Antes de dados reais: revisar grants/RLS, permissões, SMTP e backup/restauração PostgreSQL + anexos; definir política/topologia IA.
-- Próximo passo: executar o bloco somente de leitura de `docs/IMPLANTACAO-GESTAO-VPS.md`; seguir somente se a primeira linha imprimir `LIVRE`.
+# Deploy inicial Gestão Mix7 — 2026-10-01
+- DNS A `gestao.mix7.org` foi confirmado em 1.1.1.1 e 8.8.8.8 como `72.61.51.41`; sem registro AAAA.
+- O usuário clonou a branch `codex/fundacao-compartilhada`, criou `/opt/gestao-mix7/web-app/.env` com permissão 600 e preencheu `APP_KEY`, host, usuário e senha sem revelar valores no chat. A senha não foi registrada.
+- A imagem inicial `gestao-mix7-app:local` foi construída na VPS (41/41 passos, 205 s); o disco passou de 14 GB livres para 13 GB. Nenhum serviço persistente da Gestão Mix7 foi iniciado; CRM/site/Traefik continuaram ativos.
+- `migrate:status` não conectou: Supavisor retornou `ENOIDENTIFIER`. Captura posterior mostra o formato esperado `DB_USERNAME=postgres.bjrecncvgqgwdkppyswa`; ainda é necessário confirmar que host e Project ID foram copiados da tela Connect → Session pooler do mesmo projeto. Nenhuma migration foi aplicada. Referência: https://supabase.com/docs/guides/database/connecting-to-postgres
+- O container também emitiu aviso por falta de `libzip.so.4`; Dockerfile agora inclui `libzip4`, pendente CI, rebuild e verificação. Runbook foi corrigido para gerar `APP_KEY` depois do build e inclui diagnóstico de `ENOIDENTIFIER`.
+- Próximo passo: corrigir o DB_USERNAME no `.env`; aguardar o commit de correção/rebuild; então repetir `migrate:status`. Só aplicar migrations após uma consulta bem-sucedida ao banco novo.
+- Pendentes: migrations, criação do administrador, containers permanentes, TLS/HTTPS, SMTP, grants/RLS, permissões e exercício de backup/restauração. Não usar dados reais ainda.
 # Resposta mais rápida e objetiva da solução sugerida — 2026-10-01
 - Reduzi o limite de saída de 300 para 160 tokens e defini formato fixo de até 70 palavras: solução, próximos passos e confirmações essenciais. A instrução proíbe inventar entregáveis ou perguntas genéricas; a equipe continua revisando antes de usar.
 - Evidência Gemma local: pedido fictício equivalente levou 31,2 s na primeira chamada e 8,8 s aquecido; a resposta caiu de saída longa/truncada para 52 palavras estruturadas. Latência varia com computador e modelo aquecido; a melhora não garante SLA.
