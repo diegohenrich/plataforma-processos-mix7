@@ -4,7 +4,7 @@ Este procedimento cria somente o projeto Docker `gestao-mix7`, usa o banco novo 
 
 ## Antes de começar
 
-- O domínio `gestao.mix7.org` precisa ter um registro DNS `A` apontando para o IP mostrado no painel da VPS Hostinger. Confirme a resolução pública antes de solicitar o certificado TLS.
+- O DNS público atualmente retorna `NXDOMAIN` para `gestao.mix7.org`. No provedor DNS de `mix7.org`, crie um registro `A` para o host `gestao` apontando para o IP atual exibido no painel Hostinger (na captura enviada: `72.61.51.41`). Confirme que esse IP ainda é o da VPS e aguarde a propagação antes de solicitar o certificado TLS. Não crie registro `AAAA` sem IPv6 configurado na VPS.
 - O projeto Supabase deve ser exclusivo da Gestão Mix7 e ainda não conter dados. A VPS já confirmou conexão TLS ao usuário `postgres` via Session pooler/porta 5432; isso confirma rede e credenciais naquele teste, mas não confirma as migrations Laravel.
 - Não publique dados reais ainda. A aplicação não implementa RLS do Supabase e as regras completas de permissões, o envio SMTP e a restauração PostgreSQL + anexos ainda não foram aceitos em teste.
 - Confirme em checagens somente leitura que `/opt/gestao-mix7` está livre, o Traefik `websecure`/`letsencrypt` segue ativo e há espaço para construir uma imagem. Preserve todos os serviços fora deste projeto.
