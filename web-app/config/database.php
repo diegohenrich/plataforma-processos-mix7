@@ -1,10 +1,11 @@
 <?php
 
 use Illuminate\Support\Str;
+use Pdo\Mysql;
 
-$mysqlSslCaAttribute = PHP_VERSION_ID >= 80500
-    ? \Pdo\Mysql::ATTR_SSL_CA
-    : \PDO::MYSQL_ATTR_SSL_CA;
+$mysqlSslCaAttribute = extension_loaded('pdo_mysql')
+    ? (PHP_VERSION_ID >= 80500 ? Mysql::ATTR_SSL_CA : PDO::MYSQL_ATTR_SSL_CA)
+    : null;
 
 return [
 
@@ -61,7 +62,7 @@ return [
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
-            'options' => extension_loaded('pdo_mysql') ? array_filter([
+            'options' => $mysqlSslCaAttribute !== null ? array_filter([
                 $mysqlSslCaAttribute => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
         ],
@@ -81,7 +82,7 @@ return [
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
-            'options' => extension_loaded('pdo_mysql') ? array_filter([
+            'options' => $mysqlSslCaAttribute !== null ? array_filter([
                 $mysqlSslCaAttribute => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
         ],
@@ -98,7 +99,8 @@ return [
             'prefix' => '',
             'prefix_indexes' => true,
             'search_path' => 'public',
-            'sslmode' => 'prefer',
+            'sslmode' => env('DB_SSLMODE', 'require'),
+            'sslrootcert' => env('DB_SSLROOTCERT'),
         ],
 
         'sqlsrv' => [

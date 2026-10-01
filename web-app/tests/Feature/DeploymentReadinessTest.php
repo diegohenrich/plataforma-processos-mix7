@@ -15,8 +15,9 @@ class DeploymentReadinessTest extends TestCase
             'app.debug' => false,
             'app.key' => 'base64:synthetic-test-key-not-a-secret',
             'app.url' => 'https://mix7.example.test',
-            'database.default' => 'mysql',
-            'database.connections.mysql.driver' => 'mysql',
+            'database.default' => 'pgsql',
+            'database.connections.pgsql.driver' => 'pgsql',
+            'database.connections.pgsql.sslmode' => 'require',
             'filesystems.disks.local.root' => storage_path('app/private'),
             'mail.default' => 'log',
             'queue.default' => 'sync',
@@ -54,6 +55,32 @@ class DeploymentReadinessTest extends TestCase
             ->expectsOutputToContain('Pré-implantação reprovada')
             ->expectsOutputToContain('Anexos privados e graváveis')
             ->doesntExpectOutput('synthetic-key-value')
+            ->assertExitCode(1);
+    }
+
+    public function test_deployment_check_rejects_postgres_without_required_tls(): void
+    {
+        $this->app->detectEnvironment(fn (): string => 'production');
+        config([
+            'app.env' => 'production',
+            'app.debug' => false,
+            'app.key' => 'base64:synthetic-test-key-not-a-secret',
+            'app.url' => 'https://mix7.example.test',
+            'database.default' => 'pgsql',
+            'database.connections.pgsql.driver' => 'pgsql',
+            'database.connections.pgsql.sslmode' => 'disable',
+            'filesystems.disks.local.root' => storage_path('app/private'),
+            'mail.default' => 'smtp',
+            'queue.default' => 'database',
+            'session.secure' => true,
+            'session.http_only' => true,
+            'session.same_site' => 'lax',
+        ]);
+        DB::shouldReceive('select')->once()->with('SELECT 1')->andReturn([]);
+
+        $this->artisan('mix7:deploy:check')
+            ->expectsOutputToContain('TLS do PostgreSQL obrigatório')
+            ->expectsOutputToContain('Pré-implantação reprovada')
             ->assertExitCode(1);
     }
 }

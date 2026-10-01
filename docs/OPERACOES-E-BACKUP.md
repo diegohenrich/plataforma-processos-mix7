@@ -4,63 +4,60 @@
 
 O código-fonte e seu histórico ficam no GitHub. Isso não inclui o banco de produção, anexos privados em `storage/app/private`, o arquivo `.env`, a chave `APP_KEY` nem arquivos enviados pelos usuários. Uma recuperação completa precisa reunir versões compatíveis desses itens. Segredos e cópias com dados de clientes não devem entrar no GitHub, Trello ou em capturas.
 
-## Proteção disponível na Hostinger
+## Proteção do Supabase e da VPS
 
-A documentação pública da Hostinger consultada em 27/09/2026 informa que os planos de hospedagem recebem backup semanal. Backups diários estão incluídos em planos Web Business ou superiores; em Single/Premium, a ativação diária pode exigir compra. O backup manual de todos os arquivos e bancos pelo hPanel é descrito para Business ou superior, uma vez a cada 24 horas. **O plano e os recursos contratados pela Mix7 ainda não foram conferidos**, portanto confirme no hPanel a disponibilidade, o último backup, a próxima execução e a retenção antes da implantação.
+O banco PostgreSQL fica no projeto Supabase separado; o app e anexos privados ficam na VPS. Os backups gerenciados do Supabase variam por plano e não incluem os arquivos privados Laravel. Confirme no painel do projeto a frequência e retenção disponíveis. Mantenha cópia lógica criptografada fora da VPS e backup independente dos anexos e do `.env`/`APP_KEY`.
 
-Mesmo quando a cópia automática existe, exporte o MariaDB pelo phpMyAdmin antes de uma migração ou mudança de dados. Guarde o arquivo SQL em local privado e protegido, fora da hospedagem, e registre a data e o commit associado. Arquivos privados do Laravel devem ser copiados separadamente por backup de arquivos do hPanel ou transferência autenticada; o SQL sozinho não recupera anexos. Preserve `.env` e `APP_KEY` em um cofre de segredos seguro e separado. Nunca compartilhe esses valores no cartão de trabalho.
+Mesmo com backup gerenciado, gere exportação lógica antes de migrações de risco. Guarde-a criptografada em local privado separado e registre data e commit. Arquivos privados Laravel precisam de cópia separada; o banco sozinho não recupera anexos. Preserve `.env` e `APP_KEY` em cofre de segredos separado. Nunca compartilhe esses valores no cartão de trabalho.
 
 ## Antes de publicar uma mudança
 
 1. Registre o SHA do commit que será publicado e confirme que ele está no GitHub.
-2. Rode `php artisan mix7:deploy:check` com o `.env` real do ambiente. O comando confere ambiente de produção, debug, chave presente, URL HTTPS, MariaDB selecionado e acessível, anexos fora da pasta pública, diretórios graváveis e cookie de sessão seguro; nunca imprime o conteúdo da chave ou outros segredos. Avisos sobre transporte de e-mail e fila indicam funções que não estarão operacionais.
-3. Verifique no hPanel que há uma cópia recuperável recente de arquivos e banco. Se o plano oferecer backup manual, crie-o antes da migração.
-4. Em **Databases → Management → phpMyAdmin**, selecione apenas o banco da plataforma e use **Export** para baixar uma cópia SQL. Confira o nome do banco e o horário do arquivo.
+2. Rode `php artisan mix7:deploy:check` com o `.env` real do ambiente. O comando confere ambiente de produção, debug, chave, HTTPS, PostgreSQL/MariaDB selecionado e acessível, TLS PostgreSQL, anexos privados, diretórios graváveis e cookie seguro; nunca imprime segredos.
+3. Confirme no Supabase a cópia disponível e a retenção do plano; crie também exportação lógica pré-migração e cópia dos anexos da VPS.
+4. Armazene cópias criptografadas fora da VPS e do projeto Supabase, junto da data e SHA de aplicação.
 5. Se a mudança envolve anexos ou armazenamento, obtenha também uma cópia dos arquivos privados Laravel. Não os mova para `public_html`.
 6. Execute migrations versionadas e registre o resultado junto do SHA. Não importe um dump em banco compartilhado sem confirmar o banco selecionado.
 
-O comando é uma pré-verificação, não um deploy, não verifica o Cron do hPanel nem prova a entrega de e-mail. Execute migrations, agende o Cron e valide essas integrações separadamente. Se o plano não oferecer acesso ao Artisan, não ignore os requisitos: valide a configuração por procedimento controlado antes de liberar dados reais.
+O comando é uma pré-verificação, não um deploy, não verifica o agendador da VPS nem prova a entrega de e-mail. Execute migrations, agende o Cron e valide essas integrações separadamente. Execute os comandos pelo terminal SSH da VPS e valide as integrações separadamente.
 
 ## Cópia local criptografada
 
-A aplicação oferece `php artisan mix7:backup:create` para criar um ZIP criptografado com snapshot SQLite ou exportação lógica MySQL/MariaDB e arquivos do disco privado Laravel. O arquivo fica em `storage/app/backups` por padrão, fora da pasta pública. O índice não revela nomes de anexos. O `.env` e a `APP_KEY` não entram no arquivo; a chave é derivada da `APP_KEY`, que precisa ser preservada separadamente em local seguro. Perder ou trocar essa chave impede abrir o ZIP.
+A aplicação oferece `php artisan mix7:backup:create` para criar um ZIP criptografado com snapshot SQLite ou exportação lógica MySQL/MariaDB/PostgreSQL e arquivos do disco privado Laravel. PostgreSQL exige `pg_dump` no contêiner/host. O arquivo fica em `storage/app/backups`, fora da pasta pública. O `.env` e a `APP_KEY` não entram no arquivo; preserve a chave separadamente. O exportador PostgreSQL usa TLS e injeta a senha via ambiente do processo, sem colocá-la nos argumentos nem no log.
 
 ```powershell
 php artisan mix7:backup:create
 php artisan mix7:backup:restore "storage/app/backups/mix7-backup-AAAAmmdd-HHmmss-id.zip" --destination="storage/app/restore-local-2026-09-27"
 ```
 
-A restauração recusa uma pasta já existente ou dentro de `public/` e valida o manifesto, checksums e integridade SQLite sem substituir a conexão ativa. O MySQL/MariaDB restaurado é um `.sql` para importação manual em uma base de teste vazia pelo phpMyAdmin; confira cuidadosamente o banco selecionado. A cópia restaurada dos arquivos também deve permanecer fora da pasta pública. O ciclo automatizado local foi testado com SQLite sintético; o exportador MariaDB ainda precisa ser exercitado contra um servidor MariaDB compatível e não substitui o procedimento do hPanel.
+A restauração recusa uma pasta já existente ou dentro de `public/` e valida manifesto/checksums sem substituir a conexão ativa. Dumps SQL devem ser importados manualmente em um projeto/banco de teste vazio, nunca diretamente em produção sem procedimento aprovado. A restauração de arquivos também permanece fora da pasta pública. O ciclo SQLite está coberto localmente; exportação e recuperação PostgreSQL reais ainda dependem de um projeto Supabase de teste.
 
 ## Exercício de restauração
 
-Até existir ambiente de teste na hospedagem, use somente dados sintéticos. Para o exercício compartilhado futuro:
+Até existir projeto de teste, use somente dados sintéticos. Para o exercício futuro:
 
-1. Crie no hPanel um banco e uma área de teste separados da aplicação de produção.
-2. Importe o SQL nessa base vazia pelo phpMyAdmin. Se o arquivo exceder o limite da interface, siga o método SSH oficial somente se o plano permitir.
-3. Restaure os arquivos privados correspondentes em uma pasta não pública e configure um `.env` próprio. Use a `APP_KEY` correspondente ao backup somente no ambiente protegido, pois ela pode ser necessária para ler dados criptografados.
-4. Aponte a aplicação de teste exclusivamente para a base e os arquivos de teste. Confira migrations, login de teste, dados esperados e abertura de um anexo sintético.
-5. Registre data, origem, commit, duração, verificações e falhas. Apague a cópia de teste conforme o procedimento de retenção aprovado; não use teste de restauração para substituir a produção.
+1. Crie um segundo projeto Supabase ou ambiente PostgreSQL isolado da produção.
+2. Importe a cópia SQL nele usando `psql`/`pg_restore` conforme o formato, sem conectar a app de produção.
+3. Restaure os anexos em uma pasta privada separada e configure ambiente de teste próprio.
+4. Confira migrations, login sintético, dados esperados e abertura de um anexo sintético.
+5. Registre data, origem, commit, duração, verificações e falhas; elimine a cópia conforme retenção definida.
 
-Um teste local com SQLite não comprova compatibilidade nem restauração do MariaDB da Hostinger. A etapa só será considerada validada quando a cópia do banco, arquivos e configuração for recuperada em ambiente isolado compatível, sem escrita na produção.
+Um teste local com SQLite não comprova compatibilidade nem recuperação PostgreSQL. A etapa só será considerada validada quando banco, anexos e configuração forem recuperados em ambiente isolado, sem escrita na produção.
 
 ## Recuperação de incidente
 
 Antes de restaurar produção, interrompa temporariamente novas gravações, preserve uma cópia do estado atual e identifique o instante a recuperar. A restauração pode substituir dados posteriores ao ponto escolhido. Confirme com a pessoa responsável pela operação qual backup e qual escopo devem voltar; depois valide login, demandas, arquivos, filas e logs antes de liberar o acesso. Registre impacto e diferenças entre o último backup e o incidente.
 
-O backup semanal informado pela Hostinger pode deixar uma janela de perda de até vários dias; a frequência e o tempo de recuperação aceitáveis para a Mix7 ainda precisam ser definidos. Não prometa continuidade ou perda máxima de dados antes de verificar plano, retenção e um exercício real.
 
-## Fontes oficiais consultadas em 27/09/2026
+## Fontes oficiais
 
-- [Backups na Hostinger: planos, cópia manual e limites](https://www.hostinger.com/support/2298928-how-to-create-backups-at-hostinger/)
-- [Backups diários: disponibilidade por plano](https://www.hostinger.com/support/1665153-how-to-activate-daily-backups-in-hostinger/)
-- [Exportar banco pelo phpMyAdmin](https://www.hostinger.com/support/4529011-how-to-export-a-database-with-phpmyadmin-in-hostinger/)
-- [Restaurar banco e site pelo hPanel](https://www.hostinger.com/support/1583283-how-to-restore-a-deleted-website-in-hostinger/)
+- [Conexões PostgreSQL, pooler e TLS do Supabase](https://supabase.com/docs/guides/database/connecting-to-postgres)
+- [Backups gerenciados do Supabase](https://supabase.com/docs/guides/platform/backups)
 
 ## Pendências para aceitar a operação
 
-- Confirmar plano, frequência e retenção mostradas na conta hPanel da Mix7.
+- Confirmar plano, frequência e retenção exibidas no projeto Supabase escolhido.
 - Definir frequência própria, cópia fora da hospedagem, retenção, responsáveis e RPO/RTO aceitáveis.
 - Planejar armazenamento protegido para SQL, anexos e `APP_KEY`.
-- Executar e documentar uma restauração completa de teste MariaDB + arquivos em ambiente separado.
+- Executar e documentar uma restauração de teste PostgreSQL + anexos em ambiente separado.
 - Validar o procedimento real de backup antes de cada release que altere esquema ou dados.

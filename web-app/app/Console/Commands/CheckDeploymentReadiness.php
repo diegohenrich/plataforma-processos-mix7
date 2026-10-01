@@ -15,7 +15,8 @@ class CheckDeploymentReadiness extends Command
     public function handle(): int
     {
         $databaseDriver = config('database.connections.'.config('database.default').'.driver');
-        $databaseReady = in_array($databaseDriver, ['mysql', 'mariadb'], true);
+        $supportedDatabase = in_array($databaseDriver, ['mysql', 'mariadb', 'pgsql'], true);
+        $databaseReady = $supportedDatabase;
         if ($databaseReady) {
             try {
                 DB::select('SELECT 1');
@@ -39,8 +40,9 @@ class CheckDeploymentReadiness extends Command
             ['Debug desativado', config('app.debug') === false],
             ['Chave de aplicação configurada', filled(config('app.key'))],
             ['URL pública usa HTTPS', $appUrlScheme === 'https'],
-            ['MariaDB selecionado', in_array($databaseDriver, ['mysql', 'mariadb'], true)],
-            ['Banco MariaDB acessível', $databaseReady],
+            ['Banco PostgreSQL ou MariaDB selecionado', $supportedDatabase],
+            ['Banco selecionado acessível', $databaseReady],
+            ...($databaseDriver === 'pgsql' ? [['TLS do PostgreSQL obrigatório', in_array(config('database.connections.'.config('database.default').'.sslmode'), ['require', 'verify-ca', 'verify-full'], true)]] : []),
             ['Anexos privados e graváveis', $privateStorage],
             ['Cache do framework gravável', is_dir(base_path('bootstrap/cache')) && is_writable(base_path('bootstrap/cache'))],
             ['Cookie de sessão protegido', config('session.secure') === true

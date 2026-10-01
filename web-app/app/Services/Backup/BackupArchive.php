@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use PDO;
 use RuntimeException;
+use Symfony\Component\Process\Process;
 use ZipArchive;
 
 class BackupArchive
@@ -218,8 +219,56 @@ class BackupArchive
         return match (DB::connection()->getDriverName()) {
             'sqlite' => $this->exportSqlite($path),
             'mysql', 'mariadb' => $this->exportMysql($path),
-            default => throw new RuntimeException('Backup suportado apenas para SQLite, MySQL ou MariaDB.'),
+            'pgsql' => $this->exportPostgres($path),
+            default => throw new RuntimeException('Backup suportado apenas para SQLite, MySQL, MariaDB ou PostgreSQL.'),
         };
+    }
+
+    private function exportPostgres(string $path): array
+    {
+        $connection = DB::connection()->getConfig();
+        $host = (string) ($connection['host'] ?? '');
+        $database = (string) ($connection['database'] ?? '');
+        $username = (string) ($connection['username'] ?? '');
+        $password = (string) ($connection['password'] ?? '');
+
+        if ($host === '' || $database === '' || $username === '') {
+            throw new RuntimeException('A conexão PostgreSQL não tem os parâmetros necessários para exportar o banco.');
+        }
+
+        $command = [
+            'pg_dump', '--no-password', '--no-owner', '--no-privileges', '--format=plain',
+            '--host='.$host,
+            '--port='.(string) ($connection['port'] ?? 5432),
+            '--username='.$username,
+            '--dbname='.$database,
+            '--file='.$path,
+        ];
+        $environment = ['PGPASSWORD' => $password];
+        $sslmode = (string) ($connection['sslmode'] ?? 'require');
+        if (! in_array($sslmode, ['require', 'verify-ca', 'verify-full'], true)) {
+            throw new RuntimeException('A exportação PostgreSQL exige uma configuração TLS válida.');
+        }
+        $environment['PGSSLMODE'] = $sslmode;
+        $rootCertificate = $connection['sslrootcert'] ?? null;
+        if (is_string($rootCertificate) && $rootCertificate !== '') {
+            $environment['PGSSLROOTCERT'] = $rootCertificate;
+        }
+
+        try {
+            $process = new Process($command, base_path(), $environment, null, 300);
+            $process->run();
+        } catch (\Throwable) {
+            File::delete($path);
+            throw new RuntimeException('Não foi possível executar o utilitário de exportação PostgreSQL.');
+        }
+
+        if (! $process->isSuccessful() || ! is_file($path) || filesize($path) === 0) {
+            File::delete($path);
+            throw new RuntimeException('A exportação lógica do PostgreSQL falhou; confira a conexão e se pg_dump está instalado.');
+        }
+
+        return ['driver' => 'pgsql', 'extension' => 'sql'];
     }
 
     private function exportSqlite(string $path): array
@@ -314,7 +363,7 @@ class BackupArchive
     private function validateManifest(mixed $manifest, ZipArchive $zip): void
     {
         if (! is_array($manifest) || ($manifest['format'] ?? null) !== 'mix7-backup' || ($manifest['format_version'] ?? null) !== 1
-            || ! in_array($manifest['database_driver'] ?? null, ['sqlite', 'mysql', 'mariadb'], true)
+            || ! in_array($manifest['database_driver'] ?? null, ['sqlite', 'mysql', 'mariadb', 'pgsql'], true)
             || ! in_array($manifest['database_entry'] ?? null, ['database/database.sqlite', 'database/database.sql'], true)
             || ! isset($manifest['entries']) || ! is_array($manifest['entries'])
             || ! isset($manifest['entries'][$manifest['database_entry']])) {

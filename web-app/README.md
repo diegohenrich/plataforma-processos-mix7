@@ -4,7 +4,7 @@ Aplicação Laravel da plataforma integrada de demandas, equipe e aprovações. 
 
 ## Preparar demonstração local
 
-Use uma cópia local do repositório, PHP 8.2+, Composer, Node.js 22.13+ (série 22) ou 24+, e SQLite. Não conecte este banco de demonstração à instalação do CRM Mix7 nem ao banco da Hostinger.
+Use uma cópia local do repositório, PHP 8.2+, Composer, Node.js 22.13+ (série 22) ou 24+, e SQLite. Não conecte este banco de demonstração ao CRM Mix7 nem ao projeto Supabase de produção.
 
 No PowerShell:
 
@@ -34,4 +34,4 @@ npm test
 npm run build
 ```
 
-As decisões de MariaDB/Hostinger, SMTP, IA, política de dados, permissões e operação de produção estão documentadas em [`../docs/ARQUITETURA-HOSTINGER-LARAVEL.md`](../docs/ARQUITETURA-HOSTINGER-LARAVEL.md). Não faça deploy nem migração de banco usando este arquivo de demonstração.
+As decisões de Supabase PostgreSQL/VPS, SMTP, IA, política de dados, permissões e operação de produção estão documentadas em [`../docs/ARQUITETURA-HOSTINGER-LARAVEL.md`](../docs/ARQUITETURA-HOSTINGER-LARAVEL.md). Não faça deploy nem migração de banco usando este arquivo de demonstração.
