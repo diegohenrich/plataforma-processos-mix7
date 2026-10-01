@@ -1,0 +1,111 @@
+name: gestao-mix7
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: gestao-mix7-app:local
+    restart: unless-stopped
+    init: true
+    read_only: true
+    env_file:
+      - .env
+    environment:
+      APP_ENV: production
+      APP_DEBUG: "false"
+      APP_URL: https://gestao.mix7.org
+      LOG_CHANNEL: stderr
+      LOG_LEVEL: warning
+      DB_CONNECTION: pgsql
+      DB_SSLMODE: require
+      SESSION_DRIVER: file
+      SESSION_SECURE_COOKIE: "true"
+      SESSION_HTTP_ONLY: "true"
+      SESSION_SAME_SITE: lax
+      CACHE_STORE: file
+      QUEUE_CONNECTION: database
+      DB_QUEUE_RETRY_AFTER: "360"
+    expose:
+      - "8080"
+    volumes:
+      - gestao_storage:/var/www/html/storage
+    tmpfs:
+      - /tmp:mode=1777,size=256m
+      - /run/apache2:mode=0755
+      - /var/lock/apache2:mode=0755
+      - /var/log/apache2:mode=0755
+      - /var/www/html/bootstrap/cache:mode=0755
+    mem_limit: 768m
+    cpus: 1.0
+    healthcheck:
+      test:
+        - CMD
+        - php
+        - -r
+        - "ini_set('default_socket_timeout','3');$$h=@get_headers('http://127.0.0.1:8080/up');exit(isset($$h[0])&&str_contains($$h[0],' 200 ')?0:1);"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.gestao.rule: "Host(`${GESTAO_DOMAIN:-gestao.mix7.org}`)"
+      traefik.http.routers.gestao.entrypoints: "${TRAEFIK_ENTRYPOINT:-websecure}"
+      traefik.http.routers.gestao.tls: "true"
+      traefik.http.routers.gestao.tls.certresolver: "${TRAEFIK_CERT_RESOLVER:-letsencrypt}"
+      traefik.http.routers.gestao-http.rule: "Host(`${GESTAO_DOMAIN:-gestao.mix7.org}`)"
+      traefik.http.routers.gestao-http.entrypoints: "${TRAEFIK_HTTP_ENTRYPOINT:-web}"
+      traefik.http.routers.gestao-http.middlewares: "gestao-force-https"
+      traefik.http.middlewares.gestao-force-https.redirectscheme.scheme: "https"
+      traefik.http.middlewares.gestao-force-https.redirectscheme.permanent: "true"
+      traefik.http.services.gestao.loadbalancer.server.port: "8080"
+    networks:
+      - gestao_private
+
+  scheduler:
+    image: gestao-mix7-app:local
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    init: true
+    read_only: true
+    user: "33:33"
+    env_file:
+      - .env
+    environment:
+      APP_ENV: production
+      APP_DEBUG: "false"
+      APP_URL: https://gestao.mix7.org
+      LOG_CHANNEL: stderr
+      LOG_LEVEL: warning
+      DB_CONNECTION: pgsql
+      DB_SSLMODE: require
+      SESSION_DRIVER: file
+      SESSION_SECURE_COOKIE: "true"
+      SESSION_HTTP_ONLY: "true"
+      SESSION_SAME_SITE: lax
+      CACHE_STORE: file
+      QUEUE_CONNECTION: database
+      DB_QUEUE_RETRY_AFTER: "360"
+    command:
+      - php
+      - artisan
+      - schedule:work
+    volumes:
+      - gestao_storage:/var/www/html/storage
+    tmpfs:
+      - /tmp:mode=1777
+      - /var/www/html/bootstrap/cache:mode=0755,uid=33,gid=33
+    mem_limit: 384m
+    cpus: 0.5
+    networks:
+      - gestao_private
+
+volumes:
+  gestao_storage:
+
+networks:
+  gestao_private:
+    driver: bridge

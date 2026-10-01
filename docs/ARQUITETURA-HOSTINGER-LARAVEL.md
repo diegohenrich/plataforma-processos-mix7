@@ -12,11 +12,21 @@ Laravel concentra autenticação, sessão, proteção CSRF, validação, limita�
 - O banco será um projeto Supabase separado. Para o app persistente na VPS, usar Session pooler na porta 5432, TLS obrigatório; armazenar apenas no `.env` privado da aplicação host/contêiner.
 - O app não usa Supabase Auth nem chaves anon/service-role: autenticação e autorização continuam em Laravel. Desativar Data API no projeto Supabase, pois não é necessária para esta arquitetura.
 - A aplicação ainda não implementa políticas RLS do Supabase; o isolamento multi-organização é aplicado pela autorização/consultas Laravel. Desativar Data API reduz exposição por HTTP, mas não substitui grants mínimos ou RLS; não usar dados operacionais até revisar esses controles.
-- O plano da VPS já existente será usado, sem alterar os serviços existentes. A implantação ainda precisa criar os artefatos Docker do app e as labels Traefik para `gestao.mix7.org`.
+- O plano da VPS já existente será usado, sem alterar os serviços existentes. A imagem Docker do Laravel/Apache, com PDO PostgreSQL, `pg_dump` 17, armazenamento privado persistente e agendador separado, está em `web-app/Dockerfile` e `web-app/docker-compose.vps.yml`. O Compose não publica portas no host; declara labels apenas para o Traefik existente encaminhar `gestao.mix7.org`.
+- A construção da imagem, a execução de migrations e o acesso HTTP real ainda precisam ser validados na VPS. Isso prepara um ambiente de teste inicial; a aplicação não está aprovada para dados reais porque grants/RLS, matriz final de permissões, SMTP e restauração de backup ainda não foram aceitos/testados.
 
 Referências oficiais: [métodos de conexão e TLS do Supabase](https://supabase.com/docs/guides/database/connecting-to-postgres) e [proteção da Data API](https://supabase.com/docs/guides/api/securing-your-api).
 
 ## Estado implementado
+
+### Contêiner de produção (preparação)
+
+- `web-app/Dockerfile` produz Apache/PHP 8.3 com extensões `pdo_pgsql`, `zip`, `mbstring`, `pcntl` e OPcache. Assets Vite e dependências Composer são preparados em etapas separadas. O utilitário `pg_dump` vem da imagem oficial PostgreSQL 17, correspondente ao servidor Supabase esperado.
+- `web-app/docker-compose.vps.yml` define somente `app` e `scheduler`, em rede bridge privada própria. Somente o app recebe as labels Traefik para `gestao.mix7.org`; não há mapeamento de portas nem acesso ao socket Docker. A raiz do contêiner é somente leitura, `/tmp` e cache de inicialização são efêmeros, e `storage` usa volume nomeado para preservar anexos/backups entre atualizações.
+- O healthcheck faz uma requisição HTTP local ao endpoint `/up`. O scheduler executa `schedule:work`, que atende o encerramento de timers e a fila de jobs. A disponibilidade de e-mail e IA continua independente e precisa configuração/validação própria.
+- O arquivo de produção deve ser criado como `web-app/.env` na VPS (permissão `600`), nunca enviado ao Git, GitHub, Trello ou chat. Use o Session pooler, porta 5432, `DB_SSLMODE=require`. A senha do banco nunca entra nas labels nem nos argumentos dos comandos.
+- Primeiro deploy deve aplicar apenas as migrations versionadas em um banco Supabase novo, criar a conta de direção pelo comando Artisan e testar login/domínio com conteúdo sintético. Não rode o seeder de demonstração em produção.
+- Procedimento detalhado: [`docs/IMPLANTACAO-GESTAO-VPS.md`](IMPLANTACAO-GESTAO-VPS.md). A construção local da imagem não foi executada nesta retomada para não iniciar ou reabrir o Docker Desktop solicitado como fechado anteriormente; falta validar o build e a rota na VPS.
 
 ### Catálogo e solicitações de acesso a serviços
 
@@ -77,11 +87,11 @@ Abra `http://127.0.0.1:8000`. O `.env.example` permanece em SQLite para preserva
 
 ## Preparação da hospedagem
 
-Na VPS, confirmar recursos livres sem interromper serviços existentes. Criar DNS `gestao.mix7.org` apontando para o IP público e configurar a aplicação no Traefik existente. O contêiner precisa de PHP 8.2+, PDO PostgreSQL, cliente `pg_dump`, diretório persistente privado para anexos/backups e `.env` fora da imagem. O novo projeto Supabase deve ser exclusivo desta aplicação; não reutilizar o projeto do CRM.
+Na VPS, confirmar recursos livres sem interromper serviços existentes. Criar DNS `gestao.mix7.org` apontando para o IP público e verificar a rota Traefik existente. O Compose desta aplicação define PHP/Apache, PDO PostgreSQL, `pg_dump`, diretório persistente privado e `.env` fora da imagem; não publica portas no host nem altera os contêineres atuais. O novo projeto Supabase deve ser exclusivo desta aplicação; não reutilizar o projeto do CRM.
 
 Depois de configurar o `.env` e antes de liberar usuários, executar `php artisan mix7:deploy:check`. O comando reprova ambiente/debug/chave/URL/banco/armazenamento privado/cache/cookie inseguros e mostra avisos sem imprimir segredos se e-mail ou fila ainda estiverem em modo local. Ele não substitui o teste do Cron, migrations, entrega SMTP nem um teste de backup/restauração.
 
-O contêiner deve servir `web-app/public/`; `.env`, logs e arquivos privados ficam fora da raiz servida e não entram na imagem. Definir `APP_ENV=production`, `APP_DEBUG=false`, chave própria, HTTPS e permissões restritas em `storage/` e `bootstrap/cache/`. Aplicar migrations versionadas após cópia de segurança. A implantação na VPS e a compatibilidade de todas as migrations com Supabase ainda precisam de validação real.
+O contêiner serve `web-app/public/`; `.env` não entra na imagem, logs vão para Docker e arquivos privados ficam no volume `gestao_storage`, fora da raiz servida. Definir `APP_ENV=production`, `APP_DEBUG=false`, chave própria, HTTPS e permissões restritas. Aplicar migrations versionadas somente no projeto Supabase novo, após confirmar o banco selecionado. A implantação na VPS e a compatibilidade de todas as migrations com Supabase ainda precisam de validação real.
 
 Anexos internos de demandas usam o disco privado do Laravel, organizados por organização e demanda. A tabela mantém autor, nome original, MIME e tamanho; a prévia e o download passam por sessão web ou token API autenticado, escopo da organização e autorização da demanda. No detalhe da demanda, PDF.js mostra PDFs para direção, gerência e profissionais autorizados; links explícitos abrem em outra guia ou iniciam o download. A interface/API do cliente e os links de revisão não incluem esses anexos. A aplicação permite 20 MB por arquivo e 10 por envio. A tela lê `upload_max_filesize` e `post_max_size` do PHP e valida a seleção antes do envio para dar um erro compreensível. No ambiente de desenvolvimento inspecionado, os valores são 2 MB e 8 MB; a aplicação não muda configuração do servidor. Antes do uso compartilhado, ajustar/verificar esses parâmetros na configuração PHP da hospedagem e confirmar o limite efetivo, espaço e tráfego do plano.
 

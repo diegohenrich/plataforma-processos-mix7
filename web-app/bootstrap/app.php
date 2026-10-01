@@ -14,6 +14,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        // O app não publica portas no host; o Traefik é o único ingresso público.
+        $middleware->trustProxies(at: '*');
+
         $middleware->alias([
             'active' => EnsureUserIsActive::class,
             'api.token' => EnsureApiTokenAbility::class,

@@ -20,6 +20,7 @@ Demanda/briefing → planejamento revisado → execução → revisão interna �
 - [Pesquisa inicial de provedores de IA](docs/IA-PROVEDORES.md)
 - [Fases e critérios de avanço](docs/ROADMAP.md)
 - [Arquitetura web Laravel e Hostinger](docs/ARQUITETURA-HOSTINGER-LARAVEL.md)
+- [Implantação de Gestão Mix7 na VPS](docs/IMPLANTACAO-GESTAO-VPS.md)
 - [Operação e cópias de segurança](docs/OPERACOES-E-BACKUP.md)
 - [Contrato atual da API versionada](docs/API.md)
 - [Primeira implementação e seus limites](docs/PRIMEIRA-IMPLEMENTACAO.md)

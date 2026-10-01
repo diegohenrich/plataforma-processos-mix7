@@ -53,6 +53,10 @@ jobs:
         working-directory: web-app
         run: composer install --no-interaction --prefer-dist
 
+      - name: Construir imagem de produção
+        working-directory: web-app
+        run: docker build --pull --tag gestao-mix7-app:ci .
+
       - name: Validar dependências e formatar PHP
         working-directory: web-app
         run: |

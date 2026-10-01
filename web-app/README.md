@@ -35,3 +35,5 @@ npm run build
 ```
 
 As decisões de Supabase PostgreSQL/VPS, SMTP, IA, política de dados, permissões e operação de produção estão documentadas em [`../docs/ARQUITETURA-HOSTINGER-LARAVEL.md`](../docs/ARQUITETURA-HOSTINGER-LARAVEL.md). Não faça deploy nem migração de banco usando este arquivo de demonstração.
+
+O contêiner de VPS e o procedimento para o domínio `gestao.mix7.org` estão em [`../docs/IMPLANTACAO-GESTAO-VPS.md`](../docs/IMPLANTACAO-GESTAO-VPS.md). Esse fluxo usa `.env` separado, e nunca a configuração SQLite de demonstração.

@@ -1,3 +1,11 @@
+# Preparação do contêiner VPS/Supabase — 2026-10-01
+- O projeto Supabase novo foi criado pelo usuário. A partir da VPS, o teste TLS pelo Session pooler retornou `current_database=postgres` e `current_user=postgres`; isso confirma conectividade, não as migrations Laravel. Nenhuma senha foi recebida ou registrada.
+- Preparei imagem multi-stage PHP 8.3/Apache com PDO PostgreSQL e `pg_dump` 17, Compose privado com serviços `app`/`scheduler`, filesystem read-only, volume persistente de storage, labels para Traefik `websecure`/`letsencrypt`, redirecionamento HTTP→HTTPS e sem portas publicadas no host. O Ollama do Windows não é acessível no container e a IA permanece desativada em produção.
+- Acrescentei modelo `.env` de VPS sem segredos, procedimento em `docs/IMPLANTACAO-GESTAO-VPS.md`, links de arquitetura/roadmap e um passo de build Docker no workflow de CI. Rota de proxy confiável foi adicionada ao bootstrap; no Compose, o app só recebe tráfego por sua rede privada/Traefik.
+- Validações locais: Laravel 254 aprovados, 4 ignorados, 2.521 assertions; Pint passou em `bootstrap/app.php` e `config/app.php`; Composer validate; parser YAML confirmou os dois serviços, `read_only` e nenhuma porta publicada; `bash -n` passou; `git diff --check` passou. O Docker Desktop local não foi iniciado.
+- Pendente: executar o build da imagem no CI e na VPS, aplicar e confirmar migrations apenas no Supabase novo, criar usuário inicial, validar DNS/certificado/HTTPS, testar backup/restauração e concluir revisão de RLS/grants/permissões/SMTP antes de qualquer dado real. Nenhum serviço ou recurso da VPS foi alterado nesta etapa.
+- Próximo passo: sincronizar o commit e conferir CI/Trello; depois confirmar somente leitura que `/opt/gestao-mix7` está livre e seguir o roteiro de implantação.
+
 # Resposta mais rápida e objetiva da solução sugerida — 2026-10-01
 - Reduzi o limite de saída de 300 para 160 tokens e defini formato fixo de até 70 palavras: solução, próximos passos e confirmações essenciais. A instrução proíbe inventar entregáveis ou perguntas genéricas; a equipe continua revisando antes de usar.
 - Evidência Gemma local: pedido fictício equivalente levou 31,2 s na primeira chamada e 8,8 s aquecido; a resposta caiu de saída longa/truncada para 52 palavras estruturadas. Latência varia com computador e modelo aquecido; a melhora não garante SLA.
