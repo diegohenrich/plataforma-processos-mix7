@@ -1,6 +1,8 @@
 - 2026-09-26 — Implementar avaliações humanas por tarefa concluída: prazo e qualidade, evidências e fatores externos; direção tem peso 2 e gerência peso 1 conforme os áudios, armazenados junto do papel do avaliador; profissional pode responder com histórico. Não calcular nota até Mix7 definir escala, fórmula, combinação dos pesos, período, contestação e finalidade. Rever com a matriz de acesso antes do piloto.
 # Decisões vigentes
 
+- 2026-10-01 — A solução sugerida por IA deve ser curta (até 70 palavras), organizada em solução, próximos passos e confirmações essenciais, limitada ao título e briefing sem acrescentar entregáveis ou perguntas genéricas. A requisição limita geração a 160 tokens para reduzir latência; manter revisão humana e validar respostas sintéticas antes de uso. Rever após teste prático com gestores.
+
 - 2026-09-28 — A solução sugerida por IA é uma propriedade interna da demanda, gerada somente a pedido de direção/gerência a partir do título e briefing. A proposta fica registrada e identificada para revisão da equipe; não cria ou inicia tarefas. A nova geração substitui o texto atual, sem histórico de versões por enquanto. Rever se a Mix7 exigir comparação/restauração de sugestões anteriores.
 
 - 2026-09-28 — Usar exclusivamente Gemma 3:4b local via Ollama como IA/assistente do CRM nesta etapa. Endpoint fixo em 127.0.0.1:11434, sem chave e sem envio de prompts a APIs externas. A configuração é habilitada somente em APP_ENV=local; não expor o computador à internet nem enviar dados reais antes da política da Mix7. Consultas internas usam formato estruturado validado pela aplicação, com permissões e revisão humana. O modelo não fica no Git. Rever a topologia compartilhada somente quando o produto for implantado fora deste computador.

@@ -1,3 +1,10 @@
+# Resposta mais rápida e objetiva da solução sugerida — 2026-10-01
+- Reduzi o limite de saída de 300 para 160 tokens e defini formato fixo de até 70 palavras: solução, próximos passos e confirmações essenciais. A instrução proíbe inventar entregáveis ou perguntas genéricas; a equipe continua revisando antes de usar.
+- Evidência Gemma local: pedido fictício equivalente levou 31,2 s na primeira chamada e 8,8 s aquecido; a resposta caiu de saída longa/truncada para 52 palavras estruturadas. Latência varia com computador e modelo aquecido; a melhora não garante SLA.
+- Validação: suíte Laravel completa passou (253 testes, 2.517 assertions; 4 integrações ignoradas por padrão); conjunto focalizado 14/117; Pint nos arquivos PHP alterados e `git diff --check` passaram. A migração já constava aplicada. A validação de modelo usou conteúdo sintético e não gravou nada na demanda #405.
+- Registro: `docs/IA-PROVEDORES.md`, `docs/REQUIREMENTS.md` e `.ai/DECISIONS.md` atualizados. A sincronização GitHub/Trello desta melhoria ainda será feita.
+- Pendência relacionada à pergunta atual: não há publicação configurada na Hostinger. A aplicação está em `web-app/`; o `.env` local aponta para SQLite de demonstração e Gemma via Ollama local, que Hostinger não alcança. A publicação requer novo ambiente de produção, MariaDB separado, credenciais secretas e solução de worker/IA; não foi alterada hospedagem.
+
 # Solução sugerida pela IA a partir do briefing — 2026-09-28
 - Implementei na demanda a propriedade interna “Solução sugerida”, gerada por ação explícita de direção/gerência usando apenas título e briefing. A IA propõe; a pessoa revisa. Texto anterior permanece se houver falha, e a proposta não aparece para o cliente. Evento guarda autor e horário.
 - Validação local: suíte Laravel 253 testes/2.517 assertions; conjunto focado 14/117; Pint focal e `git diff --check` passaram. Migração aplicada no SQLite local. Gemma respondeu a solicitação fictícia em 10,6 s. Inspecionei a tela da demanda em viewport 390×844.

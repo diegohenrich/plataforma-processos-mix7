@@ -146,7 +146,10 @@ class AiProviderAndBriefingTest extends TestCase
             'actor_id' => $manager->id,
             'event_type' => 'ai_solution_suggested',
         ]);
-        Http::assertSent(fn ($request) => str_contains($request['messages'][1]['content'], 'Melhorar recebimento de e-mails do domínio')
+        Http::assertSent(fn ($request) => $request['max_tokens'] === 160
+            && str_contains($request['messages'][0]['content'], 'até 70 palavras')
+            && str_contains($request['messages'][0]['content'], 'Não acrescente entregáveis')
+            && str_contains($request['messages'][1]['content'], 'Melhorar recebimento de e-mails do domínio')
             && str_contains($request['messages'][1]['content'], 'Alguns e-mails são recebidos parcialmente'));
 
         $this->actingAs($manager)->get(route('demands.show', $demand))
