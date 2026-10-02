@@ -42,7 +42,7 @@ class CheckDeploymentReadiness extends Command
             ['URL pública usa HTTPS', $appUrlScheme === 'https'],
             ['Banco PostgreSQL ou MariaDB selecionado', $supportedDatabase],
             ['Banco selecionado acessível', $databaseReady],
-            ...($databaseDriver === 'pgsql' ? [['TLS do PostgreSQL obrigatório', in_array(config('database.connections.'.config('database.default').'.sslmode'), ['require', 'verify-ca', 'verify-full'], true)]] : []),
+            ...($databaseDriver === 'pgsql' ? [['Conexão PostgreSQL protegida', $this->postgresConnectionProtected()]] : []),
             ['Anexos privados e graváveis', $privateStorage],
             ['Cache do framework gravável', is_dir(base_path('bootstrap/cache')) && is_writable(base_path('bootstrap/cache'))],
             ['Cookie de sessão protegido', config('session.secure') === true
@@ -79,5 +79,15 @@ class CheckDeploymentReadiness extends Command
         $this->info('Verificações obrigatórias passaram. Confirme Cron, migrations, backup e envio real de e-mail separadamente.');
 
         return self::SUCCESS;
+    }
+
+    private function postgresConnectionProtected(): bool
+    {
+        $connection = config('database.connections.'.config('database.default'));
+        $host = (string) ($connection['host'] ?? '');
+        $sslmode = (string) ($connection['sslmode'] ?? '');
+
+        return ($host === 'database' && $sslmode === 'disable')
+            || in_array($sslmode, ['require', 'verify-ca', 'verify-full'], true);
     }
 }

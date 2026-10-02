@@ -1,112 +1,55 @@
-# Implantação inicial de Gestão Mix7 na VPS
+# Gestão Mix7 na VPS
 
-Este procedimento cria somente o projeto Docker `gestao-mix7`, usa o banco novo do Supabase e adiciona a rota `gestao.mix7.org` ao Traefik existente. Não use `docker compose down -v`, `docker system prune`, nem comandos sem os arquivos Compose deste projeto. Eles podem atingir dados ou serviços da VPS que não pertencem à Gestão Mix7.
+A aplicação Laravel e o PostgreSQL 17 rodam no projeto Docker `gestao-mix7` da VPS Hostinger. O banco fica no volume `gestao_database`, sem porta publicada; os anexos ficam em `gestao_storage`. O Traefik existente deve encaminhar `gestao.mix7.org` ao serviço `app` na porta interna 8080. Não use `docker compose down -v` nem `docker system prune`: o primeiro apaga volumes, e o segundo pode afetar outros projetos.
 
-## Antes de começar
+## Estado anterior e mudança de banco
 
-- O DNS A de `gestao.mix7.org` foi confirmado em resolvedores públicos (1.1.1.1 e 8.8.8.8) como `72.61.51.41`, igual ao IP da captura do hPanel. Confirme que o IP ainda é da VPS antes de publicar. Não há registro `AAAA`; não crie um sem IPv6 configurado na VPS.
-- O projeto Supabase deve ser exclusivo da Gestão Mix7 e ainda não conter dados. A VPS já confirmou conexão TLS ao usuário `postgres` via Session pooler/porta 5432; isso confirma rede e credenciais naquele teste, mas não confirma as migrations Laravel.
-- Não publique dados reais ainda. A aplicação não implementa RLS do Supabase e as regras completas de permissões, o envio SMTP e a restauração PostgreSQL + anexos ainda não foram aceitos em teste.
-- Confirme em checagens somente leitura que `/opt/gestao-mix7` está livre, o Traefik `websecure`/`letsencrypt` segue ativo e há espaço para construir uma imagem. Preserve todos os serviços fora deste projeto.
+Em 02/10/2026, a branch `codex/fundacao-compartilhada` estava em `f3d86ce` na VPS, e nenhuma migration havia sido aplicada. A conexão direta ao Supabase falhou por falta de rota IPv6 no contêiner; o Session pooler retornou `ENOIDENTIFIER` mesmo com usuário no formato completo. O banco Supabase criado pelo usuário permanece independente. **Esta mudança não copia dados dele:** o novo PostgreSQL local começa vazio. Não remova nenhum projeto Supabase ou volume existente como parte da instalação.
 
-Na SSH da VPS, este bloco só consulta o estado. Continue apenas se a primeira linha disser `LIVRE`:
+A pasta `/opt/gestao-mix7/web-app` já existe na VPS. O `git status --short` mostrou arquivos não rastreados chamados `=`, `CACHED`, `[app]`, `[scheduler]`, `exporting`, `naming` e `unpacking` nessa pasta. Não os remova automaticamente; preserve-os durante a atualização da branch.
 
-```bash
-if [ -e /opt/gestao-mix7 ]; then echo 'EXISTE: pare e confira a pasta'; else echo 'LIVRE: /opt/gestao-mix7'; fi
-docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
-docker network ls
-df -h /
-```
+## Preparar configuração privada
 
-## Criar configuração privada
+O arquivo `web-app/.env` já existe na VPS e deve continuar com permissão `600`. Mantenha `APP_KEY` e `DB_PASSWORD` privados. A senha com `$` deve continuar entre aspas simples no `.env`, pois o Compose também a lê. O Compose agora define para os contêineres `DB_HOST=database`, `DB_PORT=5432`, `DB_DATABASE=gestao_mix7`, `DB_USERNAME=mix7_app` e `DB_SSLMODE=disable`; a comunicação ocorre somente na rede Docker privada. O valor antigo de `DB_HOST` no `.env` não será usado pelo app, mas atualize-o para `database` quando editar o arquivo para não confundir operações futuras. A senha atual do `.env` inicia o banco local; se desejar outra, altere-a **antes da primeira inicialização**. Depois disso, trocar somente o `.env` não altera a senha da conta PostgreSQL já criada.
 
-Na sessão SSH da VPS, use o repositório e a branch/commit publicados no GitHub. Não copie o `.env` local de demonstração.
+O Compose exige `TRAEFIK_NETWORK` no `.env`, com o nome exato de uma rede Docker à qual o contêiner Traefik já esteja conectado. Para localizar esse nome sem alterar serviços, liste os contêineres e inspecione somente o Traefik:
 
 ```bash
-cd /opt
-git clone --branch codex/fundacao-compartilhada --single-branch https://github.com/diegohenrich/plataforma-processos-mix7.git gestao-mix7
-cd /opt/gestao-mix7/web-app
-cp docker/env.vps.example .env
-chmod 600 .env
-nano .env
+docker ps --format '{{.Names}}'
+docker inspect NOME_DO_CONTAINER_TRAEFIK --format '{{range $name, $network := .NetworkSettings.Networks}}{{println $name}}{{end}}'
 ```
 
-Preencha no editor:
+Escolha a rede existente compartilhável com aplicações; registre `TRAEFIK_NETWORK=nome_exato` no `.env`. O serviço `app` entrará nessa rede e na rede privada do banco; o serviço `database` permanecerá apenas na rede privada. Não crie uma rede com nome presumido nem reinicie o Traefik.
 
-- `APP_KEY`: deixe vazio por enquanto; gere-a depois do build e cole o resultado no arquivo.
-- `DB_HOST`: host do Session pooler mostrado pelo Supabase.
-- `DB_USERNAME`: `postgres.` seguido do identificador do projeto Supabase.
-- `DB_PASSWORD`: senha do banco, sem os colchetes do placeholder. Não a cole no chat. Se contiver caracteres especiais, mantenha o valor entre aspas simples no `.env`.
-- `MAIL_*`: ficam em transporte `log` inicialmente, então recuperação de senha/convites não serão entregues por e-mail. Configure SMTP antes de convidar pessoas.
+Uma `APP_KEY` anterior apareceu em texto enviado ao chat. Gere uma chave nova antes de iniciar o serviço público e guarde-a no `.env` da VPS. Como ainda não há dados da Gestão Mix7 nessa VPS, esta rotação não invalida registros existentes. Não envie a chave ou a senha ao GitHub, Trello ou chat.
 
-Salve o arquivo no `nano` (`Ctrl+O`, Enter, `Ctrl+X`) e confira somente permissões e nomes, sem mostrar valores:
+## Atualizar e iniciar
 
-```bash
-stat -c '%a %n' .env
-grep -E '^(APP_ENV|APP_DEBUG|APP_URL|DB_CONNECTION|DB_HOST|DB_PORT|DB_DATABASE|DB_USERNAME|DB_SSLMODE|MAIL_MAILER)=' .env | cut -d= -f1
-```
-
-A permissão esperada é `600`. Não use `cat .env`, não cole valores secretos em comandos e não envie capturas com segredos visíveis.
-
-## Construir, migrar e iniciar
-
-O build acontece apenas neste projeto e pode levar alguns minutos. Não inicia nem recria os contêineres Mix7/Traefik já existentes.
-
-```bash
-docker compose -f docker-compose.vps.yml build --pull app scheduler
-```
-
-Depois que o build terminar, gere uma chave de aplicação e cole a linha impressa em `APP_KEY` no `.env`. Essa chave é secreta; não a compartilhe. Salve o arquivo e confirme novamente a permissão `600`.
-
-```bash
-docker compose -f docker-compose.vps.yml run --rm app php artisan key:generate --show
-```
-
-Consulte o estado das migrations. Se falhar com `ENOIDENTIFIER`, **não rode migrate**: no Supabase, abra Connect → Session pooler e confira o host exato e o usuário `postgres.<PROJECT_REF>` da URI. O Project ID no sufixo deve ser do novo projeto Gestão Mix7. Esse erro indica tenant/host/usuário do pooler não identificado; não redefina a senha sem antes conferir esses dados.
-
-```bash
-docker compose -f docker-compose.vps.yml run --rm --no-deps app php artisan migrate:status
-```
-
-Só se o status mostrar o banco novo e as migrations como pendentes, aplique e continue:
-
-```bash
-docker compose -f docker-compose.vps.yml run --rm --no-deps app php artisan migrate --force
-docker compose -f docker-compose.vps.yml run --rm --no-deps app php artisan mix7:owner:create
-docker compose -f docker-compose.vps.yml up -d app scheduler
-```
-
-`mix7:owner:create` pede nome, e-mail e senha interativamente; crie uma senha nova e exclusiva. Não rode `db:seed` nem `migrate:fresh`.
-
-Confira somente este projeto:
-
-```bash
-docker compose -f docker-compose.vps.yml ps
-docker compose -f docker-compose.vps.yml logs --tail=80 app scheduler
-```
-
-Inspecione a saída de logs antes de compartilhá-la; não publique endereços de e-mail nem dados de pessoas. Abra `https://gestao.mix7.org`. O certificado será solicitado pelo Traefik quando o DNS estiver propagado e a rota estiver acessível. O app não publica portas diretamente: o acesso público depende do Traefik. Se aparecer `404`, confira DNS e labels do app; se aparecer `502`, confira o healthcheck e os logs do app. Não reinicie o Traefik nem outros projetos para resolver falhas desta instalação.
-
-## Atualizar com segurança
-
-Antes de cada atualização, tenha cópia do banco e dos arquivos privados fora da VPS e guarde a `APP_KEY` em cofre. Aplique somente uma branch revisada; inspecione o SHA antes de migrar:
+O usuário pediu que esta etapa avance sem testes diagnósticos. Estes comandos são as operações necessárias para instalar o banco novo, aplicar o esquema e iniciar a aplicação; não executam a suíte de testes nem o antigo `migrate:status`.
 
 ```bash
 cd /opt/gestao-mix7
-git status --short --branch
-git pull --ff-only
+git pull --ff-only origin codex/fundacao-compartilhada
 cd web-app
+docker compose -f docker-compose.vps.yml pull database
 docker compose -f docker-compose.vps.yml build app scheduler
-docker compose -f docker-compose.vps.yml run --rm --no-deps app php artisan migrate --force
+docker compose -f docker-compose.vps.yml up -d database
+docker compose -f docker-compose.vps.yml run --rm app php artisan migrate --force
+docker compose -f docker-compose.vps.yml run --rm app php artisan mix7:owner:create
 docker compose -f docker-compose.vps.yml up -d app scheduler
 ```
 
-Uma migration de banco não é desfeita ao voltar à imagem anterior. Confirme os backups e leia o diff/release antes de aplicá-la.
+O primeiro `git pull` só deve prosseguir se não houver conflito com os arquivos existentes; não force nem limpe a árvore. `mix7:owner:create` pede nome, e-mail e senha interativamente. Não execute `db:seed` nem `migrate:fresh` na VPS. Se uma operação falhar, interrompa a sequência naquele ponto e preserve o volume `gestao_database` para diagnóstico posterior.
 
-## Limites que continuam pendentes
+O `app` não publica porta no host. Para o HTTPS funcionar, o Traefik precisa alcançar o `app` pela rede externa informada em `TRAEFIK_NETWORK`. DNS e certificado também precisam estar corretos. Não declare a publicação concluída até abrir a página real no domínio.
 
-- Revisar grants mínimos e implementar/testar isolamento RLS antes de dados reais; a Data API do Supabase não é necessária para esta arquitetura.
-- Configurar e validar SMTP antes de recuperação de senha ou convites.
-- Definir a política de dados, o provedor e o worker de IA. O Ollama do Windows em `127.0.0.1` não fica acessível de dentro do container da VPS; a produção fica sem IA até uma topologia segura ser aprovada.
-- Fazer backup criptografado externo e um exercício de restauração isolado de PostgreSQL e anexos; preservar a `APP_KEY` separadamente.
-- Validar a matriz de permissões e as jornadas com cada perfil antes do uso com clientes.
+## Atualizações posteriores
+
+Antes de atualizar, salve fora da VPS uma cópia criptografada do banco e dos anexos e guarde a `APP_KEY` separadamente. Uma migration aplicada não é revertida ao voltar para uma imagem antiga. Atualize somente a branch do projeto, reconstrua `app` e `scheduler`, aplique migrations versionadas e recrie apenas esses serviços. Nunca use `down -v`.
+
+## Limites antes de dados reais
+
+- Configurar e verificar SMTP; enquanto `MAIL_MAILER=log`, convites e recuperação de senha não chegam por e-mail.
+- Definir como a IA Gemma/Ollama funcionará na VPS; o Ollama instalado no Windows não fica acessível pelo contêiner remoto.
+- Preparar backup externo recorrente do volume PostgreSQL e dos anexos e uma restauração isolada. O volume Docker sozinho não é backup.
+- Revisar permissões da aplicação e os privilégios da conta do banco antes de uso com clientes.

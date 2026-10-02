@@ -1,3 +1,11 @@
+# Implantação PostgreSQL privado na VPS — 2026-10-02
+- O usuário dispensou testes nesta etapa e autorizou corrigir a arquitetura para fazer a aplicação funcionar na VPS. O `$` da senha do `.env` já foi protegido com aspas simples. A VPS está no commit `f3d86ce`; há sete arquivos não rastreados em `web-app/` que devem ser preservados.
+- A saída nova confirma `DB_USERNAME=postgres.<Project ID>` e `DB_URL` vazia. O Session pooler Supabase ainda responde `ENOIDENTIFIER`; a conexão direta falha por falta de rota IPv6 do contêiner. A decisão Supabase foi revogada para este deploy; o projeto Supabase não será apagado nem migrado automaticamente.
+- Em preparação: `docker-compose.vps.yml` passa a definir PostgreSQL 17 privado, com volume `gestao_database`; app/scheduler recebem host, banco e usuário locais, mantendo a senha do `.env`. Readiness e `pg_dump` aceitam conexão sem TLS apenas ao serviço `database` na rede privada. Exemplo de `.env`, runbook, arquitetura, operações, roadmap e decisões foram ajustados.
+- Não foram executados testes, lint, build, migrations nem deploy por solicitação do usuário. A VPS ainda usa a versão anterior; o banco local e o HTTPS **não estão confirmados**. A conexão SSH direta daqui falhou na autenticação com as duas chaves locais; nenhum comando foi executado na VPS. Rede Docker externa do Traefik ainda não foi identificada; o Compose exige seu nome exato em `TRAEFIK_NETWORK` antes de subir o serviço.
+- Próximo passo: publicar commit/branch e atualizar Trello; depois atualizar a cópia na VPS, ligar `app` à rede Traefik existente, iniciar o banco, aplicar migrations e iniciar app/scheduler. Não declarar a publicação funcional sem abrir o domínio real.
+
+# Histórico anterior (superado onde houver conflito com o estado acima)
 # Deploy inicial Gestão Mix7 — 2026-10-01
 - DNS A `gestao.mix7.org` foi confirmado em 1.1.1.1 e 8.8.8.8 como `72.61.51.41`; sem registro AAAA.
 - O usuário clonou a branch `codex/fundacao-compartilhada`, criou `/opt/gestao-mix7/web-app/.env` com permissão 600 e preencheu `APP_KEY`, host, usuário e senha sem revelar valores no chat. A senha não foi registrada.

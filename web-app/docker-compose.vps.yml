@@ -1,6 +1,27 @@
 name: gestao-mix7
 
 services:
+  database:
+    image: postgres:17-bookworm
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: gestao_mix7
+      POSTGRES_USER: mix7_app
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Defina DB_PASSWORD no arquivo .env privado}
+    volumes:
+      - gestao_database:/var/lib/postgresql/data
+    shm_size: 128m
+    mem_limit: 512m
+    cpus: 0.5
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mix7_app -d gestao_mix7"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - gestao_private
+
   app:
     build:
       context: .
@@ -11,6 +32,9 @@ services:
     read_only: true
     env_file:
       - .env
+    depends_on:
+      database:
+        condition: service_healthy
     environment:
       APP_ENV: production
       APP_DEBUG: "false"
@@ -18,7 +42,11 @@ services:
       LOG_CHANNEL: stderr
       LOG_LEVEL: warning
       DB_CONNECTION: pgsql
-      DB_SSLMODE: require
+      DB_HOST: database
+      DB_PORT: "5432"
+      DB_DATABASE: gestao_mix7
+      DB_USERNAME: mix7_app
+      DB_SSLMODE: disable
       SESSION_DRIVER: file
       SESSION_SECURE_COOKIE: "true"
       SESSION_HTTP_ONLY: "true"
@@ -50,6 +78,7 @@ services:
       start_period: 60s
     labels:
       traefik.enable: "true"
+      traefik.docker.network: "${TRAEFIK_NETWORK:?Defina TRAEFIK_NETWORK com a rede externa usada pelo Traefik}"
       traefik.http.routers.gestao.rule: "Host(`${GESTAO_DOMAIN:-gestao.mix7.org}`)"
       traefik.http.routers.gestao.entrypoints: "${TRAEFIK_ENTRYPOINT:-websecure}"
       traefik.http.routers.gestao.tls: "true"
@@ -62,6 +91,7 @@ services:
       traefik.http.services.gestao.loadbalancer.server.port: "8080"
     networks:
       - gestao_private
+      - traefik_external
 
   scheduler:
     image: gestao-mix7-app:local
@@ -74,6 +104,9 @@ services:
     user: "33:33"
     env_file:
       - .env
+    depends_on:
+      database:
+        condition: service_healthy
     environment:
       APP_ENV: production
       APP_DEBUG: "false"
@@ -81,7 +114,11 @@ services:
       LOG_CHANNEL: stderr
       LOG_LEVEL: warning
       DB_CONNECTION: pgsql
-      DB_SSLMODE: require
+      DB_HOST: database
+      DB_PORT: "5432"
+      DB_DATABASE: gestao_mix7
+      DB_USERNAME: mix7_app
+      DB_SSLMODE: disable
       SESSION_DRIVER: file
       SESSION_SECURE_COOKIE: "true"
       SESSION_HTTP_ONLY: "true"
@@ -105,7 +142,11 @@ services:
 
 volumes:
   gestao_storage:
+  gestao_database:
 
 networks:
   gestao_private:
     driver: bridge
+  traefik_external:
+    external: true
+    name: ${TRAEFIK_NETWORK:?Defina TRAEFIK_NETWORK com a rede externa usada pelo Traefik}

@@ -246,8 +246,9 @@ class BackupArchive
         ];
         $environment = ['PGPASSWORD' => $password];
         $sslmode = (string) ($connection['sslmode'] ?? 'require');
-        if (! in_array($sslmode, ['require', 'verify-ca', 'verify-full'], true)) {
-            throw new RuntimeException('A exportação PostgreSQL exige uma configuração TLS válida.');
+        $privateDockerDatabase = $host === 'database' && $sslmode === 'disable';
+        if (! $privateDockerDatabase && ! in_array($sslmode, ['require', 'verify-ca', 'verify-full'], true)) {
+            throw new RuntimeException('A exportação PostgreSQL exige TLS ou o banco privado deste projeto Docker.');
         }
         $environment['PGSSLMODE'] = $sslmode;
         $rootCertificate = $connection['sslrootcert'] ?? null;

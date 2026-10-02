@@ -95,8 +95,7 @@ return [
             'database' => env('DB_DATABASE', 'laravel'),
             'username' => env('DB_USERNAME', 'root'),
             'password' => env('DB_PASSWORD', ''),
-            // Supavisor's working PDO connection uses PostgreSQL's UTF-8 default;
-            // omit client_encoding from the DSN unless explicitly configured.
+            // Use PostgreSQL's UTF-8 default unless an encoding is explicitly configured.
             'charset' => env('DB_CHARSET'),
             'prefix' => '',
             'prefix_indexes' => true,
