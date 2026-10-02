@@ -12,14 +12,7 @@ A pasta `/opt/gestao-mix7/web-app` já existe na VPS. O `git status --short` mos
 
 O arquivo `web-app/.env` já existe na VPS e deve continuar com permissão `600`. Mantenha `APP_KEY` e `DB_PASSWORD` privados. A senha com `$` deve continuar entre aspas simples no `.env`, pois o Compose também a lê. O Compose agora define para os contêineres `DB_HOST=database`, `DB_PORT=5432`, `DB_DATABASE=gestao_mix7`, `DB_USERNAME=mix7_app` e `DB_SSLMODE=disable`; a comunicação ocorre somente na rede Docker privada. O valor antigo de `DB_HOST` no `.env` não será usado pelo app, mas atualize-o para `database` quando editar o arquivo para não confundir operações futuras. A senha atual do `.env` inicia o banco local; se desejar outra, altere-a **antes da primeira inicialização**. Depois disso, trocar somente o `.env` não altera a senha da conta PostgreSQL já criada.
 
-O Compose exige `TRAEFIK_NETWORK` no `.env`, com o nome exato de uma rede Docker à qual o contêiner Traefik já esteja conectado. Para localizar esse nome sem alterar serviços, liste os contêineres e inspecione somente o Traefik:
-
-```bash
-docker ps --format '{{.Names}}'
-docker inspect NOME_DO_CONTAINER_TRAEFIK --format '{{range $name, $network := .NetworkSettings.Networks}}{{println $name}}{{end}}'
-```
-
-Escolha a rede existente compartilhável com aplicações; registre `TRAEFIK_NETWORK=nome_exato` no `.env`. O serviço `app` entrará nessa rede e na rede privada do banco; o serviço `database` permanecerá apenas na rede privada. Não crie uma rede com nome presumido nem reinicie o Traefik.
+O contêiner existente `traefik-traefik-1` está em modo de rede `host`, conforme inspeção na VPS em 02/10/2026. Ele alcança o IP do contêiner `app` na bridge Docker pela porta 8080 usando o provedor Docker e as labels da aplicação. Não configure `TRAEFIK_NETWORK`, não publique a porta do banco e não altere o Traefik existente nesta etapa.
 
 Uma `APP_KEY` anterior apareceu em texto enviado ao chat. Gere uma chave nova antes de iniciar o serviço público e guarde-a no `.env` da VPS. Como ainda não há dados da Gestão Mix7 nessa VPS, esta rotação não invalida registros existentes. Não envie a chave ou a senha ao GitHub, Trello ou chat.
 
@@ -41,7 +34,7 @@ docker compose -f docker-compose.vps.yml up -d app scheduler
 
 O primeiro `git pull` só deve prosseguir se não houver conflito com os arquivos existentes; não force nem limpe a árvore. `mix7:owner:create` pede nome, e-mail e senha interativamente. Não execute `db:seed` nem `migrate:fresh` na VPS. Se uma operação falhar, interrompa a sequência naquele ponto e preserve o volume `gestao_database` para diagnóstico posterior.
 
-O `app` não publica porta no host. Para o HTTPS funcionar, o Traefik precisa alcançar o `app` pela rede externa informada em `TRAEFIK_NETWORK`. DNS e certificado também precisam estar corretos. Não declare a publicação concluída até abrir a página real no domínio.
+O `app` não publica porta no host. Para o HTTPS funcionar, o Traefik em modo `host` precisa descobrir o serviço via provedor Docker e alcançar o IP da bridge do `app` na porta 8080. DNS e certificado também precisam estar corretos. Não declare a publicação concluída até abrir a página real no domínio.
 
 ## Atualizações posteriores
 

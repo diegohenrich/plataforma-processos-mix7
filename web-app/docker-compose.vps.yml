@@ -78,7 +78,6 @@ services:
       start_period: 60s
     labels:
       traefik.enable: "true"
-      traefik.docker.network: "${TRAEFIK_NETWORK:?Defina TRAEFIK_NETWORK com a rede externa usada pelo Traefik}"
       traefik.http.routers.gestao.rule: "Host(`${GESTAO_DOMAIN:-gestao.mix7.org}`)"
       traefik.http.routers.gestao.entrypoints: "${TRAEFIK_ENTRYPOINT:-websecure}"
       traefik.http.routers.gestao.tls: "true"
@@ -91,7 +90,6 @@ services:
       traefik.http.services.gestao.loadbalancer.server.port: "8080"
     networks:
       - gestao_private
-      - traefik_external
 
   scheduler:
     image: gestao-mix7-app:local
@@ -147,6 +145,3 @@ volumes:
 networks:
   gestao_private:
     driver: bridge
-  traefik_external:
-    external: true
-    name: ${TRAEFIK_NETWORK:?Defina TRAEFIK_NETWORK com a rede externa usada pelo Traefik}
