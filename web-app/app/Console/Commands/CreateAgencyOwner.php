@@ -29,7 +29,7 @@ class CreateAgencyOwner extends Command
             return self::FAILURE;
         }
 
-        $password = $this->components->password('Crie uma senha forte');
+        $password = (string) $this->secret('Crie uma senha forte', false);
         if (mb_strlen($password) < 12) {
             $this->components->error('A senha precisa ter pelo menos 12 caracteres.');
             return self::FAILURE;
