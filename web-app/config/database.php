@@ -101,7 +101,9 @@ return [
             'prefix_indexes' => true,
             'search_path' => 'public',
             'sslmode' => env('DB_SSLMODE', 'require'),
-            'sslrootcert' => env('DB_SSLROOTCERT'),
+            'sslrootcert' => env('DB_SSLMODE', 'require') === 'disable'
+                ? null
+                : (env('DB_SSLROOTCERT') ?: null),
         ],
 
         'sqlsrv' => [
