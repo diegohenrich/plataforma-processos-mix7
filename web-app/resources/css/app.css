@@ -1,0 +1,15 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source "../**/*.blade.php";
+@source "../**/*.js";
+@source "../**/*.vue";
+
+@theme {
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+}
+.module-steps-panel{margin-bottom:16px}.module-steps-list{display:grid;gap:8px;list-style:none;padding:0;margin:0}.module-steps-list li{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:11px 12px;border:1px solid #e6eded;border-radius:9px;background:#fbfdfd}.module-steps-list li.is-complete{border-color:#d3e9dc;background:#f5fbf7}.module-steps-list li>div{display:grid;gap:4px}.module-steps-list strong{color:#204b61;font-size:12px}.module-steps-list span{color:#718087;font-size:10px}.module-steps-list form{margin:0;flex:none}.module-steps-list .secondary-button{padding:7px 10px;font-size:10px}@media(max-width:560px){.module-steps-list li{align-items:flex-start;flex-direction:column}.module-steps-list form{align-self:flex-start}}
+.brief-origin{display:flex;flex-wrap:wrap;gap:8px 24px;margin:0 0 14px;padding:12px;border:1px solid #e3edef;border-radius:10px;background:#f8fcfd}.brief-origin>div{display:grid;gap:4px}.brief-origin dt{color:#718087;font-size:10px}.brief-origin dd{margin:0;color:#204b61;font-size:12px;font-weight:700}
+.activity-weekly-trend{margin-top:14px;border-top:1px solid #e6eded;padding-top:12px}.activity-weekly-trend summary{color:#176a91;font-size:12px;font-weight:700;cursor:pointer}.activity-weekly-trend>p{color:#718087;font-size:11px;line-height:1.5;margin:9px 0}.activity-weekly-trend table{width:100%;border-collapse:collapse;font-size:11px}.activity-weekly-trend th,.activity-weekly-trend td{padding:8px;border-bottom:1px solid #edf1f2;text-align:left}.activity-weekly-trend td{text-align:right;color:#204b61}.activity-weekly-trend tr:last-child th,.activity-weekly-trend tr:last-child td{border-bottom:0}

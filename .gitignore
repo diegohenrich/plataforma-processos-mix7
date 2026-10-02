@@ -7,6 +7,10 @@
 
 # Dependências e artefatos de build
 node_modules/
+/web-app/vendor/
+/web-app/.phpunit.cache/
+/web-app/database/*.sqlite
+/web-app/bootstrap/cache/*.php
 .venv/
 venv/
 dist/

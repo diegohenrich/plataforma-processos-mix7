@@ -7,7 +7,7 @@ Este documento separa três informações que atendem a perguntas diferentes. O 
 - A pessoa escolhe uma tarefa liberada e inicia ou pausa o cronômetro pela demanda minimizada.
 - O tempo é registrado na tarefa selecionada. Uma tarefa em pausa pode ser retomada; não se inicia outra sessão simultânea para a mesma pessoa.
 - Enquanto o sistema está aberto, só o intervalo iniciado pelo cronômetro conta como tempo realizado. Uma pausa encerra esse intervalo.
-- Ao fechar normalmente a aplicação, o intervalo ativo é encerrado e salvo; reabrir não acrescenta tempo offline. A plataforma operacional precisa preservar o histórico centralmente, mesmo quando a sessão ou o dispositivo falhar. O protótipo local ainda não garante esse último caso.
+- A tela envia um sinal ao servidor a cada 20 segundos enquanto há cronômetro ativo. Se os sinais pararem por mais de 180 segundos, o sistema encerra o intervalo no último sinal confirmado, pausa a tarefa e registra a pausa automática sem atribuí-la a uma ação humana. Ao retornar, o profissional vê o cronômetro encerrado e pode iniciar outro intervalo; os dados anteriores à implantação desta regra continuam recuperáveis manualmente. A detecção pode levar até três minutos, mas esse período não é incluído no tempo registrado. A suspensão prolongada da aba pode encerrar a sessão mesmo que o aplicativo continue aberto, portanto a pessoa deve conferir o timer ao voltar.
 - A estimativa é um dado de planejamento separado do tempo realizado. O sistema não deve substituir a estimativa pelo cronômetro nem alterar estimativas automaticamente.
 
 ## Capacidade como proposta para validação
@@ -16,9 +16,15 @@ Para planejamento, a proposta é calcular a disponibilidade no período a partir
 
 Essa regra é uma proposta, não uma política aprovada. Horários, pausas, feriados, ausências, reuniões, tarefas sem estimativa, distribuição de tarefas longas entre dias, bloqueios externos e tratamento de tarefas paralelas precisam de exemplos reais. O sistema não deve escolher ou redistribuir responsáveis por conta própria; qualquer sugestão da IA exige revisão humana.
 
-### Prévia local em construção
+### Prévia no protótipo local
 
 O protótipo deixa escolher um profissional com tarefas abertas, um período de semana ISO (segunda a domingo), horas previstas de trabalho e ausências em horas por dia. Não há valores iniciais de jornada. Para comparação, soma a estimativa integral de cada tarefa aberta atribuída à pessoa cujo prazo cai na semana; tarefas sem estimativa ou sem prazo aparecem como lacunas. O cronômetro não altera esses totais. Os dados são demonstrativos e ficam apenas neste navegador. A janela semanal e a regra baseada no prazo são escolhas de ensaio, não regras aprovadas pela Mix7.
+
+### Prévia compartilhada no Laravel
+
+A página Disponibilidade grava previsões semanais manuais em banco: horas totais informadas pela direção/gerência, ausências por data e tarefas abertas da pessoa com prazo final na semana. Ausências são descontadas; tarefas sem estimativa e sem prazo aparecem separadas, fora da soma. Alterações criam snapshots com autoria, preservando histórico. Profissionais consultam somente a própria semana; direção/gerência selecionam pessoas ativas da própria organização e registram alterações. Não há jornada padrão, motivo de ausência, distribuição diária, mudança automática de tarefa ou uso do cronômetro no cálculo.
+
+Esta tela reproduz a regra do protótipo como **previsão de planejamento**, não como medição oficial, política de jornada ou decisão de desempenho. A escolha de somar a estimativa inteira pelo prazo da semana permanece sujeita a validação da Mix7. A inspeção visual renderizada desta nova tela ainda está pendente.
 
 ## Relação com calendário e Gantt
 
@@ -28,9 +34,13 @@ O Gantt deve mostrar prazos, duração planejada e dependências registradas. O 
 
 1. Iniciar e pausar uma tarefa registra intervalos associados à tarefa e à pessoa autenticada; a soma corresponde somente aos intervalos ativos.
 2. Reabrir a demanda minimizada mantém o mesmo cronômetro e o histórico; iniciar outra tarefa enquanto houver sessão ativa é bloqueado ou exige a ação de pausa definida pela Mix7.
-3. Fechar normalmente e reabrir não conta tempo offline. A plataforma compartilhada recupera intervalos confirmados e registra falha ou encerramento incompleto de forma auditável.
+3. Navegar entre telas mantém o cronômetro. Se o navegador parar de enviar sinais por mais de 180 segundos, o sistema encerra o intervalo no último sinal confirmado, pausa a tarefa e registra evento automático. A tolerância atrasa a detecção, mas não é contabilizada; uma aba suspensa por longo período pode exigir que a pessoa inicie o timer novamente.
 4. Estimativa, tempo realizado e disponibilidade permanecem campos/medidas distintos; corrigir um não reescreve os outros.
 5. A prévia local compara horas semanais inseridas manualmente, ausências registradas e estimativas das tarefas com prazo no período; sobrecarga e tarefas sem estimativa ficam visíveis. A regra operacional só se conclui após a Mix7 aprovar jornada, ausências e alocação.
+
+O especialista de operação/produção da IA pode consultar esses mesmos fatos da semana atual para responder perguntas da direção/gerência. A ferramenta não retorna nomes de tarefas, não cria estimativas nem recomenda redistribuição; qualquer conteúdo enviado a um provedor continua sujeito à política de dados da Mix7, que ainda precisa ser aprovada.
+
+No planejamento estruturado, direção/gerência também pode marcar uma opção para enviar ao agente somente os totais agregados da semana escolhida: profissionais ativos, quantos têm capacidade registrada, minutos disponíveis após ausências, estimativas em tarefas com prazo e lacunas. A entrada não inclui nomes, títulos de tarefas nem identificadores individuais. A revisão da proposta mostra os mesmos totais enviados e uma observação preliminar do agente, que a gestão confere com os valores antes de decidir. Sem contexto de capacidade, o servidor rejeita uma observação que afirme carga ou disponibilidade. O agente pode usar os dados como alerta preliminar de esforço, sem selecionar, comparar ou avaliar pessoas. A gestão ainda escolhe cada responsável e aprova as tarefas. A opção desmarcada não envia dados de capacidade; marcá-la não substitui a aprovação da política de dados da Mix7.
 6. O Gantt respeita prazos e dependências salvos; dados do cronômetro não deslocam o cronograma automaticamente.
 
 ## Perguntas que ainda precisam de resposta
@@ -42,4 +52,4 @@ O Gantt deve mostrar prazos, duração planejada e dependências registradas. O 
 - O que acontece quando uma tarefa fica bloqueada ou muda de escopo? Quem altera estimativa, prazo e capacidade?
 - Quem pode ver tempos individuais e relatórios, por quanto tempo, e qual uso é permitido para avaliação?
 
-Até essas respostas serem validadas, os relatórios de capacidade são protótipo de planejamento, não medição oficial de produtividade nem base automática para avaliação.
+Até essas respostas serem validadas, a prévia semanal é um cálculo manual preliminar, não política oficial de jornada, medição de produtividade ou base automática para avaliação.
