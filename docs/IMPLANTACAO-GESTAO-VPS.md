@@ -4,7 +4,7 @@ A aplicação Laravel e o PostgreSQL 17 rodam no projeto Docker `gestao-mix7` da
 
 ## Estado anterior e mudança de banco
 
-Em 02/10/2026, a branch `codex/fundacao-compartilhada` estava em `f3d86ce` na VPS, e nenhuma migration havia sido aplicada. A conexão direta ao Supabase falhou por falta de rota IPv6 no contêiner; o Session pooler retornou `ENOIDENTIFIER` mesmo com usuário no formato completo. O banco Supabase criado pelo usuário permanece independente. **Esta mudança não copia dados dele:** o novo PostgreSQL local começa vazio. Não remova nenhum projeto Supabase ou volume existente como parte da instalação.
+Em 02/10/2026, a VPS foi atualizada até a correção `13eecd0`, o PostgreSQL privado foi iniciado e todas as migrations terminaram com `DONE`. O usuário informou que criou a conta de direção, renovou a `APP_KEY` e iniciou `app`/`scheduler`. A rota pública HTTPS apresentou a tela `Entrar · Plataforma Mix7` com HTTP 200; login e fluxos internos ainda não foram confirmados. A conexão direta anterior ao Supabase falhou por falta de rota IPv6 no contêiner; o Session pooler retornou `ENOIDENTIFIER`. O projeto Supabase permanece independente e não recebeu migração de dados. Não remova projetos Supabase nem volumes como parte da instalação.
 
 A pasta `/opt/gestao-mix7/web-app` já existe na VPS. O `git status --short` mostrou arquivos não rastreados chamados `=`, `CACHED`, `[app]`, `[scheduler]`, `exporting`, `naming` e `unpacking` nessa pasta. Não os remova automaticamente; preserve-os durante a atualização da branch.
 
@@ -14,7 +14,7 @@ O arquivo `web-app/.env` já existe na VPS e deve continuar com permissão `600`
 
 O contêiner existente `traefik-traefik-1` está em modo de rede `host`, conforme inspeção na VPS em 02/10/2026. Ele alcança o IP do contêiner `app` na bridge Docker pela porta 8080 usando o provedor Docker e as labels da aplicação. Não configure `TRAEFIK_NETWORK`, não publique a porta do banco e não altere o Traefik existente nesta etapa.
 
-Uma `APP_KEY` anterior apareceu em texto enviado ao chat. Gere uma chave nova antes de iniciar o serviço público e guarde-a no `.env` da VPS. Como ainda não há dados da Gestão Mix7 nessa VPS, esta rotação não invalida registros existentes. Não envie a chave ou a senha ao GitHub, Trello ou chat.
+Uma `APP_KEY` anterior apareceu em texto enviado ao chat. O usuário a renovou no `.env` antes de iniciar o serviço público, sem exibir o novo valor. Guarde essa chave separadamente para recuperação; não a envie ao GitHub, Trello ou chat.
 
 ## Atualizar e iniciar
 
@@ -35,6 +35,8 @@ docker compose -f docker-compose.vps.yml up -d app scheduler
 O primeiro `git pull` só deve prosseguir se não houver conflito com os arquivos existentes; não force nem limpe a árvore. `mix7:owner:create` pede nome, e-mail e senha interativamente. Não execute `db:seed` nem `migrate:fresh` na VPS. Se uma operação falhar, interrompa a sequência naquele ponto e preserve o volume `gestao_database` para diagnóstico posterior.
 
 O `app` não publica porta no host. Para o HTTPS funcionar, o Traefik em modo `host` precisa descobrir o serviço via provedor Docker e alcançar o IP da bridge do `app` na porta 8080. DNS e certificado também precisam estar corretos. Não declare a publicação concluída até abrir a página real no domínio.
+
+Em 02/10/2026, a página pública de entrada foi aberta por HTTPS e retornou HTTP 200. Isso não confirma login, funcionalidades internas, e-mail nem IA. A IA Gemma 3:4b roda apenas no computador local via Ollama; a VPS não tem esse serviço configurado.
 
 ## Atualizações posteriores
 
