@@ -1,0 +1,8 @@
+<header class="topbar">
+    @php($unreadNotifications = auth()->user()->unreadNotifications()->count())
+    <a class="notification-link" href="{{ route('notifications.index') }}" aria-label="Notificações{{ $unreadNotifications ? ', '.$unreadNotifications.' não lidas' : '' }}">Avisos @if ($unreadNotifications > 0)<span>{{ $unreadNotifications > 99 ? '99+' : $unreadNotifications }}</span>@endif</a>
+    <a class="user-chip profile-link" href="{{ route('profile.index') }}" aria-label="Editar meu perfil">@if (auth()->user()->profile_photo_path)<img class="avatar profile-avatar-image" src="{{ route('profile.photo') }}" alt="">@else<span class="avatar" aria-hidden="true">{{ mb_strtoupper(mb_substr(auth()->user()->name, 0, 1)) }}</span>@endif<span>{{ auth()->user()->name }}<br><span style="font-size:11px;color:#819096">{{ auth()->user()->position_title ?: auth()->user()->role->label() }}</span></span></a>
+    <form method="post" action="{{ route('logout') }}">@csrf<button class="logout" type="submit">Sair</button></form>
+</header>
+<style>.notification-link{display:inline-flex;align-items:center;gap:6px;padding:8px 10px;border:1px solid #d6e0e1;border-radius:999px;background:#fff;color:#38515b;text-decoration:none;font-size:11px;font-weight:700}.notification-link span{display:grid;place-items:center;min-width:18px;height:18px;padding:0 4px;border-radius:99px;background:#204b61;color:#fff;font-size:9px}.profile-link{text-decoration:none;border-radius:10px;padding:5px}.profile-link:focus-visible,.profile-link:hover{background:#f2f8f9;outline-color:#8ecde2}.profile-avatar-image{object-fit:cover}</style>
+@include('layouts.task-tray')

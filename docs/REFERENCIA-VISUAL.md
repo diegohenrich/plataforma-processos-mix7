@@ -2,11 +2,11 @@
 
 ## Fonte conferida
 
-O CRM-MIX7-RENEW foi executado em ambiente local. Chromium renderizou a tela `/login`; a rota `/administrador/dashboard` redireciona para o login sem sessão, portanto ainda falta inspecionar o dashboard autenticado renderizado. Nenhuma credencial foi tentada. O layout base abaixo vem de `public/css/dashboard-light.css`, que é carregado pelo template do dashboard. A tela de entrada serve para confirmar apenas a identidade visual do login, não sua composição interna.
+O CRM-MIX7-RENEW foi executado em ambiente local. Em 26/09/2026, o dashboard autenticado foi renderizado na cópia local com MariaDB isolado e uma conta fictícia; o banco publicado e os arquivos do CRM não foram alterados. A captura ficou fora do repositório porque continha dados pessoais do backup. A evidência completa está na seção “Dashboard autenticado renderizado — 26/09/2026”. O layout base também foi conferido em `public/css/dashboard-light.css`, carregado pelo template do dashboard.
 
 O CSS define corpo de 16 px, títulos de 32–46 px, navegação de 15 px, lateral de 252 px (230 px até 1399 px), recuos de conteúdo de 38 px (28 px até 1399 px), cartões de raio 24 px e botões com altura mínima de 44 px. Define também a lateral em degradê `#243943` → `#10252f`, item ativo `#e8f3f8` e as cores `#202e35` (texto), `#204b61` (azul-petróleo), `#8ecde2` (azul-claro), `#f5f6f5` (fundo) e branco (superfícies).
 
-Após o pedido recente do usuário para aproximar mais a plataforma do CRM, sua navegação usa o degradê escuro, textos claros, item ativo azul-claro e as larguras confirmadas de 252/230 px. O conteúdo segue em superfícies brancas e fundo claro, com os azuis do CRM nas ações e destaques. Os cartões de resumo e de demandas foram ajustados para raios maiores. Nenhum arquivo ou asset do CRM foi copiado.
+Após o pedido recente do usuário para aproximar mais a plataforma do CRM, sua navegação usa o degradê escuro, textos claros, item ativo azul-claro e as larguras confirmadas de 252/230 px. O conteúdo segue em superfícies brancas e fundo claro, com os azuis do CRM nas ações e destaques. Os cartões de resumo e de demandas foram ajustados para raios maiores.
 
 ## Inspeção renderizada
 
@@ -14,10 +14,10 @@ Depois da alteração, a página de demandas foi aberta em Chromium na janela de
 
 A plataforma tem uma sessão local de demonstração aberta em outra aba com um formulário iniciado; ela foi preservada. As regras móveis definem lateral compacta de 72 px até 900 px e 56 px até 600 px. A revisão móvel desta primeira alteração foi concluída depois, conforme a seção “Validação móvel da plataforma” abaixo.
 
-## Pendências
+## Pendências vigentes
 
-- Comparar a composição autenticada do CRM com a plataforma quando o usuário fornecer os prints. O usuário pediu que essa validação não interrompa as demais frentes; continuar requisitos, pesquisa e testes enquanto isso.
-- Reavaliar este documento quando os prints chegarem. Nenhum arquivo do CRM foi alterado.
+- Renderizar o dashboard do CRM em desktop amplo e comparar diretamente cabeçalho, hierarquia, proporções e distribuição com a plataforma; a sessão autenticada mais recente teve viewport disponível de 664 × 880 e conteúdo sintético vazio.
+- Conferir o resultado após a mudança do cabeçalho da plataforma também em desktop amplo. Nenhum arquivo do CRM foi alterado.
 
 ## Reinspeção solicitada — 25/09/2026
 
@@ -63,3 +63,25 @@ A plataforma tem uma sessão local de demonstração aberta em outra aba com um 
 - O servidor do projeto CRM-MIX7-RENEW está ativo em `http://127.0.0.1:8198`. Abri a rota `/administrador/dashboard` em Chromium; ela redirecionou para `/login`, pois esta sessão não está autenticada. A aba do CRM foi mantida aberta para o usuário entrar manualmente. Nenhuma credencial foi lida ou preenchida e nenhum arquivo do CRM foi alterado.
 - Renderizei o protótipo em Chromium (1270 × 920). A tela de Demandas mostra uma lateral escura de 252 px, o perfil no rodapé, três indicadores e um Kanban de oito etapas com rolagem horizontal. As views locais do CRM mostram perfil no topo da lateral, breadcrumb e perfil na barra superior e um dashboard modular com indicadores, análise e gráficos. O CSS confirma superfícies predominantemente claras, cantos de 24 px e tipografia de títulos entre 32 e 46 px. As views descrevem a composição implementada no código, mas não provam quais módulos aparecem após o carregamento dos dados reais.
 - Evidência: há diferenças concretas entre a composição renderizada do protótipo e a estrutura declarada no dashboard do CRM, porém ainda falta enxergar o CRM autenticado. Por isso, nenhum novo ajuste visual foi feito nesta retomada: o próximo ajuste deve ser guiado pela comparação renderizada em sessão autenticada, sem copiar componentes sem relação com os processos da Mix7.
+
+## Inspeção inicial da cópia local autorizada — 26/09/2026
+
+- O usuário confirmou o caminho `C:\Users\anony\ProjetosPessoais\Projetos de Sistemas\CRM-MIX7-RENEW` e limitou esta fase à extração visual, sem migração nem alteração da persistência e sem tocar no serviço publicado. TryCRM permanece fora da referência visual.
+- Em navegador local, `/login` carregou na cópia. A 1270 px, a tela tem composição em duas colunas: painel de marca Mix7 escuro em degradê à esquerda, com wordmark, chamada e texto institucional; área de acesso em superfície clara à direita, com título, campos e botão. Em largura estreita, o CSS recolhe o painel de marca para uma faixa superior compacta e empilha o formulário. Essa tela só confirma o desenho de acesso, não a composição do dashboard.
+- `dashboard-light.css` confirma paleta e medidas: texto `#202e35`, azul-petróleo `#204b61`, azul-claro `#8ecde2`, fundo `#f5f6f5`, superfície branca, lateral `#243943` → `#10252f`, menu com raio de cartão 24 px e tipografia de 16 px/15 px. A navegação própria do CRM coloca perfil acima do menu e usa breadcrumb/perfil no topo do conteúdo. Esses tokens e estruturas são evidência de código; a tela autenticada ainda precisa de comparação renderizada.
+- A cópia FTP contém Laravel e dependências, mas o `.env` configura MySQL local e a porta configurada não está em escuta; nenhum serviço MySQL/MariaDB local foi encontrado ativo. Para renderizar somente a página pública, o processo foi executado com configuração temporária apontando para SQLite em memória e sessão em memória. O banco MySQL da cópia não foi iniciado, acessado, apagado ou alterado; nenhuma senha foi redefinida. O usuário autorizou criar acesso fictício, mas ainda falta o servidor/banco local para autenticar. O login fica pendente até esse banco estar disponível e a entrada temporária ser feita pela pessoa usuária.
+- O PHP local mostra aviso depreciação de `PDO::MYSQL_ATTR_SSL_KEY` durante a execução. É aviso do ambiente/código de configuração local, não parte do design da tela.
+- Resultado daquela etapa: identidade visual do acesso e tokens do dashboard foram conferidos; a sessão autenticada ainda estava pendente. A renderização autenticada foi concluída depois, conforme a seção seguinte. O serviço publicado não foi acessado.
+
+## Dashboard autenticado renderizado — 26/09/2026
+
+- A sessão foi aberta na cópia local usando o MariaDB isolado e uma conta fictícia criada somente no clone. A tela autenticada foi renderizada no viewport disponível de 664 × 880. O cabeçalho compacto mostra menu à esquerda, título e avatar; o conteúdo usa fundo cinza-claro, cartões brancos arredondados, filtros de empresa e período, escolha Essencial/Avançado e módulos empilhados. A visão Avançado organiza resumo e leitura executiva, canais de contato, tendências, meta, indicadores de anúncios, histórico e tabelas recentes.
+- Na captura autenticada, os módulos de métricas e contatos aparecem carregados; os dados permanecem no navegador local e não foram reproduzidos neste documento. A captura não foi guardada no repositório porque contém registros pessoais do banco importado. O tamanho de desktop amplo continua sem comprovação renderizada nesta sessão; os valores do CSS não substituem essa validação.
+- Durante uma primeira tentativa, a configuração temporária deixou o leitor local do Google Ads desligado enquanto foi selecionada uma empresa com conta vinculada; o fluxo do dashboard acionou consultas pelo provedor direto. O servidor foi parado assim que isso foi percebido, mas não há evidência suficiente para confirmar se houve tráfego externo. Na inspeção retomada, o leitor de dados armazenados ficou habilitado, sem chamadas diretas ao provedor pelo dashboard. Para novas verificações, manter esse modo local e escolher apenas dados que não acionem integrações desnecessárias.
+- O banco publicado e os arquivos do CRM de referência não foram alterados. O clone conserva o usuário fictício e os dados locais do SQL importado. Essa validação conclui a observação autenticada do painel e deixa pendente comparar desktop amplo, registrar a evidência sem dados pessoais e aplicar somente os ajustes visuais comprovados à plataforma.
+
+## Reaplicação da marca e confirmação em base sintética — 27/09/2026
+
+- Para limitar a inspeção a dados fictícios, o CRM de referência foi iniciado com um clone SQLite isolado e uma conta sintética, sem importar ou acessar o banco oficial enviado. A página autenticada abriu em uma janela de 664 × 880, mostrando o cabeçalho do CRM, o menu lateral com avatar/perfil no topo e a área clara do dashboard; sem registros de métricas sintéticos, não foi possível comparar a distribuição detalhada dos gráficos.
+- A plataforma foi ajustada para usar a imagem oficial redonda `public/images/logo-redonda.png` (copiada para `web-app/public/images/mix7-logo-round.png`) no menu lateral desktop, na navegação compacta e nas telas de entrada, recuperação e redefinição de senha. O painel do CRM apresentou a imagem Mix7 junto ao nome do perfil; no viewport estreito disponível, a marca Mix7 apareceu no topo da navegação móvel da plataforma sem sair da área visível. A tela de login foi inspecionada visualmente antes da mudança, mas não foi renderizada novamente depois porque a sessão do navegador permaneceu autenticada; sua nova captura segue pendente.
+- A cópia local do CRM permaneceu intacta; não foi alterado o SQL enviado nem a persistência publicada. Os arquivos temporários sintéticos ficam sob `%LOCALAPPDATA%\\Temp\\Mix7-CRM-Layout-QA-c0f97cb0d0c54fafb8cc8db96c8b8d0d` e `%LOCALAPPDATA%\\Temp\\Mix7-Platform-Visual-QA-b121651347eb4c128e1b701eb2eaad2e`; encerrar os servidores temporários após validação. Comparação de conteúdo em desktop amplo permanece pendente.

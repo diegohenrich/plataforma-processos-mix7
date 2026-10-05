@@ -8,6 +8,7 @@ on:
       - 'research/**'
       - 'spec/**'
       - 'implementation/**'
+      - 'codex/**'
   pull_request:
     branches:
       - main
@@ -15,6 +16,7 @@ on:
       - 'research/**'
       - 'spec/**'
       - 'implementation/**'
+      - 'codex/**'
 
 permissions:
   contents: read
@@ -46,3 +48,31 @@ jobs:
           node --check prototipo/capacity.js
           node --check prototipo/onboarding.js
           node --check prototipo/app.js
+
+      - name: Instalar dependências PHP
+        working-directory: web-app
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Construir imagem de produção
+        working-directory: web-app
+        run: docker build --pull --tag gestao-mix7-app:ci .
+
+      - name: Validar dependências e formatar PHP
+        working-directory: web-app
+        run: |
+          composer validate --no-check-publish
+          vendor/bin/pint --test app/Http/Controllers/AiPlanningController.php app/Http/Controllers/DemandController.php app/Http/Controllers/DemandTaskController.php app/Http/Controllers/DemandReviewController.php app/Models/AiPlanningRun.php app/Models/Demand.php app/Models/DemandTask.php app/Models/DemandReviewLink.php app/Services/PlanningAgent.php routes/web.php tests/Feature/AiPlanningTest.php tests/Feature/DemandReviewLinkTest.php database/migrations/2026_09_25_000007_add_private_material_files_to_review_links.php database/migrations/2026_09_25_000008_create_ai_planning_runs_table.php database/migrations/2026_09_25_000009_create_demand_task_dependencies_table.php
+
+      - name: Instalar dependências JavaScript
+        working-directory: web-app
+        run: npm ci
+
+      - name: Compilar recursos do site
+        working-directory: web-app
+        run: npm run build
+
+      - name: Executar testes Laravel
+        working-directory: web-app
+        env:
+          APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+        run: php artisan test --compact

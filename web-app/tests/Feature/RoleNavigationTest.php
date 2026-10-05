@@ -1,0 +1,109 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Enums\UserRole;
+use App\Models\Organization;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+class RoleNavigationTest extends TestCase
+{
+    use RefreshDatabase;
+
+    public function test_mobile_and_desktop_navigation_match_authorized_routes_for_each_role(): void
+    {
+        $organization = Organization::create(['name' => 'Mix7', 'slug' => 'mix7']);
+
+        $expected = [
+            UserRole::AgencyOwner->value => [
+                'dashboard', 'demands.index', 'notifications.index', 'organization-assistant.index',
+                'team.index', 'service-access.index',
+                'knowledge.index', 'api-tokens.index', 'settings.index',
+            ],
+            UserRole::MarketingManager->value => [
+                'dashboard', 'demands.index', 'notifications.index', 'organization-assistant.index',
+                'team.activity', 'service-access.index', 'knowledge.index', 'api-tokens.index', 'settings.index',
+            ],
+            UserRole::Professional->value => [
+                'dashboard', 'demands.index', 'notifications.index', 'team.activity', 'service-access.index', 'knowledge.index', 'api-tokens.index',
+            ],
+            UserRole::Client->value => ['dashboard', 'demands.index', 'notifications.index'],
+        ];
+
+        foreach ($expected as $role => $routes) {
+            $user = User::factory()->create([
+                'organization_id' => $organization->id,
+                'role' => $role,
+                'is_active' => true,
+            ]);
+
+            $dashboard = $this->actingAs($user)->get(route('dashboard'));
+            if ($role === UserRole::Client->value) {
+                $dashboard->assertOk();
+                $html = $dashboard->getContent();
+                $this->assertStringContainsString('Área do cliente', $html);
+            } else {
+                $dashboard->assertRedirect(route('team.activity'));
+                $production = $this->get(route('team.activity'))->assertOk();
+                $html = $production->getContent();
+                $this->assertStringContainsString($role === UserRole::Professional->value ? 'Meu trabalho' : 'Produção da equipe', $html);
+            }
+            preg_match_all('/<a class="nav-item[^\"]*" href="([^"]+)"/', $html, $desktopLinks);
+            preg_match_all('/<a href="([^"]+)">/', $this->between($html, 'aria-label="Navegação para celular"', '</nav>'), $mobileLinks);
+
+            $desktopPaths = collect($desktopLinks[1])->map(fn (string $url): string => parse_url($url, PHP_URL_PATH))->all();
+            $mobilePaths = collect($mobileLinks[1])->map(fn (string $url): string => parse_url($url, PHP_URL_PATH))->all();
+            $expectedPaths = collect($routes)->map(fn (string $name): string => route($name, [], false))->all();
+
+            $this->assertSame($expectedPaths, $desktopPaths, "Desktop links differ for role {$role}.");
+            $this->assertSame($expectedPaths, $mobilePaths, "Mobile links differ for role {$role}.");
+            $this->assertStringNotContainsString(route('approvals.index'), $this->between($html, 'aria-label="Navegação para celular"', '</nav>'));
+            $this->assertStringNotContainsString(route('demand-tasks.board'), $this->between($html, 'aria-label="Navegação para celular"', '</nav>'));
+
+            foreach ($routes as $routeName) {
+                $response = $this->actingAs($user)->get(route($routeName));
+                $expectedStatus = $routeName === 'dashboard' && $role !== UserRole::Client->value ? 302 : 200;
+                $this->assertSame($expectedStatus, $response->getStatusCode(), "Route {$routeName} failed for role {$role}.");
+            }
+
+            if ($role === UserRole::Client->value) {
+                $this->get(route('team.capacity'))->assertForbidden();
+                $this->get(route('performance-reviews.index'))->assertForbidden();
+                $this->get(route('service-access.index'))->assertForbidden();
+            } elseif (in_array($role, [UserRole::MarketingManager->value, UserRole::Professional->value], true)) {
+                $this->get(route('service-access.index'))->assertOk();
+            }
+
+            if ($role !== UserRole::Client->value) {
+                $this->get(route('demands.index', ['view' => 'tasks']))->assertOk()->assertSee('Tarefas');
+                $this->get(route('demands.index', ['view' => 'board']))->assertOk()->assertSee('Demandas');
+                $this->get(route('approvals.index'))->assertRedirect(route('demands.index', ['view' => 'board']));
+            }
+
+            if (in_array($role, [UserRole::AgencyOwner->value, UserRole::MarketingManager->value], true)) {
+                $this->get(route('settings.index'))->assertOk()->assertSee('Tipos de aprovação');
+                $this->get(route('approval-modules.index'))->assertOk()->assertSee('Voltar às configurações');
+                if ($role === UserRole::AgencyOwner->value) {
+                    $this->get(route('settings.index'))->assertSee(route('ai-settings.index'));
+                } else {
+                    $this->get(route('settings.index'))->assertDontSee(route('ai-settings.index'));
+                }
+            } else {
+                $this->get(route('settings.index'))->assertForbidden();
+            }
+        }
+    }
+
+    private function between(string $value, string $start, string $end): string
+    {
+        $offset = strpos($value, $start);
+        $this->assertNotFalse($offset, "Could not find {$start} in rendered dashboard.");
+        $value = substr($value, $offset);
+        $length = strpos($value, $end);
+        $this->assertNotFalse($length, "Could not find {$end} in rendered dashboard.");
+
+        return substr($value, 0, $length + strlen($end));
+    }
+}

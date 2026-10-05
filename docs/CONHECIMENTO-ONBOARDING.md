@@ -32,4 +32,10 @@ Os modelos são gravados na chave `mix7.knowledge.v1`; as atribuições e seu pr
 6. Recarregar o navegador e verificar se as atribuições e o progresso continuam neste mesmo perfil.
 7. Usar modelos, atribuições e progresso em desktop e em 390 × 844 sem rolagem horizontal.
 
-A suíte automatizada está em `tests/knowledge.test.js` e `tests/onboarding.test.js`; a conferência visual e de interação está registrada em `docs/PRIMEIRA-IMPLEMENTACAO.md`.
+A suíte automatizada local está em `tests/knowledge.test.js` e `tests/onboarding.test.js`; a conferência visual dessa demonstração está registrada em `docs/PRIMEIRA-IMPLEMENTACAO.md`.
+
+## Estado compartilhado no Laravel
+
+A biblioteca web usa `knowledge_items`, `onboarding_assignments` e `onboarding_assignment_steps`, criadas pela migração `web-app/database/migrations/2026_09_25_000010_create_knowledge_library_tables.php`. Referências, treinamentos, contatos e trilhas pertencem à organização, registram autoria de criação/atualização, permitem busca, filtros, link HTTP/HTTPS e arquivamento/restauração. Direção e gerência mantêm conteúdo; profissionais ativos consultam. Clientes e contas inativas não acessam esta área. Estes são os limites implementados, sujeitos à matriz final de permissões dos quatro papéis.
+
+Uma trilha pode ser atribuída a uma conta profissional ativa da mesma organização. O sistema registra quem atribuiu, copia título e passos para preservar o percurso iniciado e deixa apenas a própria pessoa ou gerência marcar/reabrir passos; o usuário e o horário de conclusão ficam registrados. Nenhuma senha ou credencial é armazenada. Essa entrega é a primeira fatia compartilhada; contatos e metadados não constituem diretório de clientes ou política de dados reais aprovada.

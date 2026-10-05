@@ -2,7 +2,7 @@
 
 Projeto da Mix7 para reunir gestão de equipe e aprovações em um fluxo documentado, rastreável e integrado. O primeiro módulo de aprovação tratará criativos de redes sociais; o modelo deverá comportar outras áreas da agência.
 
-**Estado:** engenharia de requisitos e primeira fatia funcional local em `prototipo/`. Esta fatia valida o fluxo no navegador; ainda não há arquitetura/stack de produção, servidor, login ou armazenamento compartilhado.
+**Estado:** protótipo histórico em `prototipo/` e aplicação Laravel 12 em `web-app/`. A aplicação local já inclui autenticação, papéis, demandas/tarefas persistidas, aprovações por link, cronômetro, equipe, avaliações humanas, capacidade/Gantt, conhecimento/onboarding, acessos e API; a [auditoria por perfil](docs/AUDITORIA-FUNCIONAL-POR-PERFIL.md) descreve o que está funcional e o que falta. O ambiente de [demonstração local](docs/DEMONSTRACAO-LOCAL.md) usa dados fictícios. Ainda não há operação compartilhada ou validação para dados reais.
 
 ## Fluxo integrado já definido
 
@@ -12,12 +12,19 @@ Demanda/briefing → planejamento revisado → execução → revisão interna �
 
 - [Requisitos e dúvidas abertas](docs/REQUIREMENTS.md)
 - [Rastreabilidade dos três áudios](docs/TRACEABILIDADE-AUDIOS.md)
+- [Auditoria funcional por perfil e roteiro de teste](docs/AUDITORIA-FUNCIONAL-POR-PERFIL.md)
 - [Fluxo proposto para uma demanda de criativo](docs/FLUXO-PROPOSTO.md)
 - [Glossário e critério de conclusão](docs/GLOSSARIO.md)
 - [Ficha para validar um caso real da Mix7](docs/VALIDACAO-CASO-REAL.md)
 - [Produto e público](docs/PRODUCT.md)
+- [Pesquisa inicial de provedores de IA](docs/IA-PROVEDORES.md)
 - [Fases e critérios de avanço](docs/ROADMAP.md)
+- [Arquitetura web Laravel e Hostinger](docs/ARQUITETURA-HOSTINGER-LARAVEL.md)
+- [Implantação de Gestão Mix7 na VPS](docs/IMPLANTACAO-GESTAO-VPS.md)
+- [Operação e cópias de segurança](docs/OPERACOES-E-BACKUP.md)
+- [Contrato atual da API versionada](docs/API.md)
 - [Primeira implementação e seus limites](docs/PRIMEIRA-IMPLEMENTACAO.md)
+- [Demonstração local com contas e fluxos fictícios](docs/DEMONSTRACAO-LOCAL.md)
 - [Conhecimento e onboarding: escopo e pendências](docs/CONHECIMENTO-ONBOARDING.md)
 - [Histórico de validações anteriores](docs/VALIDACOES-HISTORICAS.md)
 - [Referência visual validada no CRM Mix7](docs/REFERENCIA-VISUAL.md)
@@ -29,4 +36,4 @@ O Trello é a fonte canônica para cartões e andamento. Este repositório guard
 
 **Regra de continuidade:** cada alteração ou tarefa concluída deve resultar em commit enviado e verificado no GitHub e atualização do cartão correspondente no Trello, com o resultado e o link. Consulte [AGENTS.md](AGENTS.md) e [Como contribuir](CONTRIBUTING.md). A organização inicial está preservada na tag `marco-2026-09-24-organizacao-inicial`.
 
-Para executar a demonstração local, siga [prototipo/README.md](prototipo/README.md). Não use dados reais: o armazenamento fica só neste navegador e pode ser removido ao limpar os dados locais. As pastas `Sistema de gestão de equipe` e `Sistema de aprovação de criativos das redes sociais` representam as duas frentes iniciais; a arquitetura técnica final permanece em aberto.
+Para executar o protótipo, siga [prototipo/README.md](prototipo/README.md). Para explorar a aplicação com perfis e registros sintéticos, siga [docs/DEMONSTRACAO-LOCAL.md](docs/DEMONSTRACAO-LOCAL.md); para preparar uma instalação Laravel, consulte [a arquitetura e configuração](docs/ARQUITETURA-HOSTINGER-LARAVEL.md). Não use dados reais até validar permissões, política de IA, e-mail, armazenamento/backup, limites da hospedagem e operação compartilhada. As pastas `Sistema de gestão de equipe` e `Sistema de aprovação de criativos das redes sociais` representam as duas frentes iniciais.

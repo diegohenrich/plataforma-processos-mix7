@@ -1,0 +1,38 @@
+// Copy to the private OPENCLAW_STATE_DIR/openclaw.json and set a provider/model
+// there. Never mount the Laravel source, storage, database, Docker socket or host
+// home in this container. Validate this file with the pinned OpenClaw release.
+{
+  gateway: {
+    mode: "local",
+    bind: "lan", // Needed only inside the private Docker bridge; no published port.
+    port: 18789,
+    auth: { mode: "token" }, // OPENCLAW_GATEWAY_TOKEN comes from private env.
+    controlUi: { enabled: false },
+    cliAgents: { enabled: false },
+    terminal: { enabled: false },
+    http: { endpoints: { chatCompletions: { enabled: true } } },
+  },
+  browser: { enabled: false },
+  // Only the model provider plugin is permitted. No memory, channels,
+  // computer control or third-party extensions can load in this instance.
+  plugins: { allow: ["openai"], slots: { memory: "none" } },
+  cron: { enabled: false },
+  tools: {
+    profile: "minimal",
+    allow: [],
+    agentToAgent: { enabled: false },
+    sessions: { visibility: "self" },
+  },
+  agents: {
+    defaults: {
+      model: { primary: "openai/gpt-6-luna" },
+      models: { "openai/gpt-6-luna": { agentRuntime: { id: "openclaw" } } },
+      heartbeat: { every: "0m" },
+    },
+    entries: {
+      mix7: {
+        tools: { allow: [] },
+      },
+    },
+  },
+}
