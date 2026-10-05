@@ -30,23 +30,23 @@ class AiProviderSettingsController extends Controller
     {
         $this->authorizeOwner($request);
         $data = $request->validate([
-            'provider' => ['required', 'string', 'in:ollama-gemma-local'],
+            'provider' => ['required', 'string', 'in:openclaw-internal'],
             'enabled' => ['sometimes', 'boolean'],
         ]);
 
         $setting = AiProviderSetting::query()->firstOrNew(['organization_id' => $request->user()->organization_id]);
         $setting->api_key = null;
         $setting->fill([
-            'provider' => 'ollama-gemma-local',
-            'base_url' => 'http://127.0.0.1:11434/v1',
-            'model' => 'gemma3:4b',
+            'provider' => 'openclaw-internal',
+            'base_url' => null,
+            'model' => 'openclaw/mix7',
             'enabled' => (bool) ($data['enabled'] ?? false),
             'tested_at' => null,
         ]);
         $setting->organization_id = $request->user()->organization_id;
         $setting->save();
 
-        return to_route('ai-settings.index')->with('success', 'Configuração do Gemma 3:4b local salva para esta agência.');
+        return to_route('ai-settings.index')->with('success', 'Conexão interna OpenClaw salva para esta agência.');
     }
 
     public function test(Request $request, AiProviderSettings $settings, AiTextProvider $provider): RedirectResponse
@@ -70,7 +70,7 @@ class AiProviderSettingsController extends Controller
             return back()->withErrors(['provider' => 'Teste não concluído: '.$exception->getMessage()]);
         }
 
-        return back()->with('success', 'O Gemma 3:4b local respondeu ao teste fictício.');
+        return back()->with('success', 'O OpenClaw interno respondeu ao teste fictício.');
     }
 
     private function authorizeOwner(Request $request): void

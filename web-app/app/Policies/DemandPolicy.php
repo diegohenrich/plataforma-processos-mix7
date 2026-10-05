@@ -27,7 +27,7 @@ class DemandPolicy
             return true;
         }
 
-        return $demand->created_by === $user->id || $demand->tasks()->where('assigned_to', $user->id)->exists();
+        return $demand->created_by === $user->id || $demand->responsible_user_id === $user->id || $demand->tasks()->where('assigned_to', $user->id)->exists();
     }
 
     public function create(User $user): bool

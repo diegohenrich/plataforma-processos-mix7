@@ -8,6 +8,7 @@ use App\Enums\UserRole;
 use App\Models\Demand;
 use App\Models\DemandEvent;
 use App\Models\DemandTask;
+use App\Models\DemandTaskAssignment;
 use App\Models\TaskTimeEntry;
 use App\Models\User;
 use App\Services\TaskAssignmentNotifier;
@@ -54,7 +55,7 @@ class DemandTaskController extends Controller
             $page = min(max(1, $request->integer($pageKey, 1)), $lastPage);
 
             $boardColumns->put($status->value, $scope
-                ->with(['demand:id,title,status', 'assignee:id,name,is_active', 'dependencies:id,title,status'])
+                ->with(['demand:id,title,status', 'assignee:id,name,is_active', 'dependencies:id,title,status', 'currentAssignment:demand_task_assignments.id,demand_task_assignments.demand_task_id,demand_task_assignments.assigned_at,demand_task_assignments.accepted_at'])
                 ->latest()
                 ->orderByDesc('id')
                 ->offset(($page - 1) * $perColumn)
@@ -76,6 +77,9 @@ class DemandTaskController extends Controller
             'boardCounts' => $boardCounts,
             'boardPages' => $boardPages,
             'currentUser' => $user,
+            'activeTimerTaskId' => $user->role === UserRole::Professional
+                ? TaskTimeEntry::query()->where('user_id', $user->id)->whereNull('ended_at')->value('task_id')
+                : null,
             'search' => $search,
         ]);
     }
@@ -105,6 +109,12 @@ class DemandTaskController extends Controller
             }
 
             $now = CarbonImmutable::now();
+            DemandTaskAssignment::query()
+                ->where('demand_task_id', $task->id)
+                ->where('professional_id', $user->id)
+                ->whereNull('released_at')
+                ->whereNull('accepted_at')
+                ->update(['accepted_at' => $now]);
             TaskTimeEntry::create([
                 'organization_id' => $task->organization_id,
                 'task_id' => $task->id,
@@ -334,8 +344,8 @@ class DemandTaskController extends Controller
             return $this->actionFailure($request, 'status', 'Essa mudança de status não é permitida.');
         }
 
-        if ($to === TaskStatus::InProgress && $task->dependencies()->where('status', '!=', TaskStatus::Completed->value)->exists()) {
-            return $this->actionFailure($request, 'status', 'Conclua as tarefas anteriores antes de iniciar esta tarefa.');
+        if ($to === TaskStatus::InProgress) {
+            return $this->actionFailure($request, 'status', 'Para iniciar a tarefa e contar o tempo, use “Iniciar tempo”.');
         }
 
         DB::transaction(function () use ($task, $from, $to, $request): void {
@@ -351,6 +361,13 @@ class DemandTaskController extends Controller
                 'status' => $to,
                 'completed_at' => $to === TaskStatus::Completed ? CarbonImmutable::now() : null,
             ]);
+            if ($to === TaskStatus::Completed) {
+                DemandTaskAssignment::query()
+                    ->where('demand_task_id', $task->id)
+                    ->where('professional_id', $task->assigned_to)
+                    ->whereNull('released_at')
+                    ->update(['completed_at' => CarbonImmutable::now()]);
+            }
             DemandEvent::create([
                 'organization_id' => $task->organization_id,
                 'demand_id' => $task->demand_id,
@@ -484,6 +501,18 @@ class DemandTaskController extends Controller
             }
 
             $lockedTask->update(['assigned_to' => $nextAssignee->id]);
+            DemandTaskAssignment::query()
+                ->where('demand_task_id', $lockedTask->id)
+                ->where('professional_id', $previousAssignee->id)
+                ->whereNull('released_at')
+                ->update(['released_at' => $now]);
+            DemandTaskAssignment::query()->create([
+                'organization_id' => $lockedTask->organization_id,
+                'demand_task_id' => $lockedTask->id,
+                'professional_id' => $nextAssignee->id,
+                'assigned_by' => $actor->id,
+                'assigned_at' => $now,
+            ]);
             DemandEvent::create([
                 'organization_id' => $lockedTask->organization_id,
                 'demand_id' => $lockedTask->demand_id,

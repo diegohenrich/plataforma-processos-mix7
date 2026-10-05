@@ -36,7 +36,7 @@ O primeiro `git pull` só deve prosseguir se não houver conflito com os arquivo
 
 O `app` não publica porta no host. Para o HTTPS funcionar, o Traefik em modo `host` precisa descobrir o serviço via provedor Docker e alcançar o IP da bridge do `app` na porta 8080. DNS e certificado também precisam estar corretos. Não declare a publicação concluída até abrir a página real no domínio.
 
-Em 02/10/2026, a página pública de entrada foi aberta por HTTPS e retornou HTTP 200. Isso não confirma login, funcionalidades internas, e-mail nem IA. A IA Gemma 3:4b roda apenas no computador local via Ollama; a VPS não tem esse serviço configurado.
+Em 02/10/2026, a página pública de entrada foi aberta por HTTPS e retornou HTTP 200. Isso não confirma login, funcionalidades internas, e-mail nem IA. A decisão atual é OpenClaw interno; o serviço ainda não foi configurado nem iniciado na VPS.
 
 ## Atualizações posteriores
 
@@ -45,6 +45,6 @@ Antes de atualizar, salve fora da VPS uma cópia criptografada do banco e dos an
 ## Limites antes de dados reais
 
 - Configurar e verificar SMTP; enquanto `MAIL_MAILER=log`, convites e recuperação de senha não chegam por e-mail.
-- Definir como a IA Gemma/Ollama funcionará na VPS; o Ollama instalado no Windows não fica acessível pelo contêiner remoto.
+- Validar o OpenClaw dedicado, sem ferramentas e sem porta pública, com modelo/autenticação privados, política de dados e mensagem fictícia; ver docs/IA-PROVEDORES.md.
 - Preparar backup externo recorrente do volume PostgreSQL e dos anexos e uma restauração isolada. O volume Docker sozinho não é backup.
 - Revisar permissões da aplicação e os privilégios da conta do banco antes de uso com clientes.

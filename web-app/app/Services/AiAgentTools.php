@@ -264,6 +264,9 @@ class AiAgentTools
             'result' => [
                 'title' => $demand->title,
                 'brief' => mb_substr($demand->brief, 0, 6000),
+                'responsible' => $demand->responsible()->value('name'),
+                'materials_location' => $demand->materials_location,
+                'access_instructions' => $demand->access_instructions,
                 'stage' => $demand->status->label(),
                 'tasks' => $tasks,
             ],

@@ -59,6 +59,8 @@ class PerformanceReviewController extends Controller
         $data = $request->validate([
             'task_id' => ['required', 'integer', Rule::exists('demand_tasks', 'id')->where(fn ($query) => $query
                 ->where('organization_id', $reviewer->organization_id)->where('status', TaskStatus::Completed->value))],
+            'deadline_score' => ['required', 'integer', 'between:1,5'],
+            'quality_score' => ['required', 'integer', 'between:1,5'],
             'deadline_assessment' => ['required', 'string', 'min:10', 'max:5000'],
             'quality_assessment' => ['required', 'string', 'min:10', 'max:5000'],
             'evidence' => ['nullable', 'string', 'max:5000'],
@@ -75,7 +77,9 @@ class PerformanceReviewController extends Controller
                 'professional_id' => $task->assigned_to,
                 'reviewer_id' => $reviewer->id,
                 'reviewer_role' => $reviewer->role->value,
-                'reviewer_weight' => $reviewer->role === UserRole::AgencyOwner ? 2 : 1,
+                'reviewer_weight' => 1,
+                'deadline_score' => $data['deadline_score'],
+                'quality_score' => $data['quality_score'],
                 'deadline_assessment' => $data['deadline_assessment'],
                 'quality_assessment' => $data['quality_assessment'],
                 'evidence' => $data['evidence'] ?? null,
@@ -102,6 +106,8 @@ class PerformanceReviewController extends Controller
                     'reviewer_id' => $review->reviewer_id,
                     'reviewer_role' => $review->reviewer_role,
                     'reviewer_weight' => $review->reviewer_weight,
+                    'deadline_score' => $review->deadline_score,
+                    'quality_score' => $review->quality_score,
                     'deadline_assessment' => $review->deadline_assessment,
                     'quality_assessment' => $review->quality_assessment,
                     'evidence' => $review->evidence,

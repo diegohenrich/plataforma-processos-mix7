@@ -36,11 +36,11 @@ return [
     ],
 
     'ai_gateway' => [
-        'provider' => env('AI_PROVIDER', 'ollama-gemma-local'),
-        'key' => env('AI_API_KEY') ?: env('AI_GATEWAY_API_KEY'),
+        'provider' => env('AI_PROVIDER', 'openclaw-internal'),
+        'key' => env('AI_API_KEY'),
         'oidc_token' => $_SERVER['VERCEL_OIDC_TOKEN'] ?? $_ENV['VERCEL_OIDC_TOKEN'] ?? null,
-        'base_url' => env('AI_BASE_URL', 'http://127.0.0.1:11434/v1'),
-        'model' => env('AI_MODEL', 'gemma3:4b'),
+        'base_url' => env('AI_BASE_URL', 'http://openclaw:18789/v1'),
+        'model' => env('AI_MODEL', 'openclaw/mix7'),
         'allow_unauthenticated' => (bool) env('AI_ALLOW_UNAUTHENTICATED', false),
         'claude_bin' => env('AI_CLAUDE_BIN', 'claude'),
         'codex_bin' => env('AI_CODEX_BIN', 'codex'),

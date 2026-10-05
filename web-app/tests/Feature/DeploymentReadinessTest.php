@@ -58,7 +58,7 @@ class DeploymentReadinessTest extends TestCase
             ->assertExitCode(1);
     }
 
-    public function test_deployment_check_rejects_postgres_without_required_tls(): void
+    public function test_deployment_check_accepts_private_postgres_without_tls(): void
     {
         $this->app->detectEnvironment(fn (): string => 'production');
         config([
@@ -68,6 +68,7 @@ class DeploymentReadinessTest extends TestCase
             'app.url' => 'https://mix7.example.test',
             'database.default' => 'pgsql',
             'database.connections.pgsql.driver' => 'pgsql',
+            'database.connections.pgsql.host' => 'database',
             'database.connections.pgsql.sslmode' => 'disable',
             'filesystems.disks.local.root' => storage_path('app/private'),
             'mail.default' => 'smtp',
@@ -79,8 +80,8 @@ class DeploymentReadinessTest extends TestCase
         DB::shouldReceive('select')->once()->with('SELECT 1')->andReturn([]);
 
         $this->artisan('mix7:deploy:check')
-            ->expectsOutputToContain('TLS do PostgreSQL obrigatório')
-            ->expectsOutputToContain('Pré-implantação reprovada')
-            ->assertExitCode(1);
+            ->expectsOutputToContain('Conexão PostgreSQL protegida')
+            ->expectsOutputToContain('Verificações obrigatórias passaram')
+            ->assertExitCode(0);
     }
 }

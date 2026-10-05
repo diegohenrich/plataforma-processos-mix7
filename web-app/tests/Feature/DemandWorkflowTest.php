@@ -34,8 +34,9 @@ class DemandWorkflowTest extends TestCase
             ->post(route('demands.store'), [
                 'title' => 'Site institucional',
                 'brief' => 'Apresentar serviços para novos clientes.',
-                'intake_source' => 'WhatsApp',
-                'brief_author_id' => $professional->id,
+                'responsible_user_id' => $professional->id,
+                'materials_location' => 'Pasta compartilhada da campanha',
+                'access_instructions' => 'Solicitar convite ao criador da demanda.',
                 'module_key' => 'website_review',
                 'tasks' => [
                     ['title' => 'Organizar referências', 'assignee_id' => $professional->id, 'estimate_minutes' => '90'],
@@ -47,13 +48,15 @@ class DemandWorkflowTest extends TestCase
         $demand = Demand::firstOrFail();
         $this->assertSame($organization->id, $demand->organization_id);
         $this->assertSame($manager->id, $demand->created_by);
-        $this->assertSame('WhatsApp', $demand->intake_source);
-        $this->assertSame($professional->id, $demand->brief_author_id);
+        $this->assertSame($manager->id, $demand->brief_author_id);
+        $this->assertSame($professional->id, $demand->responsible_user_id);
+        $this->assertSame('Pasta compartilhada da campanha', $demand->materials_location);
+        $this->assertSame('Solicitar convite ao criador da demanda.', $demand->access_instructions);
         $this->assertSame(DemandStatus::Received, $demand->status);
         $this->assertSame(2, $demand->tasks()->count());
         $this->assertSame(3, $demand->events()->count());
         $this->assertDatabaseHas('demand_events', ['demand_id' => $demand->id, 'actor_id' => $manager->id, 'event_type' => 'task_assigned']);
-        $response = $this->get(route('demands.show', $demand))->assertOk()->assertSee('Tipo: Revisão de site')->assertSee('configuração v1')->assertSee('Como o pedido chegou')->assertSee('WhatsApp')->assertSee($professional->name)->assertSee('Quem preparou o briefing');
+        $response = $this->get(route('demands.show', $demand))->assertOk()->assertSee('Tipo: Revisão de site')->assertSee('configuração v1')->assertSee('Responsável')->assertSee($professional->name)->assertSee($manager->name)->assertSee('Pasta compartilhada da campanha')->assertDontSee('Como o pedido chegou')->assertDontSee('Não identificado');
         $response->assertSee('Atribuída por '.$manager->name);
         $response->assertSee('<details class="panel history-panel">', false)
             ->assertSee('3 registros')
@@ -67,11 +70,13 @@ class DemandWorkflowTest extends TestCase
         $demand = $this->demand($organization, $manager);
         $this->task($demand, $professional, $manager, 'Produzir a página');
 
-        $this->actingAs($manager)->get(route('demands.index'))
+        $boardResponse = $this->actingAs($manager)->get(route('demands.index'))
             ->assertOk()
             ->assertSee('Quadro')
             ->assertSee('Lista')
-            ->assertSee('aria-label="Visualizações e tarefas das demandas"', false)
+            ->assertSee('aria-label="Filtro de visualização das demandas"', false)
+            ->assertSee('<select id="demand-view" name="view">', false)
+            ->assertSee('<option value="board" selected>', false)
             ->assertSee('Quadro de demandas por etapa')
             ->assertSee('Demanda recebida')
             ->assertSee('Aprovação do cliente')
@@ -82,9 +87,16 @@ class DemandWorkflowTest extends TestCase
             ->assertSee('<summary>Mover demanda</summary>', false)
             ->assertDontSee('<details class="kanban-move-panel" open>', false);
 
+        $html = $boardResponse->getContent();
+        preg_match('/<nav class="workspace-tabs"[^>]*>(.*?)<\/nav>/s', $html, $navigation);
+        $this->assertNotEmpty($navigation);
+        $this->assertStringNotContainsString('Quadro', $navigation[1]);
+        $this->assertStringNotContainsString('Lista', $navigation[1]);
+
         $this->get(route('demands.index', ['view' => 'list']))
             ->assertOk()
             ->assertSee('Lista de demandas')
+            ->assertSee('<option value="list" selected>', false)
             ->assertSee('Site institucional')
             ->assertDontSee('Quadro de demandas por etapa');
     }
@@ -129,7 +141,7 @@ class DemandWorkflowTest extends TestCase
             ->assertDontSee('Sem próxima etapa');
     }
 
-    public function test_task_board_shows_shared_work_by_status_and_manager_can_move_tasks(): void
+    public function test_task_board_shows_shared_work_and_only_the_professional_timer_can_start_a_task(): void
     {
         [$organization, $manager, $professional] = $this->team();
         $demand = $this->demand($organization, $manager);
@@ -146,14 +158,11 @@ class DemandWorkflowTest extends TestCase
 
         $this->patch(route('demand-tasks.status', $task), ['status' => TaskStatus::InProgress->value])
             ->assertRedirect()
-            ->assertSessionHasNoErrors();
+            ->assertSessionHasErrors('status');
+        $this->assertSame(TaskStatus::Todo, $task->fresh()->status);
+        $this->actingAs($professional)->post(route('demand-tasks.timer.start', $task))->assertRedirect();
         $this->assertSame(TaskStatus::InProgress, $task->fresh()->status);
-        $this->assertDatabaseHas('demand_events', [
-            'task_id' => $task->id,
-            'actor_id' => $manager->id,
-            'event_type' => 'task_status_changed',
-            'to_status' => TaskStatus::InProgress->value,
-        ]);
+        $this->assertDatabaseHas('demand_task_assignments', ['demand_task_id' => $task->id, 'professional_id' => $professional->id, 'accepted_at' => now()->toDateTimeString()]);
     }
 
     public function test_task_board_paginates_each_column_without_losing_total_counts(): void
@@ -215,7 +224,7 @@ class DemandWorkflowTest extends TestCase
             ->assertOk()
             ->assertSee('Conferir formatos da campanha')
             ->assertDontSee('Revisar texto do criativo')
-            ->assertSee('value="'.$colleague->name.'"', false);
+            ->assertSee('value="'.e($colleague->name).'"', false);
     }
 
     public function test_task_board_search_preserves_professional_and_organization_boundaries(): void
@@ -264,11 +273,14 @@ class DemandWorkflowTest extends TestCase
             ->assertOk()
             ->assertSee('Minha entrega')
             ->assertDontSee('Entrega da colega')
-            ->assertSee('Mover para');
+            ->assertSee('Mover para')
+            ->assertSee('Iniciar e contar tempo');
 
         $this->patch(route('demand-tasks.status', $ownTask), ['status' => TaskStatus::InProgress->value])
             ->assertRedirect()
-            ->assertSessionHasNoErrors();
+            ->assertSessionHasErrors('status');
+        $this->actingAs($professional)->post(route('demand-tasks.timer.start', $ownTask))->assertRedirect();
+        $this->assertSame(TaskStatus::InProgress, $ownTask->fresh()->status);
     }
 
     public function test_client_cannot_open_internal_task_board(): void
@@ -391,6 +403,7 @@ class DemandWorkflowTest extends TestCase
         $reassigner = User::factory()->create(['organization_id' => $organization->id, 'role' => UserRole::MarketingManager, 'is_active' => true]);
         $demand = $this->demand($organization, $manager);
         $task = $this->task($demand, $previousAssignee, $manager, 'Finalizar página inicial');
+        $previousAssignment = $task->currentAssignment()->firstOrFail();
         $task->update(['status' => TaskStatus::Paused]);
         DemandEvent::create([
             'organization_id' => $organization->id,
@@ -417,6 +430,13 @@ class DemandWorkflowTest extends TestCase
 
         $this->assertSame($nextAssignee->id, $task->fresh()->assigned_to);
         $this->assertSame(TaskStatus::Paused, $task->fresh()->status);
+        $this->assertNotNull($previousAssignment->fresh()->released_at);
+        $this->assertDatabaseHas('demand_task_assignments', [
+            'demand_task_id' => $task->id,
+            'professional_id' => $nextAssignee->id,
+            'assigned_by' => $reassigner->id,
+            'accepted_at' => null,
+        ]);
         $this->assertDatabaseHas('demand_events', [
             'task_id' => $task->id,
             'actor_id' => $reassigner->id,
@@ -533,7 +553,9 @@ class DemandWorkflowTest extends TestCase
 
         $response = $this->actingAs($professional)->get(route('demands.show', $demand))->assertOk();
         $response->assertSee('Fazer wireframe')->assertDontSee('Revisar conteúdo')->assertDontSee('Colega privado');
-        $this->patch(route('demand-tasks.status', $ownTask), ['status' => TaskStatus::InProgress->value])->assertRedirect();
+        $this->patch(route('demand-tasks.status', $ownTask), ['status' => TaskStatus::InProgress->value])->assertRedirect()->assertSessionHasErrors('status');
+        $this->assertDatabaseHas('demand_tasks', ['id' => $ownTask->id, 'status' => TaskStatus::Todo->value]);
+        $this->post(route('demand-tasks.timer.start', $ownTask))->assertRedirect();
         $this->assertDatabaseHas('demand_tasks', ['id' => $ownTask->id, 'status' => TaskStatus::InProgress->value]);
 
         $colleagueTask = $demand->tasks()->where('assigned_to', $colleague->id)->firstOrFail();
@@ -651,10 +673,15 @@ class DemandWorkflowTest extends TestCase
         [$organization, $manager, $professional] = $this->team();
         $demand = $this->demand($organization, $manager);
         $task = $this->task($demand, $professional, $manager, 'Construir a página');
+        $assignment = $task->currentAssignment()->firstOrFail();
+        $this->assertNull($assignment->accepted_at);
 
         $this->actingAs($professional)->post(route('demand-tasks.timer.start', $task))->assertRedirect();
         $task->refresh();
         $this->assertSame(TaskStatus::InProgress, $task->status);
+        $firstAcceptance = $assignment->fresh()->accepted_at;
+        $this->assertNotNull($firstAcceptance);
+        $this->assertSame(now()->toDateTimeString(), $firstAcceptance->toDateTimeString());
         $this->assertDatabaseHas('task_time_entries', ['task_id' => $task->id, 'user_id' => $professional->id, 'ended_at' => null]);
         $this->get(route('demands.show', $demand))->assertOk()->assertSee('Cronômetro ativo na tarefa Construir a página');
 
@@ -668,6 +695,7 @@ class DemandWorkflowTest extends TestCase
         $this->post(route('demand-tasks.timer.start', $task))->assertRedirect();
         $this->assertDatabaseCount('task_time_entries', 2);
         $this->assertDatabaseHas('task_time_entries', ['task_id' => $task->id, 'user_id' => $professional->id, 'ended_at' => null]);
+        $this->assertSame($firstAcceptance->toDateTimeString(), $assignment->fresh()->accepted_at->toDateTimeString());
     }
 
     public function test_floating_task_window_can_control_timer_and_completion_through_json(): void
@@ -802,6 +830,7 @@ class DemandWorkflowTest extends TestCase
         [$organization, $manager, $professional, $colleague] = $this->team();
         $demand = $this->demand($organization, $manager);
         $ownTask = $this->task($demand, $professional, $manager, 'Minha tarefa do tray');
+        $ownTask->currentAssignment()->firstOrFail()->update(['assigned_at' => now()->subHours(2)->subMinutes(52)]);
         $blockedTask = $this->task($demand, $professional, $manager, 'Outra tarefa minha');
         $dependency = $this->task($demand, $professional, $manager, 'Pré-requisito');
         $blockedTask->dependencies()->attach($dependency->id);
@@ -810,7 +839,9 @@ class DemandWorkflowTest extends TestCase
         $this->actingAs($professional)->get(route('demands.index'))
             ->assertOk()
             ->assertSee('Minhas tarefas')
-            ->assertSee('Janela flutuante')
+            ->assertSee('Manter visível')
+            ->assertSee('Manter tarefas visíveis ao minimizar o CRM', false)
+            ->assertSee('Na sua fila há 2 horas e 52 minutos. Inicie o cronômetro ou avise a gestão se estiver impedido.')
             ->assertSee('data-task-tray-floating-state', false)
             ->assertSee('Minha tarefa do tray')
             ->assertSee('Outra tarefa minha')

@@ -27,8 +27,12 @@ class AiTextProvider
             throw new RuntimeException('A conexão de IA não está configurada ou está desativada. Nenhuma pergunta foi enviada.');
         }
 
+        if ($settings['provider'] === 'openclaw-internal') {
+            return $this->completeWithManagedQueries($settings, $messages, $tools, $jsonSchema, $maxTokens);
+        }
+
         if ($settings['provider'] === 'ollama-gemma-local') {
-            return $this->completeWithGemma($settings, $messages, $tools, $jsonSchema, $maxTokens);
+            return $this->completeWithManagedQueries($settings, $messages, $tools, $jsonSchema, $maxTokens);
         }
 
         if ($settings['provider'] === 'claude-code-subscription') {
@@ -52,10 +56,12 @@ class AiTextProvider
      * @param  array<string, mixed>|null  $jsonSchema
      * @return array{message:array{role:string,content:?string,tool_calls:list<array<string,mixed>>},usage:array<string,mixed>}
      */
-    private function completeWithGemma(array $settings, array $messages, array $tools, ?array $jsonSchema, int $maxTokens): array
+    private function completeWithManagedQueries(array $settings, array $messages, array $tools, ?array $jsonSchema, int $maxTokens): array
     {
         if ($tools === []) {
-            return $this->completeWithGemmaNative($settings, $messages, $jsonSchema, $maxTokens);
+            return $settings['provider'] === 'openclaw-internal'
+                ? $this->completeWithOpenClaw($settings, $messages, $jsonSchema, $maxTokens)
+                : $this->completeWithGemmaNative($settings, $messages, $jsonSchema, $maxTokens);
         }
 
         $definitions = [];
@@ -93,17 +99,19 @@ class AiTextProvider
             'additionalProperties' => false,
         ];
 
-        $messages = $this->gemmaToolMessages($messages, $definitions);
-        $response = $this->completeWithGemmaNative($settings, $messages, $toolSchema, $maxTokens);
+        $messages = $this->managedToolMessages($messages, $definitions);
+        $response = $settings['provider'] === 'openclaw-internal'
+            ? $this->completeWithOpenClaw($settings, $messages, $toolSchema, $maxTokens)
+            : $this->completeWithGemmaNative($settings, $messages, $toolSchema, $maxTokens);
         $content = $response['message']['content'] ?? null;
         try {
             $decision = is_string($content) ? json_decode($content, true, 64, JSON_THROW_ON_ERROR) : null;
         } catch (\JsonException $exception) {
-            throw new RuntimeException('O Gemma não retornou uma decisão estruturada válida. Tente reformular a pergunta.', previous: $exception);
+            throw new RuntimeException('A IA não retornou uma decisão estruturada válida. Tente reformular a pergunta.', previous: $exception);
         }
         if (! is_array($decision) || ! in_array($decision['action'] ?? null, ['answer', 'call_tools'], true)
             || ! is_string($decision['answer'] ?? null) || ! is_array($decision['tool_calls'] ?? null)) {
-            throw new RuntimeException('O Gemma não retornou o formato esperado pelo assistente. Nenhuma consulta foi executada.');
+            throw new RuntimeException('A IA não retornou o formato esperado pelo assistente. Nenhuma consulta foi executada.');
         }
 
         $allowedNames = array_column($definitions, 'name');
@@ -111,7 +119,7 @@ class AiTextProvider
         foreach ($decision['tool_calls'] as $call) {
             if (! is_array($call) || ! is_string($call['name'] ?? null)
                 || ! in_array($call['name'], $allowedNames, true) || ! is_array($call['arguments'] ?? null)) {
-                throw new RuntimeException('O Gemma propôs uma consulta inválida. Nenhuma consulta foi executada.');
+                throw new RuntimeException('A IA propôs uma consulta inválida. Nenhuma consulta foi executada.');
             }
             $toolCalls[] = [
                 'id' => (string) Str::uuid(),
@@ -123,10 +131,10 @@ class AiTextProvider
             ];
         }
         if ($decision['action'] === 'call_tools' && $toolCalls === []) {
-            throw new RuntimeException('O Gemma pediu uma consulta sem indicar ferramenta. Nenhuma consulta foi executada.');
+            throw new RuntimeException('A IA pediu uma consulta sem indicar ferramenta. Nenhuma consulta foi executada.');
         }
         if ($decision['action'] === 'answer' && $toolCalls !== []) {
-            throw new RuntimeException('O Gemma misturou uma resposta com consultas. Nenhuma consulta foi executada.');
+            throw new RuntimeException('A IA misturou uma resposta com consultas. Nenhuma consulta foi executada.');
         }
 
         $response['message']['content'] = $decision['answer'] !== '' ? $decision['answer'] : null;
@@ -139,7 +147,7 @@ class AiTextProvider
      * @param  list<array<string, mixed>>  $tools
      * @return list<array<string, mixed>>
      */
-    private function gemmaToolMessages(array $messages, array $tools): array
+    private function managedToolMessages(array $messages, array $tools): array
     {
         $toolGuide = "Consultas internas somente leitura disponíveis (a aplicação valida e executa; você não executa ações):\n".json_encode($tools, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE)
             ."\nRetorne apenas o JSON exigido pelo formato. Use action=call_tools com uma lista de consultas necessárias e answer vazio; após receber resultados, responda com action=answer, sem repetir consultas. Nunca invente resultados nem escolha ferramentas fora da lista.";
@@ -222,6 +230,69 @@ class AiTextProvider
             'usage' => [
                 'input_tokens' => $this->integerOrNull($response->json('prompt_eval_count')),
                 'output_tokens' => $this->integerOrNull($response->json('eval_count')),
+                'cost' => null,
+            ],
+        ];
+    }
+
+    /**
+     * OpenClaw has its own internal tools. The Mix7 gateway must have none; this
+     * request deliberately exposes no HTTP tools and sends text only. Laravel
+     * interprets any proposed read call and authorizes it separately.
+     *
+     * @param  array<string, mixed>  $settings
+     * @param  list<array<string, mixed>>  $messages
+     * @param  array<string, mixed>|null  $jsonSchema
+     * @return array{message:array{role:string,content:?string,tool_calls:list<array<string,mixed>>},usage:array<string,mixed>}
+     */
+    private function completeWithOpenClaw(array $settings, array $messages, ?array $jsonSchema, int $maxTokens): array
+    {
+        $messages = array_map(static function (array $message): array {
+            if (($message['role'] ?? '') === 'tool') {
+                return ['role' => 'user', 'content' => 'Resultado da consulta autorizada pelo CRM: '.(string) ($message['content'] ?? '')];
+            }
+            if (($message['role'] ?? '') === 'assistant' && ! empty($message['tool_calls'])) {
+                return ['role' => 'assistant', 'content' => 'Solicitei uma consulta autorizada pelo CRM.'];
+            }
+
+            return ['role' => $message['role'] ?? 'user', 'content' => (string) ($message['content'] ?? '')];
+        }, $messages);
+        if ($jsonSchema !== null) {
+            $messages[] = ['role' => 'system', 'content' => 'Responda somente com JSON válido que siga exatamente este esquema; não inclua Markdown: '
+                .json_encode($jsonSchema, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE)];
+        }
+
+        // Do not set `user`: OpenClaw then creates a fresh session for each
+        // request, preventing cross-user and cross-organization agent memory.
+        $payload = [
+            'model' => 'openclaw/mix7',
+            'messages' => $messages,
+            'stream' => false,
+            'max_completion_tokens' => min(max($maxTokens, 1), 1800),
+        ];
+
+        try {
+            $response = Http::baseUrl($settings['base_url'])->withoutRedirecting()->acceptJson()->asJson()
+                ->withToken($settings['key'])->connectTimeout(5)->timeout(60)
+                ->post('/chat/completions', $payload)->throw();
+        } catch (ConnectionException $exception) {
+            throw new RuntimeException('O serviço interno de IA não respondeu. Nenhuma alteração foi feita.', previous: $exception);
+        } catch (RequestException $exception) {
+            throw new RuntimeException('O serviço interno de IA recusou a solicitação. Nenhuma alteração foi feita.', previous: $exception);
+        }
+
+        $content = $response->json('choices.0.message.content');
+        // A configured gateway with tools enabled must fail closed. Never accept
+        // an OpenClaw tool call as a Laravel-authorized tool call.
+        if (! is_string($content) || trim($content) === '' || $response->json('choices.0.message.tool_calls') !== null) {
+            throw new RuntimeException('O serviço interno de IA retornou um formato não permitido. Nenhuma alteração foi feita.');
+        }
+
+        return [
+            'message' => ['role' => 'assistant', 'content' => $content, 'tool_calls' => []],
+            'usage' => [
+                'input_tokens' => $this->integerOrNull($response->json('usage.prompt_tokens')),
+                'output_tokens' => $this->integerOrNull($response->json('usage.completion_tokens')),
                 'cost' => null,
             ],
         ];

@@ -28,7 +28,7 @@ class TaskTrayComposer
                     $query->orWhere('id', $activeEntry->task_id);
                 }
             })
-            ->with(['demand:id,title', 'dependencies:id,status']);
+            ->with(['demand:id,title', 'dependencies:id,status', 'currentAssignment:demand_task_assignments.id,demand_task_assignments.demand_task_id,demand_task_assignments.assigned_at,demand_task_assignments.accepted_at']);
         $taskCount = (clone $taskQuery)->count();
         $tasks = $taskQuery->latest()->limit(21)->get();
         $hasMore = $taskCount > 20;

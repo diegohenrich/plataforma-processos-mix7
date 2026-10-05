@@ -27,6 +27,9 @@ class ApiDemandMutationTest extends TestCase
                 'brief' => 'Briefing sintético para o site.',
                 'intake_source' => 'E-mail',
                 'brief_author_id' => $professional->id,
+                'responsible_user_id' => $professional->id,
+                'materials_location' => 'Drive da campanha',
+                'access_instructions' => 'Solicitar convite ao criador.',
                 'module_key' => 'website_review',
                 'client_user_id' => $client->id,
                 'tasks' => [
@@ -37,9 +40,11 @@ class ApiDemandMutationTest extends TestCase
 
         $response->assertCreated()
             ->assertJsonPath('data.title', 'Site institucional')
-            ->assertJsonPath('data.intake_source', 'E-mail')
-            ->assertJsonPath('data.brief_author.id', $professional->id)
-            ->assertJsonPath('data.brief_author.name', $professional->name)
+            ->assertJsonPath('data.brief_author.id', $owner->id)
+            ->assertJsonPath('data.brief_author.name', $owner->name)
+            ->assertJsonPath('data.responsible.id', $professional->id)
+            ->assertJsonPath('data.materials_location', 'Drive da campanha')
+            ->assertJsonPath('data.access_instructions', 'Solicitar convite ao criador.')
             ->assertJsonPath('data.status', DemandStatus::Received->value)
             ->assertJsonPath('data.module.key', 'website_review')
             ->assertJsonPath('data.module.label', 'Revisão de site')
@@ -60,8 +65,8 @@ class ApiDemandMutationTest extends TestCase
             ->assertOk()
             ->assertJsonPath('data.module.key', 'website_review')
             ->assertJsonPath('data.module.version', 1)
-            ->assertJsonPath('data.intake_source', 'E-mail')
-            ->assertJsonPath('data.brief_author.id', $professional->id)
+            ->assertJsonPath('data.brief_author.id', $owner->id)
+            ->assertJsonPath('data.responsible.id', $professional->id)
             ->assertJsonPath('data.tasks.0.assigned_by.id', $owner->id)
             ->assertJsonPath('data.tasks.0.assigned_by.name', $owner->name);
         $this->authenticate($token)->getJson('/api/v1/demands')
@@ -82,7 +87,7 @@ class ApiDemandMutationTest extends TestCase
         $this->assertSame(2, $professional->notifications()->where('data->type', 'task_assigned')->count());
     }
 
-    public function test_demand_creation_rejects_brief_author_outside_active_internal_team(): void
+    public function test_demand_creation_rejects_responsible_outside_active_professionals(): void
     {
         [, $owner, $professional, , $client] = $this->workspace();
         [, , $outsideProfessional] = $this->workspace('outside');
@@ -90,15 +95,16 @@ class ApiDemandMutationTest extends TestCase
             'title' => 'Demanda de teste',
             'brief' => 'Briefing sintético.',
             'module_key' => 'social_creative',
+            'responsible_user_id' => $professional->id,
             'tasks' => [['title' => 'Criar peça', 'assignee_id' => $professional->id]],
         ];
         $token = $owner->createToken('desktop')->plainTextToken;
 
-        foreach ([$outsideProfessional->id, $client->id] as $invalidAuthorId) {
+        foreach ([$outsideProfessional->id, $client->id] as $invalidProfessionalId) {
             $this->authenticate($token)->postJson('/api/v1/demands', [
                 ...$base,
-                'brief_author_id' => $invalidAuthorId,
-            ])->assertUnprocessable()->assertJsonValidationErrors('brief_author_id');
+                'responsible_user_id' => $invalidProfessionalId,
+            ])->assertUnprocessable()->assertJsonValidationErrors('responsible_user_id');
         }
 
         $this->assertSame(0, Demand::query()->count());
@@ -178,10 +184,12 @@ class ApiDemandMutationTest extends TestCase
             ->assertConflict()
             ->assertJsonPath('errors.status.0', 'Conclua todas as tarefas antes da revisão interna.');
 
-        $this->patchJson("/api/v1/tasks/{$taskId}/status", ['status' => TaskStatus::InProgress->value])
+        $this->authenticate($professional->createToken('task-start')->plainTextToken)
+            ->postJson("/api/v1/tasks/{$taskId}/timer/start")
             ->assertOk();
         $this->patchJson("/api/v1/tasks/{$taskId}/status", ['status' => TaskStatus::Completed->value])
             ->assertOk();
+        $this->authenticate($token);
         $this->patchJson("/api/v1/demands/{$demand->id}/status", ['status' => DemandStatus::InternalReview->value])
             ->assertOk()
             ->assertJsonPath('data.status', DemandStatus::InternalReview->value);

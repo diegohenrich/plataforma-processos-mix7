@@ -13,6 +13,17 @@ class AiProviderSettings
             ? AiProviderSetting::query()->where('organization_id', $organizationId)->first()
             : null;
 
+        if ((string) config('services.ai_gateway.provider') === 'openclaw-internal' && ! app()->environment('testing')) {
+            return [
+                'provider' => 'openclaw-internal',
+                'base_url' => rtrim((string) config('services.ai_gateway.base_url'), '/'),
+                'model' => 'openclaw/mix7',
+                'key' => (string) config('services.ai_gateway.key'),
+                'enabled' => $saved?->provider === 'openclaw-internal' && $saved->enabled,
+                'local_cli' => '', 'codex_cli' => '', 'source' => 'environment',
+            ];
+        }
+
         if ($saved) {
             return [
                 'provider' => $saved->provider,
@@ -45,8 +56,22 @@ class AiProviderSettings
             return false;
         }
 
+        if ($settings['provider'] === 'openclaw-internal') {
+            $url = parse_url($settings['base_url']);
+
+            return is_array($url)
+                && ($url['scheme'] ?? null) === 'http'
+                && in_array($url['host'] ?? null, ['openclaw', '127.0.0.1'], true)
+                && (int) ($url['port'] ?? 18789) === 18789
+                && ($url['path'] ?? '') === '/v1'
+                && ! isset($url['user']) && ! isset($url['pass'])
+                && ! isset($url['query']) && ! isset($url['fragment'])
+                && $settings['model'] === 'openclaw/mix7'
+                && $settings['key'] !== '';
+        }
+
         if ($settings['provider'] === 'ollama-gemma-local') {
-            return (app()->environment('local') || app()->environment('testing'))
+            return app()->environment('testing')
                 && $settings['base_url'] === 'http://127.0.0.1:11434/v1'
                 && $settings['model'] === 'gemma3:4b';
         }

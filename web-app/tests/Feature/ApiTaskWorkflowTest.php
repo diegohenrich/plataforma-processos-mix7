@@ -20,6 +20,22 @@ class ApiTaskWorkflowTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_professional_cannot_mark_work_in_progress_without_starting_the_timer(): void
+    {
+        [$organization, $owner, $professional] = $this->workspace();
+        $demand = $this->demand($organization, $owner);
+        $task = $this->task($demand, $professional, $owner);
+        $token = $professional->createToken('desktop')->plainTextToken;
+
+        $this->withToken($token)->patchJson("/api/v1/tasks/{$task->id}/status", ['status' => TaskStatus::InProgress->value])
+            ->assertUnprocessable()
+            ->assertJsonPath('message', 'Para iniciar a tarefa e contar o tempo, use “Iniciar tempo”.');
+
+        $this->assertSame(TaskStatus::Todo, $task->fresh()->status);
+        $this->assertDatabaseCount('task_time_entries', 0);
+        $this->assertDatabaseHas('demand_task_assignments', ['demand_task_id' => $task->id, 'accepted_at' => null]);
+    }
+
     public function test_professional_can_start_pause_and_complete_an_assigned_task_through_the_api(): void
     {
         Date::setTestNow(CarbonImmutable::parse('2026-09-26 12:00:00'));
@@ -40,7 +56,7 @@ class ApiTaskWorkflowTest extends TestCase
             ->assertJsonPath('data.status', TaskStatus::Paused->value)
             ->assertJsonPath('data.timer.duration_seconds', 90);
 
-        $this->patchJson("/api/v1/tasks/{$task->id}/status", ['status' => TaskStatus::InProgress->value])
+        $this->postJson("/api/v1/tasks/{$task->id}/timer/start")
             ->assertOk()
             ->assertJsonPath('data.status', TaskStatus::InProgress->value);
 
@@ -49,8 +65,8 @@ class ApiTaskWorkflowTest extends TestCase
             ->assertJsonPath('data.status', TaskStatus::Completed->value)
             ->assertJsonPath('data.completed_at', '2026-09-26T12:01:30.000000Z');
 
-        $this->assertDatabaseCount('task_time_entries', 1);
-        $this->assertNotNull(TaskTimeEntry::query()->firstOrFail()->ended_at);
+        $this->assertDatabaseCount('task_time_entries', 2);
+        $this->assertSame(2, TaskTimeEntry::query()->whereNotNull('ended_at')->count());
         $this->assertDatabaseHas('demand_events', [
             'task_id' => $task->id,
             'actor_id' => $professional->id,

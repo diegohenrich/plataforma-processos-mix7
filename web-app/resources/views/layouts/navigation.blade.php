@@ -6,7 +6,7 @@
     .brand-copy small{color:#bed4dc;font-size:13px;line-height:1.5;overflow-wrap:anywhere}
     .mobile-nav .brand-image{width:38px;height:38px;border-radius:50%}
     .mobile-nav .brand-copy{display:block;color:#fff;font-size:16px;font-weight:750}
-    .workspace-tabs{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:0 0 20px;padding-bottom:12px;border-bottom:1px solid #e3e9e8}.workspace-tabs a{display:inline-flex;align-items:center;min-height:38px;padding:7px 12px;border:1px solid #d6e0e1;border-radius:10px;background:#fff;color:#52666e;text-decoration:none;font-size:12px;font-weight:650}.workspace-tabs a[aria-current="page"]{border-color:#204b61;background:#eaf6fa;color:#204b61}.workspace-tabs .workspace-settings{margin-left:auto;background:#f8fbfb}
+    .workspace-tabs{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:0 0 20px;padding-bottom:12px;border-bottom:1px solid #e3e9e8}.workspace-tabs a{display:inline-flex;align-items:center;min-height:38px;padding:7px 12px;border:1px solid #d6e0e1;border-radius:10px;background:#fff;color:#52666e;text-decoration:none;font-size:12px;font-weight:650}.workspace-tabs a[aria-current="page"]{border-color:#204b61;background:#eaf6fa;color:#204b61}
     @media(max-width:650px){.mobile-nav .brand{gap:10px;padding:0}.mobile-nav .brand-copy small{display:none}}
 </style>
 @php
@@ -21,7 +21,7 @@
         ['label' => 'Acessos de serviços', 'icon' => '⌑', 'route' => 'service-access.index', 'active' => 'service-access', 'show' => $navigationRole !== App\Enums\UserRole::Client],
         ['label' => 'Conhecimento', 'icon' => '▤', 'route' => 'knowledge.index', 'active' => 'knowledge', 'show' => auth()->user()->can('viewAny', App\Models\KnowledgeItem::class)],
         ['label' => 'Acessos da API', 'icon' => '⌘', 'route' => 'api-tokens.index', 'active' => 'integrations', 'show' => $navigationRole !== App\Enums\UserRole::Client],
-        ['label' => 'Configuração de IA', 'icon' => '✧', 'route' => 'ai-settings.index', 'active' => 'ai-settings', 'show' => $navigationRole === App\Enums\UserRole::AgencyOwner],
+        ['label' => 'Configurações', 'icon' => '⚙', 'route' => 'settings.index', 'active' => 'settings', 'show' => auth()->user()->can('create', App\Models\Demand::class)],
     ];
 @endphp
 <aside class="sidebar" aria-label="Navegação principal">

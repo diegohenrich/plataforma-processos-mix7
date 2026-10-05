@@ -12,11 +12,12 @@ if (tray) {
         const state = JSON.parse(stateElement.textContent);
         let floatingWindow = null;
         let elapsedInterval = null;
+        let waitingInterval = null;
         let heartbeatInterval = null;
 
         if (!supportsFloatingWindow) {
             button.disabled = true;
-            button.title = 'Janela flutuante indisponível neste navegador. A bandeja da página continua funcionando.';
+            button.title = 'Seu navegador não permite abrir uma janela separada. Use Minhas tarefas no CRM.';
             status.textContent = button.title;
             status.classList.add('is-visible');
         }
@@ -37,12 +38,35 @@ if (tray) {
             return `${hours}:${minutes}:${remainder}`;
         };
 
+        const formatWaiting = (timestamp) => {
+            const seconds = Math.max(0, Math.floor((Date.now() - Date.parse(timestamp)) / 1000));
+            const days = Math.floor(seconds / 86400);
+            const hours = Math.floor((seconds % 86400) / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+
+            const parts = [];
+            if (days) parts.push(`${days} ${days === 1 ? 'dia' : 'dias'}`);
+            if (hours) parts.push(`${hours} ${hours === 1 ? 'hora' : 'horas'}`);
+            if (!days && minutes) parts.push(`${minutes} ${minutes === 1 ? 'minuto' : 'minutos'}`);
+            if (!parts.length) parts.push('1 minuto');
+
+            return parts.length > 1 ? `${parts.slice(0, -1).join(', ')} e ${parts.at(-1)}` : parts[0];
+        };
+
         const buttonFor = (documentRef, label, action, task, className = '') => {
             const control = element(documentRef, 'button', label, `mix7-control ${className}`.trim());
             control.type = 'button';
             control.addEventListener('click', () => performAction(action, task));
 
             return control;
+        };
+
+        const waitingFor = (documentRef, timestamp) => {
+            const node = element(documentRef, 'small', '', 'mix7-waiting');
+            node.dataset.waitingSince = timestamp;
+            node.textContent = `Na sua fila há ${formatWaiting(timestamp)}. Inicie o cronômetro ou avise a gestão se estiver impedido.`;
+
+            return node;
         };
 
         const activeTask = () => state.tasks.find((task) => task.id === state.active?.taskId) ?? null;
@@ -98,6 +122,7 @@ if (tray) {
                         });
                         details.append(openTask);
                         details.append(element(documentRef, 'small', `${task.demandTitle} · ${task.statusLabel}`, 'mix7-demand-title'));
+                        if (task.waitingSince) details.append(waitingFor(documentRef, task.waitingSince));
                         item.append(details);
                         if (task.blocked) item.append(element(documentRef, 'span', 'Bloqueada', 'mix7-muted'));
                         list.append(item);
@@ -136,6 +161,7 @@ if (tray) {
                     });
                     details.append(openTask);
                     details.append(element(documentRef, 'small', `${task.demandTitle} · ${task.statusLabel}`, 'mix7-demand-title'));
+                    if (task.waitingSince) details.append(waitingFor(documentRef, task.waitingSince));
                     item.append(details);
 
                     if (task.blocked) {
@@ -163,6 +189,12 @@ if (tray) {
                 root.lastElementChild.rel = 'noopener noreferrer';
             }
 
+            if (waitingInterval && floatingWindow) floatingWindow.clearInterval(waitingInterval);
+            waitingInterval = floatingWindow.setInterval(() => {
+                floatingWindow.document.querySelectorAll('[data-waiting-since]').forEach((node) => {
+                    node.textContent = `Na sua fila há ${formatWaiting(node.dataset.waitingSince)}. Inicie o cronômetro ou avise a gestão se estiver impedido.`;
+                });
+            }, 60_000);
             if (heartbeatInterval && floatingWindow) floatingWindow.clearInterval(heartbeatInterval);
             heartbeatInterval = state.active
                 ? floatingWindow.setInterval(sendHeartbeat, 20_000)
@@ -260,7 +292,7 @@ if (tray) {
         const openFloatingWindow = async () => {
             if (!supportsFloatingWindow) return;
             button.disabled = true;
-            status.textContent = 'Abrindo a janela flutuante…';
+            status.textContent = 'Abrindo uma janela separada para suas tarefas…';
             try {
                 floatingWindow = window.documentPictureInPicture.window;
                 if (!floatingWindow || floatingWindow.closed) {
@@ -279,7 +311,7 @@ if (tray) {
                     *{box-sizing:border-box}body{margin:0;padding:18px;background:#f4f9fb}
                     .mix7-header{padding:3px 2px 16px;border-bottom:1px solid #dce9ed}.mix7-eyebrow{display:block;color:#39758b;font-size:10px;font-weight:800;letter-spacing:.1em}
                     .mix7-heading{margin:6px 0 0;color:#204b61;font-size:21px}.mix7-message{min-height:18px;margin:8px 1px;color:#397050;font-size:11px}.mix7-message.is-error{color:#a14e4e}
-                    .mix7-intro{color:#667b83;font-size:12px;line-height:1.55}.mix7-active-card,.mix7-task{padding:14px;border:1px solid #d7e9e9;border-radius:13px;background:#fff;box-shadow:0 5px 18px #204b610d}
+                    .mix7-intro{color:#667b83;font-size:12px;line-height:1.55}.mix7-active-card,.mix7-task{padding:14px;border:1px solid #d7e9e9;border-radius:13px;background:#fff;box-shadow:0 5px 18px #204b610d}.mix7-waiting{color:#945b12;font-size:10px;font-weight:800;line-height:1.4}
                     .mix7-task-title{margin:8px 0 4px;color:#304952;font-size:15px;line-height:1.35}.mix7-demand-title{display:block;margin:4px 0 0;color:#718087;font-size:11px;line-height:1.4;overflow-wrap:anywhere}
                     .mix7-timer{display:block;margin:20px 0;color:#204b61;font-size:38px;font-variant-numeric:tabular-nums;letter-spacing:.02em;text-align:center}
                     .mix7-actions{display:flex;gap:8px}.mix7-control{min-height:38px;padding:8px 11px;border:1px solid #d6e0e1;border-radius:9px;background:#fff;color:#38515b;font:inherit;font-size:11px;font-weight:750;cursor:pointer}.mix7-primary{border-color:#204b61;background:#204b61;color:#fff}.mix7-secondary{border-color:#cfe2e5;background:#f4fbfc;color:#204b61}
@@ -297,12 +329,12 @@ if (tray) {
                     heartbeatInterval = null;
                     floatingWindow = null;
                     button.disabled = false;
-                    status.textContent = 'Janela flutuante fechada. A bandeja do CRM continua disponível.';
+                    status.textContent = 'Janela separada fechada. Minhas tarefas continua disponível no CRM.';
                 }, { once: true });
-                status.textContent = 'Janela flutuante aberta.';
+                status.textContent = 'Janela aberta. Suas tarefas e o cronômetro continuam visíveis ao minimizar o CRM.';
                 status.classList.add('is-visible');
             } catch (_) {
-                status.textContent = 'Não foi possível abrir a janela flutuante. Use a bandeja do CRM.';
+                status.textContent = 'Não foi possível abrir a janela separada. Use Minhas tarefas no CRM.';
                 status.classList.add('is-visible');
             } finally {
                 button.disabled = false;

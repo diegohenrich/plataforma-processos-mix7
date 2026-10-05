@@ -5,6 +5,9 @@ Este documento separa três informações que atendem a perguntas diferentes. O 
 ## Comportamento confirmado para o profissional
 
 - A pessoa escolhe uma tarefa liberada e inicia ou pausa o cronômetro pela demanda minimizada.
+- A atribuição inicia a contagem de espera. O primeiro clique em “Iniciar tempo” registra o aceite e abre a primeira sessão; alterar o status para “Em andamento” sem iniciar o cronômetro é recusado. Pausar e retomar não reinicia o tempo de aceite.
+- Ao transferir uma tarefa, a atribuição anterior é encerrada e uma nova começa. O histórico mantém responsável, quem atribuiu, momento da atribuição, primeiro início e conclusão, para que os tempos de cada pessoa não se misturem.
+- Na fila pessoal e no quadro, a tarefa ainda não iniciada mostra continuamente há quanto tempo está aguardando. A idade é um dado factual, sem prazo automático, punição ou pontuação.
 - O tempo é registrado na tarefa selecionada. Uma tarefa em pausa pode ser retomada; não se inicia outra sessão simultânea para a mesma pessoa.
 - Enquanto o sistema está aberto, só o intervalo iniciado pelo cronômetro conta como tempo realizado. Uma pausa encerra esse intervalo.
 - A tela envia um sinal ao servidor a cada 20 segundos enquanto há cronômetro ativo. Se os sinais pararem por mais de 180 segundos, o sistema encerra o intervalo no último sinal confirmado, pausa a tarefa e registra a pausa automática sem atribuí-la a uma ação humana. Ao retornar, o profissional vê o cronômetro encerrado e pode iniciar outro intervalo; os dados anteriores à implantação desta regra continuam recuperáveis manualmente. A detecção pode levar até três minutos, mas esse período não é incluído no tempo registrado. A suspensão prolongada da aba pode encerrar a sessão mesmo que o aplicativo continue aberto, portanto a pessoa deve conferir o timer ao voltar.
@@ -32,7 +35,7 @@ O Gantt deve mostrar prazos, duração planejada e dependências registradas. O 
 
 ## Critérios de aceite
 
-1. Iniciar e pausar uma tarefa registra intervalos associados à tarefa e à pessoa autenticada; a soma corresponde somente aos intervalos ativos.
+1. Sem iniciar o cronômetro, o profissional não consegue marcar uma tarefa “Em andamento” nem registra tempo de execução. Iniciar e pausar cria intervalos associados à tarefa e à pessoa autenticada; a soma corresponde somente aos intervalos ativos.
 2. Reabrir a demanda minimizada mantém o mesmo cronômetro e o histórico; iniciar outra tarefa enquanto houver sessão ativa é bloqueado ou exige a ação de pausa definida pela Mix7.
 3. Navegar entre telas mantém o cronômetro. Se o navegador parar de enviar sinais por mais de 180 segundos, o sistema encerra o intervalo no último sinal confirmado, pausa a tarefa e registra evento automático. A tolerância atrasa a detecção, mas não é contabilizada; uma aba suspensa por longo período pode exigir que a pessoa inicie o timer novamente.
 4. Estimativa, tempo realizado e disponibilidade permanecem campos/medidas distintos; corrigir um não reescreve os outros.
@@ -42,6 +45,7 @@ O especialista de operação/produção da IA pode consultar esses mesmos fatos 
 
 No planejamento estruturado, direção/gerência também pode marcar uma opção para enviar ao agente somente os totais agregados da semana escolhida: profissionais ativos, quantos têm capacidade registrada, minutos disponíveis após ausências, estimativas em tarefas com prazo e lacunas. A entrada não inclui nomes, títulos de tarefas nem identificadores individuais. A revisão da proposta mostra os mesmos totais enviados e uma observação preliminar do agente, que a gestão confere com os valores antes de decidir. Sem contexto de capacidade, o servidor rejeita uma observação que afirme carga ou disponibilidade. O agente pode usar os dados como alerta preliminar de esforço, sem selecionar, comparar ou avaliar pessoas. A gestão ainda escolhe cada responsável e aprova as tarefas. A opção desmarcada não envia dados de capacidade; marcá-la não substitui a aprovação da política de dados da Mix7.
 6. O Gantt respeita prazos e dependências salvos; dados do cronômetro não deslocam o cronograma automaticamente.
+7. Direção e gerência da organização veem, por profissional, tarefas aguardando início, o maior tempo de espera atual e médias móveis de 30 dias de (a) atribuição até o primeiro início e (b) primeiro início até conclusão. O tempo efetivamente cronometrado continua separado do prazo de execução em calendário. Profissionais veem apenas os próprios indicadores; cliente não tem acesso. Transferências preservam as medidas de cada atribuição anterior.
 
 ## Perguntas que ainda precisam de resposta
 

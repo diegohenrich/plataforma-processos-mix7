@@ -20,11 +20,11 @@ class RoleNavigationTest extends TestCase
             UserRole::AgencyOwner->value => [
                 'dashboard', 'demands.index', 'notifications.index', 'organization-assistant.index',
                 'team.index', 'service-access.index',
-                'knowledge.index', 'api-tokens.index', 'ai-settings.index',
+                'knowledge.index', 'api-tokens.index', 'settings.index',
             ],
             UserRole::MarketingManager->value => [
                 'dashboard', 'demands.index', 'notifications.index', 'organization-assistant.index',
-                'team.activity', 'service-access.index', 'knowledge.index', 'api-tokens.index',
+                'team.activity', 'service-access.index', 'knowledge.index', 'api-tokens.index', 'settings.index',
             ],
             UserRole::Professional->value => [
                 'dashboard', 'demands.index', 'notifications.index', 'team.activity', 'service-access.index', 'knowledge.index', 'api-tokens.index',
@@ -39,8 +39,17 @@ class RoleNavigationTest extends TestCase
                 'is_active' => true,
             ]);
 
-            $this->actingAs($user)->get(route('dashboard'))->assertOk();
-            $html = $this->get(route('dashboard'))->getContent();
+            $dashboard = $this->actingAs($user)->get(route('dashboard'));
+            if ($role === UserRole::Client->value) {
+                $dashboard->assertOk();
+                $html = $dashboard->getContent();
+                $this->assertStringContainsString('Área do cliente', $html);
+            } else {
+                $dashboard->assertRedirect(route('team.activity'));
+                $production = $this->get(route('team.activity'))->assertOk();
+                $html = $production->getContent();
+                $this->assertStringContainsString($role === UserRole::Professional->value ? 'Meu trabalho' : 'Produção da equipe', $html);
+            }
             preg_match_all('/<a class="nav-item[^\"]*" href="([^"]+)"/', $html, $desktopLinks);
             preg_match_all('/<a href="([^"]+)">/', $this->between($html, 'aria-label="Navegação para celular"', '</nav>'), $mobileLinks);
 
@@ -50,14 +59,13 @@ class RoleNavigationTest extends TestCase
 
             $this->assertSame($expectedPaths, $desktopPaths, "Desktop links differ for role {$role}.");
             $this->assertSame($expectedPaths, $mobilePaths, "Mobile links differ for role {$role}.");
-            $this->assertStringNotContainsString(route('approvals.index'), $html);
-            $this->assertStringNotContainsString(route('demand-tasks.board'), $html);
-            $this->assertStringNotContainsString(route('team.capacity'), $html);
-            $this->assertStringNotContainsString(route('performance-reviews.index'), $html);
+            $this->assertStringNotContainsString(route('approvals.index'), $this->between($html, 'aria-label="Navegação para celular"', '</nav>'));
+            $this->assertStringNotContainsString(route('demand-tasks.board'), $this->between($html, 'aria-label="Navegação para celular"', '</nav>'));
 
             foreach ($routes as $routeName) {
                 $response = $this->actingAs($user)->get(route($routeName));
-                $this->assertSame(200, $response->getStatusCode(), "Route {$routeName} failed for role {$role}.");
+                $expectedStatus = $routeName === 'dashboard' && $role !== UserRole::Client->value ? 302 : 200;
+                $this->assertSame($expectedStatus, $response->getStatusCode(), "Route {$routeName} failed for role {$role}.");
             }
 
             if ($role === UserRole::Client->value) {
@@ -72,6 +80,18 @@ class RoleNavigationTest extends TestCase
                 $this->get(route('demands.index', ['view' => 'tasks']))->assertOk()->assertSee('Tarefas');
                 $this->get(route('demands.index', ['view' => 'board']))->assertOk()->assertSee('Demandas');
                 $this->get(route('approvals.index'))->assertRedirect(route('demands.index', ['view' => 'board']));
+            }
+
+            if (in_array($role, [UserRole::AgencyOwner->value, UserRole::MarketingManager->value], true)) {
+                $this->get(route('settings.index'))->assertOk()->assertSee('Tipos de aprovação');
+                $this->get(route('approval-modules.index'))->assertOk()->assertSee('Voltar às configurações');
+                if ($role === UserRole::AgencyOwner->value) {
+                    $this->get(route('settings.index'))->assertSee(route('ai-settings.index'));
+                } else {
+                    $this->get(route('settings.index'))->assertDontSee(route('ai-settings.index'));
+                }
+            } else {
+                $this->get(route('settings.index'))->assertForbidden();
             }
         }
     }

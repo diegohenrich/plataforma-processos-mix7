@@ -21,6 +21,19 @@ class DemandTask extends Model
         return ['status' => TaskStatus::class, 'completed_at' => 'immutable_datetime', 'planned_start_on' => 'immutable_date', 'planned_due_on' => 'immutable_date'];
     }
 
+    protected static function booted(): void
+    {
+        static::created(function (self $task): void {
+            DemandTaskAssignment::query()->create([
+                'organization_id' => $task->organization_id,
+                'demand_task_id' => $task->id,
+                'professional_id' => $task->assigned_to,
+                'assigned_by' => $task->created_by,
+                'assigned_at' => $task->created_at,
+            ]);
+        });
+    }
+
     public function demand(): BelongsTo
     {
         return $this->belongsTo(Demand::class);
@@ -46,6 +59,18 @@ class DemandTask extends Model
     public function timeEntries(): HasMany
     {
         return $this->hasMany(TaskTimeEntry::class, 'task_id');
+    }
+
+    public function assignments(): HasMany
+    {
+        return $this->hasMany(DemandTaskAssignment::class, 'demand_task_id');
+    }
+
+    public function currentAssignment(): HasOne
+    {
+        return $this->hasOne(DemandTaskAssignment::class, 'demand_task_id')
+            ->whereNull('released_at')
+            ->latestOfMany();
     }
 
     public function performanceReviews(): HasMany

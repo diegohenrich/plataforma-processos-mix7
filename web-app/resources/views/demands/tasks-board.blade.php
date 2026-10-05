@@ -34,7 +34,7 @@
                         <div class="task-column-cards">
                             @forelse($boardColumns[$status->value] as $task)
                                 @php
-                                    $nextStatuses = $task->status->next();
+                                    $nextStatuses = array_values(array_filter($task->status->next(), fn ($next) => $next !== App\Enums\TaskStatus::InProgress));
                                     $openDependencies = $task->dependencies->filter(fn ($dependency) => $dependency->status !== App\Enums\TaskStatus::Completed);
                                     if ($openDependencies->isNotEmpty()) {
                                         $nextStatuses = array_values(array_filter($nextStatuses, fn ($next) => $next !== App\Enums\TaskStatus::InProgress));
@@ -44,8 +44,20 @@
                                 <article class="task-board-card" data-task-card data-next-stages="{{ collect($nextStatuses)->pluck('value')->implode(',') }}" @if($canUpdate && count($nextStatuses)) draggable="true" @endif>
                                     <a href="{{ route('demands.show', $task->demand) }}"><span class="task-board-title">{{ $task->title }}</span><span class="task-board-demand">{{ $task->demand->title }} · {{ $task->demand->status->label() }}</span></a>
                                     <div class="task-board-meta"><span>{{ $task->assignee?->name ?? 'Sem responsável ativo' }}</span>@if($task->estimate_minutes)<span>{{ intdiv($task->estimate_minutes, 60) }}h {{ $task->estimate_minutes % 60 }}min estimados</span>@endif</div>
+                                    @if($task->currentAssignment && ! $task->currentAssignment->accepted_at && $task->status === App\Enums\TaskStatus::Todo)
+                                        @php($waitingPrefix = $currentUser->role === App\Enums\UserRole::Professional ? 'Na sua fila há ' : 'Aguardando início há ')
+                                        @php($waitingSuffix = $currentUser->role === App\Enums\UserRole::Professional ? ' · inicie o cronômetro ou sinalize impedimento' : '')
+                                        <p class="task-waiting-badge" role="status" data-assignment-age data-waiting-since="{{ $task->currentAssignment->assigned_at->toISOString() }}" data-waiting-prefix="{{ $waitingPrefix }}" data-waiting-suffix="{{ $waitingSuffix }}">{{ $waitingPrefix }}{{ $task->currentAssignment->assigned_at->longAbsoluteDiffForHumans(now(), 2) }}{{ $waitingSuffix }}</p>
+                                    @endif
                                     @if($task->planned_due_on)<div class="task-board-meta"><span>Prazo {{ $task->planned_due_on->format('d/m/Y') }}</span></div>@endif
                                     @if($openDependencies->isNotEmpty())<p class="task-board-dependency">Aguardando {{ $openDependencies->count() }} {{ \Illuminate\Support\Str::plural('tarefa anterior', $openDependencies->count()) }}. Conclua as dependências antes de iniciar.</p>@endif
+                                    @if($currentUser->role === App\Enums\UserRole::Professional && $task->status !== App\Enums\TaskStatus::Completed && $openDependencies->isEmpty())
+                                        @if($activeTimerTaskId === $task->id)
+                                            <form class="task-board-start" method="post" action="{{ route('demand-tasks.timer.pause', $task) }}">@csrf<button type="submit">Pausar cronômetro</button></form>
+                                        @else
+                                            <form class="task-board-start" method="post" action="{{ route('demand-tasks.timer.start', $task) }}">@csrf<button type="submit" @disabled($activeTimerTaskId !== null)>{{ $task->currentAssignment?->accepted_at ? 'Retomar e contar tempo' : 'Iniciar e contar tempo' }}</button></form>
+                                        @endif
+                                    @endif
                                     @if($canUpdate && count($nextStatuses))
                                         <form class="task-board-move" method="post" action="{{ route('demand-tasks.status', $task) }}" data-task-move>
                                             @csrf @method('PATCH')
@@ -73,6 +85,18 @@
     </main>
 </div>
 <script>
+    (() => {
+        const renderAges = () => document.querySelectorAll('[data-assignment-age]').forEach((element) => {
+            const seconds = Math.max(0, Math.floor((Date.now() - Date.parse(element.dataset.waitingSince)) / 1000));
+            const days = Math.floor(seconds / 86400);
+            const hours = Math.floor((seconds % 86400) / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const age = days ? `${days}d ${hours}h` : hours ? `${hours}h ${minutes}min` : `${Math.max(1, minutes)} min`;
+            element.textContent = `${element.dataset.waitingPrefix}${age}${element.dataset.waitingSuffix}`;
+        });
+        renderAges();
+        window.setInterval(renderAges, 60000);
+    })();
     document.querySelectorAll('[data-task-card][draggable="true"]').forEach((card) => {
         card.addEventListener('dragstart', (event) => {
             if (event.target.closest('form,button,select')) { event.preventDefault(); return; }
@@ -105,4 +129,7 @@
         });
     });
 </script>
+<style>
+    .task-waiting-badge{margin:10px 0 0;padding:8px 10px;border-radius:9px;background:#fff2d7;color:#81520c;font-size:10px;font-weight:750;line-height:1.5}.task-board-start{margin:9px 0 0}.task-board-start button{width:100%;min-height:34px;padding:7px 10px;border:1px solid #b76524;border-radius:8px;background:#fff8eb;color:#8a4c13;font:inherit;font-size:10px;font-weight:800;cursor:pointer}.task-board-start button:hover{background:#ffecc7}.task-board-start button:disabled{border-color:#d6e0e1;background:#f3f6f6;color:#839197;cursor:not-allowed}
+</style>
 @endsection

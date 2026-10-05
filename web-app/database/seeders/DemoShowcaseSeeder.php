@@ -516,7 +516,7 @@ class DemoShowcaseSeeder
     private function seedPerformanceReview(Organization $organization, DemandTask $task, User $manager, User $owner, int $taskIndex, int $sequence): PerformanceReview
     {
         $reviewer = $sequence % 2 === 0 ? $owner : $manager;
-        $weight = $reviewer->role === UserRole::AgencyOwner ? 2 : 1;
+        $weight = 1;
 
         return PerformanceReview::updateOrCreate(
             ['task_id' => $task->id, 'reviewer_id' => $reviewer->id],
@@ -525,6 +525,8 @@ class DemoShowcaseSeeder
                 'professional_id' => $task->assigned_to,
                 'reviewer_role' => $reviewer->role->value,
                 'reviewer_weight' => $weight,
+                'deadline_score' => ($taskIndex % 5) + 1,
+                'quality_score' => (($taskIndex + 2) % 5) + 1,
                 'deadline_assessment' => 'Exemplo fictício: prazo avaliado com base no combinado da demonstração.',
                 'quality_assessment' => $taskIndex % 2 === 0 ? 'Exemplo fictício: material conferido antes do envio.' : 'Exemplo fictício: revisão necessária em um trecho específico.',
                 'evidence' => 'Registro de demonstração; não representa avaliação de pessoa real.',

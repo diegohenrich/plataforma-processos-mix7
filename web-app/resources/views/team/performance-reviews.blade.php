@@ -19,13 +19,14 @@
             @if ($management)
                 <section class="card performance-form-card">
                     <h2>Registrar avaliação de tarefa concluída</h2>
-                    <p>Uma avaliação por pessoa avaliadora em cada tarefa. A direção tem peso 2 e a gerência peso 1, conforme indicado nos áudios; os pesos ficam registrados, sem cálculo de nota.</p>
+                    <p>Dê uma nota de 1 a 5 para prazo e outra para qualidade, além de explicar os critérios. As duas notas são somadas (2 a 10). Cada avaliação da direção ou gerência tem o mesmo peso e só entra no mês em que a tarefa foi concluída.</p>
                     @if ($completedTasks->isEmpty())
                         <div class="empty-state"><h3>Nenhuma tarefa disponível para nova avaliação</h3><p>Conclua uma tarefa atribuída a um profissional. Tarefas que você já avaliou não aparecem novamente neste seletor.</p></div>
                     @else
                         <form class="performance-form" method="post" action="{{ route('performance-reviews.store') }}">
                             @csrf
                             <label class="field"><span>Tarefa e profissional</span><select name="task_id" required><option value="">Escolha uma tarefa</option>@foreach ($completedTasks as $task)<option value="{{ $task->id }}" @selected(old('task_id') == $task->id)>{{ $task->title }} · {{ $task->assignee->name }} · {{ $task->demand->title }}</option>@endforeach</select></label>
+                            <div class="performance-score-pair"><label class="field"><span>Nota de prazo (1 a 5)</span><select name="deadline_score" required><option value="">Escolha a nota</option>@foreach (range(1, 5) as $score)<option value="{{ $score }}" @selected(old('deadline_score') == $score)>{{ $score }} · {{ [1 => 'Abaixo do esperado', 2 => 'Precisa melhorar', 3 => 'Atendeu parcialmente', 4 => 'Atendeu ao esperado', 5 => 'Superou o esperado'][$score] }}</option>@endforeach</select></label><label class="field"><span>Nota de qualidade (1 a 5)</span><select name="quality_score" required><option value="">Escolha a nota</option>@foreach (range(1, 5) as $score)<option value="{{ $score }}" @selected(old('quality_score') == $score)>{{ $score }} · {{ [1 => 'Abaixo do esperado', 2 => 'Precisa melhorar', 3 => 'Atendeu parcialmente', 4 => 'Atendeu ao esperado', 5 => 'Superou o esperado'][$score] }}</option>@endforeach</select></label></div>
                             <label class="field"><span>Prazo</span><textarea name="deadline_assessment" rows="3" minlength="10" maxlength="5000" required placeholder="Descreva o que foi combinado e como o prazo foi cumprido.">{{ old('deadline_assessment') }}</textarea></label>
                             <label class="field"><span>Qualidade</span><textarea name="quality_assessment" rows="3" minlength="10" maxlength="5000" required placeholder="Registre o resultado observado e os critérios usados.">{{ old('quality_assessment') }}</textarea></label>
                             <label class="field"><span>Evidências ou exemplos (opcional)</span><textarea name="evidence" rows="2" maxlength="5000" placeholder="Inclua referências verificáveis ao trabalho.">{{ old('evidence') }}</textarea></label>
@@ -48,8 +49,8 @@
                 </form>
                 @forelse ($reviews as $review)
                     <article class="card performance-review-card">
-                        <div class="performance-review-heading"><div><span class="pill">{{ $review->task->status->label() }}</span><h3>{{ $review->task->title }}</h3><p>{{ $review->task->demand->title }} · Profissional: {{ $review->professional->name }}</p></div><div class="performance-review-meta"><strong>{{ $review->reviewer->name }}</strong><span>{{ $review->reviewer_role === App\Enums\UserRole::AgencyOwner->value ? 'Direção · peso 2' : 'Gerência · peso 1' }}</span><time datetime="{{ $review->created_at->toISOString() }}">{{ $review->created_at->format('d/m/Y H:i') }}</time></div></div>
-                        <div class="performance-review-fields"><div><h4>Prazo</h4><p>{{ $review->deadline_assessment }}</p></div><div><h4>Qualidade</h4><p>{{ $review->quality_assessment }}</p></div></div>
+                        <div class="performance-review-heading"><div><span class="pill">{{ $review->task->status->label() }}</span><h3>{{ $review->task->title }}</h3><p>{{ $review->task->demand->title }} · Profissional: {{ $review->professional->name }}</p></div><div class="performance-review-meta"><strong>{{ $review->reviewer->name }}</strong><span>{{ $review->reviewer_role === App\Enums\UserRole::AgencyOwner->value ? 'Direção · peso 1' : 'Gerência · peso 1' }}</span><time datetime="{{ $review->created_at->toISOString() }}">{{ $review->created_at->format('d/m/Y H:i') }}</time></div></div>
+                        <div class="performance-review-fields"><div><h4>Prazo @if ($review->deadline_score !== null)<span class="pill">{{ $review->deadline_score }}/5</span>@endif</h4><p>{{ $review->deadline_assessment }}</p></div><div><h4>Qualidade @if ($review->quality_score !== null)<span class="pill">{{ $review->quality_score }}/5</span>@endif</h4><p>{{ $review->quality_assessment }}</p></div></div>
                         @if ($review->evidence)<div class="performance-review-note"><strong>Evidências</strong><p>{{ $review->evidence }}</p></div>@endif
                         @if ($review->external_factors)<div class="performance-review-note"><strong>Bloqueios ou mudanças externas</strong><p>{{ $review->external_factors }}</p></div>@endif
                         <div class="performance-responses"><h4>Respostas</h4>@forelse ($review->responses as $response)<article><strong>{{ $response->user->name }}</strong><time datetime="{{ $response->created_at->toISOString() }}">{{ $response->created_at->format('d/m/Y H:i') }}</time><p>{{ $response->response }}</p></article>@empty<p>Nenhuma resposta registrada ainda.</p>@endforelse</div>
@@ -60,8 +61,9 @@
                 @endforelse
                 <div class="pagination-wrap">{{ $reviews->links() }}</div>
             </section>
-            <p class="footnote">Este recurso registra avaliações humanas, evidências e respostas. Não calcula nota, ranking ou consequência profissional: escala, fórmula, períodos, contestação e uso dos resultados ainda precisam ser definidos pela Mix7.</p>
-        </div>
-    </main>
+            <p class="footnote">A pontuação é um indicador mensal para apoiar a gestão. Bonificações e qualquer decisão sobre pessoas continuam sendo feitas por responsáveis humanos, considerando o contexto e as evidências.</p>
 </div>
+</main>
+</div>
+<style>.performance-score-pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.performance-score-pair .field{margin:0}.performance-review-fields h4 .pill{margin-left:5px}@media(max-width:650px){.performance-score-pair{grid-template-columns:1fr}}</style>
 @endsection

@@ -8,7 +8,15 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PerformanceReview extends Model
 {
-    protected $fillable = ['organization_id', 'task_id', 'professional_id', 'reviewer_id', 'reviewer_role', 'reviewer_weight', 'deadline_assessment', 'quality_assessment', 'evidence', 'external_factors'];
+    protected $fillable = ['organization_id', 'task_id', 'professional_id', 'reviewer_id', 'reviewer_role', 'reviewer_weight', 'deadline_score', 'quality_score', 'deadline_assessment', 'quality_assessment', 'evidence', 'external_factors'];
+
+    protected function casts(): array
+    {
+        return [
+            'deadline_score' => 'integer',
+            'quality_score' => 'integer',
+        ];
+    }
 
     public function task(): BelongsTo
     {

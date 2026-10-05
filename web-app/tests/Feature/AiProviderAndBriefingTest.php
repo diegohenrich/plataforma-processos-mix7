@@ -32,20 +32,20 @@ class AiProviderAndBriefingTest extends TestCase
         ]);
     }
 
-    public function test_owner_can_activate_local_gemma_and_only_owner_can_manage_it(): void
+    public function test_owner_can_activate_internal_openclaw_and_only_owner_can_manage_it(): void
     {
         [$organization, $owner, $manager] = $this->workspace();
         $this->actingAs($owner)->put(route('ai-settings.update'), [
-            'provider' => 'ollama-gemma-local', 'enabled' => '1',
+            'provider' => 'openclaw-internal', 'enabled' => '1',
         ])->assertRedirect(route('ai-settings.index'))->assertSessionHasNoErrors();
 
         $setting = AiProviderSetting::where('organization_id', $organization->id)->firstOrFail();
-        $this->assertSame('ollama-gemma-local', $setting->provider);
-        $this->assertSame('http://127.0.0.1:11434/v1', $setting->base_url);
-        $this->assertSame('gemma3:4b', $setting->model);
+        $this->assertSame('openclaw-internal', $setting->provider);
+        $this->assertNull($setting->base_url);
+        $this->assertSame('openclaw/mix7', $setting->model);
         $this->assertNull($setting->api_key);
-        $this->assertTrue(app(AiProviderSettings::class)->isConfigured(app(AiProviderSettings::class)->forOrganization((int) $organization->id)));
-        $this->actingAs($owner)->get(route('ai-settings.index'))->assertOk()->assertSee('Gemma 3:4b local')->assertDontSee('Codex local');
+        $this->assertFalse(app(AiProviderSettings::class)->isConfigured(app(AiProviderSettings::class)->forOrganization((int) $organization->id)));
+        $this->actingAs($owner)->get(route('ai-settings.index'))->assertOk()->assertSee('OpenClaw interno')->assertDontSee('Codex local');
         $this->actingAs($manager)->get(route('ai-settings.index'))->assertForbidden();
         $this->actingAs($manager)->put(route('ai-settings.update'), [])->assertForbidden();
     }
@@ -68,7 +68,8 @@ class AiProviderAndBriefingTest extends TestCase
             ->assertSee('briefing-document')
             ->assertSee('application/pdf')
             ->assertSee('Escolha os responsáveis')
-            ->assertSee('O arquivo original fica no seu navegador');
+            ->assertSee('Decisões para a equipe')
+            ->assertSee('O arquivo original fica no navegador');
     }
 
     public function test_ai_settings_rejects_codex_claude_and_remote_api_providers(): void
@@ -89,6 +90,7 @@ class AiProviderAndBriefingTest extends TestCase
             'message' => 'Quem é o público principal?', 'title' => 'Site institucional',
             'brief' => "Objetivo: apresentar a empresa.\nPúblico: A confirmar.",
             'follow_up' => ['Qual ação o visitante deve realizar?'], 'ready' => false, 'module_fields' => (object) [],
+            'decisions' => ['Confirmar quem aprova o conteúdo antes do envio.'],
             'tasks' => [['title' => 'Definir páginas e objetivo do site', 'estimate_minutes' => null]],
         ];
         $body = ['choices' => [['message' => ['role' => 'assistant', 'content' => json_encode($briefing, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE)]]]];
@@ -99,6 +101,7 @@ class AiProviderAndBriefingTest extends TestCase
             'messages' => [['role' => 'user', 'content' => 'Preciso de um site para apresentar a empresa.']],
         ])->assertOk()->assertJsonPath('title', 'Site institucional')
             ->assertJsonPath('ready', false)
+            ->assertJsonPath('decisions.0', 'Confirmar quem aprova o conteúdo antes do envio.')
             ->assertJsonPath('follow_up.0', 'Qual ação o visitante deve realizar?');
 
         $this->assertSame(0, Demand::count());
@@ -127,7 +130,7 @@ class AiProviderAndBriefingTest extends TestCase
             'status' => DemandStatus::Received,
         ]);
         Http::fake(['https://ai-gateway.vercel.sh/v1/chat/completions' => Http::response([
-            'choices' => [['message' => ['role' => 'assistant', 'content' => 'Confira MX, SPF e DKIM; valide aliases e faça um teste de envio e recebimento.']]],
+            'choices' => [['message' => ['role' => 'assistant', 'content' => 'Solução: revisar os registros do domínio. Próximos passos: conferir MX, SPF e DKIM. Materiais e acessos: pendentes com a pessoa que criou a demanda. Confirmar: quem concede o acesso ao provedor?']]],
         ], 200)]);
 
         $this->actingAs($manager)->get(route('demands.show', $demand))
@@ -139,18 +142,19 @@ class AiProviderAndBriefingTest extends TestCase
             ->assertRedirect()
             ->assertSessionHas('success');
 
-        $this->assertSame('Confira MX, SPF e DKIM; valide aliases e faça um teste de envio e recebimento.', $demand->fresh()->suggested_solution);
+        $this->assertSame('Solução: revisar os registros do domínio. Próximos passos: conferir MX, SPF e DKIM. Materiais e acessos: pendentes com a pessoa que criou a demanda. Confirmar: quem concede o acesso ao provedor?', $demand->fresh()->suggested_solution);
         $this->assertDatabaseCount('demand_tasks', 0);
         $this->assertDatabaseHas('demand_events', [
             'demand_id' => $demand->id,
             'actor_id' => $manager->id,
             'event_type' => 'ai_solution_suggested',
         ]);
-        Http::assertSent(fn ($request) => $request['max_tokens'] === 160
-            && str_contains($request['messages'][0]['content'], 'até 70 palavras')
-            && str_contains($request['messages'][0]['content'], 'Não acrescente entregáveis')
+        Http::assertSent(fn ($request) => $request['max_tokens'] === 240
+            && str_contains($request['messages'][0]['content'], 'materiais ou acessos faltarem')
+            && str_contains($request['messages'][0]['content'], 'Nunca inclua senhas')
             && str_contains($request['messages'][1]['content'], 'Melhorar recebimento de e-mails do domínio')
-            && str_contains($request['messages'][1]['content'], 'Alguns e-mails são recebidos parcialmente'));
+            && str_contains($request['messages'][1]['content'], 'Alguns e-mails são recebidos parcialmente')
+            && str_contains($request['messages'][1]['content'], 'Onde estão os materiais'));
 
         $this->actingAs($manager)->get(route('demands.show', $demand))
             ->assertOk()
@@ -159,12 +163,12 @@ class AiProviderAndBriefingTest extends TestCase
 
         $managerToken = $manager->createToken('solution-api-manager')->plainTextToken;
         $this->withToken($managerToken)->getJson('/api/v1/demands/'.$demand->id)
-            ->assertOk()->assertJsonPath('data.suggested_solution', 'Confira MX, SPF e DKIM; valide aliases e faça um teste de envio e recebimento.');
+            ->assertOk()->assertJsonPath('data.suggested_solution', 'Solução: revisar os registros do domínio. Próximos passos: conferir MX, SPF e DKIM. Materiais e acessos: pendentes com a pessoa que criou a demanda. Confirmar: quem concede o acesso ao provedor?');
 
         $this->actingAs($manager)->get(route('demands.show', $demand))
             ->assertOk()
             ->assertSee('Solução sugerida pela IA')
-            ->assertSee('Confira MX, SPF e DKIM; valide aliases e faça um teste de envio e recebimento.')
+            ->assertSee('Solução: revisar os registros do domínio. Próximos passos: conferir MX, SPF e DKIM.')
             ->assertSee($manager->name);
     }
 
@@ -191,7 +195,7 @@ class AiProviderAndBriefingTest extends TestCase
             ->assertJsonMissingPath('data.brief');
     }
 
-    public function test_professional_cannot_generate_demand_solution_and_failed_ai_keeps_previous_solution(): void
+    public function test_professional_can_generate_demand_solution_and_failed_ai_keeps_previous_solution(): void
     {
         [$organization, $owner] = $this->workspace();
         $professional = User::factory()->create([
@@ -200,23 +204,31 @@ class AiProviderAndBriefingTest extends TestCase
         $demand = Demand::create([
             'organization_id' => $organization->id,
             'created_by' => $owner->id,
+            'responsible_user_id' => $professional->id,
             'title' => 'Ajustar página inicial',
             'brief' => 'A página precisa mostrar melhor os serviços.',
             'suggested_solution' => 'Sugestão anterior preservada.',
             'status' => DemandStatus::Received,
         ]);
 
-        $this->actingAs($professional)->post(route('ai-solution.generate', $demand))->assertForbidden();
+        AiProviderSetting::create([
+            'organization_id' => $organization->id,
+            'provider' => 'openai-compatible', 'base_url' => 'https://ai-gateway.vercel.sh/v1',
+            'model' => 'test-provider/test-model', 'api_key' => 'test-key', 'enabled' => true,
+        ]);
+        Http::fakeSequence('https://ai-gateway.vercel.sh/v1/chat/completions')
+            ->push(['choices' => [['message' => ['role' => 'assistant', 'content' => 'Solução provisória para análise da equipe.']]]], 200)
+            ->push(['choices' => [['message' => ['role' => 'assistant', 'content' => '']]]], 200);
+        $this->actingAs($professional)->get(route('demands.show', $demand))->assertOk()->assertSee('Gerar nova sugestão');
+        $this->actingAs($professional)->post(route('ai-solution.generate', $demand))->assertRedirect()->assertSessionHas('success');
+        $this->assertSame('Solução provisória para análise da equipe.', $demand->fresh()->suggested_solution);
 
-        Http::fake(['https://ai-gateway.vercel.sh/v1/chat/completions' => Http::response([
-            'choices' => [['message' => ['role' => 'assistant', 'content' => '']]],
-        ], 200)]);
         $this->actingAs($owner)->post(route('ai-solution.generate', $demand))
             ->assertRedirect()
             ->assertSessionHasErrors('suggested_solution');
 
-        $this->assertSame('Sugestão anterior preservada.', $demand->fresh()->suggested_solution);
-        $this->assertDatabaseMissing('demand_events', ['demand_id' => $demand->id, 'event_type' => 'ai_solution_suggested']);
+        $this->assertSame('Solução provisória para análise da equipe.', $demand->fresh()->suggested_solution);
+        $this->assertDatabaseHas('demand_events', ['demand_id' => $demand->id, 'event_type' => 'ai_solution_suggested']);
     }
 
     public function test_guided_briefing_uses_attached_document_as_context_without_saving_it(): void
@@ -357,7 +369,6 @@ class AiProviderAndBriefingTest extends TestCase
     public function test_gemma_uses_structured_application_managed_tool_requests(): void
     {
         [$organization] = $this->workspace();
-        $this->app['env'] = 'local';
         AiProviderSetting::create([
             'organization_id' => $organization->id, 'provider' => 'ollama-gemma-local',
             'base_url' => 'http://127.0.0.1:11434/v1', 'model' => 'gemma3:4b', 'enabled' => true,
@@ -393,7 +404,6 @@ class AiProviderAndBriefingTest extends TestCase
     public function test_gemma_plain_answers_are_kept_concise_to_reduce_generation_time(): void
     {
         [$organization] = $this->workspace();
-        $this->app['env'] = 'local';
         AiProviderSetting::create([
             'organization_id' => $organization->id, 'provider' => 'ollama-gemma-local',
             'base_url' => 'http://127.0.0.1:11434/v1', 'model' => 'gemma3:4b', 'enabled' => true,

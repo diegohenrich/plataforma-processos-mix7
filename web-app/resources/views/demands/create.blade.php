@@ -16,7 +16,7 @@
             @else
                 <section class="ai-briefing-guide panel" data-briefing-assistant data-endpoint="{{ route('ai-briefing.suggest') }}">
                     <div class="section-heading"><div><h2>Monte o briefing com a IA</h2><p>Conte o pedido com suas palavras. O assistente pergunta o que falta e organiza um rascunho para você revisar.</p></div><span class="assistant-badge">Você decide e salva</span></div>
-                    <p class="ai-briefing-privacy">A conversa e o texto do documento são processados localmente pelo Gemma. O arquivo original fica no seu navegador e não é salvo como demanda; nada é criado até você revisar e clicar em “Criar demanda”.</p>
+                    <p class="ai-briefing-privacy">A conversa e o texto extraído do documento são enviados ao serviço interno de IA. O arquivo original fica no navegador e não é salvo como demanda; nada é criado até você revisar e clicar em “Criar demanda”.</p>
                     @if ($aiConfigured)
                         <div class="ai-briefing-messages" data-briefing-messages role="log" aria-live="polite"><p class="ai-briefing-empty">Escolha o tipo do trabalho acima e descreva o que o cliente pediu para começar.</p></div>
                         <label class="field" for="briefing-assistant-input">O que você já sabe sobre o pedido?</label>
@@ -29,9 +29,9 @@
                             <button class="secondary-button" type="button" data-briefing-remove-file hidden>Remover documento</button>
                         </div>
                         <div class="ai-briefing-actions"><span class="field-help" data-briefing-status>O rascunho fica editável no formulário.</span><button class="secondary-button" type="button" data-briefing-send>Conversar com a IA</button></div>
-                        <div class="ai-briefing-draft" data-briefing-draft hidden><strong>Rascunho organizado</strong><p data-briefing-followup></p><button class="secondary-button" type="button" data-briefing-apply>Aplicar sem apagar edições</button></div>
+                        <div class="ai-briefing-draft" data-briefing-draft hidden><strong>Rascunho organizado</strong><p data-briefing-followup></p><p data-briefing-decisions hidden></p><button class="secondary-button" type="button" data-briefing-apply>Aplicar sem apagar edições</button></div>
                     @else
-                        <div class="notice notice-info">O Gemma 3:4b local ainda não está ativo. Abra a <a href="{{ route('ai-settings.index') }}">Configuração de IA</a> para conferir o Ollama. Você também pode preencher o formulário manualmente.</div>
+                        <div class="notice notice-info">O OpenClaw interno ainda não está ativo. Abra a <a href="{{ route('ai-settings.index') }}">Configuração de IA</a> para conferir a conexão. Você também pode preencher o formulário manualmente.</div>
                     @endif
                 </section>
                 <form method="post" action="{{ route('demands.store') }}" class="form-card" novalidate>
@@ -40,8 +40,11 @@
                     <label class="field">Tipo de aprovação<select name="module_key" id="module-key" required><option value="">Escolha o tipo</option>@foreach ($modules as $module)<option value="{{ $module['key'] }}" @selected(old('module_key') === $module['key'])>{{ $module['label'] }}</option>@endforeach</select><span class="field-help">O tipo pode pedir informações próprias da equipe. As etapas de aprovação seguem o fluxo compartilhado.</span>@error('module_key')<span class="error">{{ $message }}</span>@enderror</label>
                     <section id="module-fields" class="form-section module-custom-fields" hidden aria-live="polite"><div class="form-section-heading"><div><h2>Informações deste tipo</h2><p>Visíveis somente à equipe da agência.</p></div></div><div id="module-fields-list"></div></section>
                     <label class="field">Briefing<textarea name="brief" rows="5" maxlength="12000" required placeholder="O que precisa ser feito? Inclua objetivo, público e materiais já recebidos.">{{ old('brief') }}</textarea>@error('brief')<span class="error">{{ $message }}</span>@enderror</label>
-                    <label class="field">Como o pedido chegou? (opcional)<input name="intake_source" value="{{ old('intake_source') }}" maxlength="120" placeholder="Ex.: WhatsApp, e-mail, reunião"><span class="field-help">Registre o canal informado pela equipe. Não inclua senha ou dado de acesso.</span>@error('intake_source')<span class="error">{{ $message }}</span>@enderror</label>
-                    <label class="field">Quem preparou o briefing? (opcional)<select name="brief_author_id"><option value="">Não identificado</option>@foreach ($briefAuthors as $author)<option value="{{ $author->id }}" @selected(old('brief_author_id') == $author->id)>{{ $author->name }} · {{ $author->role->label() }}</option>@endforeach</select><span class="field-help">Escolha uma pessoa da equipe ou deixe como não identificado. A criação da demanda continua registrada separadamente.</span>@error('brief_author_id')<span class="error">{{ $message }}</span>@enderror</label>
+                    <section class="form-section demand-setup-section"><div class="form-section-heading"><div><h2>Responsável e materiais</h2><p>A pessoa responsável acompanha a demanda. As tarefas podem ser atribuídas a outros profissionais.</p></div></div>
+                        <label class="field">Responsável principal<select name="responsible_user_id" required><option value="">Escolha quem cuidará da demanda</option>@foreach ($professionals as $professional)<option value="{{ $professional->id }}" @selected(old('responsible_user_id') == $professional->id)>{{ $professional->name }}</option>@endforeach</select><span class="field-help">A pessoa que criou a demanda fica registrada automaticamente como quem preparou o briefing.</span>@error('responsible_user_id')<span class="error">{{ $message }}</span>@enderror</label>
+                        <label class="field">Onde estão os materiais? (opcional)<textarea name="materials_location" rows="2" maxlength="3000" placeholder="Ex.: pasta compartilhada do cliente; arquivos que faltam serão anexados aqui depois.">{{ old('materials_location') }}</textarea><span class="field-help">Quem cria a demanda deve disponibilizar os arquivos. Você também poderá anexá-los na página da demanda.</span>@error('materials_location')<span class="error">{{ $message }}</span>@enderror</label>
+                        <label class="field">Como obter os acessos necessários? (opcional)<textarea name="access_instructions" rows="2" maxlength="3000" placeholder="Ex.: solicitar acesso ao site pelo responsável do cliente; pedir convite para a conta da agência.">{{ old('access_instructions') }}</textarea><span class="field-help">Explique a quem pedir acesso e onde encontrá-lo. Nunca registre senhas, tokens ou chaves aqui.</span>@error('access_instructions')<span class="error">{{ $message }}</span>@enderror</label>
+                    </section>
                     <label class="field">Cliente vinculado (opcional)<select name="client_user_id"><option value="">Sem conta de cliente vinculada</option>@foreach ($clients as $client)<option value="{{ $client->id }}" @selected(old('client_user_id') == $client->id)>{{ $client->name }}</option>@endforeach</select><span class="field-help">O cliente vinculado vê apenas o nome e a etapa das próprias demandas. A aprovação do material continua pelo link privado enviado pela equipe.</span>@error('client_user_id')<span class="error">{{ $message }}</span>@enderror</label>
                     <div class="form-section-heading"><div><h2>Primeiras tarefas</h2><p>Atribua cada tarefa a uma pessoa da equipe.</p></div><button class="secondary-button" type="button" id="add-task">+ Adicionar tarefa</button></div>
                     <div id="task-list" class="task-form-list">
@@ -141,6 +144,7 @@
     const attachmentStatus = root.querySelector('[data-briefing-file-status]');
     const draftPanel = root.querySelector('[data-briefing-draft]');
     const followUp = root.querySelector('[data-briefing-followup]');
+    const decisions = root.querySelector('[data-briefing-decisions]');
     const renderMessage = (role, text) => {
         log.querySelector('.ai-briefing-empty')?.remove();
         const item = document.createElement('p');
@@ -190,6 +194,8 @@
             latestDraft = data;
             draftPanel.hidden = false;
             followUp.textContent = data.follow_up?.length ? `Ainda vale confirmar: ${data.follow_up.join(' · ')}` : (data.ready ? 'O briefing já pode ser revisado no formulário.' : 'Confira se o rascunho representa corretamente o pedido.');
+            decisions.hidden = !data.decisions?.length;
+            decisions.textContent = data.decisions?.length ? `Decisões para a equipe: ${data.decisions.join(' · ')}` : '';
             const formWasEmpty = !form.querySelector('[name="title"]').value.trim()
                 && !form.querySelector('[name="brief"]').value.trim()
                 && [...form.querySelectorAll('#task-list [name$="[title]"]')].every((field) => !field.value.trim());

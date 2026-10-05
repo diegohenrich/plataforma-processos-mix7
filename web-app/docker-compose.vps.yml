@@ -90,6 +90,7 @@ services:
       traefik.http.services.gestao.loadbalancer.server.port: "8080"
     networks:
       - gestao_private
+      - gestao_ai
 
   scheduler:
     image: gestao-mix7-app:local
@@ -138,10 +139,38 @@ services:
     networks:
       - gestao_private
 
+  openclaw:
+    profiles: [ai]
+    image: ${OPENCLAW_IMAGE:-ghcr.io/openclaw/openclaw:latest}
+    restart: unless-stopped
+    init: true
+    user: "1000:1000"
+    environment:
+      HOME: /home/node
+      OPENCLAW_HOME: /home/node
+      OPENCLAW_STATE_DIR: /home/node/.openclaw
+      OPENCLAW_GATEWAY_TOKEN: ${AI_API_KEY:-}
+      OPENCLAW_CONFIG_PATH: /home/node/.openclaw/openclaw.json
+      OPENCLAW_GATEWAY_PORT: "18789"
+    volumes:
+      - ${OPENCLAW_STATE_DIR:-/opt/gestao-mix7-openclaw}:/home/node/.openclaw
+    expose:
+      - "18789"
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["test -n \"$$OPENCLAW_GATEWAY_TOKEN\" && test -s /home/node/.openclaw/openclaw.json && exec node dist/index.js gateway --bind lan --port 18789"]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    networks:
+      - gestao_ai
+    mem_limit: 512m
+    cpus: 0.5
+
 volumes:
   gestao_storage:
   gestao_database:
 
 networks:
   gestao_private:
+    driver: bridge
+  gestao_ai:
     driver: bridge

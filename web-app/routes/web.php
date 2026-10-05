@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\UserRole;
 use App\Http\Controllers\AiAgentController;
 use App\Http\Controllers\AiBriefingController;
 use App\Http\Controllers\AiPlanningController;
@@ -18,12 +19,15 @@ use App\Http\Controllers\DemandReviewController;
 use App\Http\Controllers\DemandTaskController;
 use App\Http\Controllers\KnowledgeController;
 use App\Http\Controllers\PerformanceReviewController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ServiceAccessController;
+use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\TeamActivityController;
 use App\Http\Controllers\TeamCapacityController;
 use App\Http\Controllers\TeamInvitationController;
 use App\Http\Controllers\TeamMemberController;
 use App\Http\Controllers\UserNotificationController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/painel');
@@ -42,10 +46,20 @@ Route::middleware('guest')->group(function (): void {
 });
 
 Route::middleware(['auth', 'active'])->group(function (): void {
-    Route::get('/painel', fn () => view('dashboard'))->name('dashboard');
+    Route::get('/painel', function (Request $request) {
+        if ($request->user()->role === UserRole::Client) {
+            return view('dashboard');
+        }
+
+        return redirect()->route('team.activity');
+    })->name('dashboard');
+    Route::get('/perfil', [ProfileController::class, 'index'])->name('profile.index');
+    Route::get('/perfil/foto', [ProfileController::class, 'photo'])->name('profile.photo');
+    Route::put('/perfil', [ProfileController::class, 'update'])->name('profile.update');
     Route::get('/notificacoes', [UserNotificationController::class, 'index'])->name('notifications.index');
     Route::post('/notificacoes/ler-todas', [UserNotificationController::class, 'markAllRead'])->name('notifications.read-all');
     Route::get('/notificacoes/{notification}', [UserNotificationController::class, 'open'])->name('notifications.open');
+    Route::get('/configuracoes', [SettingsController::class, 'index'])->name('settings.index');
     Route::resource('demandas', DemandController::class)->only(['index', 'create', 'store', 'show'])->names('demands')->parameters(['demandas' => 'demand']);
     Route::post('/demandas/assistente-briefing', [AiBriefingController::class, 'suggest'])->middleware('throttle:5,1')->name('ai-briefing.suggest');
     Route::get('/tipos-aprovacao', [DemandModuleController::class, 'index'])->name('approval-modules.index');

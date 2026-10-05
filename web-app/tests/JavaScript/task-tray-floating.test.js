@@ -138,6 +138,7 @@ function createHarness({ supported = true } = {}) {
             canStart: true,
             blocked: false,
             canComplete: true,
+            waitingSince: new Date(Date.now() - (2 * 3600 + 52 * 60) * 1000).toISOString(),
             startUrl: '/tarefas/7/cronometro/iniciar',
             pauseUrl: '/tarefas/7/cronometro/pausar',
             completeUrl: '/tarefas/7/status',
@@ -201,6 +202,7 @@ test('opens a task window and controls the timer and task through authenticated 
     await app.button.click();
     assert.ok(app.pip.document.body.findByText('Minhas tarefas'));
     assert.ok(app.pip.document.body.findByText('Preparar o criativo'));
+    assert.ok(app.pip.document.body.findByText('Na sua fila há 2 horas e 52 minutos. Inicie o cronômetro ou avise a gestão se estiver impedido.'));
 
     await app.pip.document.body.findByText('Iniciar').click();
     assert.ok(app.pip.document.body.findByText('Pausar'));
@@ -222,5 +224,5 @@ test('opens a task window and controls the timer and task through authenticated 
 test('clearly disables the floating window when the browser API is unavailable', () => {
     const app = createHarness({ supported: false });
     assert.equal(app.button.disabled, true);
-    assert.equal(app.status.textContent, 'Janela flutuante indisponível neste navegador. A bandeja da página continua funcionando.');
+    assert.equal(app.status.textContent, 'Seu navegador não permite abrir uma janela separada. Use Minhas tarefas no CRM.');
 });

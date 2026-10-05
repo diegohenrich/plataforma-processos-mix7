@@ -11,6 +11,14 @@
             <a class="back-link" href="{{ route('demands.index') }}">← Voltar às demandas</a>
             @include('partials.flash')
             <section class="demand-hero"><div><p class="eyebrow">{{ $demand->organization->name }} · Demanda #{{ $demand->id }}</p><h1 class="heading">{{ $demand->title }}</h1><p class="meta-line">Criada por {{ $demand->creator->name }} em {{ $demand->created_at->format('d/m/Y H:i') }}</p>@if ($demand->module_key)<p class="meta-line">Tipo: {{ $demand->moduleDisplayLabel() }} · configuração v{{ $demand->module_version }}</p>@endif</div><span class="pill pill-large">{{ $demand->status->label() }}</span></section>
+            <section class="demand-properties" aria-label="Resumo da demanda">
+                <div><span>Responsável</span><strong>{{ $demand->responsible?->name ?? 'A definir' }}</strong></div>
+                <div><span>Briefing preparado por</span><strong>{{ $demand->briefAuthor?->name ?? $demand->creator->name }}</strong></div>
+                <div><span>Solicitante</span><strong>{{ $demand->creator->name }}</strong></div>
+                <div><span>Cliente</span><strong>{{ $demand->client?->name ?? 'Não vinculado' }}</strong></div>
+                <div><span>Andamento</span><strong>{{ $demand->status->label() }}</strong></div>
+                <div><span>Materiais</span><strong>{{ $demand->attachments->count() ? $demand->attachments->count().' arquivo(s)' : 'Aguardando materiais' }}</strong></div>
+            </section>
             @error('status')<div class="notice notice-error">{{ $message }}</div>@enderror
             @error('suggested_solution')<div class="notice notice-error">{{ $message }}</div>@enderror
             @if ($canManage)
@@ -94,7 +102,8 @@
 
             <div class="detail-grid">
                 <div class="detail-main">
-                    <section class="panel"><div class="section-heading"><div><h2>Briefing</h2><p>O pedido original fica guardado na demanda.</p></div></div><dl class="brief-origin"><div><dt>Como o pedido chegou</dt><dd>{{ $demand->intake_source ?: 'Não informado' }}</dd></div><div><dt>Quem preparou o briefing</dt><dd>{{ $demand->briefAuthor?->name ?? 'Não identificado' }}</dd></div></dl><div class="brief-text">{{ $demand->brief }}</div></section>
+                    <section class="panel"><div class="section-heading"><div><h2>Briefing</h2><p>O pedido e o contexto do trabalho, organizados para a equipe.</p></div></div><div class="brief-text">{{ $demand->brief }}</div></section>
+                    <section class="panel demand-resources-panel"><div class="section-heading"><div><h2>Materiais e acessos</h2><p>{{ $demand->creator->name }} é responsável por disponibilizar o que for necessário.</p></div></div><dl class="demand-resource-properties"><div><dt>Onde encontrar os materiais</dt><dd>{{ $demand->materials_location ?: 'Ainda não informado. Peça os arquivos a '.$demand->creator->name.' ou anexe-os nesta demanda.' }}</dd></div><div><dt>Como obter os acessos</dt><dd>{{ $demand->access_instructions ?: 'Ainda não informado. Peça orientação a '.$demand->creator->name.'. Não compartilhe senhas nesta página.' }}</dd></div></dl><p class="field-help">Os arquivos anexados aparecem na seção “Arquivos da equipe”. Acesso a serviços deve ser concedido pelo próprio serviço, sem registrar credenciais aqui.</p></section>
                     <section class="panel suggested-solution-panel" aria-labelledby="suggested-solution-heading">
                         <div class="section-heading"><div><h2 id="suggested-solution-heading">Solução sugerida pela IA</h2><p>Proposta criada a partir do título e do briefing. Revise antes de orientar ou iniciar o trabalho.</p></div><span class="assistant-badge">A equipe decide</span></div>
                         @if ($demand->suggested_solution)
@@ -103,10 +112,10 @@
                         @else
                             <p class="empty-inline">Ainda não há uma proposta para esta demanda.</p>
                         @endif
-                        @if ($canManage)
+                        @if (auth()->user()->role !== App\Enums\UserRole::Client)
                             @if ($aiConfigured)
                                 <form method="post" action="{{ route('ai-solution.generate', $demand) }}">@csrf<button class="secondary-button" type="submit">{{ $demand->suggested_solution ? 'Gerar nova sugestão' : 'Propor solução com IA' }}</button></form>
-                                <p class="field-help">A IA recebe somente o título e o briefing. A proposta fica registrada para consulta; nenhuma tarefa é criada nem iniciada.</p>
+                                <p class="field-help">A IA considera o título, o briefing e as orientações de material e acesso registradas. Ela não inventa dados ausentes nem cria tarefas. Revise a sugestão antes de usá-la.</p>
                             @else
                                 <p class="field-help">Configure o assistente da agência para gerar uma proposta. A demanda e seu briefing continuam disponíveis normalmente.</p>
                             @endif
@@ -340,6 +349,7 @@
     </main>
 </div>
 <style>
+.demand-properties{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:1px;margin:0 0 16px;overflow:hidden;border:1px solid #dce7e9;border-radius:14px;background:#dce7e9}.demand-properties>div{display:grid;align-content:start;gap:6px;min-height:66px;padding:12px 14px;background:#fff}.demand-properties span,.demand-resource-properties dt{color:#75868c;font-size:10px;line-height:1.35}.demand-properties strong{color:#204b61;font-size:12px;line-height:1.4;overflow-wrap:anywhere}.demand-resources-panel{border-left:3px solid #8ecde2}.demand-resource-properties{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:0}.demand-resource-properties>div{min-width:0;padding:12px;border:1px solid #e3edef;border-radius:10px;background:#f8fcfd}.demand-resource-properties dd{margin:6px 0 0;color:#344d56;font-size:12px;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere}.demand-resources-panel .field-help{margin-top:12px}
 .detail-main,.detail-side{min-width:0}.history-toggle{display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;list-style:none}.history-toggle::-webkit-details-marker{display:none}.history-toggle:focus-visible{outline:3px solid #8ecde2;outline-offset:3px;border-radius:6px}.history-toggle>span:first-child{display:grid;gap:3px}.history-toggle strong{color:#204b61;font-size:14px}.history-toggle small{color:#718087;font-size:11px;font-weight:400}.history-toggle-icon{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:#eaf6fa;color:#326c82;font-size:18px;line-height:1}.history-panel[open] .history-toggle-icon{font-size:0}.history-panel[open] .history-toggle-icon:after{content:'−';font-size:18px}.history-panel .history-list{margin-top:17px}
 .suggested-solution-text{padding:14px;border:1px solid #dcebed;border-radius:11px;background:#f7fbfc;color:#344d56;font-size:13px;line-height:1.7;white-space:pre-wrap}.suggested-solution-panel form{margin-top:12px}
 .task-reassign{margin-top:10px}.task-reassign summary{width:max-content;max-width:100%;cursor:pointer;color:#326c82;font-size:11px;font-weight:700}.task-reassign form{display:flex;flex-wrap:wrap;align-items:end;gap:8px;margin-top:8px}.task-reassign select{max-width:100%;min-height:36px;border:1px solid #d6e0e1;border-radius:9px;padding:7px 9px;background:#fff;color:#344d56}.task-reassign .secondary-button{min-height:36px;padding:7px 10px;font-size:10px}.task-reassign .field-help{margin:7px 0;color:#718087;font-size:10px;line-height:1.45}.inactive-assignee{color:#a05a30;font-size:11px}
@@ -352,6 +362,10 @@
 </style>
 <style>
 .demand-attachments{margin:18px 0}.attachment-upload{margin-top:14px}.attachment-drop{display:grid;justify-items:center;gap:7px;padding:24px;border:1px dashed #9fc8d4;border-radius:14px;background:#f7fbfc;text-align:center;color:#204b61;cursor:pointer;transition:background .15s,border-color .15s}.attachment-drop:hover,.attachment-drop.is-dragging{border-color:#39758b;background:#eaf6fa}.attachment-drop strong{font-size:13px}.attachment-drop>span:last-of-type{color:#718087;font-size:11px}.attachment-drop-icon{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:#e3f3f8;color:#326c82;font-size:22px}.attachment-drop input{max-width:100%;margin-top:6px;color:#52666e;font:inherit;font-size:11px}.attachment-upload-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:11px}.attachment-list{list-style:none;padding:0;margin:16px 0 0}.attachment-item{display:flex;align-items:center;gap:12px;padding:11px 0;border-top:1px solid #edf0ef}.attachment-file-icon{display:grid;place-items:center;flex:0 0 38px;height:38px;border-radius:10px;background:#eaf6fa;color:#326c82;font-size:9px;font-weight:800}.attachment-file-info{display:grid;gap:4px;min-width:0;flex:1}.attachment-file-info>a{overflow:hidden;color:#204b61;text-overflow:ellipsis;white-space:nowrap;font-size:12px;font-weight:700}.attachment-file-info span{color:#718087;font-size:10px}.attachment-download{flex-shrink:0;text-decoration:none}.attachment-empty{margin:16px 0 0}.attachment-preview{margin-top:7px}.attachment-preview summary{width:max-content;max-width:100%;cursor:pointer;color:#326c82;font-size:11px;font-weight:700}.attachment-preview iframe,.attachment-preview img,.attachment-preview video{display:block;width:min(100%,760px);max-height:620px;margin-top:8px;border:1px solid #e3e9e8;border-radius:10px;background:#f5f6f5}.attachment-preview iframe{height:480px}.attachment-preview img,.attachment-preview video{height:auto;object-fit:contain}@media(max-width:650px){.attachment-drop{padding:20px 12px}.attachment-upload-footer{align-items:stretch;flex-direction:column}.attachment-upload-footer .primary-button{align-self:flex-start}.attachment-item{align-items:flex-start;flex-wrap:wrap}.attachment-file-info{min-width:calc(100% - 55px)}.attachment-download{margin-left:50px}.attachment-preview iframe{height:62vh;min-height:360px}}
+</style>
+<style>
+@media(max-width:1050px){.demand-properties{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:600px){.demand-properties{grid-template-columns:repeat(2,minmax(0,1fr))}.demand-properties>div{padding:10px}.demand-resource-properties{grid-template-columns:1fr}}
 </style>
 @if ($canManage)
 <script>

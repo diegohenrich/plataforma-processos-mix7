@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Enums\TaskStatus;
 use App\Enums\UserRole;
 use App\Models\DemandTask;
+use App\Models\DemandTaskAssignment;
 use App\Models\TaskTimeEntry;
 use App\Models\User;
+use App\Services\MonthlyTeamHistory;
 use App\Services\TaskTimerHeartbeat;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
@@ -33,7 +35,7 @@ class TeamActivityController extends Controller
             ->where('organization_id', $viewer->organization_id)
             ->whereIn('assigned_to', $ids)
             ->where('status', '!=', TaskStatus::Completed->value)
-            ->with('demand:id,title')
+            ->with(['demand:id,title', 'currentAssignment:demand_task_assignments.id,demand_task_assignments.demand_task_id,demand_task_assignments.assigned_at,demand_task_assignments.accepted_at'])
             ->orderBy('assigned_to')->orderBy('title')
             ->get(['id', 'assigned_to', 'demand_id', 'title', 'status', 'estimate_minutes', 'planned_start_on', 'planned_due_on']);
         $timers = TaskTimeEntry::query()
@@ -46,6 +48,8 @@ class TeamActivityController extends Controller
         $data = $professionals->map(function (User $professional) use ($tasks, $timers): array {
             $commitments = $tasks->where('assigned_to', $professional->id)->map(function (DemandTask $task) use ($timers): array {
                 $timer = $timers->get($task->id);
+                $assignment = $task->currentAssignment;
+                $waitingForStart = $assignment && ! $assignment->accepted_at;
 
                 return [
                     'task_id' => $task->id,
@@ -56,6 +60,9 @@ class TeamActivityController extends Controller
                     'estimate_minutes' => $task->estimate_minutes,
                     'planned_start_on' => $task->planned_start_on?->toDateString(),
                     'planned_due_on' => $task->planned_due_on?->toDateString(),
+                    'waiting_since' => $waitingForStart ? $assignment->assigned_at->toISOString() : null,
+                    'waiting_seconds' => $waitingForStart ? max(0, (int) $assignment->assigned_at->diffInSeconds(now())) : null,
+                    'accepted_at' => $assignment?->accepted_at?->toISOString(),
                     'timer_running' => $timer !== null,
                     'timer_started_at' => $timer?->started_at?->toISOString(),
                 ];
@@ -89,6 +96,54 @@ class TeamActivityController extends Controller
             ->orderBy('name')
             ->get(['id', 'name', 'is_active']);
         $professionalIds = $professionals->modelKeys();
+        $activeCohort = User::query()
+            ->where('organization_id', $viewer->organization_id)
+            ->where('role', UserRole::Professional->value)
+            ->where('is_active', true)
+            ->orderBy('id')
+            ->get(['id', 'name', 'is_active']);
+        $monthlyHistory = $request->expectsJson()
+            ? collect()
+            : app(MonthlyTeamHistory::class)->build($viewer->organization_id, $professionals, $activeCohort, $now);
+
+        $assignmentMetrics = array_fill_keys($professionalIds, [
+            'pending_start_count' => 0,
+            'oldest_pending_seconds' => null,
+            'acceptance_seconds' => [],
+            'execution_seconds' => [],
+        ]);
+        DemandTaskAssignment::query()
+            ->where('organization_id', $viewer->organization_id)
+            ->whereIn('professional_id', $professionalIds)
+            ->whereNull('accepted_at')
+            ->whereNull('released_at')
+            ->whereHas('task', fn ($query) => $query->where('status', '!=', TaskStatus::Completed->value))
+            ->get(['professional_id', 'assigned_at'])
+            ->each(function (DemandTaskAssignment $assignment) use (&$assignmentMetrics, $now): void {
+                $seconds = max(0, (int) $assignment->assigned_at->diffInSeconds($now));
+                $person = &$assignmentMetrics[$assignment->professional_id];
+                $person['pending_start_count']++;
+                $person['oldest_pending_seconds'] = max($person['oldest_pending_seconds'] ?? 0, $seconds);
+                unset($person);
+            });
+
+        DemandTaskAssignment::query()
+            ->where('organization_id', $viewer->organization_id)
+            ->whereIn('professional_id', $professionalIds)
+            ->where(function ($query) use ($periodStart): void {
+                $query->where('accepted_at', '>=', $periodStart)
+                    ->orWhere('completed_at', '>=', $periodStart);
+            })
+            ->orderBy('id')
+            ->cursor()
+            ->each(function (DemandTaskAssignment $assignment) use (&$assignmentMetrics, $periodStart): void {
+                if ($assignment->accepted_at && $assignment->accepted_at->greaterThanOrEqualTo($periodStart)) {
+                    $assignmentMetrics[$assignment->professional_id]['acceptance_seconds'][] = max(0, (int) $assignment->assigned_at->diffInSeconds($assignment->accepted_at));
+                }
+                if ($assignment->accepted_at && $assignment->completed_at && $assignment->completed_at->greaterThanOrEqualTo($periodStart)) {
+                    $assignmentMetrics[$assignment->professional_id]['execution_seconds'][] = max(0, (int) $assignment->accepted_at->diffInSeconds($assignment->completed_at));
+                }
+            });
 
         $taskGroups = DemandTask::query()
             ->selectRaw('assigned_to, status, COUNT(*) as task_count, SUM(CASE WHEN status != ? THEN COALESCE(estimate_minutes, 0) ELSE 0 END) as open_estimate_minutes', [TaskStatus::Completed->value])
@@ -152,7 +207,7 @@ class TeamActivityController extends Controller
                 }
             });
 
-        $rows = $professionals->map(function (User $professional) use ($taskGroups, $completedCounts, $recordedSeconds, $weekly, $weekStarts, $periodStart, $now): array {
+        $rows = $professionals->map(function (User $professional) use ($taskGroups, $completedCounts, $recordedSeconds, $weekly, $weekStarts, $periodStart, $now, $assignmentMetrics): array {
             $byStatus = $taskGroups->get($professional->id, collect())->keyBy('status');
             $count = fn (TaskStatus $status): int => (int) ($byStatus->get($status->value)->task_count ?? 0);
             $estimateMinutes = (int) $byStatus->sum('open_estimate_minutes');
@@ -168,6 +223,13 @@ class TeamActivityController extends Controller
                 'estimate_minutes' => $estimateMinutes,
                 'completed_30d' => (int) ($completedCounts[$professional->id] ?? 0),
                 'recorded_seconds_30d' => $recordedSeconds[$professional->id] ?? 0,
+                'pending_start_count' => $assignmentMetrics[$professional->id]['pending_start_count'] ?? 0,
+                'oldest_pending_seconds' => $assignmentMetrics[$professional->id]['oldest_pending_seconds'] ?? null,
+                'oldest_pending_label' => $this->formatDuration($assignmentMetrics[$professional->id]['oldest_pending_seconds'] ?? null),
+                'average_acceptance_seconds_30d' => $this->averageSeconds($assignmentMetrics[$professional->id]['acceptance_seconds'] ?? []),
+                'average_execution_seconds_30d' => $this->averageSeconds($assignmentMetrics[$professional->id]['execution_seconds'] ?? []),
+                'average_acceptance_label' => $this->formatDuration($this->averageSeconds($assignmentMetrics[$professional->id]['acceptance_seconds'] ?? [])),
+                'average_execution_label' => $this->formatDuration($this->averageSeconds($assignmentMetrics[$professional->id]['execution_seconds'] ?? [])),
                 'weekly_trend' => collect($weekStarts)->map(function (CarbonImmutable $weekStart) use ($weekly, $professional, $periodStart, $now): array {
                     $weekKey = $weekStart->toDateString();
                     $weekEnd = $weekStart->endOfWeek();
@@ -187,7 +249,7 @@ class TeamActivityController extends Controller
                 ->where('organization_id', $viewer->organization_id)
                 ->where('assigned_to', $viewer->id)
                 ->where('status', '!=', TaskStatus::Completed->value)
-                ->with('demand:id,title')
+                ->with(['demand:id,title', 'currentAssignment:demand_task_assignments.id,demand_task_assignments.demand_task_id,demand_task_assignments.assigned_at,demand_task_assignments.accepted_at'])
                 ->orderByRaw("CASE status WHEN 'in_progress' THEN 0 WHEN 'blocked' THEN 1 WHEN 'paused' THEN 2 ELSE 3 END")
                 ->orderBy('created_at')
                 ->paginate(20)
@@ -211,6 +273,10 @@ class TeamActivityController extends Controller
                 'estimate_minutes' => $row['estimate_minutes'],
                 'completed_last_30_days' => $row['completed_30d'],
                 'recorded_seconds_last_30_days' => $row['recorded_seconds_30d'],
+                'awaiting_start_count' => $row['pending_start_count'],
+                'oldest_awaiting_start_seconds' => $row['oldest_pending_seconds'],
+                'average_acceptance_seconds_last_30_days' => $row['average_acceptance_seconds_30d'],
+                'average_execution_seconds_last_30_days' => $row['average_execution_seconds_30d'],
                 'weekly_trend' => $row['weekly_trend'],
             ])->values();
             $personalTasks = $personal
@@ -220,6 +286,8 @@ class TeamActivityController extends Controller
                     'status' => $task->status->value,
                     'status_label' => $task->status->label(),
                     'estimate_minutes' => $task->estimate_minutes,
+                    'waiting_since' => $task->currentAssignment && ! $task->currentAssignment->accepted_at ? $task->currentAssignment->assigned_at->toISOString() : null,
+                    'waiting_seconds' => $task->currentAssignment && ! $task->currentAssignment->accepted_at ? max(0, (int) $task->currentAssignment->assigned_at->diffInSeconds($now)) : null,
                     'demand' => ['id' => $task->demand->id, 'title' => $task->demand->title],
                 ])->values()
                 : collect();
@@ -247,6 +315,36 @@ class TeamActivityController extends Controller
             'activeEntry' => $activeEntry,
             'periodStart' => $periodStart,
             'periodEnd' => $now,
+            'monthlyHistory' => $monthlyHistory,
         ]);
+    }
+
+    /** @param list<int> $samples */
+    private function averageSeconds(array $samples): ?int
+    {
+        return $samples === [] ? null : (int) round(array_sum($samples) / count($samples));
+    }
+
+    private function formatDuration(?int $seconds): string
+    {
+        if ($seconds === null) {
+            return 'Sem dados';
+        }
+
+        $minutes = (int) round($seconds / 60);
+        if ($minutes < 60) {
+            return $minutes.' min';
+        }
+
+        $hours = intdiv($minutes, 60);
+        $remainingMinutes = $minutes % 60;
+        if ($hours >= 24) {
+            $days = intdiv($hours, 24);
+            $hours %= 24;
+
+            return $days.' d'.($hours > 0 ? ' '.$hours.' h' : '');
+        }
+
+        return $hours.' h'.($remainingMinutes > 0 ? ' '.$remainingMinutes.' min' : '');
     }
 }

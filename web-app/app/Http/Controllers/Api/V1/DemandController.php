@@ -20,6 +20,7 @@ class DemandController extends Controller
             ->when($user->role === UserRole::Professional, function (Builder $query) use ($user): void {
                 $query->where(function (Builder $visible) use ($user): void {
                     $visible->where('created_by', $user->id)
+                        ->orWhere('responsible_user_id', $user->id)
                         ->orWhereHas('tasks', fn (Builder $tasks) => $tasks->where('assigned_to', $user->id));
                 });
             })
@@ -27,6 +28,7 @@ class DemandController extends Controller
             ->with([
                 'creator:id,name',
                 'briefAuthor:id,name',
+                'responsible:id,name',
                 'moduleSteps.completer:id,name',
                 'tasks' => fn ($tasks) => $tasks
                     ->with(['assignee:id,name', 'creator:id,name', 'latestAssignmentEvent.actor:id,name'])
@@ -50,8 +52,10 @@ class DemandController extends Controller
                     'id' => $demand->id,
                     'title' => $demand->title,
                     'brief' => $demand->brief,
-                    'intake_source' => $demand->intake_source,
                     'brief_author' => $demand->briefAuthor?->only(['id', 'name']),
+                    'responsible' => $demand->responsible?->only(['id', 'name']),
+                    'materials_location' => $demand->materials_location,
+                    'access_instructions' => $demand->access_instructions,
                     'summary' => $demand->ai_summary,
                     'suggested_solution' => $demand->suggested_solution,
                     'module' => $this->moduleData($demand),
@@ -97,8 +101,10 @@ class DemandController extends Controller
                 'id' => $demand->id,
                 'title' => $demand->title,
                 'brief' => $demand->brief,
-                'intake_source' => $demand->intake_source,
                 'brief_author' => $demand->briefAuthor()->first(['id', 'name'])?->only(['id', 'name']),
+                'responsible' => $demand->responsible()->first(['id', 'name'])?->only(['id', 'name']),
+                'materials_location' => $demand->materials_location,
+                'access_instructions' => $demand->access_instructions,
                 'summary' => $demand->ai_summary,
                 'suggested_solution' => $demand->suggested_solution,
                 'module' => $this->moduleData($demand),

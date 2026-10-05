@@ -13,7 +13,7 @@ class Demand extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['organization_id', 'created_by', 'client_user_id', 'title', 'brief', 'intake_source', 'brief_author_id', 'ai_summary', 'suggested_solution', 'module_key', 'module_version', 'module_label', 'module_fields_schema', 'module_fields_data', 'status'];
+    protected $fillable = ['organization_id', 'created_by', 'responsible_user_id', 'client_user_id', 'title', 'brief', 'intake_source', 'brief_author_id', 'materials_location', 'access_instructions', 'ai_summary', 'suggested_solution', 'module_key', 'module_version', 'module_label', 'module_fields_schema', 'module_fields_data', 'status'];
 
     protected function casts(): array
     {
@@ -43,6 +43,11 @@ class Demand extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function responsible(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'responsible_user_id');
     }
 
     public function client(): BelongsTo

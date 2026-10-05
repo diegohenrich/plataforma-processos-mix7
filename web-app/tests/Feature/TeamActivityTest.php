@@ -7,6 +7,7 @@ use App\Enums\TaskStatus;
 use App\Enums\UserRole;
 use App\Models\Demand;
 use App\Models\DemandTask;
+use App\Models\DemandTaskAssignment;
 use App\Models\Organization;
 use App\Models\PerformanceReview;
 use App\Models\PerformanceReviewResponse;
@@ -55,25 +56,130 @@ class TeamActivityTest extends TestCase
             ->assertOk()->assertSee('Produção da equipe')->assertSee($professional->name)
             ->assertSee('2,0 h')->assertSee('0,5 h')->assertSee('concluídas em 30 dias')
             ->assertSee('Ver evolução semanal')->assertSee('Concluídas')->assertSee('Tempo registrado')
-            ->assertSee('não são nota, ranking')->assertSee($colleague->name)->assertDontSee('Tarefa da colega')->assertDontSee($outsideProfessional->name);
-        $this->get(route('dashboard'))->assertOk()->assertSee('Equipe')
-            ->assertSee(route('team.activity'), false)
-            ->assertDontSee(route('performance-reviews.index'), false)->assertSee('Acessos da API');
+            ->assertSee('não exibe posições')->assertSee($colleague->name)->assertDontSee('Tarefa da colega')->assertDontSee($outsideProfessional->name);
+        $this->get(route('dashboard'))->assertRedirect(route('team.activity'));
+        $this->get(route('team.activity'))->assertOk()->assertSee('Produção da equipe');
         $this->actingAs($owner)->get(route('team.activity'))->assertOk();
         $this->actingAs($manager)->get(route('team.index'))->assertForbidden();
     }
 
+    public function test_management_sees_waiting_acceptance_and_completion_durations_separately(): void
+    {
+        $this->travelTo(CarbonImmutable::parse('2026-10-02 12:00:00'));
+        [$organization, $owner, $manager, $professional] = $this->workspace();
+        $demand = $this->demand($organization, $owner);
+        $waiting = $this->task($demand, $professional, 'Aguardando começar', TaskStatus::Todo);
+        $waiting->currentAssignment()->update(['assigned_at' => now()->subDays(2)]);
+
+        $completed = $this->task($demand, $professional, 'Concluída com medição', TaskStatus::Completed);
+        $completed->update(['completed_at' => now()->subHour()]);
+        $completed->currentAssignment()->update([
+            'assigned_at' => now()->subHours(4),
+            'accepted_at' => now()->subHours(3),
+            'completed_at' => now()->subHour(),
+        ]);
+
+        $response = $this->actingAs($manager)->getJson('/api/v1/team/activity')->assertOk();
+        $professionalData = collect($response->json('data.professionals'))->firstWhere('id', $professional->id);
+        $this->assertSame(1, $professionalData['awaiting_start_count']);
+        $this->assertSame(172800, $professionalData['oldest_awaiting_start_seconds']);
+        $this->assertSame(3600, $professionalData['average_acceptance_seconds_last_30_days']);
+        $this->assertSame(7200, $professionalData['average_execution_seconds_last_30_days']);
+
+        $this->get(route('team.activity'))
+            ->assertOk()
+            ->assertSee('média até iniciar (últimos 30 dias)')
+            ->assertSee('média do início à conclusão (últimos 30 dias)')
+            ->assertSee('a mais antiga há 2 d');
+        $this->actingAs($owner)->get(route('team.activity'))->assertOk()->assertSee('a mais antiga há 2 d');
+    }
+
+    public function test_monthly_history_keeps_all_months_and_hides_colleagues_from_professionals(): void
+    {
+        $this->travelTo(CarbonImmutable::parse('2026-10-02 12:00:00'));
+        [$organization, $owner, $manager, $professional, $colleague] = $this->workspace();
+        $demand = $this->demand($organization, $owner);
+        $septemberTask = $this->task($demand, $professional, 'Entrega de setembro', TaskStatus::Completed);
+        $septemberTask->update(['completed_at' => CarbonImmutable::parse('2026-09-15 15:00:00')]);
+        DemandTaskAssignment::query()->where('demand_task_id', $septemberTask->id)->update([
+            'assigned_at' => CarbonImmutable::parse('2026-09-10 09:00:00'),
+            'accepted_at' => CarbonImmutable::parse('2026-09-11 09:00:00'),
+            'completed_at' => CarbonImmutable::parse('2026-09-15 15:00:00'),
+        ]);
+        TaskTimeEntry::create([
+            'organization_id' => $organization->id,
+            'task_id' => $septemberTask->id,
+            'user_id' => $professional->id,
+            'started_at' => CarbonImmutable::parse('2026-09-12 09:00:00'),
+            'ended_at' => CarbonImmutable::parse('2026-09-12 11:00:00'),
+        ]);
+        $this->review($septemberTask, $professional, $owner, '2026-10-01 10:00:00');
+        $colleagueTask = $this->task($demand, $colleague, 'Entrega da colega', TaskStatus::Completed);
+        $colleagueTask->update(['completed_at' => CarbonImmutable::parse('2026-09-20 15:00:00')]);
+        DemandTaskAssignment::query()->where('demand_task_id', $colleagueTask->id)->update([
+            'accepted_at' => CarbonImmutable::parse('2026-09-19 09:00:00'),
+            'completed_at' => CarbonImmutable::parse('2026-09-20 15:00:00'),
+        ]);
+
+        $this->actingAs($manager)->get(route('team.activity'))
+            ->assertOk()->assertSee('Desempenho da equipe por mês')->assertSee('09/2026')->assertSee('10/2026')
+            ->assertSee($professional->name)->assertSee($colleague->name)->assertSee('Avaliações');
+
+        $this->actingAs($professional)->get(route('team.activity'))
+            ->assertOk()->assertSee('Meu mês a mês')->assertSee('09/2026')->assertSee('Seu mês')
+            ->assertDontSee($colleague->name)->assertDontSee('Entrega da colega');
+    }
+
+    public function test_monthly_scores_compare_only_eligible_professionals_and_keep_personal_view_private(): void
+    {
+        $this->travelTo(CarbonImmutable::parse('2026-10-02 12:00:00'));
+        [$organization, $owner, $manager, $professional, $colleague] = $this->workspace();
+        $third = User::factory()->create(['organization_id' => $organization->id, 'role' => UserRole::Professional, 'is_active' => true, 'name' => 'Pessoa Terceira']);
+        $fourth = User::factory()->create(['organization_id' => $organization->id, 'role' => UserRole::Professional, 'is_active' => true, 'name' => 'Pessoa Quarta']);
+        $demand = $this->demand($organization, $owner);
+
+        foreach ([
+            [$professional, [[5, 5], [5, 5], [5, 5]]],
+            [$colleague, [[4, 4], [4, 4], [4, 4]]],
+            [$third, [[3, 3], [3, 3], [3, 3]]],
+            [$fourth, [[2, 2], [2, 2], [2, 2]]],
+        ] as $index => [$person, $scores]) {
+            foreach ($scores as $taskIndex => [$deadline, $quality]) {
+                $task = $this->task($demand, $person, "Entrega {$index}-{$taskIndex}", TaskStatus::Completed);
+                $task->update(['completed_at' => CarbonImmutable::parse('2026-10-01 12:00:00')->addMinutes($taskIndex)]);
+                $this->review($task, $person, $owner, '2026-10-02 11:00:00', $deadline, $quality);
+
+                if ($index === 0 && $taskIndex === 0) {
+                    $this->review($task, $person, $manager, '2026-10-02 11:30:00', 2, 2);
+                }
+            }
+        }
+
+        $management = $this->actingAs($manager)->get(route('team.activity'))->assertOk();
+        $management->assertSee('Desempenho da equipe por mês')->assertSee($professional->name)->assertSee('9,0/10')->assertSee('Destaque do mês');
+
+        $personal = $this->actingAs($professional)->get(route('team.activity'))->assertOk();
+        $personal->assertSee('Você está entre os profissionais com melhor avaliação neste mês')->assertSee('9,0/10')
+            ->assertDontSee($colleague->name)->assertDontSee('Pessoa Terceira')->assertDontSee('Pessoa Quarta')
+            ->assertDontSee('Destaque do mês');
+    }
+
     public function test_professional_sees_own_tasks_and_timer_controls_but_not_colleagues(): void
     {
+        $this->travelTo(CarbonImmutable::parse('2026-10-02 12:00:00'));
         [$organization, $owner, , $professional, $colleague] = $this->workspace();
         $demand = $this->demand($organization, $owner);
-        $this->task($demand, $professional, 'Minha tarefa', TaskStatus::Todo);
+        $ownTask = $this->task($demand, $professional, 'Minha tarefa', TaskStatus::Todo);
+        $ownTask->currentAssignment()->update(['assigned_at' => now()->subHours(2)->subMinutes(52)]);
         $this->task($demand, $colleague, 'Tarefa privada da colega', TaskStatus::InProgress);
 
         $this->actingAs($professional)->get(route('team.activity'))
-            ->assertOk()->assertSee('Meu trabalho')->assertSee('Minha tarefa')->assertSee('Iniciar tempo')->assertDontSee('Tarefa privada da colega');
-        $this->get(route('dashboard'))->assertOk()->assertSee('Meu trabalho')->assertSee('Abrir minhas tarefas')
-            ->assertSee(route('team.activity'), false)->assertDontSee(route('performance-reviews.index'), false);
+            ->assertOk()->assertSee('Meu trabalho')->assertSee('Minha tarefa')->assertSee('Iniciar tempo')
+            ->assertSee('Na sua fila há 2 horas e 52 minutos. Inicie o cronômetro ou avise a gestão se estiver impedido.')
+            ->assertDontSee('Tarefa privada da colega');
+        $this->get(route('dashboard'))->assertRedirect(route('team.activity'));
+        $this->get(route('team.activity'))->assertOk()->assertSee('Meu trabalho')->assertSee('Suas tarefas abertas')
+            ->assertDontSee('Tarefa privada da colega');
         $this->actingAs($professional)->get(route('team.index'))->assertForbidden();
     }
 
@@ -172,9 +278,11 @@ class TeamActivityTest extends TestCase
         $task = $this->task($demand, $professional, 'Finalizar site', TaskStatus::Completed);
 
         $this->actingAs($manager)->get(route('performance-reviews.index'))
-            ->assertOk()->assertSee('Registrar avaliação de tarefa concluída')->assertSee('gerência peso 1');
+            ->assertOk()->assertSee('Registrar avaliação de tarefa concluída')->assertSee('Cada avaliação da direção ou gerência tem o mesmo peso');
         $this->post(route('performance-reviews.store'), [
             'task_id' => $task->id,
+            'deadline_score' => 4,
+            'quality_score' => 5,
             'deadline_assessment' => 'Prazo combinado cumprido após revisão do escopo.',
             'quality_assessment' => 'Entrega conferida com critérios do briefing e sem erros visíveis.',
             'evidence' => 'Checklist de aceite conferido pela gerência.',
@@ -206,6 +314,8 @@ class TeamActivityTest extends TestCase
         $task = $this->task($demand, $professional, 'Concluir campanha', TaskStatus::Completed);
         $payload = [
             'task_id' => $task->id,
+            'deadline_score' => 4,
+            'quality_score' => 3,
             'deadline_assessment' => 'O prazo foi acompanhado com contexto e evidência suficientes.',
             'quality_assessment' => 'A entrega foi revisada conforme os critérios definidos para a campanha.',
             'evidence' => 'Checklist da campanha conferido.',
@@ -221,7 +331,9 @@ class TeamActivityTest extends TestCase
 
         $this->actingAs($owner)->postJson('/api/v1/team/performance-reviews', $payload)
             ->assertCreated()
-            ->assertJsonPath('data.reviewer_weight', 2);
+            ->assertJsonPath('data.reviewer_weight', 1)
+            ->assertJsonPath('data.deadline_score', 4)
+            ->assertJsonPath('data.quality_score', 3);
         $this->actingAs($manager)->postJson('/api/v1/team/performance-reviews', $payload)
             ->assertStatus(409);
 
@@ -244,20 +356,26 @@ class TeamActivityTest extends TestCase
         ]);
     }
 
-    public function test_owner_weight_is_two_and_duplicate_or_unrelated_reviews_are_rejected(): void
+    public function test_direction_and_management_have_equal_weight_and_duplicate_or_unrelated_reviews_are_rejected(): void
     {
         [$organization, $owner, , $professional] = $this->workspace();
         $demand = $this->demand($organization, $owner);
         $task = $this->task($demand, $professional, 'Publicar site', TaskStatus::Completed);
         $payload = [
             'task_id' => $task->id,
+            'deadline_score' => 5,
+            'quality_score' => 4,
             'deadline_assessment' => 'O prazo previsto foi cumprido conforme combinado.',
             'quality_assessment' => 'A qualidade atende os critérios registrados para a entrega.',
         ];
 
         $this->actingAs($owner)->post(route('performance-reviews.store'), $payload)->assertRedirect(route('performance-reviews.index'));
-        $this->assertDatabaseHas('performance_reviews', ['task_id' => $task->id, 'reviewer_weight' => 2]);
+        $this->assertDatabaseHas('performance_reviews', ['task_id' => $task->id, 'reviewer_weight' => 1, 'deadline_score' => 5, 'quality_score' => 4]);
         $this->post(route('performance-reviews.store'), $payload)->assertSessionHasErrors('task_id');
+
+        $invalidScoreTask = $this->task($demand, $professional, 'Nota inválida', TaskStatus::Completed);
+        $this->post(route('performance-reviews.store'), [...$payload, 'task_id' => $invalidScoreTask->id, 'deadline_score' => 6])
+            ->assertSessionHasErrors('deadline_score');
 
         [$otherOrganization, $otherOwner, , $otherProfessional] = $this->workspace('outside-review');
         $otherDemand = $this->demand($otherOrganization, $otherOwner);
@@ -272,12 +390,16 @@ class TeamActivityTest extends TestCase
         $colleagueTask = $this->task($demand, $colleague, 'Tarefa da colega', TaskStatus::Completed);
         $this->actingAs($professional)->post(route('performance-reviews.store'), [
             'task_id' => $colleagueTask->id,
+            'deadline_score' => 2,
+            'quality_score' => 2,
             'deadline_assessment' => 'Descrição suficiente para passar na validação.',
             'quality_assessment' => 'Descrição suficiente para passar na validação.',
         ])->assertForbidden();
 
         $this->actingAs($owner)->post(route('performance-reviews.store'), [
             'task_id' => $colleagueTask->id,
+            'deadline_score' => 2,
+            'quality_score' => 2,
             'deadline_assessment' => 'O prazo foi acompanhado e está descrito com evidência.',
             'quality_assessment' => 'A qualidade foi conferida com os critérios de aceite.',
         ])->assertRedirect(route('performance-reviews.index'));
@@ -294,6 +416,8 @@ class TeamActivityTest extends TestCase
         $task = $this->task($demand, $professional, 'Ajustar campanha', TaskStatus::Completed);
         $this->actingAs($owner)->post(route('performance-reviews.store'), [
             'task_id' => $task->id,
+            'deadline_score' => 3,
+            'quality_score' => 4,
             'deadline_assessment' => 'O prazo final respeitou a mudança aprovada.',
             'quality_assessment' => 'A qualidade corresponde ao material validado.',
         ])->assertRedirect(route('performance-reviews.index'));
@@ -335,12 +459,14 @@ class TeamActivityTest extends TestCase
         $this->review($alreadyReviewedByManager, $professional, $manager);
         $this->review($reviewedByOwnerOnly, $professional, $owner);
 
-        $this->actingAs($manager)->get(route('performance-reviews.index'))
-            ->assertOk()->assertDontSee('value="'.$alreadyReviewedByManager->id.'"', false)
-            ->assertSee('value="'.$reviewedByOwnerOnly->id.'"', false);
+        $response = $this->actingAs($manager)->get(route('performance-reviews.index'))->assertOk();
+        preg_match('/<select name="task_id".*?<\/select>/s', $response->getContent(), $taskOptions);
+        $this->assertNotEmpty($taskOptions);
+        $this->assertStringNotContainsString('Já avaliada por esta gerência', $taskOptions[0]);
+        $this->assertStringContainsString('Avaliada somente pela direção', $taskOptions[0]);
     }
 
-    private function review(DemandTask $task, User $professional, User $reviewer, string $createdAt = '2026-09-15 12:00:00'): PerformanceReview
+    private function review(DemandTask $task, User $professional, User $reviewer, string $createdAt = '2026-09-15 12:00:00', ?int $deadlineScore = null, ?int $qualityScore = null): PerformanceReview
     {
         $review = PerformanceReview::create([
             'organization_id' => $task->organization_id,
@@ -348,7 +474,9 @@ class TeamActivityTest extends TestCase
             'professional_id' => $professional->id,
             'reviewer_id' => $reviewer->id,
             'reviewer_role' => $reviewer->role->value,
-            'reviewer_weight' => $reviewer->role === UserRole::AgencyOwner ? 2 : 1,
+            'reviewer_weight' => 1,
+            'deadline_score' => $deadlineScore,
+            'quality_score' => $qualityScore,
             'deadline_assessment' => 'O prazo foi avaliado com contexto e registro suficientes.',
             'quality_assessment' => 'A qualidade foi conferida usando critérios registrados.',
         ]);

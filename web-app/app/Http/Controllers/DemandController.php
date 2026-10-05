@@ -39,12 +39,14 @@ class DemandController extends Controller
             ->when($user->role === UserRole::Professional, function (Builder $query) use ($user): void {
                 $query->where(function (Builder $visible) use ($user): void {
                     $visible->where('created_by', $user->id)
+                        ->orWhere('responsible_user_id', $user->id)
                         ->orWhereHas('tasks', fn (Builder $tasks) => $tasks->where('assigned_to', $user->id));
                 });
             })
             ->when($user->role === UserRole::Client, fn (Builder $query) => $query->where('client_user_id', $user->id))
             ->with([
                 'creator:id,name',
+                'responsible:id,name',
                 'client:id,name',
                 'tasks' => fn ($tasks) => $tasks
                     ->with('assignee:id,name')
@@ -83,13 +85,6 @@ class DemandController extends Controller
             ->where('is_active', true)
             ->orderBy('name')
             ->get(['id', 'name']);
-        $briefAuthors = User::query()
-            ->where('organization_id', $request->user()->organization_id)
-            ->whereIn('role', [UserRole::AgencyOwner->value, UserRole::MarketingManager->value, UserRole::Professional->value])
-            ->where('is_active', true)
-            ->orderBy('name')
-            ->get(['id', 'name', 'role']);
-
         $modules = collect(DemandModule::cases())->map(fn (DemandModule $module): array => [
             'key' => $module->value,
             'label' => $module->label(),
@@ -103,7 +98,7 @@ class DemandController extends Controller
 
         $aiConfigured = app(AiProviderSettings::class)->isConfiguredFor((int) $request->user()->organization_id);
 
-        return view('demands.create', compact('professionals', 'clients', 'briefAuthors', 'modules', 'aiConfigured'));
+        return view('demands.create', compact('professionals', 'clients', 'modules', 'aiConfigured'));
     }
 
     public function store(Request $request, TaskAssignmentNotifier $taskAssignmentNotifier): RedirectResponse|JsonResponse
@@ -117,15 +112,17 @@ class DemandController extends Controller
         $data = $request->validate([
             'title' => ['required', 'string', 'max:180'],
             'brief' => ['required', 'string', 'max:12000'],
-            'intake_source' => ['nullable', 'string', 'max:120'],
-            'brief_author_id' => [
+            'responsible_user_id' => [
+                'sometimes',
                 'nullable',
                 'integer',
                 Rule::exists('users', 'id')->where(fn ($query) => $query
                     ->where('organization_id', $organizationId)
-                    ->whereIn('role', [UserRole::AgencyOwner->value, UserRole::MarketingManager->value, UserRole::Professional->value])
+                    ->where('role', UserRole::Professional->value)
                     ->where('is_active', true)),
             ],
+            'materials_location' => ['nullable', 'string', 'max:3000'],
+            'access_instructions' => ['nullable', 'string', 'max:3000'],
             'module_key' => ['required', 'string', Rule::in($allowedModuleKeys)],
             'client_user_id' => [
                 'nullable',
@@ -162,11 +159,13 @@ class DemandController extends Controller
             $demand = Demand::create([
                 'organization_id' => $organizationId,
                 'created_by' => $request->user()->id,
+                'responsible_user_id' => $data['responsible_user_id'] ?? $data['tasks'][0]['assignee_id'],
                 'client_user_id' => $data['client_user_id'] ?? null,
                 'title' => $data['title'],
                 'brief' => $data['brief'],
-                'intake_source' => isset($data['intake_source']) ? trim($data['intake_source']) : null,
-                'brief_author_id' => $data['brief_author_id'] ?? null,
+                'brief_author_id' => $request->user()->id,
+                'materials_location' => isset($data['materials_location']) ? trim($data['materials_location']) : null,
+                'access_instructions' => isset($data['access_instructions']) ? trim($data['access_instructions']) : null,
                 'module_key' => $data['module_key'],
                 'module_version' => $builtInModule?->version() ?? $customModule->config_version,
                 'module_label' => $builtInModule?->label() ?? $customModule->label,
@@ -233,8 +232,10 @@ class DemandController extends Controller
                 'data' => [
                     'id' => $demand->id,
                     'title' => $demand->title,
-                    'intake_source' => $demand->intake_source,
                     'brief_author' => $demand->briefAuthor()->first(['id', 'name'])?->only(['id', 'name']),
+                    'responsible' => $demand->responsible()->first(['id', 'name'])?->only(['id', 'name']),
+                    'materials_location' => $demand->materials_location,
+                    'access_instructions' => $demand->access_instructions,
                     'module' => ['key' => $demand->module_key, 'label' => $demand->moduleDisplayLabel(), 'version' => $demand->module_version],
                     'module_fields' => ['schema' => $demand->module_fields_schema ?? [], 'data' => $demand->module_fields_data ?? []],
                     'module_steps' => $demand->moduleSteps()->get(['key', 'label', 'position'])->map(fn ($step): array => ['key' => $step->key, 'label' => $step->label, 'position' => $step->position, 'completed' => false]),
@@ -286,7 +287,7 @@ class DemandController extends Controller
 
         return view('demands.show', [
             'currentUser' => $user,
-            'demand' => $demand->load(['creator:id,name', 'briefAuthor:id,name', 'organization:id,name', 'client:id,name,email', 'attachments.uploader:id,name']),
+            'demand' => $demand->load(['creator:id,name', 'briefAuthor:id,name', 'responsible:id,name', 'organization:id,name', 'client:id,name,email', 'attachments.uploader:id,name']),
             'suggestedSolutionEvent' => $demand->events()->where('event_type', 'ai_solution_suggested')->with('actor:id,name')->latest('created_at')->first(),
             'moduleSteps' => $demand->moduleSteps()->with('completer:id,name')->get(),
             'tasks' => $tasks,
