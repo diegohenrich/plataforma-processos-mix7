@@ -1052,3 +1052,9 @@ Histórico operacional anterior preservado em [docs/VALIDACOES-HISTORICAS.md](..
 - `.env`, SQLite de demonstração, `vendor`, `node_modules` e outros dados locais permanecem ignorados e fora do commit. A configuração privada da VPS não foi lida ou alterada.
 - A VPS permanece no último estado documentado (até `13eecd0`, confirmação de 02/10); este conjunto ainda exige atualização manual a partir do Git, migrations e rebuild conforme `docs/IMPLANTACAO-GESTAO-VPS.md`. O OpenClaw é opcional, sem configuração de segredos; não ativar com dados reais até validar configuração e política.
 - Sincronização Trello tentada em 05/10; serviço respondeu HTTP 429 e indicou nova tentativa após 12:09:30 UTC. Repetir quando disponível e registrar no cartão correspondente. Próxima etapa operacional após o push: fornecer ao usuário sequência segura para atualizar a VPS, preservando volumes e `.env`.
+
+# Runbook de atualização incremental da VPS — 2026-10-05
+- Separei o procedimento de primeiro deploy da atualização de uma VPS já instalada. O caminho incremental preserva `.env`, volumes e conta existente: exige backup externo prévio do PostgreSQL/anexos, pull fast-forward, build de app/scheduler, migrations versionadas, subida dos serviços e conferência do login; proíbe recriação do proprietário, seed/reset e remoção de volumes.
+- O runbook registra o commit candidato `186b764` e deixa explícito que a VPS não foi alterada. O OpenClaw segue opcional e não é iniciado pela sequência de atualização.
+- Validação documental: `git diff --check` passou; comandos foram comparados com o Compose atual. A sequência ainda precisa ser executada pelo usuário no terminal da VPS após confirmar backup restaurável.
+- Trello: cartão #47 registra a publicação geral; cartões longos #9, #32, #39 e #40 não aceitaram edição porque o conector limita descrições a 2.048 caracteres. O status detalhado permanece neste arquivo e no PR #11.

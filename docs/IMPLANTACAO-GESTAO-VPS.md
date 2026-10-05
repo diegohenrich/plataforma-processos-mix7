@@ -16,7 +16,7 @@ O contêiner existente `traefik-traefik-1` está em modo de rede `host`, conform
 
 Uma `APP_KEY` anterior apareceu em texto enviado ao chat. O usuário a renovou no `.env` antes de iniciar o serviço público, sem exibir o novo valor. Guarde essa chave separadamente para recuperação; não a envie ao GitHub, Trello ou chat.
 
-## Atualizar e iniciar
+## Primeiro deploy em um banco vazio
 
 O usuário pediu que esta etapa avance sem testes diagnósticos. Estes comandos são as operações necessárias para instalar o banco novo, aplicar o esquema e iniciar a aplicação; não executam a suíte de testes nem o antigo `migrate:status`.
 
@@ -33,6 +33,27 @@ docker compose -f docker-compose.vps.yml up -d app scheduler
 ```
 
 O primeiro `git pull` só deve prosseguir se não houver conflito com os arquivos existentes; não force nem limpe a árvore. `mix7:owner:create` pede nome, e-mail e senha interativamente. Não execute `db:seed` nem `migrate:fresh` na VPS. Se uma operação falhar, interrompa a sequência naquele ponto e preserve o volume `gestao_database` para diagnóstico posterior.
+
+## Atualizar uma VPS que já está em uso
+
+Em 05/10/2026, o commit `186b76460976fff3441958ed116a3505186802ee` foi publicado em `codex/fundacao-compartilhada` e passou pelo CI. Ele contém cinco migrations aditivas de perfil, atribuições e notas de avaliação, além de ajustes de fluxo, interface e um serviço OpenClaw opcional. O commit ainda não foi aplicado na VPS.
+
+Antes de começar, confirme que existe uma cópia externa recente e restaurável do PostgreSQL e dos anexos, e mantenha `APP_KEY` e `.env` privados sob guarda. Se o backup ainda não foi validado, pare antes do pull. No terminal da VPS:
+
+```bash
+cd /opt/gestao-mix7
+git status --short
+git pull --ff-only origin codex/fundacao-compartilhada
+cd web-app
+docker compose -f docker-compose.vps.yml build app scheduler
+docker compose -f docker-compose.vps.yml run --rm app php artisan migrate --force
+docker compose -f docker-compose.vps.yml up -d app scheduler
+docker compose -f docker-compose.vps.yml ps
+```
+
+Se `git status --short` mostrar arquivos desconhecidos, preserve-os; não use `git clean`, `reset --hard` ou force pull. Se o pull der conflito, ou build/migration falhar, pare e não remova nem recrie volumes. Nesta atualização não execute `mix7:owner:create`, `db:seed`, `migrate:fresh`, `docker compose down -v` nem `docker system prune`: a conta inicial já foi criada e o banco contém o estado persistente.
+
+Depois do `ps`, abra `https://gestao.mix7.org/entrar` e confirme o login e as telas necessárias. A migration atualiza o esquema sem apagar registros; isso não substitui backup nem validação dos fluxos. O serviço OpenClaw continua em profile opcional `ai`; estes comandos não o iniciam nem ativam IA. Só configure-o depois de preparar segredos privados, arquivo de configuração e política de dados.
 
 O `app` não publica porta no host. Para o HTTPS funcionar, o Traefik em modo `host` precisa descobrir o serviço via provedor Docker e alcançar o IP da bridge do `app` na porta 8080. DNS e certificado também precisam estar corretos. Não declare a publicação concluída até abrir a página real no domínio.
 
